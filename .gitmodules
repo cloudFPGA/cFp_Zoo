@@ -1,0 +1,3 @@
+[submodule "cFDK"]
+	path = cFDK
+	url = git@github.ibm.com:cloudFPGA/cFDK.git
