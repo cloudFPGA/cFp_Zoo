@@ -1,0 +1,8 @@
+This file is a guard for handle_vivado.tcl and should prevent the failure of a build process
+becuase the make target monolithic_debug is called but the debug nets aren't defined in
+<Top>/TOP/xdc/debug.xdc .
+This must be done once manually in the Gui and then write YES in the last line of this file.
+(It must stay the last line...)
+
+Have you defined the debug nets etc. in <Top>/xdc/debug.xdc?
+YES
