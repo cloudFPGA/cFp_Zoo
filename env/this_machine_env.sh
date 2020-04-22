@@ -11,7 +11,7 @@
 
 ##SOURCE_VIVADO##
 # we need absolut pathes
-rootDir="/home/diaman/projects/cloudFPGA/cFp_Triangle"
+rootDir="/home/diaman/projects/cloudFPGA/cFp_cv"
 
 export cFpRootDir="$rootDir/"
 export cFpIpDir="$rootDir/ip/"
@@ -23,5 +23,3 @@ export cFpXprDir="$rootDir/xpr/"
 export cFpDcpDir="$rootDir/dcps/"
 export roleName1="1"
 export roleName2="2"
-
-

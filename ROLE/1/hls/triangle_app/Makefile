@@ -2,8 +2,8 @@
 # *                            cloudFPGA
 # *            All rights reserved -- Property of IBM
 # *----------------------------------------------------------------------------
-# * Created : Sep 2018
-# * Authors : Francois Abel, Burkhard Ringlein
+# * Created : Apr 2020
+# * Authors : Dionysios Diamantopoulos
 # *
 # * Description : A makefile that synthesizes and packages the current HLS core
 # *     as an IP.
@@ -40,12 +40,21 @@ ${ipName}_prj/solution1/impl/ip: $(DEPS)
 CHECK_VIVADO := $(shell command -v vivado 2> /dev/null)
 VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
 
+CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
+VITISBINDIR := `dirname ${CHECK_VITIS}`
+
+INPUT_IMAGE = ./test/128x128.png
 
 src = ./src/${ipName}.cpp \
+			./src/xf_harris_accel.cpp \
 			./test/test_${ipName}.cpp
 
 obj = $(src:.cpp=.o)
-CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -I$(VIVADOBINDIR)/../include -I$(cFpRootDir)/cFDK/SRA/LIB/hls -std=c++11
+CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attributes \
+					 -D__SDSVHLS__ -std=c++0x \
+					 `pkg-config --libs opencv` `xml2-config --cflags --libs` \
+					 -I$(VIVADOBINDIR)/../include -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
+					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
 
 csim: assert_env
 	export hlsSim=1; export hlsCoSim=0; vivado_hls -f run_hls.tcl
@@ -57,18 +66,23 @@ ifdef CHECK_VIVADO
 else
 	@echo Vivado was not found in PATH
 endif
+ifdef CHECK_VITIS
+	@echo "Found version $(CHECK_VITIS)"
+else
+	@echo Vitis was not found in PATH
+endif
 	mkdir -p ./${ipName}_prj
 	mkdir -p ./${ipName}_prj/solution1
 	mkdir -p ./${ipName}_prj/solution1/fcsim/
 	mkdir -p ./${ipName}_prj/solution1/fcsim/build
 	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/$@ $^ $(CXXFLAGS)
-	cd ./${ipName}_prj/solution1/fcsim/build && ./$@
+	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ ../../../../$(INPUT_IMAGE)
 
 memchecksim: fcsim
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim ../../../../$(INPUT_IMAGE)
 
 callgraph: fcsim
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim 
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim ../../../../$(INPUT_IMAGE)
 
 kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
