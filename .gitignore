@@ -1,0 +1,63 @@
+# Compiled source
+#-----------------
+*.com
+*.class
+*.o
+*.so
+.directory
+*.pyc
+tags
+
+# Executables
+#-------------
+*.out
+*.hex
+
+# Vivado
+#--------
+*.log
+*.jou
+*_prj/
+*.Xil/
+vivado*.str
+*.wcfg
+
+
+# Vivado_hls
+#------------
+*.pref
+*.dat
+*.dat.*
+*.gold*
+*.strm*
+
+# Vim
+#----- 
+*.swp
+
+# Emacs
+#-------
+*~
+\#*\#
+
+# Backup
+#--------
+*.bak
+*.sav
+
+# Folders
+#---------
+build/
+ip/
+xpr/
+workspace/
+
+# cFDK specific files
+#---------------------
+.ip_guard
+.synth_guard
+*.date
+*.vivado*
+*.dat
+env/
+dcps/
