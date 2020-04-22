@@ -18,17 +18,17 @@
 # * Modification History:
 # *  Fab: Jan-18-2018 Adds header and environment variables.
 # *  Fab: Feb-15-2018 Changed the export procedure.
-# *  Did: Apr-22-2020 Added xf:cv:harris example from Xilinx Vitis 
+# *  Did: Apr-22-2020 Added xf:cv:harris example from Xilinx Vitis
 # ******************************************************************************
 
 # User defined settings
 #-------------------------------------------------
-set projectName    "triangle_app"
+set projectName    "harris_app"
 set solutionName   "solution1"
 set xilPartName    "xcku060-ffva1156-2-i"
 
 set ipName         ${projectName}
-set ipDisplayName  "Triangle Application Example."
+set ipDisplayName  "Harris Application Example."
 set ipDescription  "Demonstrates the functionalities of a cloudFPGA cluster."
 set ipVendor       "IBM"
 set ipLibrary      "hls"

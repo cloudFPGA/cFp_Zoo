@@ -6,7 +6,7 @@
 //  *     Authors: FAB, WEI, NGL
 //  *
 //  *     Description:
-//  *        The Role for a Triangle Example application (UDP or TCP)
+//  *        The Role for a Harris Example application (UDP or TCP)
 //  *
 
 #ifndef _ROLE_TRIANGLE_H_
@@ -38,7 +38,7 @@ using namespace hls;
 #define DEFAULT_RX_PORT 2718
 
 
-void triangle_app(
+void harris_app(
 
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
@@ -53,4 +53,3 @@ void triangle_app(
 );
 
 #endif
-

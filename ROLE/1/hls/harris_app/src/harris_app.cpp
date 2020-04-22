@@ -6,10 +6,10 @@
 //  *     Authors: FAB, WEI, NGL
 //  *
 //  *     Description:
-//  *        The Role for a Triangle Example application (UDP or TCP)
+//  *        The Role for a Harris Example application (UDP or TCP)
 //  *
 
-#include "triangle_app.hpp"
+#include "harris_app.hpp"
 
 
 stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
@@ -20,12 +20,12 @@ PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 
 
 /*****************************************************************************
- * @brief   Main process of the UDP/Tcp Triangle Application
+ * @brief   Main process of the UDP/Tcp Harris Application
  * @ingroup udp_app_flash
  *
  * @return Nothing.
  *****************************************************************************/
-void triangle_app(
+void harris_app(
 
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
@@ -74,7 +74,7 @@ void triangle_app(
 
   switch(enqueueFSM)
   {
-    case WAIT_FOR_META: 
+    case WAIT_FOR_META:
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
@@ -103,7 +103,7 @@ void triangle_app(
   {
     case WAIT_FOR_STREAM_PAIR:
       //-- Forward incoming chunk to SHELL
-      if ( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
+      if ( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty()
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() ) //TODO: split up?
       {
         udpWordTx = sRxpToTxp_Data.read();
@@ -117,7 +117,7 @@ void triangle_app(
         //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
         meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
         //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
-        
+
         meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
         meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
@@ -129,7 +129,7 @@ void triangle_app(
         }
       }
 
-    case PROCESSING_PACKET: 
+    case PROCESSING_PACKET:
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         udpWordTx = sRxpToTxp_Data.read();
@@ -144,4 +144,3 @@ void triangle_app(
   }
 
 }
-

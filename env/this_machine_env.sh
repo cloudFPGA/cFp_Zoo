@@ -3,7 +3,7 @@
 #  *     Copyright IBM Research, All Rights Reserved
 #  *    =============================================
 #  *     Created: Apr 2019
-#  *     Authors: FAB, WEI, NGL
+#  *     Authors: FAB, WEI, NGL, DID
 #  *
 #  *     Description:
 #  *        Auto generated file that exports all necessary environment variables
@@ -11,7 +11,7 @@
 
 ##SOURCE_VIVADO##
 # we need absolut pathes
-rootDir="/home/diaman/projects/cloudFPGA/cFp_cv"
+rootDir="/home/diaman/projects/cloudFPGA/cFp_Vitis"
 
 export cFpRootDir="$rootDir/"
 export cFpIpDir="$rootDir/ip/"

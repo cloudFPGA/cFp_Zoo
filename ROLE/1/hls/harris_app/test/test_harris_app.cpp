@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file       : test_triangle_app_flash.cpp
+ * @file       : test_harris_app_flash.cpp
  * @brief      : Testbench for UDP Application Flash (UAF).
  *
  * System:     : cloudFPGA
@@ -14,7 +14,7 @@
 #include <stdio.h>
 #include <hls_stream.h>
 
-#include "../src/triangle_app.hpp"
+#include "../src/harris_app.hpp"
 
 #include "common/xf_headers.hpp"
 #include "../include/xf_harris_config.h"
@@ -62,7 +62,7 @@ int         simCnt;
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
-    triangle_app(
+    harris_app(
         &node_rank, &size,
       sSHL_Uaf_Data, sUAF_Shl_Data,
       siUdp_meta, soUdp_meta,

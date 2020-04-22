@@ -16,7 +16,7 @@ library IEEE;
 use     IEEE.std_logic_1164.all;
 use     IEEE.numeric_std.all;
 
-library UNISIM; 
+library UNISIM;
 use     UNISIM.vcomponents.all;
 
 -- library XIL_DEFAULTLIB;
@@ -67,7 +67,7 @@ entity Role_Themisto is
     siNRC_Role_Udp_Meta_TREADY  : out   std_ulogic;
     siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
     siNRC_Role_Udp_Meta_TLAST   : in    std_ulogic;
-      
+
     ------------------------------------------------------
     -- SHELL / Role / Nts0 / Tcp Interface
     ------------------------------------------------------
@@ -96,12 +96,12 @@ entity Role_Themisto is
     siNRC_Role_Tcp_Meta_TREADY  : out   std_ulogic;
     siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
     siNRC_Role_Tcp_Meta_TLAST   : in    std_ulogic;
-    
-    
+
+
     --------------------------------------------------------
     -- SHELL / Mem / Mp0 Interface
     --------------------------------------------------------
-    ---- Memory Port #0 / S2MM-AXIS ----------------   
+    ---- Memory Port #0 / S2MM-AXIS ----------------
     ------ Stream Read Command ---------
     soSHL_Mem_Mp0_RdCmd_tdata           : out   std_ulogic_vector( 79 downto 0);
     soSHL_Mem_Mp0_RdCmd_tvalid          : out   std_ulogic;
@@ -129,12 +129,12 @@ entity Role_Themisto is
     soSHL_Mem_Mp0_Write_tkeep           : out   std_ulogic_vector( 63 downto 0);
     soSHL_Mem_Mp0_Write_tlast           : out   std_ulogic;
     soSHL_Mem_Mp0_Write_tvalid          : out   std_ulogic;
-    soSHL_Mem_Mp0_Write_tready          : in    std_ulogic; 
-    
+    soSHL_Mem_Mp0_Write_tready          : in    std_ulogic;
+
     --------------------------------------------------------
     -- SHELL / Mem / Mp1 Interface
     --------------------------------------------------------
-    ---- Memory Port #1 / S2MM-AXIS ------------------   
+    ---- Memory Port #1 / S2MM-AXIS ------------------
     ------ Stream Read Command ---------
     soSHL_Mem_Mp1_RdCmd_tdata           : out   std_ulogic_vector( 79 downto 0);
     soSHL_Mem_Mp1_RdCmd_tvalid          : out   std_ulogic;
@@ -162,8 +162,8 @@ entity Role_Themisto is
     soSHL_Mem_Mp1_Write_tkeep           : out   std_ulogic_vector( 63 downto 0);
     soSHL_Mem_Mp1_Write_tlast           : out   std_ulogic;
     soSHL_Mem_Mp1_Write_tvalid          : out   std_ulogic;
-    soSHL_Mem_Mp1_Write_tready          : in    std_ulogic; 
-    
+    soSHL_Mem_Mp1_Write_tready          : in    std_ulogic;
+
     --------------------------------------------------------
     -- SHELL / Mmio / AppFlash Interface
     --------------------------------------------------------
@@ -187,22 +187,22 @@ entity Role_Themisto is
     -- TOP : Secondary Clock (Asynchronous)
     --------------------------------------------------------
     piTOP_250_00Clk                     : in    std_ulogic;  -- Freerunning
-    
+
     ------------------------------------------------
     -- SMC Interface
-    ------------------------------------------------ 
+    ------------------------------------------------
     piFMC_ROLE_rank                      : in    std_logic_vector(31 downto 0);
     piFMC_ROLE_size                      : in    std_logic_vector(31 downto 0);
-    
+
     poVoid                              : out   std_ulogic
 
   );
-  
+
 end Role_Themisto;
 
 
 -- *****************************************************************************
--- **  ARCHITECTURE  **  FLASH of ROLE 
+-- **  ARCHITECTURE  **  FLASH of ROLE
 -- *****************************************************************************
 
 architecture Flash of Role_Themisto is
@@ -211,7 +211,7 @@ architecture Flash of Role_Themisto is
 
   --============================================================================
   --  SIGNAL DECLARATIONS
-  --============================================================================  
+  --============================================================================
 
 
   ----============================================================================
@@ -268,7 +268,7 @@ architecture Flash of Role_Themisto is
 
   signal EMIF_inv   : std_logic_vector(7 downto 0);
 
-  -- I hate Vivado HLS 
+  -- I hate Vivado HLS
   signal sReadTlastAsVector : std_logic_vector(0 downto 0);
   signal sWriteTlastAsVector : std_logic_vector(0 downto 0);
   signal sResetAsVector : std_logic_vector(0 downto 0);
@@ -280,7 +280,7 @@ architecture Flash of Role_Themisto is
 
   --============================================================================
   --  VARIABLE DECLARATIONS
-  --============================================================================  
+  --============================================================================
   signal sUdpPostCnt : std_ulogic_vector(9 downto 0);
   signal sTcpPostCnt : std_ulogic_vector(9 downto 0);
 
@@ -289,7 +289,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component TriangleApplication is
+  component HarrisApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -335,7 +335,7 @@ architecture Flash of Role_Themisto is
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
            poROL_NRC_Rx_ports_V_ap_vld : out std_logic
          );
-  end component TriangleApplication;
+  end component HarrisApplication;
 
 
 
@@ -376,7 +376,7 @@ architecture Flash of Role_Themisto is
            soMemWriteP0_TVALID        : OUT STD_LOGIC;
            soMemWriteP0_TREADY        : IN STD_LOGIC;
            soMemWriteP0_TKEEP         : OUT STD_LOGIC_VECTOR (63 downto 0);
-           soMemWriteP0_TLAST         : OUT STD_LOGIC_VECTOR (0 downto 0) 
+           soMemWriteP0_TLAST         : OUT STD_LOGIC_VECTOR (0 downto 0)
          );
   end component MemTestFlash;
 
@@ -414,19 +414,19 @@ architecture Flash of Role_Themisto is
 
 begin
 
-  --  -- write constant to EMIF Register to test read out 
-  --  --poROL_SHL_EMIF_2B_Reg <= x"EF" & EMIF_inv; 
-  --  poROL_SHL_EMIF_2B_Reg( 7 downto 0)  <= EMIF_inv; 
-  --  poSHL_Mmio_RdReg(11 downto 8) <= piFMC_ROLE_rank(3 downto 0) when (unsigned(piFMC_ROLE_rank) /= 0) else 
-  --  x"F"; 
-  --  poSHL_Mmio_RdReg(15 downto 12) <= piFMC_ROLE_size(3 downto 0) when (unsigned(piFMC_ROLE_size) /= 0) else 
-  --  x"E"; 
+  --  -- write constant to EMIF Register to test read out
+  --  --poROL_SHL_EMIF_2B_Reg <= x"EF" & EMIF_inv;
+  --  poROL_SHL_EMIF_2B_Reg( 7 downto 0)  <= EMIF_inv;
+  --  poSHL_Mmio_RdReg(11 downto 8) <= piFMC_ROLE_rank(3 downto 0) when (unsigned(piFMC_ROLE_rank) /= 0) else
+  --  x"F";
+  --  poSHL_Mmio_RdReg(15 downto 12) <= piFMC_ROLE_size(3 downto 0) when (unsigned(piFMC_ROLE_size) /= 0) else
+  --  x"E";
 
-  --  EMIF_inv <= (not piSHL_ROL_EMIF_2B_Reg(7 downto 0)) when piSHL_ROL_EMIF_2B_Reg(15) = '1' else 
+  --  EMIF_inv <= (not piSHL_ROL_EMIF_2B_Reg(7 downto 0)) when piSHL_ROL_EMIF_2B_Reg(15) = '1' else
   --              x"BE" ;
 
-  poSHL_Mmio_RdReg <= sMemTestDebugOut when (unsigned(piSHL_Mmio_WrReg) /= 0) else 
-   x"EFBE"; 
+  poSHL_Mmio_RdReg <= sMemTestDebugOut when (unsigned(piSHL_Mmio_WrReg) /= 0) else
+   x"EFBE";
 
   --################################################################################
   --#                                                                              #
@@ -441,12 +441,12 @@ begin
 
   -- gUdpAppFlashDepre : if cUSE_DEPRECATED_DIRECTIVES generate --TODO
 
-  --  begin 
+  --  begin
 
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: TriangleApplication
+  UAF: HarrisApplication
   port map (
 
              ------------------------------------------------------
@@ -455,7 +455,7 @@ begin
              ap_clk                      => piSHL_156_25Clk,
              ap_rst_n                    => (not piMMIO_Ly7_Rst),
              ap_start                    => piMMIO_Ly7_En,
-            
+
              piFMC_ROL_rank_V         => piFMC_ROLE_rank,
              --piFMC_ROL_rank_V_ap_vld  => '1',
              piFMC_ROL_size_V         => piFMC_ROLE_size,
@@ -475,7 +475,7 @@ begin
              soTHIS_Shl_Data_tkeep     => soNRC_Udp_Data_tkeep,
              soTHIS_Shl_Data_tlast     => soNRC_Udp_Data_tlast,
              soTHIS_Shl_Data_tvalid    => soNRC_Udp_Data_tvalid,
-             soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready, 
+             soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready,
 
              siNrc_meta_TDATA          =>  siNRC_Role_Udp_Meta_TDATA    ,
              siNrc_meta_TVALID         =>  siNRC_Role_Udp_Meta_TVALID   ,
@@ -494,8 +494,8 @@ begin
            );
 
   --end generate;
-  
-  
+
+
   --################################################################################
   --#                                                                              #
   --#    #######    ####   ######     #####                                        #
@@ -509,12 +509,12 @@ begin
 
   -- gUdpAppFlashDepre : if cUSE_DEPRECATED_DIRECTIVES generate --TODO
 
-  --  begin 
+  --  begin
 
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
-  TAF: TriangleApplication
+  TAF: HarrisApplication
   port map (
 
              ------------------------------------------------------
@@ -523,7 +523,7 @@ begin
              ap_clk                      => piSHL_156_25Clk,
              ap_rst_n                    => (not piMMIO_Ly7_Rst),
              ap_start                    => piMMIO_Ly7_En,
-          
+
              piFMC_ROL_rank_V         => piFMC_ROLE_rank,
              --piFMC_ROL_rank_V_ap_vld  => '1',
              piFMC_ROL_size_V         => piFMC_ROLE_size,
@@ -543,7 +543,7 @@ begin
              soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
              soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
              soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
-             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
+             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready,
 
              siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
              siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
@@ -582,7 +582,7 @@ begin
   --sResetAsVector(0) <= piSHL_ROL_EMIF_2B_Reg(0);
   sResetAsVector(0) <= piMMIO_Ly7_Rst;
 
-  MEM_TEST: MemTestFlash 
+  MEM_TEST: MemTestFlash
   port map(
             ap_clk                     => piSHL_156_25Clk,
             ap_rst_n                   => (not piSHL_156_25Rst),
@@ -628,4 +628,3 @@ begin
 
 
 end architecture Flash;
-

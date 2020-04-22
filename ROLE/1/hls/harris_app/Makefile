@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 # Name of the HLS core to build
-ipName =triangle_app
+ipName =harris_app
 
 DEPS := $(shell find ./src/ -type f)
 

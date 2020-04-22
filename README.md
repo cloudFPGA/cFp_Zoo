@@ -1,11 +1,14 @@
-# cFp_Triangle
-cloudFPGA project (cFp) for a triangle communication example
+# cFp_Vitis
+cloudFPGA project (cFp) for Xilinx Vitis library
 
-**Idea**:
+**Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Xilinx Vitis](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform. 
 ```
-   CPU  -->  FPGA  -->  FPGA 
-    /\___________________|
+   CPU  -->  FPGA (Vitis)  -->  FPGA (Vitis)
+    /\___________________________|
 ```
+
+![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)
+
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
@@ -17,9 +20,9 @@ nc -u <FPGA 1> 2718   # without -u for TCP
 nc -lu 2718           # without -u for TCP
 ```
 
-Then the packets will be send from Terminal 1 to 2. 
+Then the packets will be send from Terminal 1 to 2.
 
-For more details, `tcpdump -i <interface> -nn -s0 -vv -X port 2718` could be helpful. 
+For more details, `tcpdump -i <interface> -nn -s0 -vv -X port 2718` could be helpful.
 
 
 The *Role* is the same for both FPGAs, because which destination the packets will have is determined by the `node_id`/`node_rank` and `cluster_size`
@@ -36,7 +39,7 @@ The following depicts an example API call, assuming that the cFp_Triangle bitfil
 
 ## Firewall issues
 
-Some firewalls may block network packets if there is not a connection to the remote machine/port. 
+Some firewalls may block network packets if there is not a connection to the remote machine/port.
 Hence, to get the Triangle example to work, the following commands may be necessary to be executed (as root):
 ```
 $ firewall-cmd --zone=public --add-port=2718-2750/udp --permanent
@@ -44,5 +47,3 @@ $ firewall-cmd --reload
 ```
 
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
-
-
