@@ -11,6 +11,9 @@
 
 #include "harris_app.hpp"
 
+//#include "common/xf_headers.hpp"
+#include "../include/xf_harris_config.h"
+//#include "../include/xf_ocv_ref.hpp"
 
 stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
 stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
@@ -70,6 +73,14 @@ void harris_app(
   NetworkWord  udpWordTx;
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   NetworkMeta  meta_in = NetworkMeta();
+
+
+  uint16_t Thresh = 442;
+  float K = 0.04;
+  uint16_t k = K * (1 << 16); // Convert to Q0.16 format
+  static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(128, 128);
+  static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(128, 128);
+  //harris_accel(imgInput, imgOutput, Thresh, k);
 
 
   switch(enqueueFSM)
@@ -138,6 +149,11 @@ void harris_app(
         if(udpWordTx.tlast == 1)
         {
           dequeueFSM = WAIT_FOR_STREAM_PAIR;
+          //harris_accel(imgInput, imgOutput, Thresh, k);
+          ap_uint<INPUT_PTR_WIDTH> imgInput_tb[128*128];
+          ap_uint<INPUT_PTR_WIDTH> imgOutput_tb[128*128];
+          cornerHarris_accel(imgInput_tb, imgOutput_tb, 128, 128, Thresh, k);
+
         }
 
       }

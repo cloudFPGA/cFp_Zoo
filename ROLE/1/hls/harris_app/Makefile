@@ -87,6 +87,9 @@ callgraph: fcsim
 kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
 
+csynth: assert_env
+	export hlsSim=0; export hlsCoSim=0; vivado_hls -f run_hls.tcl
+
 cosim: assert_env
 	@#rm -rf ${ipName}_prj
 	export hlsSim=0; export hlsCoSim=1; vivado_hls -f run_hls.tcl

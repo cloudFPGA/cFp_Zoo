@@ -1,10 +1,10 @@
 # cFp_Vitis
 cloudFPGA project (cFp) for Xilinx Vitis library
 
-**Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Xilinx Vitis](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform. 
+**Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Xilinx Vitis](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
 ```
-   CPU  -->  FPGA (Vitis)  -->  FPGA (Vitis)
-    /\___________________________|
+   CPU(OpenCL/OpenCV)  -->  FPGA (Vitis HLS C++)  -->  FPGA (Vitis HLS C++)
+    /\__________________________________________________|
 ```
 
 ![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)

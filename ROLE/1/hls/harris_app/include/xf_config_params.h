@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#ifndef _XF_HARRIS_CONFIG_PARAMS_H_
+#define _XF_HARRIS_CONFIG_PARAMS_H_
+
 #define RO 0
 #define NO 1
 
@@ -24,3 +27,5 @@
 #define MAXCORNERS 1024
 
 #define XF_USE_URAM false
+
+#endif // _XF_HARRIS_CONFIG_PARAMS_H_

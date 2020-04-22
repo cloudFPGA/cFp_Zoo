@@ -53,17 +53,13 @@ set hlsCoSim $env(hlsCoSim)
 # Open and Setup Project
 #-------------------------------------------------
 open_project  ${projectName}_prj
-set_top       ${projectName}
+#set_top       ${projectName}
+set_top cornerHarris_accel
 
 # the -I flag without trailing '/'!!
-add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${srcDir}/${projectName}.hpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${srcDir}/xf_harris_accel.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${incDir}/xf_config_params.h -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${incDir}/xf_harris_config.h -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${incDir}/xf_ocv_ref.hpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-
-add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
+add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
+add_files     ${srcDir}/xf_harris_accel.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
+add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
 
 # Create a solution
 #-------------------------------------------------

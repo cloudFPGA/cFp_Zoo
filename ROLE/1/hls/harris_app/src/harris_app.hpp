@@ -2,15 +2,15 @@
 //  *                       cloudFPGA
 //  *     Copyright IBM Research, All Rights Reserved
 //  *    =============================================
-//  *     Created: May 2019
-//  *     Authors: FAB, WEI, NGL
+//  *     Created: April 2020
+//  *     Authors: DID
 //  *
 //  *     Description:
 //  *        The Role for a Harris Example application (UDP or TCP)
 //  *
 
-#ifndef _ROLE_TRIANGLE_H_
-#define _ROLE_TRIANGLE_H_
+#ifndef _ROLE_HARRIS_H_
+#define _ROLE_HARRIS_H_
 
 #include <stdio.h>
 #include <iostream>

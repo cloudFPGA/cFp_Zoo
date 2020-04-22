@@ -224,7 +224,54 @@ int main(int argc, char** argv) {
     nrErr  = 0;
 
     //------------------------------------------------------
-    //-- STEP-1.1 : CREATE TRAFFIC AS INPUT STREAMS
+    //-- TESTBENCH LOCAL VARIABLES FOR HARRIS
+    //------------------------------------------------------
+    cv::Mat in_img, img_gray;
+    cv::Mat hls_out_img, ocv_out_img;
+    cv::Mat ocvpnts, hlspnts;
+
+    if (argc != 2) {
+        printf("Usage : %s <input image> \n", argv[0]);
+        return -1;
+    }
+    in_img = cv::imread(argv[1], 0); // reading in the color image
+
+    if (!in_img.data) {
+        printf("Failed to load the image ... %s\n!", argv[1]);
+        return -1;
+    }
+
+    uint16_t Thresh; // Threshold for HLS
+    float Th;
+    if (FILTER_WIDTH == 3) {
+        Th = 30532960.00;
+        Thresh = 442;
+    } else if (FILTER_WIDTH == 5) {
+        Th = 902753878016.0;
+        Thresh = 3109;
+    } else if (FILTER_WIDTH == 7) {
+        Th = 41151168289701888.000000;
+        Thresh = 566;
+    }
+
+
+    //------------------------------------------------------
+    //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
+    //------------------------------------------------------
+    //	cvtColor(in_img, img_gray, CV_BGR2GRAY);
+    // Convert rgb into grayscale
+    hls_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for hls output image
+    ocv_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for opencv output image
+
+
+    //------------------------------------------------------
+    //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
+    //------------------------------------------------------
+    ocv_ref(in_img, ocv_out_img, Th);
+
+
+    //------------------------------------------------------
+    //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
     if (nrErr == 0) {
         if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat")) {
@@ -242,14 +289,14 @@ int main(int argc, char** argv) {
     }
 
     //------------------------------------------------------
-    //-- STEP-1.2 : SET THE PASS-THROUGH MODE
+    //-- STEP-2.2 : SET THE PASS-THROUGH MODE
     //------------------------------------------------------
     //piSHL_This_MmioEchoCtrl.write(ECHO_PATH_THRU);
     //[TODO] piSHL_This_MmioPostPktEn.write(DISABLED);
     //[TODO] piSHL_This_MmioCaptPktEn.write(DISABLED);
 
     //------------------------------------------------------
-    //-- STEP-2 : MAIN TRAFFIC LOOP
+    //-- STEP-3 : MAIN TRAFFIC LOOP
     //------------------------------------------------------
     while (!nrErr) {
 
@@ -277,7 +324,7 @@ int main(int argc, char** argv) {
     }  // End: while()
 
     //-------------------------------------------------------
-    //-- STEP-3 : DRAIN AND WRITE OUTPUT FILE STREAMS
+    //-- STEP-4 : DRAIN AND WRITE OUTPUT FILE STREAMS
     //-------------------------------------------------------
     //---- UAF-->SHELL Data ----
     if (!getOutputDataStream(sUAF_Shl_Data, "sUAF_Shl_Data", "ofsUAF_Shl_Data.dat"))
@@ -304,7 +351,7 @@ int main(int argc, char** argv) {
       }
 
     //------------------------------------------------------
-    //-- STEP-4 : COMPARE INPUT AND OUTPUT FILE STREAMS
+    //-- STEP-5 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------
     int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
                                             ../../../../test/ifsSHL_Uaf_Data.dat");
@@ -336,54 +383,25 @@ int main(int argc, char** argv) {
 
 
 
-    //int main(int argc, char** argv) {
-        cv::Mat in_img, img_gray;
-        cv::Mat hls_out_img, ocv_out_img;
-        cv::Mat ocvpnts, hlspnts;
 
-        if (argc != 2) {
-            printf("Usage : <executable> <input image> \n");
-            return -1;
-        }
-        in_img = cv::imread(argv[1], 0); // reading in the color image
-
-        if (!in_img.data) {
-            printf("Failed to load the image ... %s\n!", argv[1]);
-            return -1;
-        }
-
-        uint16_t Thresh; // Threshold for HLS
-        float Th;
-        if (FILTER_WIDTH == 3) {
-            Th = 30532960.00;
-            Thresh = 442;
-        } else if (FILTER_WIDTH == 5) {
-            Th = 902753878016.0;
-            Thresh = 3109;
-        } else if (FILTER_WIDTH == 7) {
-            Th = 41151168289701888.000000;
-            Thresh = 566;
-        }
-        //	cvtColor(in_img, img_gray, CV_BGR2GRAY);
-        // Convert rgb into grayscale
-        hls_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for hls output image
-        ocv_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for opencv output image
-
-        ocv_ref(in_img, ocv_out_img, Th);
-        /**************		HLS Function	  *****************/
-        float K = 0.04;
-        uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-        uint32_t nCorners = 0;
-        uint16_t imgwidth = in_img.cols;
-        uint16_t imgheight = in_img.rows;
+    /**************		HLS Function	  *****************/
+    float K = 0.04;
+    uint16_t k = K * (1 << 16); // Convert to Q0.16 format
+    uint32_t nCorners = 0;
+    uint16_t imgwidth = in_img.cols;
+    uint16_t imgheight = in_img.rows;
 
     #if NO
+
         static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
         static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
 
         imgInput.copyTo(in_img.data);
         //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
         harris_accel(imgInput, imgOutput, Thresh, k);
+        //ap_uint<INPUT_PTR_WIDTH> imgInput_tb[128*128];
+        //ap_uint<INPUT_PTR_WIDTH> imgOutput_tb[128*128];
+        //cornerHarris_accel(imgInput_tb, imgOutput_tb, in_img.rows, in_img.cols, Thresh, k);
 
     #endif
 
@@ -507,27 +525,7 @@ int main(int argc, char** argv) {
 
         if (persuccess < 60 || totalhls == 0) return 1;
 
-        //return 0;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        //return 0; // of original Harris
 
     return(nrErr);
 }

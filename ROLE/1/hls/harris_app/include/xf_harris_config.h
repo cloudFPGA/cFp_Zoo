@@ -24,6 +24,9 @@
 #include "features/xf_harris.hpp"
 #include "xf_config_params.h"
 
+#define CH_TYPE XF_GRAY
+#define INPUT_PTR_WIDTH 64
+#define OUTPUT_PTR_WIDTH 64
 /*
  * Pack pixels in and write into streams
  */
@@ -50,5 +53,9 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst,
                   unsigned short Thresh,
                   unsigned short k);
+
+void cornerHarris_accel(ap_uint<INPUT_PTR_WIDTH>* img_inp,
+                        ap_uint<OUTPUT_PTR_WIDTH>* img_out,
+                        int rows, int cols, int threshold, int k);
 
 #endif
