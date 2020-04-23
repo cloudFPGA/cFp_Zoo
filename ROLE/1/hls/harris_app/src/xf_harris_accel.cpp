@@ -29,7 +29,7 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
 void cornerHarris_accel(
     ap_uint<INPUT_PTR_WIDTH>* img_inp, ap_uint<OUTPUT_PTR_WIDTH>* img_out, int rows, int cols, int threshold, int k) {
 // clang-format off
-    #pragma HLS INTERFACE m_axi     port=img_inp  offset=slave bundle=gmem1
+/*    #pragma HLS INTERFACE m_axi     port=img_inp  offset=slave bundle=gmem1
     #pragma HLS INTERFACE m_axi     port=img_out  offset=slave bundle=gmem2
 
     #pragma HLS INTERFACE s_axilite port=rows     bundle=control
@@ -38,7 +38,7 @@ void cornerHarris_accel(
     #pragma HLS INTERFACE s_axilite port=k     bundle=control
     #pragma HLS INTERFACE s_axilite port=return   bundle=control
     // clang-format on
-
+*/
     const int pROWS = HEIGHT;
     const int pCOLS = WIDTH;
     const int pNPC1 = NPIX;

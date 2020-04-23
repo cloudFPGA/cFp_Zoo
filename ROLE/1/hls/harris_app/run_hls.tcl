@@ -53,13 +53,16 @@ set hlsCoSim $env(hlsCoSim)
 # Open and Setup Project
 #-------------------------------------------------
 open_project  ${projectName}_prj
-#set_top       ${projectName}
-set_top cornerHarris_accel
+set_top       ${projectName}
+#set_top cornerHarris_accel
+#set_top harris_accel
+
+set vitis_libs "-D__SDSVHLS__ -std=c++0x"
 
 # the -I flag without trailing '/'!!
-add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files     ${srcDir}/xf_harris_accel.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
-add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include"
+add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}"
+add_files     ${srcDir}/xf_harris_accel.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}"
+add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/vision/L1/include ${vitis_libs}"
 
 # Create a solution
 #-------------------------------------------------
