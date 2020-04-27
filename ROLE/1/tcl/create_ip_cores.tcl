@@ -4,24 +4,24 @@
 # *----------------------------------------------------------------------------
 # * Created : Sep 2018
 # * Authors : Francois Abel
-# *
-# * Description : A Tcl script that generates all the IP cores instanciated by
+# * 
+# * Description : A Tcl script that generates all the IP cores instanciated by 
 # *   this FLASH version of the FMKU60 ROLE.
-# *
+# * 
 # * Synopsis : vivado -mode batch -source <this_file> -notrace
 # *                             [ -log    <log_file_name>        ]
 # *                             [ -help                          ]
 # *                             [ -tclargs <myscript_arguments>  ]
-# *
-# * Warning : All arguments before the '-tclargs' are arugments to the Vivado
+# * 
+# * Warning : All arguments before the '-tclargs' are arugments to the Vivado 
 # *   invocation (e.g. -mode, -source, -log and -tclargs itself). All options
 # *   after the '-tclargs' are TCL arguments to this script. Enter the following
 # *   command to get the list of supported TCL arguments:
 # *     vivado -mode batch -source <this_file> -notrace -tclargs -help
-# *
-# * Return: 0 if OK, otherwise the number of errors which corresponds to the
-# *   number of IPs that failed to be generated.
-# *
+# * 
+# * Return: 0 if OK, otherwise the number of errors which corresponds to the 
+# *   number of IPs that failed to be generated. 
+# * 
 # * Reference documents:
 # *  - UG896 / Ch.3 / Using Manage IP Projects.
 # *  - UG896 / Ch.2 / IP Basics.
@@ -37,7 +37,7 @@ package require cmdline
 # Set the Global Settings used by the SHELL Project
 #-------------------------------------------------------------------------------
 if { ! [ info exists ipXprDir ] && ! [ info exists ipXprName ] } {
-    # Expect to be in the TCL directory and source the TCL settings file
+    # Expect to be in the TCL directory and source the TCL settings file 
     source xpr_settings.tcl
 }
 
@@ -73,7 +73,7 @@ proc my_clean_ip_dir { ipModName } {
             my_dbg_trace "An IP with name \'${ipModName}\' already exists and will be removed from the project \'${::ipXprName} !" ${::dbgLvl_1}
             remove_files -fileset ${ipModName} ${fileset}
             break
-        }
+        }        
     }
 
     ## STEP-3: Check for possible dangling files (may happen after IP flow got broken)
@@ -83,7 +83,7 @@ proc my_clean_ip_dir { ipModName } {
             my_dbg_trace "A dangling IP file \'${ipModName}\' already exists and will be removed from the project \'${::ipXprName} !" ${::dbgLvl_1}
             remove_files ${ipModName} ${file}
             break
-        }
+        }        
     }
 
     ## STEP-4: Delete related previous files and directories from the disk
@@ -114,11 +114,11 @@ proc my_customize_ip {ipModName ipDir ipVendor ipLibrary ipName ipVersion ipCfgL
     if { ${::gTargetIpCore} ne ${ipModName} && ${::gTargetIpCore} ne "all" } {
         # Skip the creation and customization this IP module
         my_dbg_trace "Skipping Module ${ipModName}" ${::dbgLvl_1}
-        return ${::OK}
+        return ${::OK} 
     } else {
         set ::nrGenIPs [ expr { ${::nrGenIPs} + 1 } ]
     }
-
+    
     set title "##  Creating IP Module: ${ipModName} "
     while { [ string length $title ] < 80 } {
         append title "#"
@@ -162,7 +162,7 @@ proc my_customize_ip {ipModName ipDir ipVendor ipLibrary ipName ipVersion ipCfgL
     # Note: A typical 'set_property' command looks like the following:
     #   "set_property -dict [ list CONFIG.TDATA_NUM_BYTES {8} \
     #                              CONFIG.HAS_TKEEP {1}       \
-    #                              CONFIG.HAS_TLAST {1} ] [ get_ips ${ipModName} ]
+    #                              CONFIG.HAS_TLAST {1} ] [ get_ips ${ipModName} ] 
     if { [llength ${ipCfgList} ] != 0 } {
         set_property -dict ${ipCfgList} [ get_ips ${ipModName} ]
         my_dbg_trace "Done with \'set_property\'." ${::dbgLvl_1}
@@ -208,8 +208,8 @@ proc my_customize_ip {ipModName ipDir ipVendor ipLibrary ipName ipVersion ipCfgL
 #                                                                              #
 ################################################################################
 
-# By default, create all the IP cores
-set gTargetIpCore "all"
+# By default, create all the IP cores 
+set gTargetIpCore "all"   
 
 #-------------------------------------------------------------------------------
 # Parsing of the Command Line
@@ -229,9 +229,9 @@ if { $argc > 0 } {
         { ipList                  "Display the list of IP modules names." }
     }
     set usage "\nUSAGE: vivado -mode batch -source ${argv0} -notrace -tclargs \[OPTIONS] \nOPTIONS:"
-
+    
     array set kvList [ cmdline::getoptions argv ${options} ${usage} ]
-
+    
     # Process the arguments
     foreach { key value } [ array get kvList ] {
         my_dbg_trace "KEY = ${key} | VALUE = ${value}" ${dbgLvl_2}
@@ -239,7 +239,7 @@ if { $argc > 0 } {
             set gTargetIpCore ${value}
             my_dbg_trace "Setting gTargetIpCore to \'${gTargetIpCore}\' " ${dbgLvl_1}
             break;
-        }
+        } 
         if { ${key} eq "ipList" } {
             my_puts "IP MODULE NAMES THAT CAN GENERATED BY THIS SCRIPT:"
             set thisScript [ open ${argv0} ]
@@ -253,11 +253,11 @@ if { $argc > 0 } {
                             puts "\t${modName}"
                         }
                     }
-                }
+                } 
             }
             close ${thisScript}
             return ${::OK}
-        }
+        } 
     }
 }
 
@@ -282,12 +282,12 @@ if { [ file exists ${ipDir} ] != 1 } {
     file mkdir ${ipDir}
 } else {
     my_puts "The managed IP directory already exists. "
-    if { ${gTargetIpCore} eq "all" } {
+    if { ${gTargetIpCore} eq "all" } { 
         if { [ file exists ${ipDir}/ip_user_files ] } {
             file delete -force ${ipDir}/ip_user_files
-            file mkdir ${ipDir}/ip_user_files
+            file mkdir ${ipDir}/ip_user_files 
             my_dbg_trace "Done with the cleaning of: \'${ipDir}/ip_user_files\' " ${dbgLvl_1}
-        }
+        }   
     } else {
         if { [ file exists ${ipDir}/ip_user_files/${gTargetIpCore} ] } {
             file delete -force ${ipDir}/ip_user_files/${gTargetIpCore}
@@ -310,7 +310,7 @@ if { [ file exists ${ipXprDir}/${ipXprName}.xpr ] != 1 } {
 
 # Open managed IP project
 #------------------------------------------------------------------------------
-# TODO
+# TODO 
 #if { [ catch { current_project } rc ] } {
 #    my_puts "Opening managed IP project: ${ipXprFile}"
 #    open_project ${ipXprFile}
@@ -330,17 +330,17 @@ set_property target_language Verilog [current_project]
 
 
 ###############################################################################
-##
+##                                   
 ##  PHASE-1: Creating Vivado-based IPs
 ##
 ###############################################################################
 my_puts ""
 
-# [HOWTO] # VIVADO-IP : AXI Register Slice
+# [HOWTO] # VIVADO-IP : AXI Register Slice 
 # [HOWTO] #------------------------------------------------------------------------------
 # [HOWTO] #  Signal Properties
-# [HOWTO]
-# [HOWTO] # VIVADO-IP : AXI Register Slice
+# [HOWTO] 
+# [HOWTO] # VIVADO-IP : AXI Register Slice 
 # [HOWTO] #------------------------------------------------------------------------------
 # [HOWTO] #  Signal Properties
 # [HOWTO] #    [Yes] : Enable TREADY
@@ -361,9 +361,9 @@ my_puts ""
 # [HOWTO] set ipCfgList  [ list CONFIG.TDATA_NUM_BYTES {8} \
 # [HOWTO]                       CONFIG.HAS_TKEEP {1} \
 # [HOWTO]                       CONFIG.HAS_TLAST {1} ]
-# [HOWTO]
+# [HOWTO] 
 # [HOWTO] set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-# [HOWTO]
+# [HOWTO] 
 # [HOWTO] if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
 
@@ -375,16 +375,16 @@ my_puts ""
 my_puts ""
 
 # Specify the IP Repository Path to add the HLS-based IP implementation paths.
-#   (Must do this because IPs are stored outside of the current project)
+#   (Must do this because IPs are stored outside of the current project) 
 #-------------------------------------------------------------------------------
 set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
-#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------  
 # IBM-HSL-IP : UDP Application Flash
 #------------------------------------------------------------------------------
-set ipModName "HarrisApplication"
-set ipName    "harris_app"
+set ipModName "UdpApplicationFlash"
+set ipName    "udp_app_flash"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
@@ -395,7 +395,35 @@ set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName
 if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
 
+#------------------------------------------------------------------------------  
+# IBM-HSL-IP : TCP Application Flash 
 #------------------------------------------------------------------------------
+set ipModName "TcpApplicationFlash"
+set ipName    "tcp_app_flash"
+set ipVendor  "IBM"
+set ipLibrary "hls"
+set ipVersion "1.0"
+set ipCfgList  [ list ]
+
+set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
+
+if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
+
+#------------------------------------------------------------------------------  
+# IBM-HSL-IP : TCP Shell Interface 
+#------------------------------------------------------------------------------
+set ipModName "TcpShellInterface"
+set ipName    "tcp_shell_if"
+set ipVendor  "IBM"
+set ipLibrary "hls"
+set ipVersion "1.0"
+set ipCfgList  [ list ]
+
+set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
+
+if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
+
+#------------------------------------------------------------------------------  
 # IBM-HSL-IP : MemTest Flash
 #------------------------------------------------------------------------------
 set ipModName "MemTestFlash"
@@ -430,3 +458,9 @@ my_puts "#######################################################################
 close_project
 
 exit ${nrErrors}
+
+
+
+
+
+

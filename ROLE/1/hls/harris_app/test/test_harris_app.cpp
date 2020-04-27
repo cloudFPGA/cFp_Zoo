@@ -6,6 +6,9 @@
  * Component   : Role
  * Language    : Vivado HLS
  *
+ * Created: April 2020
+ * Authors: FAB, WEI, NGL, DID
+ * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
@@ -22,7 +25,25 @@
 
 using namespace std;
 
+//---------------------------------------------------------
+// HELPERS FOR THE DEBUGGING TRACES
+//  .e.g: DEBUG_LEVEL = (MDL_TRACE | IPS_TRACE)
+//---------------------------------------------------------
+#define THIS_NAME "TB"
 
+#define TRACE_OFF     0x0000
+#define TRACE_URIF   1 <<  1
+#define TRACE_UAF    1 <<  2
+#define TRACE_MMIO   1 <<  3
+#define TRACE_ALL     0xFFFF
+
+#define DEBUG_LEVEL (TRACE_ALL)
+
+
+//------------------------------------------------------
+//-- TESTBENCH DEFINES
+//------------------------------------------------------
+#define MAX_SIM_CYCLES  500
 #define OK          true
 #define KO          false
 #define VALID       true
@@ -32,23 +53,28 @@ using namespace std;
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
 
+//---------------------------------------------------------
+//-- TESTBENCH GLOBAL VARIABLES
+//--  These variables might be updated/overwritten by the
+//--  content of a test-vector file.
+//---------------------------------------------------------
+unsigned int    gSimCycCnt    = 0;
+bool            gTraceEvent   = false;
+bool            gFatalError   = false;
+unsigned int    gMaxSimCycles = MAX_SIM_CYCLES;
+
 //------------------------------------------------------
 //-- DUT INTERFACES AS GLOBAL VARIABLES
 //------------------------------------------------------
 
-//-- SHELL / Uaf / Mmio / Config Interfaces
-//ap_uint<2>          piSHL_This_MmioEchoCtrl;
-ap_uint<1>          piSHL_This_MmioPostPktEn;
-ap_uint<1>          piSHL_This_MmioCaptPktEn;
+//-- SHELL / MMIO / Configuration Interfaces
+ap_uint<2>          sSHL_UAF_MmioEchoCtrl;
+ap_uint<1>          sSHL_UAF_MmioPostPktEn;
+ap_uint<1>          sSHL_UAF_MmioCaptPktEn;
 
-//-- SHELL / Uaf / Udp Interfaces
-stream<UdpWord>   sSHL_Uaf_Data ("sSHL_Uaf_Data");
-stream<UdpWord>     sUAF_Shl_Data   ("sUAF_Shl_Data");
-ap_uint<32>             s_udp_rx_ports = 0x0;
-stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
-stream<NetworkMetaStream>   soUdp_meta          ("soUdp_meta");
-ap_uint<32>             node_rank;
-ap_uint<32>             size;
+//-- SHELL / UDP Interfaces
+stream<UdpWord>     ssSHL_UAF_Data      ("ssSHL_UAF_Data");
+stream<UdpWord>     ssUAF_SHL_Data      ("ssUAF_SHL_Data");
 
 //------------------------------------------------------
 //-- TESTBENCH GLOBAL VARIABLES
@@ -58,22 +84,24 @@ int         simCnt;
 
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
- * @ingroup udp_app_flash
+ * @ingroup harris_app
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
     harris_app(
-        &node_rank, &size,
-      sSHL_Uaf_Data, sUAF_Shl_Data,
-      siUdp_meta, soUdp_meta,
-      &s_udp_rx_ports);
+            sSHL_UAF_MmioEchoCtrl,
+            //[TODO] sSHL_UAF_MmioPostPktEn,
+            //[TODO] sSHL_UAF_MmioCaptPktEn,
+            ssSHL_UAF_Data,
+            ssUAF_SHL_Data);
+
     simCnt++;
     printf("[%4.4d] STEP DUT \n", simCnt);
 }
 
 /*****************************************************************************
  * @brief Initialize an input data stream from a file.
- * @ingroup udp_app_flash
+ * @ingroup harris_app
  *
  * @param[in] sDataStream, the input data stream to set.
  * @param[in] dataStreamName, the name of the data stream.
@@ -126,7 +154,7 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
 
 /*****************************************************************************
  * @brief Read data from a stream.
- * @ingroup udp_app_flash
+ * @ingroup harris_app
  *
  * @param[in]  sDataStream,    the output data stream to read.
  * @param[in]  dataStreamName, the name of the data stream.
@@ -143,7 +171,7 @@ bool readDataStream(stream <UdpWord> &sDataStream, UdpWord *udpWord) {
 
 /*****************************************************************************
  * @brief Dump a data word to a file.
- * @ingroup udp_app_flash
+ * @ingroup harris_app
  *
  * @param[in] udpWord,      a pointer to the data word to dump.
  * @param[in] outFileStream,the output file stream to write to.
@@ -165,7 +193,7 @@ bool dumpDataToFile(UdpWord *udpWord, ofstream &outFileStream) {
 
 /*****************************************************************************
  * @brief Fill an output file with data from an output stream.
- * @ingroup udp_app_flash
+ * @ingroup harris_app
  *
  * @param[in] sDataStream,    the output data stream to set.
  * @param[in] dataStreamName, the name of the data stream.
@@ -274,26 +302,18 @@ int main(int argc, char** argv) {
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
     if (nrErr == 0) {
-        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat")) {
+        if (!setInputDataStream(ssSHL_UAF_Data, "ssSHL_UAF_Data", "ifsSHL_Uaf_Data.dat")) {
             printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
             nrErr++;
         }
-
-        //there are 2 streams from the the App to the Role
-        NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-        siUdp_meta.write(NetworkMetaStream(tmp_meta));
-        siUdp_meta.write(NetworkMetaStream(tmp_meta));
-        //set correct node_rank and size
-        node_rank = 1;
-        size = 3;
     }
 
     //------------------------------------------------------
     //-- STEP-2.2 : SET THE PASS-THROUGH MODE
     //------------------------------------------------------
-    //piSHL_This_MmioEchoCtrl.write(ECHO_PATH_THRU);
-    //[TODO] piSHL_This_MmioPostPktEn.write(DISABLED);
-    //[TODO] piSHL_This_MmioCaptPktEn.write(DISABLED);
+    sSHL_UAF_MmioEchoCtrl.write(ECHO_PATH_THRU);
+    //[TODO] sSHL_UAF_MmioPostPktEn.write(DISABLED);
+    //[TODO] sSHL_UAF_MmioCaptPktEn.write(DISABLED);
 
     //------------------------------------------------------
     //-- STEP-3 : MAIN TRAFFIC LOOP
@@ -301,22 +321,8 @@ int main(int argc, char** argv) {
     while (!nrErr) {
 
         if (simCnt < 25)
-        {
             stepDut();
-
-            if(simCnt > 2)
-            {
-              assert(s_udp_rx_ports == 0x1);
-            }
-
-            //if( !soUdp_meta.empty())
-            //{
-            //  NetworkMetaStream tmp_meta = soUdp_meta.read();
-            //  printf("NRC received NRCmeta stream from node_rank %d.\n", (int) tmp_meta.tdata.src_rank);
-            //}
-
-
-        } else {
+        else {
             printf("## End of simulation at cycle=%3d. \n", simCnt);
             break;
         }
@@ -327,28 +333,10 @@ int main(int argc, char** argv) {
     //-- STEP-4 : DRAIN AND WRITE OUTPUT FILE STREAMS
     //-------------------------------------------------------
     //---- UAF-->SHELL Data ----
-    if (!getOutputDataStream(sUAF_Shl_Data, "sUAF_Shl_Data", "ofsUAF_Shl_Data.dat"))
+    if (!getOutputDataStream(ssUAF_SHL_Data, "ssUAF_SHL_Data", "ofsUAF_Shl_Data.dat"))
     {
         nrErr++;
     }
-    //---- UAF-->SHELL META ----
-    if( !soUdp_meta.empty())
-    {
-      int i = 0;
-      while( !soUdp_meta.empty())
-      {
-        i++;
-        NetworkMetaStream tmp_meta = soUdp_meta.read();
-        printf("NRC received NRCmeta stream from rank %d to rank %d.\n", (int) tmp_meta.tdata.src_rank, (int) tmp_meta.tdata.dst_rank);
-        assert(tmp_meta.tdata.src_rank == node_rank);
-        //ensure forwarding behavior
-        assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % size));
-      }
-      assert(i == 2);
-    } else {
-      printf("Error No metadata received...\n");
-      nrErr++;
-      }
 
     //------------------------------------------------------
     //-- STEP-5 : COMPARE INPUT AND OUTPUT FILE STREAMS
