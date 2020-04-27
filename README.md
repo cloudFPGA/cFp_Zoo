@@ -9,6 +9,20 @@ cloudFPGA project (cFp) for Xilinx Vitis library
 
 ![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)
 
+```bash
+git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Vitis.git
+cd cFp_Vitis
+source ./env/setenv.sh
+cd ./ROLE/1/hls/harris_app
+make fcsim -j 4  # to run simulation using your system's gcc (with 4 threads)
+make csim   # to run simulation using Vivado's gcc
+make cosim  # to run co-simulation using Vivado
+make csynth # to run HLS using Vivado
+make callgraph # to run fcsim and then execute the binary in Valgrind's callgraph tool
+make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
+make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
+```
+
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
