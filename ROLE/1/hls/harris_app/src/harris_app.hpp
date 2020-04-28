@@ -27,45 +27,28 @@
 using namespace hls;
 
 
+#define WAIT_FOR_META 0
+#define WAIT_FOR_STREAM_PAIR 1
+#define PROCESSING_PACKET 2
+#define PacketFsmType uint8_t
 
 
-/********************************************
- * SHELL/MMIO/EchoCtrl - Config Register
- ********************************************/
-enum EchoCtrl {
-	ECHO_PATH_THRU	= 0,
-	ECHO_STORE_FWD	= 1,
-	ECHO_OFF		= 2
-};
-
-/********************************************
- * UDP Specific Streaming Interfaces
- ********************************************/
-
-//struct UdpWord {            // UDP Streaming Chunk (i.e. 8 bytes)
-//    ap_uint<64>    tdata;
-//    ap_uint<8>     tkeep;
-//    ap_uint<1>     tlast;
-//    UdpWord()      {}
-//    UdpWord(ap_uint<64> tdata, ap_uint<8> tkeep, ap_uint<1> tlast) :
-//                   tdata(tdata), tkeep(tkeep), tlast(tlast) {}
-//};
+#define DEFAULT_TX_PORT 2718
+#define DEFAULT_RX_PORT 2718
 
 
-void harris_app (
+void harris_app(
 
-        //------------------------------------------------------
-        //-- SHELL / This / Mmio / Config Interfaces
-        //------------------------------------------------------
-        ap_uint<2>          piSHL_This_MmioEchoCtrl,
-        //[TODO] ap_uint<1> piSHL_This_MmioPostPktEn,
-        //[TODO] ap_uint<1> piSHL_This_MmioCaptPktEn,
-
-        //------------------------------------------------------
-        //-- SHELL / This / Udp Interfaces
-        //------------------------------------------------------
-        stream<UdpWord>     &siSHL_This_Data,
-        stream<UdpWord>     &soTHIS_Shl_Data
+    ap_uint<32>             *pi_rank,
+    ap_uint<32>             *pi_size,
+    //------------------------------------------------------
+    //-- SHELL / This / Udp/TCP Interfaces
+    //------------------------------------------------------
+    stream<NetworkWord>         &siSHL_This_Data,
+    stream<NetworkWord>         &soTHIS_Shl_Data,
+    stream<NetworkMetaStream>   &siNrc_meta,
+    stream<NetworkMetaStream>   &soNrc_meta,
+    ap_uint<32>                 *po_rx_ports
 );
 
 
