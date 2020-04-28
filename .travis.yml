@@ -14,6 +14,7 @@ script:
 
 deploy:
   provider: pages
+  url: github.ibm.com
   skip_cleanup: true
   local_dir: docs/html
   github_token: $GH_REPO_TOKEN
