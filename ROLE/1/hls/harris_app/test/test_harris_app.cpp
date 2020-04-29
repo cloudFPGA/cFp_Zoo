@@ -231,6 +231,65 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
 }
 
 
+/*****************************************************************************
+ * @brief Fill an output file with data from an image.
+ * @ingroup Harris
+ *
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
+		   const string   outFileName)
+{
+    string      strLine;
+    ofstream    outFileStream;
+    string      datFile = "../../../../test/" + outFileName;
+    UdpWord     udpWord;
+    bool        rc = OK;
+
+    //-- STEP-1 : OPEN FILE
+    outFileStream.open(datFile.c_str());
+    if ( !outFileStream ) {
+        cout << "### ERROR : Could not open the output data file " << datFile << endl;
+        return(KO);
+    }
+    printf("came to dumpImgToFile: _img.rows=%u, img.cols=%u\n", _img.rows, _img.cols);
+
+    //-- STEP-2 : DUMP IMAGE DATA TO FILE
+    for (int count = 0, j = 0; j < _img.rows; j++) {
+      int l = 0;
+	for (int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i++, count++) {
+	  //if (NPIX == XF_NPPC8) {
+	    ap_uint<64> value = 
+		      _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i);
+	    udpWord.tdata = value;
+	    udpWord.tkeep = 255;
+	    if (count == (_img.rows * _img.cols - 1)) {
+	      udpWord.tlast = 1;
+	    }
+	    else {
+	      udpWord.tlast = 0;
+	    }
+            printf("[%4.4d] IMG TB is dumping image to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+                    simCnt, datFile.c_str(), count, value,
+                    udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
+            if (!dumpDataToFile(&udpWord, outFileStream)) {
+	      rc = KO;
+              break;
+            }
+	  //}
+	}
+    }
+    
+    //-- STEP-3: CLOSE FILE
+    outFileStream.close();
+
+    return(rc);
+}
+
+
+
 int main(int argc, char** argv) {
 
     //------------------------------------------------------
@@ -422,6 +481,11 @@ int main(int argc, char** argv) {
         imgInput.copyTo(in_img.data);
         //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
         harris_accel(imgInput, imgOutput, Thresh, k);
+	
+	if (!dumpImgToFile(imgInput, "imgInput.txt")) {
+	  nrErr++;
+	}
+	
         //ap_uint<INPUT_PTR_WIDTH> imgInput_tb[128*128];
         //ap_uint<INPUT_PTR_WIDTH> imgOutput_tb[128*128];
         //cornerHarris_accel(imgInput_tb, imgOutput_tb, in_img.rows, in_img.cols, Thresh, k);
