@@ -44,6 +44,7 @@ stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 
+unsigned int processed_word = 0;
 
 uint8_t upper(uint8_t a)
 {
@@ -90,7 +91,23 @@ uint64_t invert_word(uint64_t input)
 #pragma HLS unroll factor=8
     output |= ((uint64_t) invert_case((uint8_t) (input >> i*8))) << i*8;
   }
+  printf("DEBUG in invert_word: input = %u = 0x%16.16llX \n", input, input);
+  printf("DEBUG in invert_word: output= %u = 0x%16.16llX \n", output, output);
   return output;
+}
+
+void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
+{
+  uint64_t output = 0x0;
+  for(uint8_t i = 0; i < 8; i++)
+  {
+#pragma HLS unroll factor=8
+    output |= (uint64_t) (((uint8_t) (input >> i*8))) ;
+    img[processed_word] = output;
+    output = 0;
+    printf("DEBUG in store_word: img[%u]= %u = 0x%16.16llX \n", processed_word, img[processed_word], img[processed_word]);
+    processed_word++;
+  }
 }
 
 
@@ -143,18 +160,15 @@ void harris_app(
   uint16_t Thresh = 442;
   float K = 0.04;
   uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-  //static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(128, 128);
-  //static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(128, 128);
-  ap_uint<INPUT_PTR_WIDTH> imgInput_tb[128*128];
-  ap_uint<INPUT_PTR_WIDTH> imgOutput_tb[128*128];
-  
+  ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
+  ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
   
 
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkWord udpWord;
-  NetworkWord  udpWordTx;
+  NetworkWord udpWordTx;
   NetworkWord newWord;
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   NetworkMeta  meta_in = NetworkMeta();
@@ -177,7 +191,9 @@ void harris_app(
       {
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
+	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
         newWord = NetworkWord(invert_word(udpWord.tdata), udpWord.tkeep, udpWord.tlast);
+	store_word(udpWord.tdata, img_inp);
         sRxpToTxp_Data.write(newWord);
         if(udpWord.tlast == 1)
         {
@@ -189,14 +205,15 @@ void harris_app(
 
   // spare placeholder of Harris IP
   if (*pi_rank == 13)
-    cornerHarris_accel(imgInput_tb, imgOutput_tb, 128, 128, Thresh, k);
+    cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
 
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
+      printf("DEBUG in harris_app: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, processed_word=%u\n", dequeueFSM, processed_word);
       //-- Forward incoming chunk to SHELL
-      if ( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
-          && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() ) 
+      if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
+          && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
         udpWordTx = sRxpToTxp_Data.read();
         soTHIS_Shl_Data.write(udpWordTx);
@@ -220,12 +237,15 @@ void harris_app(
           dequeueFSM = PROCESSING_PACKET;
         }
       }
+      break;
 
     case PROCESSING_PACKET: 
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         udpWordTx = sRxpToTxp_Data.read();
+
         soTHIS_Shl_Data.write(udpWordTx);
+	printf("DEBUG in harris_app: dequeueFSM=%d - PROCESSING_PACKET\n", dequeueFSM);
 
         if(udpWordTx.tlast == 1)
         {
@@ -233,6 +253,7 @@ void harris_app(
         }
 
       }
+      break;
   }
 
 }

@@ -366,7 +366,7 @@ int main(int argc, char** argv) {
         siUdp_meta.write(NetworkMetaStream(tmp_meta));
         //set correct node_rank and cluster_size
         node_rank = 1;
-        cluster_size = 3;
+        cluster_size = 2;
     }
 
     //------------------------------------------------------
@@ -381,7 +381,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     while (!nrErr) {
 
-        if (simCnt < 25)
+        if (simCnt < 50)
         {
             stepDut();
 
@@ -425,7 +425,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      assert(i == 2);
+      assert(i == 1);
     } else {
       printf("Error No metadata received...\n");
       nrErr++;
@@ -469,9 +469,6 @@ int main(int argc, char** argv) {
     /**************		HLS Function	  *****************/
     float K = 0.04;
     uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-    uint32_t nCorners = 0;
-    uint16_t imgwidth = in_img.cols;
-    uint16_t imgheight = in_img.rows;
 
     #if NO
 
@@ -480,15 +477,24 @@ int main(int argc, char** argv) {
 
         imgInput.copyTo(in_img.data);
         //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
-        harris_accel(imgInput, imgOutput, Thresh, k);
 	
-	if (!dumpImgToFile(imgInput, "imgInput.txt")) {
-	  nrErr++;
-	}
+	ap_uint<INPUT_PTR_WIDTH> imgInputArray[in_img.rows * in_img.cols];
+	ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
 	
-        //ap_uint<INPUT_PTR_WIDTH> imgInput_tb[128*128];
-        //ap_uint<INPUT_PTR_WIDTH> imgOutput_tb[128*128];
-        //cornerHarris_accel(imgInput_tb, imgOutput_tb, in_img.rows, in_img.cols, Thresh, k);
+	xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
+	
+	
+	// L2 Vitis Harris
+        cornerHarris_accel(imgInputArray, imgOutputArray, in_img.rows, in_img.cols, Thresh, k);
+	xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
+        
+	// L1 Vitis Harris 
+	//harris_accel(imgInput, imgOutput, Thresh, k);
+	
+	
+	//if (!dumpImgToFile(imgInput, "imgInput.txt")) {
+	//  nrErr++;
+	//}
 
     #endif
 
