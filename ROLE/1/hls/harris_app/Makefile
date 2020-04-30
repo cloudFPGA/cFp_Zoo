@@ -43,8 +43,8 @@ VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
 CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
-INPUT_IMAGE = ./test/128x128.png
-#INPUT_IMAGE = ./test/8x8.png
+#INPUT_IMAGE = ./test/128x128.png
+INPUT_IMAGE = ./test/8x8.png
 
 src = ./src/${ipName}.cpp \
 			./src/xf_harris_accel.cpp \
@@ -58,7 +58,7 @@ CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attribu
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
 
 csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; vivado_hls -f run_hls.tcl
+	export hlsSim=1; export hlsCoSim=0; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
 
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)
@@ -95,7 +95,7 @@ csynth: assert_env
 
 cosim: assert_env
 	@#rm -rf ${ipName}_prj
-	export hlsSim=0; export hlsCoSim=1; vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=1; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
 
 cosim_view:
 	@/bin/echo -e "current_fileset\nopen_wave_database $(ipName).wdb\n" > ./$(ipName)_prj/solution1/sim/verilog/open_wave.tcl

@@ -49,6 +49,8 @@ set repoDir      ${currDir}/../../ip
 #-------------------------------------------------
 set hlsSim $env(hlsSim)
 set hlsCoSim $env(hlsCoSim)
+set SimFile $env(SimFile)
+
 
 # Open and Setup Project
 #-------------------------------------------------
@@ -74,13 +76,13 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -compiler gcc -clean -argv "${testDir}/128x128.png"
+  csim_design -compiler gcc -clean -argv "${SimFile}"
 } else {
 
   csynth_design
 
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${testDir}/128x128.png"
+    cosim_design -compiler gcc -trace_level all -argv "${SimFile}"
   } else {
 
   # Export RTL
