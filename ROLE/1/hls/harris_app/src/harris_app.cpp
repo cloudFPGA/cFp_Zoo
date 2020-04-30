@@ -45,6 +45,7 @@ PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 
 unsigned int processed_word = 0;
+unsigned int image_loaded = 0;
 
 uint8_t upper(uint8_t a)
 {
@@ -98,19 +99,54 @@ uint64_t invert_word(uint64_t input)
 
 void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
 {
-  uint64_t output = 0x0;
-  for(uint8_t i = 0; i < 8; i++)
-  {
-#pragma HLS unroll factor=8
-    output |= (uint64_t) (((uint8_t) (input >> i*8))) ;
-    img[processed_word] = output;
-    output = 0;
-    printf("DEBUG in store_word: img[%u]= %u = 0x%16.16llX \n", processed_word, img[processed_word], img[processed_word]);
-    processed_word++;
-  }
+    img[processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
+    printf("DEBUG in store_word: input = %u = 0x%16.16llX \n", input, input);
+    printf("DEBUG in store_word: img[%u]= %u = 0x%16.16llX \n", processed_word, (uint64_t)img[processed_word], (uint64_t)img[processed_word]);
+    if (processed_word < 31) {
+      processed_word++;
+    }
+    else {
+      printf("DEBUG in store_word: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      processed_word = 0;
+      image_loaded = 1;
+    }
 }
 
+/*
+// Cast data read from AXI input port to decimal values
+static void mbus_to_decimal(snap_membus_t *data_read, mat_elmt_t *table_decimal_in)
+{
+	union {
+		uint64_t     value_u;
+		mat_elmt_t   value_d;
+	};
 
+	loop_m2d1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+#pragma HLS PIPELINE
+	   loop_m2d2: for(int j = 0; j < MAX_NB_OF_ELMT_PERDW; j++)
+	   {
+		value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));
+		table_decimal_in[i*MAX_NB_OF_ELMT_PERDW + j] = value_d;
+	   }
+
+}
+
+// Cast decimal values to AXI output port format (64 Bytes)
+static void  decimal_to_mbus(mat_elmt_t *table_decimal_out, snap_membus_t *data_to_be_written)
+{
+	union {
+		mat_elmt_t   value_d;
+		uint64_t     value_u;
+	};
+	loop_d2m1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
+#pragma HLS PIPELINE
+	   loop_d2m2: for(int j = 0; j < MAX_NB_OF_ELMT_PERDW; j++)
+	   {
+		value_d = table_decimal_out[i*MAX_NB_OF_ELMT_PERDW + j];
+		data_to_be_written[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j)) = (uint64_t)value_u;
+	   }
+}
+*/
 
 /*****************************************************************************
  * @brief   Main process of the UDP/Tcp Triangle Application
@@ -192,9 +228,9 @@ void harris_app(
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
 	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
-        newWord = NetworkWord(invert_word(udpWord.tdata), udpWord.tkeep, udpWord.tlast);
+        //newWord = NetworkWord(invert_word(udpWord.tdata), udpWord.tkeep, udpWord.tlast);
 	store_word(udpWord.tdata, img_inp);
-        sRxpToTxp_Data.write(newWord);
+        //sRxpToTxp_Data.write(newWord);
         if(udpWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -204,9 +240,26 @@ void harris_app(
   }
 
   // spare placeholder of Harris IP
-  if (*pi_rank == 13)
-    cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
+  if (image_loaded == 1) {
+    printf("DEBUG in harris_app: image_loaded => my_cornerHarris_accel(), processed_word=%u\n", processed_word);
+    if (*pi_rank == 15)
+      my_cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
+    
 
+    if (processed_word < 31) {
+      newWord = NetworkWord(invert_word(img_inp[processed_word]), 255, 0);
+      processed_word++;
+    }
+    else {
+      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      newWord = NetworkWord(invert_word(img_inp[processed_word]), 03, 1);
+      processed_word = 0;
+      image_loaded = 0; // force reset
+    }    
+    
+    sRxpToTxp_Data.write(newWord);
+  }
+  
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:

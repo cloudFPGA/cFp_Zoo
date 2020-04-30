@@ -54,7 +54,7 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   unsigned short Thresh,
                   unsigned short k);
 
-void cornerHarris_accel(ap_uint<INPUT_PTR_WIDTH>* img_inp,
+void my_cornerHarris_accel(ap_uint<INPUT_PTR_WIDTH>* img_inp,
                         ap_uint<OUTPUT_PTR_WIDTH>* img_out,
                         int rows, int cols, int threshold, int k);
 

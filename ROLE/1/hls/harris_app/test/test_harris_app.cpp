@@ -163,6 +163,24 @@ bool readDataStream(stream <UdpWord> &sDataStream, UdpWord *udpWord) {
 }
 
 
+
+ap_uint<64> pack_ap_uint_64_ (ap_uint<8> *buffer) {
+
+    ap_uint<64>  value ;
+
+    value = buffer[7] ;
+    value = (value << 8 ) + buffer[6] ;
+    value = (value << 8 ) + buffer[5] ;
+    value = (value << 8 ) + buffer[4] ;
+    value = (value << 8 ) + buffer[3] ;
+    value = (value << 8 ) + buffer[2] ;
+    value = (value << 8 ) + buffer[1] ;
+    value = (value << 8 ) + buffer[0] ;
+
+    return value ;
+
+}
+
 /*****************************************************************************
  * @brief Dump a data word to a file.
  * @ingroup udp_app_flash
@@ -247,7 +265,8 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     string      datFile = "../../../../test/" + outFileName;
     UdpWord     udpWord;
     bool        rc = OK;
-
+    unsigned int vals_per_line = 8;
+    
     //-- STEP-1 : OPEN FILE
     outFileStream.open(datFile.c_str());
     if ( !outFileStream ) {
@@ -255,17 +274,20 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
         return(KO);
     }
     printf("came to dumpImgToFile: _img.rows=%u, img.cols=%u\n", _img.rows, _img.cols);
-
+    
+    ap_uint<8> value[vals_per_line];
+    
     //-- STEP-2 : DUMP IMAGE DATA TO FILE
-    for (int count = 0, j = 0; j < _img.rows; j++) {
+    for (unsigned int count = 0, j = 0; j < _img.rows; j++) {
       int l = 0;
-	for (int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i++, count++) {
+	for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=vals_per_line, count+=vals_per_line) {
 	  //if (NPIX == XF_NPPC8) {
-	    ap_uint<64> value = 
-		      _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i);
-	    udpWord.tdata = value;
+	    for (unsigned int k = 0; k < vals_per_line; k++) {
+	      value[k] = _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i + k);
+	    }
+	    udpWord.tdata = pack_ap_uint_64_(value);
 	    udpWord.tkeep = 255;
-	    if (count == (_img.rows * _img.cols - 1)) {
+	    if (count >= (_img.rows * _img.cols - vals_per_line)) {
 	      udpWord.tlast = 1;
 	    }
 	    else {
@@ -381,7 +403,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     while (!nrErr) {
 
-        if (simCnt < 50)
+        if (simCnt < 70)
         {
             stepDut();
 
@@ -485,16 +507,16 @@ int main(int argc, char** argv) {
 	
 	
 	// L2 Vitis Harris
-        cornerHarris_accel(imgInputArray, imgOutputArray, in_img.rows, in_img.cols, Thresh, k);
+        my_cornerHarris_accel(imgInputArray, imgOutputArray, in_img.rows, in_img.cols, Thresh, k);
 	xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
         
 	// L1 Vitis Harris 
 	//harris_accel(imgInput, imgOutput, Thresh, k);
 	
 	
-	//if (!dumpImgToFile(imgInput, "imgInput.txt")) {
-	//  nrErr++;
-	//}
+	if (!dumpImgToFile(imgInput, "imgInput.txt")) {
+	  nrErr++;
+	}
 
     #endif
 
