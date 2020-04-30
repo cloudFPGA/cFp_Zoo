@@ -38,8 +38,8 @@
 #define NPIX XF_NPPC1
 #endif
 
-#define WIDTH 8
-#define HEIGHT 8
+#define WIDTH 128
+#define HEIGHT 128
 
 #define IMGSIZE WIDTH* HEIGHT
 

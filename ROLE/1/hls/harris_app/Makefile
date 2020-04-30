@@ -43,8 +43,8 @@ VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
 CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
-#INPUT_IMAGE = ./test/128x128.png
-INPUT_IMAGE = ./test/8x8.png
+INPUT_IMAGE = ./test/128x128.png
+#INPUT_IMAGE = ./test/8x8.png
 
 src = ./src/${ipName}.cpp \
 			./src/xf_harris_accel.cpp \
@@ -61,7 +61,7 @@ csim: assert_env
 	export hlsSim=1; export hlsCoSim=0; vivado_hls -f run_hls.tcl
 
 ## Runs fast HLS C simulation using g++ toolchain
-fcsim: $(obj)
+fcompile: $(obj)
 ifdef CHECK_VIVADO
 	@echo "Found version $(CHECK_VIVADO)"
 else
@@ -76,10 +76,12 @@ endif
 	mkdir -p ./${ipName}_prj/solution1
 	mkdir -p ./${ipName}_prj/solution1/fcsim/
 	mkdir -p ./${ipName}_prj/solution1/fcsim/build
-	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/$@ $^ $(CXXFLAGS)
-	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ ../../../../$(INPUT_IMAGE)
+	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS)
 
-memchecksim: fcsim
+fcsim: fcompile
+	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ ../../../../$(INPUT_IMAGE)
+	
+memchecksim: fcompile
 	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim ../../../../$(INPUT_IMAGE)
 
 callgraph: fcsim

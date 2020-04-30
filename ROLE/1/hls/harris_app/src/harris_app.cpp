@@ -46,6 +46,7 @@ PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 
 unsigned int processed_word = 0;
 unsigned int image_loaded = 0;
+unsigned int run_harris_once = 1;
 
 uint8_t upper(uint8_t a)
 {
@@ -242,8 +243,10 @@ void harris_app(
   // spare placeholder of Harris IP
   if (image_loaded == 1) {
     printf("DEBUG in harris_app: image_loaded => my_cornerHarris_accel(), processed_word=%u\n", processed_word);
-    //if (*pi_rank == 15)
+    if (run_harris_once == 1) {
       my_cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
+      run_harris_once = 0;
+    }
     
 
     if (processed_word < IMG_PACKETS - 1) {

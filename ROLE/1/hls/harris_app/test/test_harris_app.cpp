@@ -149,12 +149,11 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
 
 
 /*****************************************************************************
- * @brief Initialize an input data stream from a file.
- * @ingroup udp_app_flash
+ * @brief Initialize an input array from a file with format "tdata tkeep tlast"
+ * @ingroup Harris
  *
- * @param[in] sDataStream the input data stream to set.
- * @param[in] dataStreamName the name of the data stream.
- * @param[in] inpFileName the name of the input file to read from.
+ * @param[in]  inpFileName the name of the input file to read from.
+ * @param[out] imgOutputArray the array to write the tdata only field from the file.
  * @return OK if successful otherwise KO.
  ******************************************************************************/
 bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray) {
@@ -211,7 +210,13 @@ bool readDataStream(stream <UdpWord> &sDataStream, UdpWord *udpWord) {
 }
 
 
-
+/*****************************************************************************
+ * @brief Pack an array of 8 x ap_uint<8> into a ap_uint<64> word.
+ * @ingroup Harris
+ *
+ * @param[in]  buffer     A pointer to an array of 8 x ap_uint<8>
+ * @return An ap_uint<64> word.
+ ******************************************************************************/
 ap_uint<64> pack_ap_uint_64_ (ap_uint<8> *buffer) {
 
     ap_uint<64>  value ;
@@ -358,6 +363,13 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     return(rc);
 }
 
+
+/*****************************************************************************
+ * @brief Write the corners found by Harris into a file.
+ * @ingroup Harris
+ *
+ * @return 0 if successful, otherwise 1.
+ ******************************************************************************/
 unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat& out_img, 
 		             std::vector<cv::Point>& hls_points,
 			     std::vector<cv::Point>& ocv_points,
@@ -422,6 +434,12 @@ unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat
 
 }
 
+/*****************************************************************************
+ * @brief Mark the points found by Harris into the image.
+ * @ingroup Harris
+ *
+ * @return Nothing
+ ******************************************************************************/
 void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
 
         for (int j = 0; j < imgOutput.rows; j++) {
@@ -590,7 +608,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     while (!nrErr) {
 
-        if (simCnt < 70)
+        if (simCnt < IMG_PACKETS*2+10)
         {
             stepDut();
 
@@ -709,7 +727,7 @@ int main(int argc, char** argv) {
 
         /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
         xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
-        xf::cv::imwrite("hls_out_new.jpg", imgOutput);
+        xf::cv::imwrite("hls_out.jpg", imgOutput);
 
         unsigned int val;
         unsigned short int row, col;
@@ -721,8 +739,17 @@ int main(int argc, char** argv) {
         std::vector<cv::Point> ocv_points;
         std::vector<cv::Point> common_pts;
 
+	
+	xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>* select_imgOutput;
+	
+	
+	// Select which output you want to process for image outputs and corners comparisons:
+	// &imgOutput   : The processed image by Harris IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
+	// &imgOutputTb : The processed image by Harris IP in this testbench (i.e. I/O traffic is done in testbench)
+	select_imgOutput = &imgOutput;
+	
 	/* Mark HLS points on the image */
-	markPointsOnImage(imgOutputTb, in_img, out_img, hls_points);
+	markPointsOnImage(*select_imgOutput, in_img, out_img, hls_points);
  
 	/* Write HLS and Opencv corners into a file */
 	nrErr += writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
