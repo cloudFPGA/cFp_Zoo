@@ -64,7 +64,9 @@ ap_uint<1>          piSHL_This_MmioCaptPktEn;
 
 //-- SHELL / Uaf / Udp Interfaces
 stream<UdpWord>   sSHL_Uaf_Data ("sSHL_Uaf_Data");
-stream<UdpWord>     sUAF_Shl_Data   ("sUAF_Shl_Data");
+stream<UdpWord>   sUAF_Shl_Data ("sUAF_Shl_Data");
+stream<UdpWord>   image_stream_from_harris_app ("image_stream_from_harris_app");
+
 ap_uint<32>             s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
 stream<NetworkMetaStream>   soUdp_meta          ("soUdp_meta");
@@ -97,10 +99,10 @@ void stepDut() {
  * @brief Initialize an input data stream from a file.
  * @ingroup udp_app_flash
  *
- * @param[in] sDataStream, the input data stream to set.
- * @param[in] dataStreamName, the name of the data stream.
- * @param[in] inpFileName, the name of the input file to read from.
- * @return OK if successful, otherwise KO.
+ * @param[in] sDataStream the input data stream to set.
+ * @param[in] dataStreamName the name of the data stream.
+ * @param[in] inpFileName the name of the input file to read from.
+ * @return OK if successful otherwise KO.
  ******************************************************************************/
 bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamName, const string inpFileName) {
     string      strLine;
@@ -144,6 +146,52 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
     return(OK);
 }
 
+
+
+/*****************************************************************************
+ * @brief Initialize an input data stream from a file.
+ * @ingroup udp_app_flash
+ *
+ * @param[in] sDataStream the input data stream to set.
+ * @param[in] dataStreamName the name of the data stream.
+ * @param[in] inpFileName the name of the input file to read from.
+ * @return OK if successful otherwise KO.
+ ******************************************************************************/
+bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray) {
+    string      strLine;
+    ifstream    inpFileStream;
+    string      datFile = "../../../../test/" + inpFileName;
+    UdpWord     udpWord;
+    unsigned int index = 0;
+    
+    //-- STEP-1 : OPEN FILE
+    inpFileStream.open(datFile.c_str());
+    if ( !inpFileStream ) {
+        cout << "### ERROR : Could not open the input data file " << datFile << endl;
+        return(KO);
+    }
+
+    //-- STEP-2 : SET DATA STREAM
+    while (inpFileStream) {
+
+        if (!inpFileStream.eof()) {
+
+            getline(inpFileStream, strLine);
+            if (strLine.empty()) continue;
+            sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
+	    imgOutputArray[index++] = udpWord.tdata; //FIXME: check possible seg.fault
+            // Print Data to console
+            printf("[%4.4d] TB is filling input array from [%s] - Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+	      simCnt, inpFileName.c_str(),
+              udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
+        }
+    }
+
+    //-- STEP-3: CLOSE FILE
+    inpFileStream.close();
+
+    return(OK);
+}
 
 
 /*****************************************************************************
@@ -310,6 +358,113 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     return(rc);
 }
 
+unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat& out_img, 
+		             std::vector<cv::Point>& hls_points,
+			     std::vector<cv::Point>& ocv_points,
+			     std::vector<cv::Point>& common_pts) {
+
+	cv::Mat ocvpnts, hlspnts;
+ 
+        ocvpnts = in_img.clone();
+
+        int nhls = hls_points.size();
+
+        /// Drawing a circle around corners
+        for (int j = 1; j < ocv_out_img.rows - 1; j++) {
+            for (int i = 1; i < ocv_out_img.cols - 1; i++) {
+                if ((int)ocv_out_img.at<unsigned char>(j, i)) {
+                    cv::circle(ocvpnts, cv::Point(i, j), 5, cv::Scalar(0, 0, 255), 2, 8, 0);
+                    ocv_points.push_back(cv::Point(i, j));
+                }
+            }
+        }
+
+        printf("ocv corner count = %d, Hls corner count = %d\n", ocv_points.size(), hls_points.size());
+        int nocv = ocv_points.size();
+
+        /*									End
+         */
+        /*							Find common points in among opencv and HLS
+         */
+        int ocv_x, ocv_y, hls_x, hls_y;
+        for (int j = 0; j < nocv; j++) {
+            for (int k = 0; k < nhls; k++) {
+                ocv_x = ocv_points[j].x;
+                ocv_y = ocv_points[j].y;
+                hls_x = hls_points[k].x;
+                hls_y = hls_points[k].y;
+
+                if ((ocv_x == hls_x) && (ocv_y == hls_y)) {
+                    common_pts.push_back(ocv_points[j]);
+                    break;
+                }
+            }
+        }
+        /*							End */
+        imwrite("output_hls.png", out_img); // HLS Image
+        imwrite("output_ocv.png", ocvpnts); // Opencv Image
+        /*						Success, Loss and Gain Percentages */
+        float persuccess, perloss, pergain;
+
+        int totalocv = ocv_points.size();
+        int ncommon = common_pts.size();
+        int totalhls = hls_points.size();
+        persuccess = (((float)ncommon / totalhls) * 100);
+        perloss = (((float)(totalocv - ncommon) / totalocv) * 100);
+        pergain = (((float)(totalhls - ncommon) / totalhls) * 100);
+
+        printf("Commmon = %d\t Success = %f\t Loss = %f\t Gain = %f\n", ncommon, persuccess, perloss, pergain);
+
+        if (persuccess < 60 || totalhls == 0) 
+	  return 1;
+	else
+	  return 0;
+
+}
+
+void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
+
+        for (int j = 0; j < imgOutput.rows; j++) {
+            int l = 0;
+            for (int i = 0; i < (imgOutput.cols >> XF_BITSHIFT(NPIX)); i++) {
+                if (NPIX == XF_NPPC8) {
+                    ap_uint<64> value =
+                        imgOutput.read(j * (imgOutput.cols >> XF_BITSHIFT(NPIX)) + i); //.at<unsigned char>(j,i);
+                    for (int k = 0; k < 64; k += 8, l++) {
+                        uchar pix = value.range(k + 7, k);
+                        if (pix != 0) {
+                            cv::Point tmp;
+                            tmp.x = l;
+                            tmp.y = j;
+                            if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
+                                hls_points.push_back(tmp);
+                            }
+                            short int y, x;
+                            y = j;
+                            x = l;
+                            if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+                        }
+                    }
+                }
+                if (NPIX == XF_NPPC1) {
+                    unsigned char pix = imgOutput.read(j * (imgOutput.cols >> XF_BITSHIFT(NPIX)) + i);
+                    if (pix != 0) {
+                        cv::Point tmp;
+                        tmp.x = i;
+                        tmp.y = j;
+                        if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
+                            hls_points.push_back(tmp);
+                        }
+                        short int y, x;
+                        y = j;
+                        x = i;
+                        if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+                    }
+                }
+            }
+        }
+}
+
 
 
 int main(int argc, char** argv) {
@@ -331,7 +486,6 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     cv::Mat in_img, img_gray;
     cv::Mat hls_out_img, ocv_out_img;
-    cv::Mat ocvpnts, hlspnts;
 
     if (argc != 2) {
         printf("Usage : %s <input image> \n", argv[0]);
@@ -366,7 +520,40 @@ int main(int argc, char** argv) {
     hls_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for hls output image
     ocv_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for opencv output image
 
+    #if NO
 
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+
+    imgInput.copyTo(in_img.data);
+    //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
+	
+    ap_uint<INPUT_PTR_WIDTH> imgInputArray[in_img.rows * in_img.cols];
+    ap_uint<OUTPUT_PTR_WIDTH> imgOutputArrayTb[in_img.rows * in_img.cols];
+    ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
+  
+    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
+	
+    if (!dumpImgToFile(imgInput, "imgInput.txt")) {
+      nrErr++;
+    }
+
+    #endif
+
+    #if RO
+
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+
+    // imgInput.copyTo(img_gray.data);
+    imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8>(argv[1], 0);
+
+    #endif
+    
+    
+    
     //------------------------------------------------------
     //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
     //------------------------------------------------------
@@ -377,7 +564,7 @@ int main(int argc, char** argv) {
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
     if (nrErr == 0) {
-        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat")) {
+        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "imgInput.txt")) {
             printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
             nrErr++;
         }
@@ -448,13 +635,24 @@ int main(int argc, char** argv) {
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
       assert(i == 1);
-    } else {
+    }
+    else {
       printf("Error No metadata received...\n");
       nrErr++;
-      }
+    }
+    
+    //-------------------------------------------------------
+    //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
+    //-------------------------------------------------------    
+    if (!setInputFileToArray("ofsUAF_Shl_Data.dat", imgOutputArray)) {
+      printf("### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n");
+      nrErr++;
+    }
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
+
 
     //------------------------------------------------------
-    //-- STEP-5 : COMPARE INPUT AND OUTPUT FILE STREAMS
+    //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------
     int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
                                             ../../../../test/verify_UAF_Shl_Data.dat");
@@ -494,45 +692,24 @@ int main(int argc, char** argv) {
 
     #if NO
 
-        static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
-        static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
-
-        imgInput.copyTo(in_img.data);
-        //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
-	
-	ap_uint<INPUT_PTR_WIDTH> imgInputArray[in_img.rows * in_img.cols];
-	ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
-	
-	xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
-	
-	
-	// L2 Vitis Harris
-        my_cornerHarris_accel(imgInputArray, imgOutputArray, in_img.rows, in_img.cols, Thresh, k);
-	xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
+    // L2 Vitis Harris
+    my_cornerHarris_accel(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
-	// L1 Vitis Harris 
-	//harris_accel(imgInput, imgOutput, Thresh, k);
+    // L1 Vitis Harris 
+    //harris_accel(imgInput, imgOutput, Thresh, k);
 	
-	
-	if (!dumpImgToFile(imgInput, "imgInput.txt")) {
-	  nrErr++;
-	}
-
     #endif
 
     #if RO
 
-        static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
-        static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
-
-        // imgInput.copyTo(img_gray.data);
-        imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8>(argv[1], 0);
-        harris_accel(imgInput, imgOutput, Thresh, k);
+    harris_accel(imgInput, imgOutputTb, Thresh, k);
 
     #endif
 
         /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
-        xf::cv::imwrite("hls_out.jpg", imgOutput);
+        xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
+        xf::cv::imwrite("hls_out_new.jpg", imgOutput);
 
         unsigned int val;
         unsigned short int row, col;
@@ -543,104 +720,15 @@ int main(int argc, char** argv) {
         std::vector<cv::Point> hls_points;
         std::vector<cv::Point> ocv_points;
         std::vector<cv::Point> common_pts;
-        /*						Mark HLS points on the image 				*/
 
-        for (int j = 0; j < imgOutput.rows; j++) {
-            int l = 0;
-            for (int i = 0; i < (imgOutput.cols >> XF_BITSHIFT(NPIX)); i++) {
-                if (NPIX == XF_NPPC8) {
-                    ap_uint<64> value =
-                        imgOutput.read(j * (imgOutput.cols >> XF_BITSHIFT(NPIX)) + i); //.at<unsigned char>(j,i);
-                    for (int k = 0; k < 64; k += 8, l++) {
-                        uchar pix = value.range(k + 7, k);
-                        if (pix != 0) {
-                            cv::Point tmp;
-                            tmp.x = l;
-                            tmp.y = j;
-                            if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
-                                hls_points.push_back(tmp);
-                            }
-                            short int y, x;
-                            y = j;
-                            x = l;
-                            if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
-                        }
-                    }
-                }
-                if (NPIX == XF_NPPC1) {
-                    unsigned char pix = imgOutput.read(j * (imgOutput.cols >> XF_BITSHIFT(NPIX)) + i);
-                    if (pix != 0) {
-                        cv::Point tmp;
-                        tmp.x = i;
-                        tmp.y = j;
-                        if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
-                            hls_points.push_back(tmp);
-                        }
-                        short int y, x;
-                        y = j;
-                        x = i;
-                        if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
-                    }
-                }
-            }
-        }
+	/* Mark HLS points on the image */
+	markPointsOnImage(imgOutputTb, in_img, out_img, hls_points);
+ 
+	/* Write HLS and Opencv corners into a file */
+	nrErr += writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
+	
+	
 
-        /*						End of marking HLS points on the image 				*/
-        /*						Write HLS and Opencv corners into a file			*/
-
-        ocvpnts = in_img.clone();
-
-        int nhls = hls_points.size();
-
-        /// Drawing a circle around corners
-        for (int j = 1; j < ocv_out_img.rows - 1; j++) {
-            for (int i = 1; i < ocv_out_img.cols - 1; i++) {
-                if ((int)ocv_out_img.at<unsigned char>(j, i)) {
-                    cv::circle(ocvpnts, cv::Point(i, j), 5, cv::Scalar(0, 0, 255), 2, 8, 0);
-                    ocv_points.push_back(cv::Point(i, j));
-                }
-            }
-        }
-
-        printf("ocv corner count = %d, Hls corner count = %d\n", ocv_points.size(), hls_points.size());
-        int nocv = ocv_points.size();
-
-        /*									End
-         */
-        /*							Find common points in among opencv and HLS
-         */
-        int ocv_x, ocv_y, hls_x, hls_y;
-        for (int j = 0; j < nocv; j++) {
-            for (int k = 0; k < nhls; k++) {
-                ocv_x = ocv_points[j].x;
-                ocv_y = ocv_points[j].y;
-                hls_x = hls_points[k].x;
-                hls_y = hls_points[k].y;
-
-                if ((ocv_x == hls_x) && (ocv_y == hls_y)) {
-                    common_pts.push_back(ocv_points[j]);
-                    break;
-                }
-            }
-        }
-        /*							End */
-        imwrite("output_hls.png", out_img); // HLS Image
-        imwrite("output_ocv.png", ocvpnts); // Opencv Image
-        /*						Success, Loss and Gain Percentages */
-        float persuccess, perloss, pergain;
-
-        int totalocv = ocv_points.size();
-        int ncommon = common_pts.size();
-        int totalhls = hls_points.size();
-        persuccess = (((float)ncommon / totalhls) * 100);
-        perloss = (((float)(totalocv - ncommon) / totalocv) * 100);
-        pergain = (((float)(totalhls - ncommon) / totalhls) * 100);
-
-        printf("Commmon = %d\t Success = %f\t Loss = %f\t Gain = %f\n", ncommon, persuccess, perloss, pergain);
-
-        if (persuccess < 60 || totalhls == 0) return 1;
-
-        //return 0; // of original Harris
 
     return(nrErr);
 }

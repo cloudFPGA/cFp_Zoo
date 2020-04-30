@@ -102,7 +102,7 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
     img[processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
     printf("DEBUG in store_word: input = %u = 0x%16.16llX \n", input, input);
     printf("DEBUG in store_word: img[%u]= %u = 0x%16.16llX \n", processed_word, (uint64_t)img[processed_word], (uint64_t)img[processed_word]);
-    if (processed_word < 31) {
+    if (processed_word < IMG_PACKETS-1) {
       processed_word++;
     }
     else {
@@ -242,17 +242,17 @@ void harris_app(
   // spare placeholder of Harris IP
   if (image_loaded == 1) {
     printf("DEBUG in harris_app: image_loaded => my_cornerHarris_accel(), processed_word=%u\n", processed_word);
-    if (*pi_rank == 15)
+    //if (*pi_rank == 15)
       my_cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
     
 
-    if (processed_word < 31) {
-      newWord = NetworkWord(invert_word(img_inp[processed_word]), 255, 0);
+    if (processed_word < IMG_PACKETS - 1) {
+      newWord = NetworkWord(img_out[processed_word], 255, 0);
       processed_word++;
     }
     else {
       printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
-      newWord = NetworkWord(invert_word(img_inp[processed_word]), 03, 1);
+      newWord = NetworkWord(img_out[processed_word], 255, 1);
       processed_word = 0;
       image_loaded = 0; // force reset
     }    

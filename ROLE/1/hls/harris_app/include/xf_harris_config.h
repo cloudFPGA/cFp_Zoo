@@ -38,10 +38,12 @@
 #define NPIX XF_NPPC1
 #endif
 
-#define WIDTH 128
-#define HEIGHT 128
+#define WIDTH 8
+#define HEIGHT 8
 
 #define IMGSIZE WIDTH* HEIGHT
+
+#define IMG_PACKETS IMGSIZE/(INPUT_PTR_WIDTH/8)
 
 #if RO
 #define IN_TYPE ap_uint<64>
