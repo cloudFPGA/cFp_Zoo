@@ -3,7 +3,7 @@
 #  *     Copyright IBM Research, All Rights Reserved
 #  *    =============================================
 #  *     Created: Apr 2019
-#  *     Authors: FAB, WEI, NGL
+#  *     Authors: FAB, WEI, NGL, DID
 #  *
 #  *     Description:
 #  *       Makefile to build a cloudFPGA-project (cFp)
@@ -167,6 +167,7 @@ clean: ## Cleans the current cFp project (.i.e this TOP)
 	rm -rf $(CLEAN_TYPES)
 	rm -rf ./xpr/ ./hd_visual/
 	rm -rf ./dcps/
+	rm -rf ./docs/
 	# rm -rf ./xdc/.DEBUG_SWITCH
 
 full_clean: clean ## Cleans the entire cFp structure (.i.e TOP, SHELL and ROLE).
@@ -175,7 +176,9 @@ full_clean: clean ## Cleans the entire cFp structure (.i.e TOP, SHELL and ROLE).
 	$(MAKE) -C $(ROLE2_DIR) clean
 	rm -rf ./TOP/xdc/.DEBUG_SWITCH
 
-
+doxygen:
+	doxygen Doxyfile
+	
 print-%: ## A little make receipt to print a variable (usage example --> 'make print-SHELL_DIR')
 	@echo $* = $($*)
 

@@ -49,8 +49,9 @@ set repoDir      ${currDir}/../../ip
 #-------------------------------------------------
 set hlsSim $env(hlsSim)
 set hlsCoSim $env(hlsCoSim)
-set SimFile $env(SimFile)
-
+if { [info exists env(SimFile)] } {
+  set SimFile $env(SimFile)
+}
 
 # Open and Setup Project
 #-------------------------------------------------
