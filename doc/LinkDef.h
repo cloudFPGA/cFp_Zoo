@@ -3,10 +3,14 @@
  * \brief This is the peoject of cloudFPGA that bridges cFDK with Vitis Vision Open Source Library.
  */
 
-
+/** \defgroup VitisVision Vitis Vision
+ *  @ingroup cFp_Vitis
+ *
+ * \brief This is the accelerated functions of Vitis Vision sub-library from Vitis Open Source Library.
+ */
 
 /** \defgroup Harris Harris
- *  @ingroup cFp_Vitis
+ *  @ingroup VitisVision
  *
  * \brief This is the Harris accelerated function from Vitis Vision Open Source Library.
  */
