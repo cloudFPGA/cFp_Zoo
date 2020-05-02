@@ -19,7 +19,7 @@
 /*****************************************************************************
  * @brief   Top-level accelerated function of the Harris Application with 
  * xf::cv I/F
- * @ingroup Harris
+ * @ingroup HarrisHLS
  *
  * @return Nothing.
  *****************************************************************************/
@@ -35,7 +35,7 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
 /*****************************************************************************
  * @brief   Top-level accelerated function of the Harris Application with 
  * array I/F
- * @ingroup Harris
+ * @ingroup HarrisHLS
  *
  * @return Nothing.
  *****************************************************************************/

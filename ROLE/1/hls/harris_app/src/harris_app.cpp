@@ -52,7 +52,7 @@ unsigned int run_harris_once = 1;
 
 /*****************************************************************************
  * @brief   Store a word from ethernet to local memory
- * @ingroup Harris
+ * @ingroup HarrisHLS
  *
  * @return Nothing.
  *****************************************************************************/
@@ -77,7 +77,7 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
  * @brief   Main process of the Harris Application 
  * directives.
  * @deprecated  This functions is using deprecated AXI stream interface 
- * Vivado HLS 
+ * Vivado HarrisHLS 
  * @ingroup Harris
  * @return Nothing.
  *****************************************************************************/
