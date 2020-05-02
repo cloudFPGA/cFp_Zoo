@@ -75,9 +75,11 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
 
 
 /*****************************************************************************
- * @brief   Main process of the UDP/Tcp Triangle Application
+ * @brief   Main process of the Harris Application 
+ * This functions is using deprecated AXI stream interface Vivado HLS 
+ * directives.
+ * @deprecated
  * @ingroup Harris
- *
  * @return Nothing.
  *****************************************************************************/
 void harris_app(
