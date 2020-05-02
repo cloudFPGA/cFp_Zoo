@@ -16,7 +16,8 @@
 
 /*****************************************************************************
  * @file       : harris_app.cpp
- * @brief      : UDP Application
+ * @brief      : Harris Application
+ * @ingroup Harris
  *
  * System:     : cloudFPGA
  * Component   : RoleFlash
@@ -48,56 +49,14 @@ unsigned int processed_word = 0;
 unsigned int image_loaded = 0;
 unsigned int run_harris_once = 1;
 
-uint8_t upper(uint8_t a)
-{
-  if( (a >= 0x61) && (a <= 0x7a) )
-  {
-    a -= 0x20;
-  }
-  return a;
-}
 
 
-
-uint8_t lower(uint8_t a)
-{
-  if( (a >= 0x41) && (a <= 0x5a) )
-  {
-    a += 0x20;
-  }
-  return a;
-}
-
-uint8_t invert_case(uint8_t a)
-{
-  uint8_t ret = 0x0;
-  if( (a >= 0x41) && (a <= 0x5a) )
-  {
-    ret = a + 0x20;
-  }
-  else if( (a >= 0x61) && (a <= 0x7a) )
-  {
-    ret = a - 0x20;
-  } else {
-    ret = a;
-  }
-  return ret;
-}
-
-
-uint64_t invert_word(uint64_t input)
-{
-  uint64_t output = 0x0;
-  for(uint8_t i = 0; i < 8; i++)
-  {
-#pragma HLS unroll factor=8
-    output |= ((uint64_t) invert_case((uint8_t) (input >> i*8))) << i*8;
-  }
-  printf("DEBUG in invert_word: input = %u = 0x%16.16llX \n", input, input);
-  printf("DEBUG in invert_word: output= %u = 0x%16.16llX \n", output, output);
-  return output;
-}
-
+/*****************************************************************************
+ * @brief   Store a word from ethernet to local memory
+ * @ingroup Harris
+ *
+ * @return Nothing.
+ *****************************************************************************/
 void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
 {
     img[processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
@@ -113,45 +72,11 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
     }
 }
 
-/*
-// Cast data read from AXI input port to decimal values
-static void mbus_to_decimal(snap_membus_t *data_read, mat_elmt_t *table_decimal_in)
-{
-	union {
-		uint64_t     value_u;
-		mat_elmt_t   value_d;
-	};
 
-	loop_m2d1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
-#pragma HLS PIPELINE
-	   loop_m2d2: for(int j = 0; j < MAX_NB_OF_ELMT_PERDW; j++)
-	   {
-		value_u = (uint64_t)data_read[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j));
-		table_decimal_in[i*MAX_NB_OF_ELMT_PERDW + j] = value_d;
-	   }
-
-}
-
-// Cast decimal values to AXI output port format (64 Bytes)
-static void  decimal_to_mbus(mat_elmt_t *table_decimal_out, snap_membus_t *data_to_be_written)
-{
-	union {
-		mat_elmt_t   value_d;
-		uint64_t     value_u;
-	};
-	loop_d2m1: for(int i = 0; i < MAX_NB_OF_WORDS_READ; i++)
-#pragma HLS PIPELINE
-	   loop_d2m2: for(int j = 0; j < MAX_NB_OF_ELMT_PERDW; j++)
-	   {
-		value_d = table_decimal_out[i*MAX_NB_OF_ELMT_PERDW + j];
-		data_to_be_written[i]((8*sizeof(mat_elmt_t)*(j+1))-1, (8*sizeof(mat_elmt_t)*j)) = (uint64_t)value_u;
-	   }
-}
-*/
 
 /*****************************************************************************
  * @brief   Main process of the UDP/Tcp Triangle Application
- * @ingroup udp_app_flash
+ * @ingroup Harris
  *
  * @return Nothing.
  *****************************************************************************/
@@ -229,7 +154,6 @@ void harris_app(
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
 	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
-        //newWord = NetworkWord(invert_word(udpWord.tdata), udpWord.tkeep, udpWord.tlast);
 	store_word(udpWord.tdata, img_inp);
         //sRxpToTxp_Data.write(newWord);
         if(udpWord.tlast == 1)

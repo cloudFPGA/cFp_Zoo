@@ -16,6 +16,13 @@
 
 #include "../include/xf_harris_config.h"
 
+/*****************************************************************************
+ * @brief   Top-level accelerated function of the Harris Application with 
+ * xf::cv I/F
+ * @ingroup Harris
+ *
+ * @return Nothing.
+ *****************************************************************************/
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst,
                   unsigned short Thresh,
@@ -25,6 +32,13 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
 }
 
 
+/*****************************************************************************
+ * @brief   Top-level accelerated function of the Harris Application with 
+ * array I/F
+ * @ingroup Harris
+ *
+ * @return Nothing.
+ *****************************************************************************/
 //extern "C" {
 void my_cornerHarris_accel(
     ap_uint<INPUT_PTR_WIDTH>* img_inp, ap_uint<OUTPUT_PTR_WIDTH>* img_out, int rows, int cols, int threshold, int k) {

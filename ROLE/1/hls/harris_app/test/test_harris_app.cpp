@@ -81,7 +81,7 @@ int         simCnt;
 
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
- * @ingroup udp_app_flash
+ * @ingroup Harris
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
@@ -97,7 +97,7 @@ void stepDut() {
 
 /*****************************************************************************
  * @brief Initialize an input data stream from a file.
- * @ingroup udp_app_flash
+ * @ingroup Harris
  *
  * @param[in] sDataStream the input data stream to set.
  * @param[in] dataStreamName the name of the data stream.
@@ -195,7 +195,7 @@ bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray) 
 
 /*****************************************************************************
  * @brief Read data from a stream.
- * @ingroup udp_app_flash
+ * @ingroup Harris
  *
  * @param[in]  sDataStream,    the output data stream to read.
  * @param[in]  dataStreamName, the name of the data stream.
@@ -236,7 +236,7 @@ ap_uint<64> pack_ap_uint_64_ (ap_uint<8> *buffer) {
 
 /*****************************************************************************
  * @brief Dump a data word to a file.
- * @ingroup udp_app_flash
+ * @ingroup Harris
  *
  * @param[in] udpWord,      a pointer to the data word to dump.
  * @param[in] outFileStream,the output file stream to write to.
@@ -258,7 +258,7 @@ bool dumpDataToFile(UdpWord *udpWord, ofstream &outFileStream) {
 
 /*****************************************************************************
  * @brief Fill an output file with data from an output stream.
- * @ingroup udp_app_flash
+ * @ingroup Harris
  *
  * @param[in] sDataStream,    the output data stream to set.
  * @param[in] dataStreamName, the name of the data stream.
@@ -484,7 +484,12 @@ void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv:
 }
 
 
-
+/*****************************************************************************
+ * @brief Main testbench of Hrris.
+ * @ingroup Harris
+ *
+ * @return 0 upon success, nrErr else.
+ ******************************************************************************/
 int main(int argc, char** argv) {
 
     //------------------------------------------------------
