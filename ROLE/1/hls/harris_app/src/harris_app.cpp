@@ -15,20 +15,19 @@
 
 
 /*****************************************************************************
- * @file       : harris_app.cpp
- * @brief      : Harris Application
+ * @file       harris_app.cpp
+ * @brief      Harris Application
  * @ingroup Harris
  *
- * System:     : cloudFPGA
- * Component   : RoleFlash
- * Language    : Vivado HLS
+ * System     cloudFPGA
+ * Language   Vivado HLS
  *
  *----------------------------------------------------------------------------
  *
  * @details    : This application implements a set of UDP-oriented tests and
  *  functions which are embedded into the Flash of the cloudFPGA role.
  *
- * @note       : For the time being, we continue designing with the DEPRECATED
+ * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
  *
  *****************************************************************************/
@@ -76,9 +75,9 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
 
 /*****************************************************************************
  * @brief   Main process of the Harris Application 
- * This functions is using deprecated AXI stream interface Vivado HLS 
  * directives.
- * @deprecated
+ * @deprecated  This functions is using deprecated AXI stream interface 
+ * Vivado HLS 
  * @ingroup Harris
  * @return Nothing.
  *****************************************************************************/
