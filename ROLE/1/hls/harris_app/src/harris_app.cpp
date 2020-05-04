@@ -1,27 +1,8 @@
-//  *
-//  *                       cloudFPGA
-//  *     Copyright IBM Research, All Rights Reserved
-//  *    =============================================
-//  *     Created: May 2019
-//  *     Authors: FAB, WEI, NGL, DID
-//  *
-//  *     Description:
-//  *        The Role for a Harris Example application (UDP or TCP)
-//  *
-
-#include "harris_app.hpp"
-
-#include "../include/xf_harris_config.h"
-
-
 /*****************************************************************************
  * @file       harris_app.cpp
- * @brief      Harris Application
- * @ingroup Harris
- *
- * System     cloudFPGA
- * Language   Vivado HLS
- *
+ * @brief      The Role for a Harris Example application (UDP or TCP)
+ * @author     FAB, WEI, NGL, DID
+ * @date       May 2020
  *----------------------------------------------------------------------------
  *
  * @details    : This application implements a set of UDP-oriented tests and
@@ -29,13 +10,17 @@
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
- *
+ * 
+ *----------------------------------------------------------------------------
+ * 
+ * @ingroup HarrisHLS
+ * @addtogroup HarrisHLS
+ * \{
  *****************************************************************************/
 
+#include "harris_app.hpp"
 
-
-
-
+#include "../include/xf_harris_config.h"
 
 
 stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
@@ -52,8 +37,6 @@ unsigned int run_harris_once = 1;
 
 /*****************************************************************************
  * @brief   Store a word from ethernet to local memory
- * @ingroup HarrisHLS
- *
  * @return Nothing.
  *****************************************************************************/
 void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
@@ -78,7 +61,6 @@ void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
  * directives.
  * @deprecated  This functions is using deprecated AXI stream interface 
  * Vivado HarrisHLS 
- * @ingroup Harris
  * @return Nothing.
  *****************************************************************************/
 void harris_app(
@@ -240,3 +222,4 @@ void harris_app(
 }
 
 
+/*! \} */

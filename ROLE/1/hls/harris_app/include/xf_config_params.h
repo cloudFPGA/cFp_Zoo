@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+
+/*****************************************************************************
+ * @file       xf_config_params.h
+ * @brief      The Harris IP configuration header
+ * @author     DID
+ * @date       May 2020
+ * 
+ * @ingroup HarrisHLS
+ * @addtogroup HarrisHLS
+ * \{
+ *****************************************************************************/
+
 #ifndef _XF_HARRIS_CONFIG_PARAMS_H_
 #define _XF_HARRIS_CONFIG_PARAMS_H_
 
@@ -29,3 +41,7 @@
 #define XF_USE_URAM false
 
 #endif // _XF_HARRIS_CONFIG_PARAMS_H_
+
+
+
+/*! \} */

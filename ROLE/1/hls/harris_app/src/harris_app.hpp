@@ -1,13 +1,23 @@
-//  *
-//  *                       cloudFPGA
-//  *     Copyright IBM Research, All Rights Reserved
-//  *    =============================================
-//  *     Created: April 2020
-//  *     Authors: FAB, WEI, NGL, DID
-//  *
-//  *     Description:
-//  *        The Role for a Harris Example application (UDP or TCP)
-//  *
+/*****************************************************************************
+ * @file       harris_app.hpp
+ * @brief      The Role for a Harris Example application (UDP or TCP)
+ * @author     FAB, WEI, NGL, DID
+ * @date       May 2020
+ *----------------------------------------------------------------------------
+ *
+ * @details    : This application implements a set of UDP-oriented tests and
+ *  functions which are embedded into the Flash of the cloudFPGA role.
+ *
+ * @deprecated   For the time being, we continue designing with the DEPRECATED
+ *               directives because the new PRAGMAs do not work for us.
+ * 
+ *----------------------------------------------------------------------------
+ * 
+ * @ingroup HarrisHLS
+ * @addtogroup HarrisHLS
+ * \{
+ *****************************************************************************/
+
 
 #ifndef _ROLE_HARRIS_H_
 #define _ROLE_HARRIS_H_
@@ -63,3 +73,6 @@ void harris_app(
 
 
 #endif
+
+
+/*! \} */

@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/*****************************************************************************
+ * @file       xf_ocv_ref.hpp
+ * @brief      The Harris reference functions used in TB
+ * @author     DID
+ * @date       May 2020
+ * 
+ * @ingroup HarrisTB
+ * @addtogroup HarrisTB
+ * \{
+ *****************************************************************************/
+
+
 #ifndef _XF_OCV_REF_HPP_
 #define _XF_OCV_REF_HPP_
 
@@ -616,3 +628,6 @@ void ocv_ref(cv::Mat img_gray, cv::Mat& ocv_out_img, float Th) {
 }
 
 #endif
+
+
+/*! \} */

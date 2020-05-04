@@ -1,6 +1,6 @@
 /*****************************************************************************
- * @file       : test_harris_app_flash.cpp
- * @brief      : Testbench for UDP Application Flash (UAF).
+ * @file       : test_harris_app.cpp
+ * @brief      : Testbench for Harris.
  *
  * System:     : cloudFPGA
  * Component   : Role
@@ -12,7 +12,11 @@
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
+ * @ingroup HarrisTB
+ * @addtogroup HarrisTB
+ * \{
  *****************************************************************************/
+
 
 #include <stdio.h>
 #include <hls_stream.h>
@@ -81,7 +85,6 @@ int         simCnt;
 
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
- * @ingroup HarrisTB
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
@@ -97,7 +100,6 @@ void stepDut() {
 
 /*****************************************************************************
  * @brief Initialize an input data stream from a file.
- * @ingroup HarrisTB
  *
  * @param[in] sDataStream the input data stream to set.
  * @param[in] dataStreamName the name of the data stream.
@@ -150,7 +152,6 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
 
 /*****************************************************************************
  * @brief Initialize an input array from a file with format "tdata tkeep tlast"
- * @ingroup HarrisTB
  *
  * @param[in]  inpFileName the name of the input file to read from.
  * @param[out] imgOutputArray the array to write the tdata only field from the file.
@@ -195,7 +196,6 @@ bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray) 
 
 /*****************************************************************************
  * @brief Read data from a stream.
- * @ingroup HarrisTB
  *
  * @param[in]  sDataStream,    the output data stream to read.
  * @param[in]  dataStreamName, the name of the data stream.
@@ -212,7 +212,6 @@ bool readDataStream(stream <UdpWord> &sDataStream, UdpWord *udpWord) {
 
 /*****************************************************************************
  * @brief Pack an array of 8 x ap_uint<8> into a ap_uint<64> word.
- * @ingroup HarrisTB
  *
  * @param[in]  buffer     A pointer to an array of 8 x ap_uint<8>
  * @return An ap_uint<64> word.
@@ -236,7 +235,6 @@ ap_uint<64> pack_ap_uint_64_ (ap_uint<8> *buffer) {
 
 /*****************************************************************************
  * @brief Dump a data word to a file.
- * @ingroup HarrisTB
  *
  * @param[in] udpWord,      a pointer to the data word to dump.
  * @param[in] outFileStream,the output file stream to write to.
@@ -258,7 +256,6 @@ bool dumpDataToFile(UdpWord *udpWord, ofstream &outFileStream) {
 
 /*****************************************************************************
  * @brief Fill an output file with data from an output stream.
- * @ingroup HarrisTB
  *
  * @param[in] sDataStream,    the output data stream to set.
  * @param[in] dataStreamName, the name of the data stream.
@@ -304,8 +301,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
 
 /*****************************************************************************
  * @brief Fill an output file with data from an image.
- * @ingroup HarrisTB
- *
+ * 
  * @param[in] sDataStream    the input image in xf::cv::Mat format.
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
@@ -366,8 +362,7 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
 
 /*****************************************************************************
  * @brief Write the corners found by Harris into a file.
- * @ingroup HarrisTB
- *
+ * 
  * @return 0 if successful, otherwise 1.
  ******************************************************************************/
 unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat& out_img, 
@@ -436,8 +431,7 @@ unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat
 
 /*****************************************************************************
  * @brief Mark the points found by Harris into the image.
- * @ingroup HarrisTB
- *
+ * 
  * @return Nothing
  ******************************************************************************/
 void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
@@ -486,8 +480,7 @@ void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv:
 
 /*****************************************************************************
  * @brief Main testbench of Hrris.
- * @ingroup HarrisTB
- *
+ * 
  * @return 0 upon success, nrErr else.
  ******************************************************************************/
 int main(int argc, char** argv) {
@@ -764,3 +757,8 @@ int main(int argc, char** argv) {
 
     return(nrErr);
 }
+
+
+
+
+/*! \} */

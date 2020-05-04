@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/*****************************************************************************
+ * @file       xf_harris_accel.cpp
+ * @brief      The Harris top-level
+ * @author     DID
+ * @date       May 2020
+ * 
+ * @ingroup HarrisHLS
+ * @addtogroup HarrisHLS
+ * \{
+ *****************************************************************************/
+
+
 #include "../include/xf_harris_config.h"
 
 /*****************************************************************************
@@ -76,3 +88,6 @@ void my_cornerHarris_accel(
     xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(out_mat, img_out);
 }
 //}
+
+
+/*! \} */

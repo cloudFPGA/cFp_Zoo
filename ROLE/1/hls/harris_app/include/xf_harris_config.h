@@ -14,6 +14,18 @@
  * limitations under the License.
  */
 
+/*****************************************************************************
+ * @file       xf_harris_config.h
+ * @brief      The Harris configuration header
+ * @author     DID
+ * @date       May 2020
+ * 
+ * @ingroup Harris
+ * @addtogroup Harris
+ * \{
+ *****************************************************************************/
+
+
 #ifndef _XF_HARRIS_CONFIG_H_
 #define _XF_HARRIS_CONFIG_H_
 
@@ -61,3 +73,6 @@ void my_cornerHarris_accel(ap_uint<INPUT_PTR_WIDTH>* img_inp,
                         int rows, int cols, int threshold, int k);
 
 #endif
+
+
+/*! \} */
