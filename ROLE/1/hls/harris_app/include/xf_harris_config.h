@@ -53,7 +53,7 @@
 #define WIDTH 8
 #define HEIGHT 8
 
-#define IMGSIZE WIDTH* HEIGHT
+#define IMGSIZE WIDTH * HEIGHT
 
 #define IMG_PACKETS IMGSIZE/(INPUT_PTR_WIDTH/8)
 
@@ -68,9 +68,14 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   unsigned short Thresh,
                   unsigned short k);
 
-void my_cornerHarris_accel(ap_uint<INPUT_PTR_WIDTH>* img_inp,
+void cornerHarrisAccelArray(ap_uint<INPUT_PTR_WIDTH>* img_inp,
                         ap_uint<OUTPUT_PTR_WIDTH>* img_out,
                         int rows, int cols, int threshold, int k);
+
+void cornerHarrisAccelStream(
+    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    int rows, int cols, int threshold, int k);
 
 #endif
 

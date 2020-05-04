@@ -40,6 +40,8 @@ using namespace hls;
 #define WAIT_FOR_META 0
 #define WAIT_FOR_STREAM_PAIR 1
 #define PROCESSING_PACKET 2
+#define HARRIS_RETURN_RESULTS 3
+
 #define PacketFsmType uint8_t
 
 

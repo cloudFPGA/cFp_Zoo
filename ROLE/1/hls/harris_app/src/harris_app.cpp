@@ -18,7 +18,7 @@
  * \{
  *****************************************************************************/
 
-#include "harris_app.hpp"
+#include "../include/harris_app.hpp"
 
 #include "../include/xf_harris_config.h"
 
@@ -28,39 +28,66 @@ stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
 
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
+PacketFsmType HarrisFSM  = WAIT_FOR_META;
 
 unsigned int processed_word = 0;
 unsigned int image_loaded = 0;
 unsigned int run_harris_once = 1;
 
+hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> > img_in_axi_stream("img_in_axi_stream");
+hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> > img_out_axi_stream("img_out_axi_stream");
 
 
 /*****************************************************************************
  * @brief   Store a word from ethernet to local memory
  * @return Nothing.
  *****************************************************************************/
-void store_word(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
+void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE])
 {
     img[processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
-    printf("DEBUG in store_word: input = %u = 0x%16.16llX \n", input, input);
-    printf("DEBUG in store_word: img[%u]= %u = 0x%16.16llX \n", processed_word, (uint64_t)img[processed_word], (uint64_t)img[processed_word]);
+    printf("DEBUG in storeWordToArray: input = %u = 0x%16.16llX \n", input, input);
+    printf("DEBUG in storeWordToArray: img[%u]= %u = 0x%16.16llX \n", processed_word, 
+(uint64_t)img[processed_word], (uint64_t)img[processed_word]);
     if (processed_word < IMG_PACKETS-1) {
       processed_word++;
     }
     else {
-      printf("DEBUG in store_word: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      printf("DEBUG in storeWordToArray: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
       processed_word = 0;
       image_loaded = 1;
     }
 }
 
 
+/*****************************************************************************
+ * @brief   Store a word from ethernet to a local AXI stream
+ * @return Nothing.
+ *****************************************************************************/
+void storeWordToAxiStream(NetworkWord word, hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream)
+{
+    
+  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> v;
+  v.data = word.tdata;
+  v.keep = word.tkeep;
+  v.last = word.tlast;
+  img_in_axi_stream.write(v);
+  printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX \n", (uint64_t)v.data, (uint64_t)v.data);
+  
+  if (processed_word < IMG_PACKETS-1) {
+    processed_word++;
+  }
+  else {
+    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put processed_word = 0.\n");
+    processed_word = 0;
+    image_loaded = 1;
+  }
+}
+
 
 /*****************************************************************************
  * @brief   Main process of the Harris Application 
  * directives.
  * @deprecated  This functions is using deprecated AXI stream interface 
- * Vivado HarrisHLS 
  * @return Nothing.
  *****************************************************************************/
 void harris_app(
@@ -100,15 +127,19 @@ void harris_app(
 //#pragma HLS STREAM variable=sRxtoTx_Meta depth=1500 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
+#pragma HLS reset variable=HarrisFSM
 
 
   uint16_t Thresh = 442;
   float K = 0.04;
   uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-  ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
-  ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
+  //ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
+  //ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
   
-
+  const int img_packets = IMG_PACKETS;
+#pragma HLS stream variable=img_in_axi_stream depth=img_packets
+#pragma HLS stream variable=img_out_axi_stream depth=img_packets
+  
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   //-- LOCAL VARIABLES ------------------------------------------------------
@@ -137,7 +168,8 @@ void harris_app(
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
 	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
-	store_word(udpWord.tdata, img_inp);
+	//storeWordToArray(udpWord.tdata, img_inp);
+	storeWordToAxiStream(udpWord, img_in_axi_stream);
         //sRxpToTxp_Data.write(newWord);
         if(udpWord.tlast == 1)
         {
@@ -147,28 +179,104 @@ void harris_app(
       break;
   }
 
-  // spare placeholder of Harris IP
+ 
+  
+  
+  /* --------------------------------------------------------------------------------------------
+  // spare placeholder of Harris IP with array I/F
   if (image_loaded == 1) {
-    printf("DEBUG in harris_app: image_loaded => my_cornerHarris_accel(), processed_word=%u\n", processed_word);
+    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelArray(), processed_word=%u\n", 
+processed_word);
     if (run_harris_once == 1) {
-      my_cornerHarris_accel(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
+      cornerHarrisAccelArray(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
       run_harris_once = 0;
     }
-    
-
     if (processed_word < IMG_PACKETS - 1) {
       newWord = NetworkWord(img_out[processed_word], 255, 0);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
       processed_word++;
     }
     else {
       printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
       newWord = NetworkWord(img_out[processed_word], 255, 1);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+      processed_word = 0;
+      image_loaded = 0; // force reset
+    }
+    sRxpToTxp_Data.write(newWord);
+  }
+   -------------------------------------------------------------------------------------------- */
+  
+  
+  switch(HarrisFSM)
+  {
+    case WAIT_FOR_META: 
+      printf("DEBUG in HarrisFSM: WAIT_FOR_META\n");
+      if ( image_loaded == 1 )
+      {
+        HarrisFSM = PROCESSING_PACKET;
+      }
+      break;
+
+    case PROCESSING_PACKET:
+      printf("DEBUG in HarrisFSM: PROCESSING_PACKET\n");
+      cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+      HarrisFSM = HARRIS_RETURN_RESULTS;
+      break;
+      
+    case HARRIS_RETURN_RESULTS:
+      printf("DEBUG in HarrisFSM: HARRIS_RETURN_RESULTS\n");
+      if (!img_out_axi_stream.empty()) {
+	if (processed_word < IMG_PACKETS - 1) {
+	  newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
+	  processed_word++;
+	  HarrisFSM = HARRIS_RETURN_RESULTS;
+	}
+	else {
+	  printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+	  newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+	  processed_word = 0;
+	  image_loaded = 0; // force reset
+	  HarrisFSM = WAIT_FOR_META;
+	}
+	sRxpToTxp_Data.write(newWord);
+      }
+      break;
+      
+  }
+
+  
+  
+  
+  /*
+    // spare placeholder of Harris IP with stream I/F
+  if (image_loaded == 1) {
+    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelStream(), processed_word=%u\n", 
+processed_word);
+    if (run_harris_once == 1) {
+      cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+      run_harris_once = 0;
+    }
+    if (processed_word < IMG_PACKETS - 1) {
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
+      processed_word++;
+    }
+    else {
+      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
       processed_word = 0;
       image_loaded = 0; // force reset
     }    
-    
     sRxpToTxp_Data.write(newWord);
   }
+  */
+  
+  
+  
+  
+  
+  
+  
   
   switch(dequeueFSM)
   {

@@ -21,7 +21,7 @@
 #include <stdio.h>
 #include <hls_stream.h>
 
-#include "../src/harris_app.hpp"
+#include "../include/harris_app.hpp"
 
 #include "common/xf_headers.hpp"
 #include "../include/xf_harris_config.h"
@@ -709,7 +709,7 @@ int main(int argc, char** argv) {
     #if NO
 
     // L2 Vitis Harris
-    my_cornerHarris_accel(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
+    cornerHarrisAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
     xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
     // L1 Vitis Harris 
@@ -750,7 +750,8 @@ int main(int argc, char** argv) {
 	markPointsOnImage(*select_imgOutput, in_img, out_img, hls_points);
  
 	/* Write HLS and Opencv corners into a file */
-	nrErr += writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
+	//nrErr += 
+	writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
 	
 	
 
