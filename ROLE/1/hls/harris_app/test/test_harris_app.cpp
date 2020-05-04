@@ -551,7 +551,7 @@ int main(int argc, char** argv) {
   
     xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
 	
-    if (!dumpImgToFile(imgInput, "imgInput.txt")) {
+    if (!dumpImgToFile(imgInput, "ifsSHL_Uaf_Data.dat")) {
       nrErr++;
     }
 
@@ -580,7 +580,7 @@ int main(int argc, char** argv) {
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
     if (nrErr == 0) {
-        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "imgInput.txt")) {
+        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat")) { 
             printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
             nrErr++;
         }
