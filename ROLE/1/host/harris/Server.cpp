@@ -47,9 +47,10 @@ int main(int argc, char * argv[]) {
         unsigned short sourcePort; // Port of datagram source
 
         clock_t last_cycle = clock();
-
+#ifdef INPUT_FROM_CAMERA
         while (1) {
             // Block until receive message from a client
+#endif
             do {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
             } while (recvMsgSize > sizeof(int));
@@ -61,7 +62,11 @@ int main(int argc, char * argv[]) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
                 if (recvMsgSize != PACK_SIZE) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << endl;
+#ifdef INPUT_FROM_CAMERA
                     continue;
+#else
+		    exit(1);
+#endif
                 }
                 memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
             }
@@ -72,9 +77,22 @@ int main(int argc, char * argv[]) {
             Mat frame = imdecode(rawData, IMREAD_COLOR);
             if (frame.size().width == 0) {
                 cerr << "decode failure!" << endl;
+#ifdef INPUT_FROM_CAMERA
                 continue;
+#else
+		exit(1);
+#endif
             }
             imshow("recv", frame);
+	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.jpg", frame);
+	    
+	    string str_command = "cd ../../../hls/harris_app && make clean && INPUT_IMAGE=./test/input_from_udp_to_fpga.jpg make fcsim -j 4 && cd ../../host/harris/build/ "; 
+  
+	    const char *command = str_command.c_str(); 
+  
+	    cout << "Calling TB with command:" << command << endl; 
+	    system(command); 
+	    
             free(longbuf);
 
             waitKey(1);
@@ -84,7 +102,9 @@ int main(int argc, char * argv[]) {
 
             cout << next_cycle - last_cycle;
             last_cycle = next_cycle;
+#ifdef INPUT_FROM_CAMERA	    
         }
+#endif
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);

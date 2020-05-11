@@ -21,6 +21,7 @@
 #include "PracticalSocket.h"      // For UDPSocket and SocketException
 #include <iostream>               // For cout and cerr
 #include <cstdlib>                // For atoi()
+#include <stdio.h>
 
 using namespace std;
 
@@ -30,8 +31,8 @@ using namespace cv;
 
 
 int main(int argc, char * argv[]) {
-    if ((argc < 3) || (argc > 3)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port>\n";
+    if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
         exit(1);
     }
 
@@ -44,17 +45,31 @@ int main(int argc, char * argv[]) {
 
         Mat frame, send;
         vector < uchar > encoded;
+	
+#ifdef INPUT_FROM_CAMERA
         VideoCapture cap(0); // Grab the camera
         namedWindow("send", WINDOW_AUTOSIZE);
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
             exit(1);
         }
+#else
+	frame = cv::imread(argv[3], 0); // reading in the color image
 
+	if (!frame.data) {
+	  printf("Failed to load the image ... %s\n!", argv[3]);
+	  return -1;
+	}
+	else {
+	  printf("Succesfully loaded image ... %s\n!", argv[3]);
+	}
+#endif
         clock_t last_cycle = clock();
+#ifdef INPUT_FROM_CAMERA	
         while (1) {
             cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
+#endif
             resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
             vector < int > compression_params;
             compression_params.push_back(IMWRITE_JPEG_QUALITY);
@@ -71,7 +86,7 @@ int main(int argc, char * argv[]) {
             for (int i = 0; i < total_pack; i++)
                 sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
 
-            waitKey(FRAME_INTERVAL);
+            waitKey(1000*FRAME_INTERVAL);
 
             clock_t next_cycle = clock();
             double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
@@ -79,8 +94,11 @@ int main(int argc, char * argv[]) {
 
             cout << next_cycle - last_cycle;
             last_cycle = next_cycle;
-        }
-        // Destructor closes the socket
+        
+#ifdef INPUT_FROM_CAMERA
+	}
+#endif
+	// Destructor closes the socket
 
     } catch (SocketException & e) {
         cerr << e.what() << endl;
