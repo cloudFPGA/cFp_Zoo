@@ -513,6 +513,9 @@ int main(int argc, char** argv) {
         printf("Failed to load the image ... %s\n!", argv[1]);
         return -1;
     }
+    else {
+      printf("Succesfully loaded image ... %s\n!", argv[1]);
+    }
 
     uint16_t Thresh; // Threshold for HLS
     float Th;

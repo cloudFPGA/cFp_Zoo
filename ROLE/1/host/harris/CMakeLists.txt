@@ -1,0 +1,10 @@
+cmake_minimum_required(VERSION 2.8)
+project( lan_vid_pseudostream )
+find_package( OpenCV REQUIRED )
+find_package( LibXml2 REQUIRED)
+include_directories(${LIBXML2_INCLUDE_DIR})
+add_executable( server Server.cpp PracticalSocket.cpp )
+target_link_libraries( server ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
+add_executable( client Client.cpp PracticalSocket.cpp )
+target_link_libraries( client ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
+
