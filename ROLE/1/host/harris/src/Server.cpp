@@ -18,7 +18,7 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "PracticalSocket.h" // For UDPSocket and SocketException
+#include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include <iostream>          // For cout and cerr
 #include <cstdlib>           // For atoi()
 
@@ -26,7 +26,7 @@
 
 #include "opencv2/opencv.hpp"
 using namespace cv;
-#include "config.h"
+#include "../include/config.h"
 
 int main(int argc, char * argv[]) {
 
@@ -84,13 +84,14 @@ int main(int argc, char * argv[]) {
 #endif
             }
             imshow("recv", frame);
+	    
+	    // We save the image received from network in order to process it with the harris TB
 	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.jpg", frame);
 	    
+	    // Calling the actual TB over its typical makefile procedure, but passing the save file
 	    string str_command = "cd ../../../hls/harris_app && make clean && INPUT_IMAGE=./test/input_from_udp_to_fpga.jpg make fcsim -j 4 && cd ../../host/harris/build/ "; 
-  
 	    const char *command = str_command.c_str(); 
-  
-	    cout << "Calling TB with command:" << command << endl; 
+  	    cout << "Calling TB with command:" << command << endl; 
 	    system(command); 
 	    
             free(longbuf);
