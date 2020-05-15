@@ -18,6 +18,9 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#include <hls_stream.h>
+#include "common/xf_headers.hpp"
+
 #include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include <iostream>          // For cout and cerr
 #include <cstdlib>           // For atoi()
@@ -27,6 +30,9 @@
 #include "opencv2/opencv.hpp"
 using namespace cv;
 #include "../include/config.h"
+
+
+
 
   /**
    *   Main testbench for the user-application for Harris on host. Server
@@ -77,9 +83,8 @@ int main(int argc, char * argv[]) {
 
             cout << "Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
-            Mat rawData = Mat(1, PACK_SIZE * total_pack, CV_8UC1, longbuf);
-            Mat frame = imdecode(rawData, IMREAD_COLOR);
-            if (frame.size().width == 0) {
+            cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
+	    if (frame.size().width == 0) {
                 cerr << "decode failure!" << endl;
 #ifdef INPUT_FROM_CAMERA
                 continue;
@@ -90,11 +95,11 @@ int main(int argc, char * argv[]) {
             imshow("recv", frame);
 	    
 	    // We save the image received from network in order to process it with the harris TB
-	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.jpg", frame);
+	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.png", frame);
 	    
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
 	    string str_command = "cd ../../../hls/harris_app && make clean && \
-				  INPUT_IMAGE=./test/input_from_udp_to_fpga.jpg make fcsim -j 4 && \
+				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png	 make fcsim -j 4 && \
 				  cd ../../host/harris/build/ "; 
 	    const char *command = str_command.c_str(); 
   	    cout << "Calling TB with command:" << command << endl; 

@@ -18,6 +18,9 @@
  *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
+#include "common/xf_headers.hpp"
+
 #include "../include/PracticalSocket.h"      // For UDPSocket and SocketException
 #include <iostream>               // For cout and cerr
 #include <cstdlib>                // For atoi()
@@ -30,7 +33,7 @@ using namespace cv;
 #include "../include/config.h"
 
 
-void matToVector (Mat *mat, std::vector<uchar> *array) {
+void matToVector (cv::Mat *mat, std::vector<uchar> *array) {
   if (mat->isContinuous()) {
     // array.assign(mat.datastart, mat.dataend); // <- has problems for sub-matrix like mat = big_mat.row(i)
     array->assign(mat->data, mat->data + mat->total());
@@ -58,9 +61,9 @@ int main(int argc, char * argv[]) {
         UDPSocket sock;
         int jpegqual =  ENCODE_QUALITY; // Compression Parameter
 
-        Mat frame, send;
+        cv::Mat frame, send;
         vector < uchar > encoded;
-	
+		
 #ifdef INPUT_FROM_CAMERA
         VideoCapture cap(0); // Grab the camera
         namedWindow("send", WINDOW_AUTOSIZE);
@@ -69,7 +72,8 @@ int main(int argc, char * argv[]) {
             exit(1);
         }
 #else
-	frame = cv::imread(argv[3], 0); // reading in the color image
+	frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the color image
+	
 
 	if (!frame.data) {
 	  printf("Failed to load the image ... %s\n!", argv[3]);
@@ -85,7 +89,16 @@ int main(int argc, char * argv[]) {
             cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
 #endif
-            resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+            resize(frame, send, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+	    
+	    //static xf::cv::Mat<XF_8UC1, FRAME_HEIGHT, FRAME_WIDTH, XF_NPPC1> imgInput(send.rows, send.cols);
+	    //imgInput.copyTo(send.data);
+	    
+	    //uint8_t imgInputArray[send.rows * send.cols];
+ 
+	    //cv::Mat2Array<64, XF_8UC1, FRAME_HEIGHT, FRAME_WIDTH, NPIX>(imgInput, imgInputArray);
+	    
+	    
             vector < int > compression_params;
             compression_params.push_back(IMWRITE_JPEG_QUALITY);
             compression_params.push_back(jpegqual);
@@ -93,28 +106,43 @@ int main(int argc, char * argv[]) {
             //imencode(".jpg", send, encoded, compression_params);
             //imshow("send1", send);
             //int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
-	    cout << "\ttotal_pack=" << total_pack << endl;
-	    matToVector(&send, &encoded);
+	    //cout << "\ttotal_pack=" << total_pack << endl;
+	    //matToVector(&send, &encoded);
             imshow("send2", send);
-            int total_pack2 = 1 + (encoded.size() - 1) / PACK_SIZE;
+            int total_pack2 = 1 + (send.total() - 1) / PACK_SIZE;
 	    cout << "\ttotal_pack2=" << total_pack2 << endl;
 	    
+	    
+	    // flatten the mat.
+	    uint totalElements = send.total()*send.channels(); // Note: image.total() == rows*cols.
+	    printf("DEBUG: send.total=%u\n", send.total());
+	    printf("DEBUG: send.channels=%u\n", send.channels());
+	    printf("DEBUG: totalElements=%u\n", totalElements);
+	    printf("DEBUG: encoded.size()=%u\n", encoded.size());
+	    cv::Mat flat = send.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
+	    if(!send.isContinuous()) {
+	      flat = flat.clone(); // O(N),
+	    }    
+	    
             int ibuf[1];
-            ibuf[0] = total_pack;
+            ibuf[0] = total_pack2;
             sock.sendTo(ibuf, sizeof(int), servAddress, servPort);
 
-            for (int i = 0; i < total_pack; i++)
-                sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-
-            waitKey(1000*FRAME_INTERVAL);
+            for (int i = 0; i < total_pack2; i++) {
+                //sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+		//sock.sendTo( & send.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+		sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+	    }
+            
 
             clock_t next_cycle = clock();
             double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
+            cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack2 / duration / 1024 * 8) << endl;
 
             cout << next_cycle - last_cycle;
             last_cycle = next_cycle;
-        
+	    
+	    waitKey(1000*FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA
 	}
 #endif
