@@ -1,29 +1,21 @@
-/*
- *   C++ UDP socket server for live image upstreaming
- *   Modified from http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoServer.cpp
- *   Copyright (C) 2015
+/*****************************************************************************
+ * @file       harris_host_fwd_tb.cpp
+ * @brief      Testbench for Harris userspace application for cF (x86, ppc64).
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+ * @date       May 2020
+ * @author     DID
+ * 
+ * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
+ * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
+ * 
+ * @ingroup HarrisTB
+ * @addtogroup HarrisTB
+ * \{
+ *****************************************************************************/
 
-#include <hls_stream.h>
-#include "common/xf_headers.hpp"
-
-#include "../include/PracticalSocket.h" // For UDPSocket and SocketException
-#include <iostream>          // For cout and cerr
 #include <cstdlib>           // For atoi()
+#include <iostream>          // For cout and cerr
+#include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 
 #define BUF_LEN 65540 // Larger than maximum UDP packet size
 
@@ -61,11 +53,8 @@ int main(int argc, char * argv[]) {
         while (1) {
             // Block until receive message from a client
 #endif
-            do {
-                recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
-            } while (recvMsgSize > sizeof(int));
-            int total_pack = ((int * ) buffer)[0];
-
+    
+	    int total_pack = 1 + (FRAME_WIDTH * FRAME_HEIGHT - 1) / PACK_SIZE;
             cout << "expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
             for (int i = 0; i < total_pack; i++) {
@@ -94,7 +83,7 @@ int main(int argc, char * argv[]) {
             }
             imshow("recv", frame);
 	    
-	    // We save the image received from network in order to process it with the harris TB
+	    // We save the image received from network in order to process it with the harris HLS TB
 	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.png", frame);
 	    
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
@@ -124,3 +113,8 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
+
+/*! \} */

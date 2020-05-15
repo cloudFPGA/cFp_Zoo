@@ -1,48 +1,30 @@
-/*
- *   C++ UDP socket client for live image upstreaming
- *   Modified from http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
- *   Copyright (C) 2015
+
+/*****************************************************************************
+ * @file       harris_host.cpp
+ * @brief      Harris userspace application for cF (x86, ppc64).
  *
- *   This program is free software; you can redistribute it and/or modify
- *   it under the terms of the GNU General Public License as published by
- *   the Free Software Foundation; either version 2 of the License, or
- *   (at your option) any later version.
- *
- *   This program is distributed in the hope that it will be useful,
- *   but WITHOUT ANY WARRANTY; without even the implied warranty of
- *   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *   GNU General Public License for more details.
- *
- *   You should have received a copy of the GNU General Public License
- *   along with this program; if not, write to the Free Software
- *   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
+ * @date       May 2020
+ * @author     DID
+ * 
+ * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
+ * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
+ * 
+ * @ingroup Harris
+ * @addtogroup Harris
+ * \{
+ *****************************************************************************/
 
 
-#include "common/xf_headers.hpp"
-
-#include "../include/PracticalSocket.h"      // For UDPSocket and SocketException
+#include <stdio.h>
 #include <iostream>               // For cout and cerr
 #include <cstdlib>                // For atoi()
-#include <stdio.h>
-
+#include "../include/PracticalSocket.h"      // For UDPSocket and SocketException
 using namespace std;
-
 #include "opencv2/opencv.hpp"
 using namespace cv;
 #include "../include/config.h"
+#include <assert.h>
 
-
-void matToVector (cv::Mat *mat, std::vector<uchar> *array) {
-  if (mat->isContinuous()) {
-    // array.assign(mat.datastart, mat.dataend); // <- has problems for sub-matrix like mat = big_mat.row(i)
-    array->assign(mat->data, mat->data + mat->total());
-  } else {
-    for (int i = 0; i < mat->rows; ++i) {
-      array->insert(array->end(), mat->ptr<uchar>(i), mat->ptr<uchar>(i)+mat->cols);
-    }
-  }
-}
 
   /**
    *   Main testbench and user-application for Harris on host. Client
@@ -59,7 +41,6 @@ int main(int argc, char * argv[]) {
 
     try {
         UDPSocket sock;
-        int jpegqual =  ENCODE_QUALITY; // Compression Parameter
 
         cv::Mat frame, send;
         vector < uchar > encoded;
@@ -91,53 +72,33 @@ int main(int argc, char * argv[]) {
 #endif
             resize(frame, send, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    
-	    //static xf::cv::Mat<XF_8UC1, FRAME_HEIGHT, FRAME_WIDTH, XF_NPPC1> imgInput(send.rows, send.cols);
-	    //imgInput.copyTo(send.data);
+	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
 	    
-	    //uint8_t imgInputArray[send.rows * send.cols];
- 
-	    //cv::Mat2Array<64, XF_8UC1, FRAME_HEIGHT, FRAME_WIDTH, NPIX>(imgInput, imgInputArray);
+            imshow("send", send);
+            int total_pack = 1 + (send.total() - 1) / PACK_SIZE;
+	    cout << "\ttotal_pack=" << total_pack << endl;
 	    
+	    //printf("DEBUG: send.total=%u\n", send.total());
+	    //printf("DEBUG: send.channels=%u\n", send.channels());
+	    //printf("DEBUG: encoded.size()=%u\n", encoded.size());
 	    
-            vector < int > compression_params;
-            compression_params.push_back(IMWRITE_JPEG_QUALITY);
-            compression_params.push_back(jpegqual);
+	    // If the image has channels we should flatten it to ensure the correct transmission
+	    //uint totalElements = send.total() * send.channels(); // Note: image.total() == rows*cols.
+	    //printf("DEBUG: totalElements=%u\n", totalElements);
+	    //cv::Mat flat = send.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
+	    //if(!send.isContinuous()) {
+	    //  flat = flat.clone(); // O(N)
+	    //}    
+	    
 
-            //imencode(".jpg", send, encoded, compression_params);
-            //imshow("send1", send);
-            //int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
-	    //cout << "\ttotal_pack=" << total_pack << endl;
-	    //matToVector(&send, &encoded);
-            imshow("send2", send);
-            int total_pack2 = 1 + (send.total() - 1) / PACK_SIZE;
-	    cout << "\ttotal_pack2=" << total_pack2 << endl;
-	    
-	    
-	    // flatten the mat.
-	    uint totalElements = send.total()*send.channels(); // Note: image.total() == rows*cols.
-	    printf("DEBUG: send.total=%u\n", send.total());
-	    printf("DEBUG: send.channels=%u\n", send.channels());
-	    printf("DEBUG: totalElements=%u\n", totalElements);
-	    printf("DEBUG: encoded.size()=%u\n", encoded.size());
-	    cv::Mat flat = send.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
-	    if(!send.isContinuous()) {
-	      flat = flat.clone(); // O(N),
-	    }    
-	    
-            int ibuf[1];
-            ibuf[0] = total_pack2;
-            sock.sendTo(ibuf, sizeof(int), servAddress, servPort);
-
-            for (int i = 0; i < total_pack2; i++) {
-                //sock.sendTo( & encoded[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-		//sock.sendTo( & send.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-		sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+            for (int i = 0; i < total_pack; i++) {
+		sock.sendTo( & send.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+		//sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
 	    }
             
-
             clock_t next_cycle = clock();
             double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack2 / duration / 1024 * 8) << endl;
+            cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
 
             cout << next_cycle - last_cycle;
             last_cycle = next_cycle;
@@ -155,3 +116,8 @@ int main(int argc, char * argv[]) {
 
     return 0;
 }
+
+
+
+
+/*! \} */
