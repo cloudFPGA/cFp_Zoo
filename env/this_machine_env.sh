@@ -3,7 +3,7 @@
 #  *     Copyright IBM Research, All Rights Reserved
 #  *    =============================================
 #  *     Created: Apr 2019
-#  *     Authors: FAB, WEI, NGL, DID
+#  *     Authors: FAB, WEI, NGL
 #  *
 #  *     Description:
 #  *        Auto generated file that exports all necessary environment variables
@@ -23,3 +23,5 @@ export cFpXprDir="$rootDir/xpr/"
 export cFpDcpDir="$rootDir/dcps/"
 export roleName1="1"
 export roleName2="2"
+
+

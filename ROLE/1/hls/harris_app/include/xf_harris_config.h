@@ -35,7 +35,7 @@
 #include "common/xf_utility.hpp"
 #include "features/xf_harris.hpp"
 #include "xf_config_params.h"
-#include "../../../host/harris/config.h"
+#include "../../../host/harris/include/config.h"
 
 #define CH_TYPE XF_GRAY
 #define INPUT_PTR_WIDTH 64

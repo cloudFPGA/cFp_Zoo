@@ -12,6 +12,15 @@ Documentation: https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/
     /\__________________________________________________|
 ```
 
+## System configurattion
+
+Assuming Ubuntu 18.04 the folowing packages should be installed:
+```
+sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv
+```
+
+## Quick divein 
+
 ![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)
 
 ```bash
@@ -28,6 +37,9 @@ make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
 ```
 
+
+## Content from previous README (cFp_Build)
+(keeping it here for reference, but not related to cFp_Vitis yet)
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash

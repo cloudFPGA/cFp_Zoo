@@ -28,6 +28,10 @@
 using namespace cv;
 #include "../include/config.h"
 
+  /**
+   *   Main testbench for the user-application for Harris on host. Server
+   *   @return O on success, 1 on fail 
+   */
 int main(int argc, char * argv[]) {
 
     if (argc != 2) { // Test for correct number of parameters
@@ -89,7 +93,9 @@ int main(int argc, char * argv[]) {
 	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.jpg", frame);
 	    
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
-	    string str_command = "cd ../../../hls/harris_app && make clean && INPUT_IMAGE=./test/input_from_udp_to_fpga.jpg make fcsim -j 4 && cd ../../host/harris/build/ "; 
+	    string str_command = "cd ../../../hls/harris_app && make clean && \
+				  INPUT_IMAGE=./test/input_from_udp_to_fpga.jpg make fcsim -j 4 && \
+				  cd ../../host/harris/build/ "; 
 	    const char *command = str_command.c_str(); 
   	    cout << "Calling TB with command:" << command << endl; 
 	    system(command); 

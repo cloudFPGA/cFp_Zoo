@@ -30,6 +30,21 @@ using namespace cv;
 #include "../include/config.h"
 
 
+void matToVector (Mat *mat, std::vector<uchar> *array) {
+  if (mat->isContinuous()) {
+    // array.assign(mat.datastart, mat.dataend); // <- has problems for sub-matrix like mat = big_mat.row(i)
+    array->assign(mat->data, mat->data + mat->total());
+  } else {
+    for (int i = 0; i < mat->rows; ++i) {
+      array->insert(array->end(), mat->ptr<uchar>(i), mat->ptr<uchar>(i)+mat->cols);
+    }
+  }
+}
+
+  /**
+   *   Main testbench and user-application for Harris on host. Client
+   *   @return O on success, 1 on fail 
+   */
 int main(int argc, char * argv[]) {
     if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
         cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
@@ -75,10 +90,15 @@ int main(int argc, char * argv[]) {
             compression_params.push_back(IMWRITE_JPEG_QUALITY);
             compression_params.push_back(jpegqual);
 
-            imencode(".jpg", send, encoded, compression_params);
-            imshow("send", send);
-            int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
-
+            //imencode(".jpg", send, encoded, compression_params);
+            //imshow("send1", send);
+            //int total_pack = 1 + (encoded.size() - 1) / PACK_SIZE;
+	    cout << "\ttotal_pack=" << total_pack << endl;
+	    matToVector(&send, &encoded);
+            imshow("send2", send);
+            int total_pack2 = 1 + (encoded.size() - 1) / PACK_SIZE;
+	    cout << "\ttotal_pack2=" << total_pack2 << endl;
+	    
             int ibuf[1];
             ibuf[0] = total_pack;
             sock.sendTo(ibuf, sizeof(int), servAddress, servPort);

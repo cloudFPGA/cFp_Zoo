@@ -3,4 +3,4 @@
 	url = git@github.ibm.com:cloudFPGA/cFDK.git
 [submodule "Vitis_Libraries"]
 	path = Vitis_Libraries
-	url = git@github.com:Xilinx/Vitis_Libraries.git
+	url = https://github.com/Xilinx/Vitis_Libraries.git
