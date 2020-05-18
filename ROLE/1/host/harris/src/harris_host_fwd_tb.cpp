@@ -106,7 +106,7 @@ int main(int argc, char * argv[]) {
             last_cycle_rx = next_cycle_rx;
 	    
 	    cout << "Waiting for the file to be processed..." << endl;
-            waitKey(20);
+            //waitKey(20);
 	    cout << "OK. Will try to process it\n" << endl;
 
 	    
