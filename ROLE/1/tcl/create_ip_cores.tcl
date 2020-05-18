@@ -381,39 +381,10 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : UDP Application Flash
+# IBM-HSL-IP : UDP Harris Application
 #------------------------------------------------------------------------------
-set ipModName "UdpApplicationFlash"
-set ipName    "udp_app_flash"
-set ipVendor  "IBM"
-set ipLibrary "hls"
-set ipVersion "1.0"
-set ipCfgList  [ list ]
-
-set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-
-if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
-
-
-#------------------------------------------------------------------------------  
-# IBM-HSL-IP : TCP Application Flash 
-#------------------------------------------------------------------------------
-set ipModName "TcpApplicationFlash"
-set ipName    "tcp_app_flash"
-set ipVendor  "IBM"
-set ipLibrary "hls"
-set ipVersion "1.0"
-set ipCfgList  [ list ]
-
-set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-
-if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
-
-#------------------------------------------------------------------------------  
-# IBM-HSL-IP : TCP Shell Interface 
-#------------------------------------------------------------------------------
-set ipModName "TcpShellInterface"
-set ipName    "tcp_shell_if"
+set ipModName "HarrisApp"
+set ipName    "harris_app"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"

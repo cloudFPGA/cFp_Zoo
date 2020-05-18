@@ -3,7 +3,7 @@
 # *            All rights reserved -- Property of IBM
 # *----------------------------------------------------------------------------
 # * Created : Apr 2018
-# * Authors : Burkhard Ringlein, Francois Abel
+# * Authors : Burkhard Ringlein, Francois Abel, Dionysios Diamantopoulos
 # *
 # * Description : A makefile that invokes all necesarry steps to synthesize
 # *         this ROLE.
@@ -27,7 +27,7 @@ CLEAN_TYPES = *.log *.jou *.str *.time
 all: assert_env Role_$(cFpSRAtype)_OOC.dcp
 
 assert_env:
-	@../cFDK/SRA/LIB/bash/assert_envs.sh
+	@../../cFDK/SRA/LIB/bash/assert_envs.sh
 
 #OBSOLETE Role_x1Udp_x1Tcp_x2Mp_OOC.dcp: ./hdl ./ip ./xdc ./tcl
 #OBSOLETE 	cd ./tcl/; vivado -mode batch -source run_pr.tcl -notrace -log run_pr.log -tclargs -force
