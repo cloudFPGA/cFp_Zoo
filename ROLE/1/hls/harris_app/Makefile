@@ -79,6 +79,7 @@ endif
 	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS)
 
 fcsim: fcompile
+	@make logo
 	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ ../../../../$(INPUT_IMAGE)
 	
 memchecksim: fcompile
@@ -104,3 +105,18 @@ cosim_view:
 clean:
 	rm -rf ${ipName}_prj $(obj)
 	rm -f vivado*.log
+
+	
+logo:
+	@echo "                                                               ";
+	@echo "...build with:                                                 ";
+	@echo " ██████╗███████╗██████╗    ██████╗ ██╗   ██╗██╗██╗     ██████╗ ";
+	@echo "██╔════╝██╔════╝██╔══██╗   ██╔══██╗██║   ██║██║██║     ██╔══██╗";
+	@echo "██║     █████╗  ██████╔╝   ██████╔╝██║   ██║██║██║     ██║  ██║";
+	@echo "██║     ██╔══╝  ██╔═══╝    ██╔══██╗██║   ██║██║██║     ██║  ██║";
+	@echo "╚██████╗██║     ██║███████╗██████╔╝╚██████╔╝██║███████╗██████╔╝";
+	@echo " ╚═════╝╚═╝     ╚═╝╚══════╝╚═════╝  ╚═════╝ ╚═╝╚══════╝╚═════╝ ";
+	@echo "                                                    v1.0 --did ";
+	@echo "                                                               ";
+
+

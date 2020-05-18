@@ -16,16 +16,15 @@
 
 
 #include <stdio.h>
-#include <iostream>               // For cout and cerr
-#include <cstdlib>                // For atoi()
-#include "../include/PracticalSocket.h"      // For UDPSocket and SocketException
-using namespace std;
-#include "opencv2/opencv.hpp"
-using namespace cv;
+#include <iostream>                     // For cout and cerr
+#include <cstdlib>                      // For atoi()
+#include <assert.h>                     // For assert()
+#include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include "../include/config.h"
-#include <assert.h>
+#include "opencv2/opencv.hpp"
 
-#define BUF_LEN 65540 // Larger than maximum UDP packet size
+using namespace std;
+using namespace cv;
 
   /**
    *   Main testbench and user-application for Harris on host. Client
@@ -60,11 +59,11 @@ int main(int argc, char * argv[]) {
 	
 
 	if (!frame.data) {
-	  printf("Failed to load the image ... %s\n!", argv[3]);
+	  printf("ERROR: Failed to load the image ... %s!\n", argv[3]);
 	  return -1;
 	}
 	else {
-	  printf("Succesfully loaded image ... %s\n!", argv[3]);
+	  printf("INFO: Succesfully loaded image ... %s!\n", argv[3]);
 	}
 #endif
         clock_t last_cycle_tx = clock();
@@ -84,7 +83,7 @@ int main(int argc, char * argv[]) {
 	    assert(send.isContinuous());
 	    
             int total_pack = 1 + (send.total() - 1) / PACK_SIZE;
-	    cout << "\ttotal_pack=" << total_pack << endl;
+	    cout << "INFO: Total packets to send = " << total_pack << endl;
 	    
 	    //printf("DEBUG: send.total=%u\n", send.total());
 	    //printf("DEBUG: send.channels=%u\n", send.channels());
@@ -106,14 +105,13 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
-            cout << next_cycle_tx - last_cycle_tx << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
 	    
 	    clock_t last_cycle_rx = clock();
 	    
 	    // RX Loop
-            cout << "expecting length of packs:" << total_pack << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
             for (int i = 0; i < total_pack; i++) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
@@ -128,7 +126,7 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
             }
 
-            cout << "Received packet from " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
  
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
@@ -144,12 +142,16 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
-            cout << next_cycle_rx - last_cycle_rx << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
 	    
+	    string out_file;
+	    out_file.assign(argv[3]);
+	    out_file += "_fpga_out.png";
+	    cout << "INFO: The output file is stored at: " << out_file << endl; 
+	    
 	    // We save the image received from network after being processed by harris HLS TB
-	    imwrite("../../../hls/harris_app/test/output_from_fpga_to_udp.png", frame);
+	    imwrite(out_file, frame);
 	    
 	    waitKey(1000*FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA

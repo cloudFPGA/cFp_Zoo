@@ -16,14 +16,10 @@
 #include <cstdlib>           // For atoi()
 #include <iostream>          // For cout and cerr
 #include "../include/PracticalSocket.h" // For UDPSocket and SocketException
-
-#define BUF_LEN 65540 // Larger than maximum UDP packet size
-
-#include "opencv2/opencv.hpp"
-using namespace cv;
 #include "../include/config.h"
+#include "opencv2/opencv.hpp"
 
-
+using namespace cv;
 
 
   /**
@@ -32,8 +28,8 @@ using namespace cv;
    */
 int main(int argc, char * argv[]) {
 
-    if (argc != 2) { // Test for correct number of parameters
-        cerr << "Usage: " << argv[0] << " <Server Port>" << endl;
+    if ((argc < 2) || (argc > 3)) { // Test for correct number of parameters
+        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode>" << endl;
         exit(1);
     }
 
@@ -56,14 +52,14 @@ int main(int argc, char * argv[]) {
 #endif
     
 	    int total_pack = 1 + (FRAME_WIDTH * FRAME_HEIGHT - 1) / PACK_SIZE;
-            cout << "expecting length of packs:" << total_pack << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
 	    
 	    // RX Loop
             for (int i = 0; i < total_pack; i++) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
                 if (recvMsgSize != PACK_SIZE) {
-                    cerr << "Received unexpected size pack:" << recvMsgSize << endl;
+                    cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
 #ifdef INPUT_FROM_CAMERA
                     continue;
 #else
@@ -73,11 +69,11 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
             }
 
-            cout << "Received packet from " << sourceAddress << ":" << sourcePort << endl;
+            cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
             cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
-                cerr << "receive failure!" << endl;
+                cerr << "ERROR: receive failure!" << endl;
 #ifdef INPUT_FROM_CAMERA
                 continue;
 #else
@@ -89,9 +85,26 @@ int main(int argc, char * argv[]) {
 	    // We save the image received from network in order to process it with the harris HLS TB
 	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.png", frame);
 	    
+	    // Select simulation mode, default fcsim
+	    string exec_cmd = "make fcsim -j 4";
+	    string ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png";
+	    if (argc == 3) {
+	      if (atoi(argv[2]) == 2) {
+		exec_cmd = "make csim";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/csim/build/output_hls.png";
+	      }
+	      else if (atoi(argv[2]) == 3) {
+		exec_cmd = "make cosim";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/cosim/build/output_hls.png";
+	      }
+	      else if (atoi(argv[2]) == 4) {
+		exec_cmd = "make kcachegrind";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png";
+	      }
+	    }
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
 	    string str_command = "cd ../../../hls/harris_app && make clean && \
-				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png	 make fcsim -j 4 && \
+				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
 				  cd ../../host/harris/build/ "; 
 	    const char *command = str_command.c_str(); 
   	    cout << "Calling TB with command:" << command << endl; 
@@ -101,23 +114,18 @@ int main(int argc, char * argv[]) {
 	    	    	    	    
 	    clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
-            cout << next_cycle_rx - last_cycle_rx << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
-	    
-	    cout << "Waiting for the file to be processed..." << endl;
-            //waitKey(20);
-	    cout << "OK. Will try to process it\n" << endl;
+    
 
-	    
 	    // TX step
-	    frame = cv::imread("../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png", cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
+	    frame = cv::imread(ouf_file, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 	    if (!frame.data) {
-	      cout << "Failed to load the image ../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png" << endl; 
+	      cerr << "ERROR: Failed to load the image " << ouf_file << endl; 
 	      return -1;
 	    }
 	    else {
-	      cout << "Succesfully loaded image ../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png" << endl; 
+	      cout << "INFO: Succesfully loaded image " << ouf_file << endl; 
 	    }
 	        
 	    assert(frame.total() == FRAME_WIDTH * FRAME_HEIGHT);
@@ -137,8 +145,7 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
-            cout << next_cycle_tx - last_cycle_tx << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
 	    
 	    
@@ -149,7 +156,6 @@ int main(int argc, char * argv[]) {
         cerr << e.what() << endl;
         exit(1);
     }
-
     return 0;
 }
 
