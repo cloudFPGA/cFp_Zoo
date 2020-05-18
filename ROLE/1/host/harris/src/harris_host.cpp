@@ -25,6 +25,7 @@ using namespace cv;
 #include "../include/config.h"
 #include <assert.h>
 
+#define BUF_LEN 65540 // Larger than maximum UDP packet size
 
   /**
    *   Main testbench and user-application for Harris on host. Client
@@ -38,7 +39,9 @@ int main(int argc, char * argv[]) {
 
     string servAddress = argv[1]; // First arg: server address
     unsigned short servPort = Socket::resolveService(argv[2], "udp");
-
+    char buffer[BUF_LEN]; // Buffer for echo string
+    int recvMsgSize; // Size of received message
+    
     try {
         UDPSocket sock;
 
@@ -53,7 +56,7 @@ int main(int argc, char * argv[]) {
             exit(1);
         }
 #else
-	frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the color image
+	frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 	
 
 	if (!frame.data) {
@@ -64,7 +67,7 @@ int main(int argc, char * argv[]) {
 	  printf("Succesfully loaded image ... %s\n!", argv[3]);
 	}
 #endif
-        clock_t last_cycle = clock();
+        clock_t last_cycle_tx = clock();
 #ifdef INPUT_FROM_CAMERA	
         while (1) {
             cap >> frame;
@@ -74,7 +77,12 @@ int main(int argc, char * argv[]) {
 	    
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
 	    
-            imshow("send", send);
+            imshow("host_send", send);
+	    
+	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
+	    // will return such a continuous Mat, but we should check it.
+	    assert(send.isContinuous());
+	    
             int total_pack = 1 + (send.total() - 1) / PACK_SIZE;
 	    cout << "\ttotal_pack=" << total_pack << endl;
 	    
@@ -90,18 +98,58 @@ int main(int argc, char * argv[]) {
 	    //  flat = flat.clone(); // O(N)
 	    //}    
 	    
-
+	    // TX Loop
             for (int i = 0; i < total_pack; i++) {
 		sock.sendTo( & send.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
 		//sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
 	    }
             
-            clock_t next_cycle = clock();
-            double duration = (next_cycle - last_cycle) / (double) CLOCKS_PER_SEC;
-            cout << "\teffective FPS:" << (1 / duration) << " \tkbps:" << (PACK_SIZE * total_pack / duration / 1024 * 8) << endl;
+            clock_t next_cycle_tx = clock();
+            double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
+            cout << "\teffective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
+            cout << next_cycle_tx - last_cycle_tx << endl;
+            last_cycle_tx = next_cycle_tx;
+	    
+	    clock_t last_cycle_rx = clock();
+	    
+	    // RX Loop
+            cout << "expecting length of packs:" << total_pack << endl;
+            char * longbuf = new char[PACK_SIZE * total_pack];
+            for (int i = 0; i < total_pack; i++) {
+                recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
+                if (recvMsgSize != PACK_SIZE) {
+                    cerr << "Received unexpected size pack:" << recvMsgSize << endl;
+#ifdef INPUT_FROM_CAMERA
+                    continue;
+#else
+		    exit(1);
+#endif
+                }
+                memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
+            }
 
-            cout << next_cycle - last_cycle;
-            last_cycle = next_cycle;
+            cout << "Received packet from " << servAddress << ":" << servPort << endl;
+ 
+            frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
+	    if (frame.size().width == 0) {
+                cerr << "receive failure!" << endl;
+#ifdef INPUT_FROM_CAMERA
+                continue;
+#else
+		exit(1);
+#endif
+            }
+            namedWindow("host_recv", WINDOW_AUTOSIZE);
+            imshow("host_recv", frame);
+            
+            clock_t next_cycle_rx = clock();
+            double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
+            cout << "\teffective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
+            cout << next_cycle_rx - last_cycle_rx << endl;
+            last_cycle_rx = next_cycle_rx;
+	    
+	    // We save the image received from network after being processed by harris HLS TB
+	    imwrite("../../../hls/harris_app/test/output_from_fpga_to_udp.png", frame);
 	    
 	    waitKey(1000*FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA
