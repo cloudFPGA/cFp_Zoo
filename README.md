@@ -14,10 +14,20 @@ Documentation: https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/
 
 ## System configurattion
 
-Assuming Ubuntu 18.04 the folowing packages should be installed:
+Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
-sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv
+sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev
 ```
+
+You may also need these steps for Ubuntu 18.04 & Vitis 2019.2 :
+```
+sudo apt-get install libjpeg62
+wget http://se.archive.ubuntu.com/ubuntu/pool/main/libp/libpng/libpng12-0_1.2.54-1ubuntu1_amd64.deb
+sudo apt-get install ./libpng12-0_1.2.54-1ubuntu1_amd64.deb 
+rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
+```
+
+
 
 ## Quick divein 
 

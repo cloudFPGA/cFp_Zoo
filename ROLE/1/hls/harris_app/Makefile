@@ -54,7 +54,7 @@ obj = $(src:.cpp=.o)
 CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attributes \
 					 -D__SDSVHLS__ -std=c++0x \
 					 `pkg-config --libs opencv` `xml2-config --cflags --libs` \
-					 -I$(VIVADOBINDIR)/../include -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
+					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
 
 csim: assert_env
