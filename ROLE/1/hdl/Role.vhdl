@@ -289,7 +289,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component TriangleApplication is
+  component HarrisApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -335,7 +335,7 @@ architecture Flash of Role_Themisto is
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
            poROL_NRC_Rx_ports_V_ap_vld : out std_logic
          );
-  end component TriangleApplication;
+  end component HarrisApplication;
 
 
 
@@ -435,7 +435,7 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: TriangleApplication
+  UAF: HarrisApplication
   port map (
 
              ------------------------------------------------------
@@ -503,7 +503,7 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
-  TAF: TriangleApplication
+  TAF: HarrisApplication
   port map (
 
              ------------------------------------------------------
