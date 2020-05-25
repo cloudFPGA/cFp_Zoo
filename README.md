@@ -82,20 +82,28 @@ The testbench of Harris is highlighted below:
 ![Oveview of Vitis Vision Harris Testbench](./doc/harris_tb.png)
 
 The testbench is offered in two flavors:
-- HLS tb: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
-- End-user application TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
+- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
+- Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
 
 Basic files/modules:
-  1. [harris_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send an image to the FPGA for processing with Harris Corner Detector algorithm. This file is part of both the `HLS tb` and the `End-user application TB`
-  2. [harris_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `End-user application TB`.
+  1. [harris_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send an image to the FPGA for processing with Harris Corner Detector algorithm. This file is part of both the `HLS TB` and the `Host TB`
+  2. [harris_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
   3. [test_harris_app.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/hls/harris_app/src/harris_app.cpp): The typical Vivado HLS testbench of Harris IP, when this is wrapped in a Themisto Shell.
   4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
   5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
 
   
+##### Harris image size 
+
+The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/include/config.h 
+through the `FRAME_HEIGHT` and `FRAME_WIDTH` directives. These directives have an impact of the FPGA resources. In the following simulations if the image 
+provided has other dimensions, the `cv::resize` function will be used to adjust the image (scale) to `FRAME_HEIGHT x FRAME_WIDTH`.
+  
+**Note:** Remember to run `make clean` every time you change those directives.
+  
 ##### Run simulation
 
-###### HLS testbench
+###### HLS TB
   
 ```bash
 cd ./ROLE/1/hls/harris_app
@@ -113,21 +121,29 @@ make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
 ```
 
-###### End-user application testbench
+###### Host TB
   
 ```bash
+# Compile sources
 cd ./ROLE/1/host/harris
 mkdir build && cd build
 cmake ../
 make -j 2
+
+# Start the intermediate listener
 # Usage: ./harris_host_fwd_tb <Server Port> <optional simulation mode>
 ./harris_host_fwd_tb 1234 0
+
+# Start the actual user application on host
 # Open another terminal and prepare env
 cd cFp_Vitis
 source ./env/setenv.sh
 cd ./ROLE/1/host/harris/build
 # Usage: ./harris_host <Server> <Server Port> <optional input image>
 ./harris_host localhost 1234 ../../../hls/harris_app/test/8x8.png
+
+
+# What happens is that the user application (harris_host) is sending an input image file to intermediate listener (harris_host_fwd_tb) through socket. The latter receives the payload and reconstructs the image. Then it is calling the HLS TB by firstly compiling the HLS TB files. The opposite data flow is realized for taking the results back and reconstruct the FPGA output image.
 # You should expect the output in the file <optional input image>_fpga_out.png
 eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
