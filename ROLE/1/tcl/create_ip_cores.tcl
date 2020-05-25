@@ -381,9 +381,9 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : UDP Harris Application
+# IBM-HSL-IP : UDP Harris Application Flash
 #------------------------------------------------------------------------------
-set ipModName "HarrisApp"
+set ipModName "HarrisApplication"
 set ipName    "harris_app"
 set ipVendor  "IBM"
 set ipLibrary "hls"
@@ -393,6 +393,7 @@ set ipCfgList  [ list ]
 set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
 
 if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
+
 
 #------------------------------------------------------------------------------  
 # IBM-HSL-IP : MemTest Flash
