@@ -84,6 +84,16 @@ The testbench of Harris is highlighted below:
 The testbench is offered in two flavors:
 - HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
+  For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
+  ```c
+  // Calling the actual TB over its typical makefile procedure, but passing the save file
+  string str_command = "cd ../../../hls/harris_app && make clean && \
+  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
+  cd ../../host/harris/build/ "; 
+  const char *command = str_command.c_str(); 
+  cout << "Calling TB with command:" << command << endl; 
+  system(command); 
+  ```
 
 Basic files/modules:
   1. [harris_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send an image to the FPGA for processing with Harris Corner Detector algorithm. This file is part of both the `HLS TB` and the `Host TB`
@@ -96,10 +106,10 @@ Basic files/modules:
 ##### Harris image size 
 
 The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/include/config.h 
-through the `FRAME_HEIGHT` and `FRAME_WIDTH` directives. These directives have an impact of the FPGA resources. In the following simulations if the image 
+through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
 provided has other dimensions, the `cv::resize` function will be used to adjust the image (scale) to `FRAME_HEIGHT x FRAME_WIDTH`.
   
-**Note:** Remember to run `make clean` every time you change those directives.
+**Note:** Remember to run `make clean` every time you change those definitions.
   
 ##### Run simulation
 
