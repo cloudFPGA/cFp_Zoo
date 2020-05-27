@@ -153,7 +153,10 @@ cd ./ROLE/1/host/harris/build
 ./harris_host localhost 1234 ../../../hls/harris_app/test/8x8.png
 
 
-# What happens is that the user application (harris_host) is sending an input image file to intermediate listener (harris_host_fwd_tb) through socket. The latter receives the payload and reconstructs the image. Then it is calling the HLS TB by firstly compiling the HLS TB files. The opposite data flow is realized for taking the results back and reconstruct the FPGA output image.
+# What happens is that the user application (harris_host) is sending an input image file to 
+# intermediate listener (harris_host_fwd_tb) through socket. The latter receives the payload and 
+# reconstructs the image. Then it is calling the HLS TB by firstly compiling the HLS TB files. The 
+# opposite data flow is realized for taking the results back and reconstruct the FPGA output image.
 # You should expect the output in the file <optional input image>_fpga_out.png
 eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
@@ -198,6 +201,11 @@ cd cFp_Vitis/ROLE/1/host/harris/build
 eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
 ```
+
+#### Usefull commands
+
+- Connect to ZYC2 network through openvpn:
+  `sudo openvpn --config zyc2-vpn-user.ovpn --auth-user-pass up-user`
 
 
 ## Content from previous README (cFp_Build)

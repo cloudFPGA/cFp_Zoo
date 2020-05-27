@@ -169,7 +169,9 @@ void harris_app(
         udpWord = siSHL_This_Data.read();
 	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
 	////storeWordToArray(udpWord.tdata, img_inp);
-	//storeWordToAxiStream(udpWord, img_in_axi_stream);
+	storeWordToAxiStream(udpWord, img_in_axi_stream);
+	udpWord.tdata += 1;
+	udpWord.tdata += image_loaded;
         sRxpToTxp_Data.write(udpWord);
         if(udpWord.tlast == 1)
         {
@@ -207,7 +209,7 @@ processed_word);
   }
    -------------------------------------------------------------------------------------------- */
   
-  /* SKIP HARRIS
+  
   switch(HarrisFSM)
   {
     case WAIT_FOR_META: 
@@ -239,12 +241,12 @@ processed_word);
 	  image_loaded = 0; // force reset
 	  HarrisFSM = WAIT_FOR_META;
 	}
-	sRxpToTxp_Data.write(newWord);
+	//sRxpToTxp_Data.write(newWord);
       }
       break;
       
   }
-  */
+
   
   
   
