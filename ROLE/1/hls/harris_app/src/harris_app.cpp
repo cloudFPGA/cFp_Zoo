@@ -84,71 +84,29 @@ void storeWordToAxiStream(NetworkWord word, hls::stream<ap_axiu<INPUT_PTR_WIDTH,
 }
 
 
+
+
+
 /*****************************************************************************
- * @brief   Main process of the Harris Application 
- * directives.
- * @deprecated  This functions is using deprecated AXI stream interface 
+ * @brief Receive Path - From SHELL to THIS.
+ *
+ * @param[in]  piSHL_MmioEchoCtrl  configuration of the echo function.
+ * @param[in]  siSHL_Data          data from SHELL.
+ * @param[out] soEPt_Data          data to pEchoPassTrough.
+ * @param[out] soESf_Data          data to pEchoStoreAndForward.
+ *
  * @return Nothing.
- *****************************************************************************/
-void harris_app(
-
-    ap_uint<32>             *pi_rank,
-    ap_uint<32>             *pi_size,
-    //------------------------------------------------------
-    //-- SHELL / This / Udp/TCP Interfaces
-    //------------------------------------------------------
-    stream<NetworkWord>         &siSHL_This_Data,
-    stream<NetworkWord>         &soTHIS_Shl_Data,
-    stream<NetworkMetaStream>   &siNrc_meta,
-    stream<NetworkMetaStream>   &soNrc_meta,
-    ap_uint<32>                 *po_rx_ports
-    )
+ ******************************************************************************/
+void pRXPath(
+	stream<NetworkWord>         &siSHL_This_Data,
+        stream<NetworkMetaStream>   &siNrc_meta,
+        NetworkMetaStream  meta_tmp)
 {
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+    #pragma HLS DATAFLOW interval=1
 
-  //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
- //#pragma HLS INTERFACE ap_ctrl_none port=return
-
-  //#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
-
-#pragma HLS INTERFACE axis register both port=siSHL_This_Data
-#pragma HLS INTERFACE axis register both port=soTHIS_Shl_Data
-
-#pragma HLS INTERFACE axis register both port=siNrc_meta
-#pragma HLS INTERFACE axis register both port=soNrc_meta
-
-#pragma HLS INTERFACE ap_ovld register port=po_rx_ports name=poROL_NRC_Rx_ports
-#pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
-#pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
-
-
-  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS DATAFLOW interval=1
-//#pragma HLS STREAM variable=sRxpToTxp_Data depth=1500 
-//#pragma HLS STREAM variable=sRxtoTx_Meta depth=1500 
-#pragma HLS reset variable=enqueueFSM
-#pragma HLS reset variable=dequeueFSM
-#pragma HLS reset variable=HarrisFSM
-
-
-  uint16_t Thresh = 442;
-  float K = 0.04;
-  uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-  //ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
-  //ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
-  
-  const int img_packets = IMG_PACKETS;
-#pragma HLS stream variable=img_in_axi_stream depth=img_packets
-#pragma HLS stream variable=img_out_axi_stream depth=img_packets
-  
-  *po_rx_ports = 0x1; //currently work only with default ports...
-
-  //-- LOCAL VARIABLES ------------------------------------------------------
-  NetworkWord udpWord;
-  NetworkWord udpWordTx;
-  NetworkWord newWord;
-  NetworkMetaStream  meta_tmp = NetworkMetaStream();
-  NetworkMeta  meta_in = NetworkMeta();
-
+    //-- LOCAL VARIABLES ------------------------------------------------------
+    UdpWord    udpWord;
 
   switch(enqueueFSM)
   {
@@ -169,7 +127,7 @@ void harris_app(
         udpWord = siSHL_This_Data.read();
 	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
 	////storeWordToArray(udpWord.tdata, img_inp);
-	storeWordToAxiStream(udpWord, img_in_axi_stream);
+	//storeWordToAxiStream(udpWord, img_in_axi_stream);
 	udpWord.tdata += 1;
 	udpWord.tdata += image_loaded;
         sRxpToTxp_Data.write(udpWord);
@@ -182,32 +140,30 @@ void harris_app(
   }
 
  
-  
-  
-  /* --------------------------------------------------------------------------------------------
-  // spare placeholder of Harris IP with array I/F
-  if (image_loaded == 1) {
-    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelArray(), processed_word=%u\n", 
-processed_word);
-    if (run_harris_once == 1) {
-      cornerHarrisAccelArray(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
-      run_harris_once = 0;
-    }
-    if (processed_word < IMG_PACKETS - 1) {
-      newWord = NetworkWord(img_out[processed_word], 255, 0);
-      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
-      processed_word++;
-    }
-    else {
-      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
-      newWord = NetworkWord(img_out[processed_word], 255, 1);
-      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
-      processed_word = 0;
-      image_loaded = 0; // force reset
-    }
-    sRxpToTxp_Data.write(newWord);
-  }
-   -------------------------------------------------------------------------------------------- */
+}
+
+
+/*****************************************************************************
+ * @brief Receive Path - From SHELL to THIS.
+ *
+ * @param[in]  piSHL_MmioEchoCtrl  configuration of the echo function.
+ * @param[in]  siSHL_Data          data from SHELL.
+ * @param[out] soEPt_Data          data to pEchoPassTrough.
+ * @param[out] soESf_Data          data to pEchoStoreAndForward.
+ *
+ * @return Nothing.
+ ******************************************************************************/
+void pProcPath(
+	void)
+{
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+    #pragma HLS DATAFLOW interval=1
+
+    //-- LOCAL VARIABLES ------------------------------------------------------
+    NetworkWord newWord;
+    uint16_t Thresh = 442;
+    float K = 0.04;
+    uint16_t k = K * (1 << 16); // Convert to Q0.16 format
   
   
   switch(HarrisFSM)
@@ -246,39 +202,33 @@ processed_word);
       break;
       
   }
+ 
+}
 
-  
-  
-  
-  /*
-    // spare placeholder of Harris IP with stream I/F
-  if (image_loaded == 1) {
-    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelStream(), processed_word=%u\n", 
-processed_word);
-    if (run_harris_once == 1) {
-      cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
-      run_harris_once = 0;
-    }
-    if (processed_word < IMG_PACKETS - 1) {
-      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
-      processed_word++;
-    }
-    else {
-      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
-      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
-      processed_word = 0;
-      image_loaded = 0; // force reset
-    }    
-    sRxpToTxp_Data.write(newWord);
-  }
-  */
-  
-  
-  
-  
-  
-  
-  
+
+
+/*****************************************************************************
+ * @brief Transmit Path - From THIS to SHELL.
+ *
+ * @param[in]  piSHL_MmioEchoCtrl, configuration of the echo function.
+ * @param[in]  siEPt_Data,         data from pEchoPassTrough.
+ * @param[in]  siESf_Data,         data from pEchoStoreAndForward.
+ * @param[out] soSHL_Data,         data to SHELL.
+ *
+ * @return Nothing.
+ *****************************************************************************/
+void pTXPath(
+        stream<NetworkWord>         &soTHIS_Shl_Data,
+        stream<NetworkMetaStream>   &soNrc_meta,
+        ap_uint<32>                 *pi_rank,
+        ap_uint<32>                 *pi_size)
+{
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+    #pragma HLS DATAFLOW interval=1
+
+    //-- LOCAL VARIABLES ------------------------------------------------------
+    UdpWord      udpWordTx;
+    NetworkMeta  meta_in = NetworkMeta();
   
   switch(dequeueFSM)
   {
@@ -328,6 +278,144 @@ processed_word);
       }
       break;
   }
+}
+
+
+/*****************************************************************************
+ * @brief   Main process of the Harris Application 
+ * directives.
+ * @deprecated  This functions is using deprecated AXI stream interface 
+ * @return Nothing.
+ *****************************************************************************/
+void harris_app(
+
+    ap_uint<32>             *pi_rank,
+    ap_uint<32>             *pi_size,
+    //------------------------------------------------------
+    //-- SHELL / This / Udp/TCP Interfaces
+    //------------------------------------------------------
+    stream<NetworkWord>         &siSHL_This_Data,
+    stream<NetworkWord>         &soTHIS_Shl_Data,
+    stream<NetworkMetaStream>   &siNrc_meta,
+    stream<NetworkMetaStream>   &soNrc_meta,
+    ap_uint<32>                 *po_rx_ports
+    )
+{
+
+  //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
+ //#pragma HLS INTERFACE ap_ctrl_none port=return
+
+  //#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
+
+#pragma HLS INTERFACE axis register both port=siSHL_This_Data
+#pragma HLS INTERFACE axis register both port=soTHIS_Shl_Data
+
+#pragma HLS INTERFACE axis register both port=siNrc_meta
+#pragma HLS INTERFACE axis register both port=soNrc_meta
+
+#pragma HLS INTERFACE ap_ovld register port=po_rx_ports name=poROL_NRC_Rx_ports
+#pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
+#pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
+
+
+  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+#pragma HLS DATAFLOW 
+//#pragma HLS STREAM variable=sRxpToTxp_Data depth=1500 
+//#pragma HLS STREAM variable=sRxtoTx_Meta depth=1500 
+#pragma HLS reset variable=enqueueFSM
+#pragma HLS reset variable=dequeueFSM
+#pragma HLS reset variable=HarrisFSM
+
+
+
+  //ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
+  //ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
+  
+  const int img_packets = IMG_PACKETS;
+#pragma HLS stream variable=img_in_axi_stream depth=img_packets
+#pragma HLS stream variable=img_out_axi_stream depth=img_packets
+  
+  *po_rx_ports = 0x1; //currently work only with default ports...
+
+  //-- LOCAL VARIABLES ------------------------------------------------------
+  NetworkMetaStream  meta_tmp = NetworkMetaStream();
+
+
+
+ pRXPath(
+	siSHL_This_Data,
+        siNrc_meta,
+        meta_tmp);
+  
+  
+  /* --------------------------------------------------------------------------------------------
+  // spare placeholder of Harris IP with array I/F
+  if (image_loaded == 1) {
+    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelArray(), processed_word=%u\n", 
+processed_word);
+    if (run_harris_once == 1) {
+      cornerHarrisAccelArray(img_inp, img_out, WIDTH, HEIGHT, Thresh, k);
+      run_harris_once = 0;
+    }
+    if (processed_word < IMG_PACKETS - 1) {
+      newWord = NetworkWord(img_out[processed_word], 255, 0);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
+      processed_word++;
+    }
+    else {
+      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      newWord = NetworkWord(img_out[processed_word], 255, 1);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+      processed_word = 0;
+      image_loaded = 0; // force reset
+    }
+    sRxpToTxp_Data.write(newWord);
+  }
+   -------------------------------------------------------------------------------------------- */
+  
+  
+  pProcPath();
+  
+
+
+  
+  
+  
+  /*
+    // spare placeholder of Harris IP with stream I/F
+  if (image_loaded == 1) {
+    printf("DEBUG in harris_app: image_loaded => cornerHarrisAccelStream(), processed_word=%u\n", 
+processed_word);
+    if (run_harris_once == 1) {
+      cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+      run_harris_once = 0;
+    }
+    if (processed_word < IMG_PACKETS - 1) {
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
+      processed_word++;
+    }
+    else {
+      printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put processed_word = 0.\n", processed_word);
+      newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+      processed_word = 0;
+      image_loaded = 0; // force reset
+    }    
+    sRxpToTxp_Data.write(newWord);
+  }
+  */
+  
+  
+  pTXPath(
+        soTHIS_Shl_Data,
+        soNrc_meta,
+        pi_rank,
+        pi_size);
+  
+  
+  
+  
+  
+
 
 }
 
