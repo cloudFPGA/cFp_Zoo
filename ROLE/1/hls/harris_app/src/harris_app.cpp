@@ -44,18 +44,20 @@ unsigned int run_harris_once = 1;
  *****************************************************************************/
 void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE], unsigned int *processed_word, unsigned int *image_loaded)
 {
-    img[*processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
-    printf("DEBUG in storeWordToArray: input = %u = 0x%16.16llX \n", input, input);
-    printf("DEBUG in storeWordToArray: img[%u]= %u = 0x%16.16llX \n", *processed_word, 
-(uint64_t)img[*processed_word], (uint64_t)img[*processed_word]);
-    if (*processed_word < IMG_PACKETS-1) {
-      *processed_word++;
-    }
-    else {
-      printf("DEBUG in storeWordToArray: WARNING - you've reached the max depth of img[%u]. Will put *processed_word = 0.\n", *processed_word);
-      *processed_word = 0;
-      *image_loaded = 1;
-    }
+  #pragma HLS INLINE
+  
+  img[*processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
+  printf("DEBUG in storeWordToArray: input = %u = 0x%16.16llX \n", input, input);
+  printf("DEBUG in storeWordToArray: img[%u]= %u = 0x%16.16llX \n", *processed_word, 
+  (uint64_t)img[*processed_word], (uint64_t)img[*processed_word]);
+  if (*processed_word < IMG_PACKETS-1) {
+    *processed_word++;
+  }
+  else {
+    printf("DEBUG in storeWordToArray: WARNING - you've reached the max depth of img[%u]. Will put *processed_word = 0.\n", *processed_word);
+    *processed_word = 0;
+    *image_loaded = 1;
+  }
 }
 
 
@@ -64,8 +66,9 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE], uns
  * @return Nothing.
  *****************************************************************************/
 void storeWordToAxiStream(NetworkWord word, hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream, unsigned int *processed_word, unsigned int *image_loaded)
-{
-    
+{   
+  #pragma HLS INLINE
+  
   ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> v;
   v.data = word.tdata;
   v.keep = word.tkeep;
@@ -109,8 +112,8 @@ void pRXPath(
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE
+    #pragma HLS DATAFLOW interval=1
+    // #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     UdpWord    udpWord;
 
