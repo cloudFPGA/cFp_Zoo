@@ -4,3 +4,6 @@
 [submodule "Vitis_Libraries"]
 	path = Vitis_Libraries
 	url = https://github.com/Xilinx/Vitis_Libraries.git
+[submodule "hlslib"]
+	path = hlslib
+	url = https://github.com/definelicht/hlslib.git

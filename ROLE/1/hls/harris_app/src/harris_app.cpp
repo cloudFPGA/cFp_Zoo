@@ -22,6 +22,11 @@
 
 #include "../include/xf_harris_config.h"
 
+#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+
+using hlslib::Stream;
+
+#define Data_t ap_uint<INPUT_PTR_WIDTH>
 
 //stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
 //stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
@@ -42,7 +47,7 @@ unsigned int run_harris_once = 1;
  * @brief   Store a word from ethernet to local memory
  * @return Nothing.
  *****************************************************************************/
-void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE], unsigned int *processed_word, unsigned int *image_loaded)
+void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS], unsigned int *processed_word, unsigned int *image_loaded)
 {
   #pragma HLS INLINE
   
@@ -65,14 +70,22 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMGSIZE], uns
  * @brief   Store a word from ethernet to a local AXI stream
  * @return Nothing.
  *****************************************************************************/
-void storeWordToAxiStream(NetworkWord word, hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream, unsigned int *processed_word, unsigned int *image_loaded)
+void storeWordToAxiStream(
+  NetworkWord word, 
+  Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+  unsigned int *processed_word, 
+  unsigned int *image_loaded)
 {   
   #pragma HLS INLINE
   
-  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> v;
-  v.data = word.tdata;
-  v.keep = word.tkeep;
-  v.last = word.tlast;
+  //ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> v;
+  //v.data = word.tdata;
+  //v.keep = word.tkeep;
+  //v.last = word.tlast;
+  
+  Data_t v;
+  v = word.tdata;
+  
   img_in_axi_stream.write(v);
   
   if (*processed_word < IMG_PACKETS-1) {
@@ -83,7 +96,8 @@ void storeWordToAxiStream(NetworkWord word, hls::stream<ap_axiu<INPUT_PTR_WIDTH,
     *processed_word = 0;
     *image_loaded = 1;
   }
-  printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u\n", (uint64_t)v.data, (uint64_t)v.data, *processed_word);
+  //printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u\n", (uint64_t)v.data, (uint64_t)v.data, *processed_word);
+  printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u, *image_loaded = %u\n", (uint64_t)v, (uint64_t)v, *processed_word, *image_loaded);
 }
 
 
@@ -105,7 +119,7 @@ void pRXPath(
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkWord>                              &sRxpToTxp_Data,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >  &img_in_axi_stream,
+	Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
         NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word, 
 	unsigned int                                     *image_loaded
@@ -120,10 +134,10 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
+      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META\n");
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
-	printf("DEBUG in harris_app: enqueueFSM - WAIT_FOR_META\n");
         meta_tmp.tlast = 1; //just to be sure...
         *processed_word = 0;
 	*image_loaded = 0;
@@ -133,12 +147,12 @@ void pRXPath(
       break;
 
     case PROCESSING_PACKET:
+      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET\n");
       //if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full() )
       if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
-	printf("DEBUG in harris_app: enqueueFSM - PROCESSING_PACKET\n");
 	////storeWordToArray(udpWord.tdata, img_inp);
 	storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word, image_loaded);
 	//udpWord.tdata += 1;
@@ -168,8 +182,8 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                               &sRxpToTxp_Data,
-	      hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >   &img_in_axi_stream,
-	      hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >  &img_out_axi_stream, 
+	      Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+              Stream<Data_t, IMG_PACKETS>                          &img_out_axi_stream,
 	      unsigned int                                      *processed_word_tx, 
 	      unsigned int                                      *image_loaded
 	      )
@@ -187,39 +201,65 @@ void pProcPath(
   switch(HarrisFSM)
   {
     case WAIT_FOR_META: 
-      printf("DEBUG in HarrisFSM: WAIT_FOR_META\n");
-      if ( (*image_loaded) == 1 )
+      printf("DEBUG in pProcPath: WAIT_FOR_META\n");
+//      if ( (*image_loaded) == 1 )
+//      {
+//        HarrisFSM = PROCESSING_PACKET;
+//	*processed_word_tx = 0;
+//      }
+      if (img_in_axi_stream.full())
       {
-        HarrisFSM = PROCESSING_PACKET;
-	*processed_word_tx = 0;
-      }
+	HarrisFSM = PROCESSING_PACKET;
+      }      
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in HarrisFSM: PROCESSING_PACKET\n");
-      //cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+      printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
+	//if (img_in_axi_stream.full())
+	//{
+	//  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+	//}
 	img_out_axi_stream.write(img_in_axi_stream.read());
-	HarrisFSM = HARRIS_RETURN_RESULTS;
+	if (img_out_axi_stream.full())
+	{
+	  HarrisFSM = HARRIS_RETURN_RESULTS;
+	} 
       }
       break;
       
     case HARRIS_RETURN_RESULTS:
-      printf("DEBUG in HarrisFSM: HARRIS_RETURN_RESULTS\n");
+      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
-	if (*processed_word_tx < IMG_PACKETS - 1) {
-	  newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
-	  (*processed_word_tx)++;
-	  HarrisFSM = HARRIS_RETURN_RESULTS;
-	}
-	else {
-	  printf("DEBUG in harris_app: WARNING - you've reached the max depth of img[%u]. Will put *processed_word_tx = 0.\n", *processed_word_tx);
-	  newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+	
+	Data_t temp = img_out_axi_stream.read();
+	if ( img_out_axi_stream.empty() ) 
+	{
+	  newWord = NetworkWord(temp, 255, 1);
 	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
+	else
+	{
+	  newWord = NetworkWord(temp, 255, 0);
+	  (*processed_word_tx)++;
+	}
+	/*
+	if (*processed_word_tx < IMG_PACKETS - 1) {
+	  //newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
+	  newWord = NetworkWord(img_out_axi_stream.read(), 255, 0);
+	  
+	  HarrisFSM = HARRIS_RETURN_RESULTS;
+	}
+	else {
+	  printf("DEBUG in pProcPath: WARNING - you've reached the max depth of img[%u]. Will put *processed_word_tx = 0.\n", *processed_word_tx);
+	  //newWord = NetworkWord(img_out_axi_stream.read().data, 255, 1);
+	  newWord = NetworkWord(img_out_axi_stream.read(), 255, 1);
+	  *processed_word_tx = 0;
+	  HarrisFSM = WAIT_FOR_META;
+	}*/
 	/**/sRxpToTxp_Data.write(newWord);
       }
       break;
@@ -261,7 +301,7 @@ void pTXPath(
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
-      printf("DEBUG in harris_app: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word=%u\n", dequeueFSM, *processed_word);
+      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word=%u\n", dequeueFSM, *processed_word);
       //-- Forward incoming chunk to SHELL
       if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
@@ -291,12 +331,12 @@ void pTXPath(
       break;
 
     case PROCESSING_PACKET: 
+      printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET\n", dequeueFSM);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         udpWordTx = sRxpToTxp_Data.read();
 
         soTHIS_Shl_Data.write(udpWordTx);
-	printf("DEBUG in harris_app: dequeueFSM=%d - PROCESSING_PACKET\n", dequeueFSM);
 
         if(udpWordTx.tlast == 1)
         {
@@ -354,8 +394,12 @@ void harris_app(
   static unsigned int processed_word_tx;
   static unsigned int image_loaded;
   const int img_packets = IMG_PACKETS;
-  static hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >  img_in_axi_stream ("img_in_axi_stream" );
-  static hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> > img_out_axi_stream("img_out_axi_stream");
+  //static hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >  img_in_axi_stream ("img_in_axi_stream" );
+  //static hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> > img_out_axi_stream("img_out_axi_stream");
+  
+  static Stream<Data_t, IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
+  static Stream<Data_t, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
+  
   //ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
   //ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
   *po_rx_ports = 0x1; //currently work only with default ports...
