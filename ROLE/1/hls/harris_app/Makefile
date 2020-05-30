@@ -19,7 +19,8 @@ ipName =harris_app
 
 DEPS := $(shell find ./src/ -type f)
 
-.PHONY: all sim cosim cosim_view
+.PHONY: all csim cosim_view
+
 all: ${ipName}_prj/solution1/impl/ip
 
 
@@ -57,9 +58,6 @@ CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attribu
 					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
 
-csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
-
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)
 ifdef CHECK_VIVADO
@@ -92,11 +90,14 @@ kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
 
 csynth: assert_env
-	export hlsSim=0; export hlsCoSim=0; vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; vivado_hls -f run_hls.tcl
+
+csim: assert_env
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
 
 cosim: assert_env
-	@#rm -rf ${ipName}_prj
-	export hlsSim=0; export hlsCoSim=1; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimFile=../../../../$(INPUT_IMAGE); vivado_hls -f run_hls.tcl
+	#@#rm -rf ${ipName}_prj
 
 cosim_view:
 	@/bin/echo -e "current_fileset\nopen_wave_database $(ipName).wdb\n" > ./$(ipName)_prj/solution1/sim/verilog/open_wave.tcl
