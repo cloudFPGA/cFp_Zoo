@@ -23,6 +23,7 @@
 #include "../include/xf_harris_config.h"
 
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+//#include "../../../../../../cFp_BringUp/ROLE/hls/udp_app_flash/src/udp_app_flash.hpp"
 
 using hlslib::Stream;
 
@@ -148,16 +149,17 @@ void pRXPath(
 
     case PROCESSING_PACKET:
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET\n");
-      if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full() )
+      if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full()  && !img_in_axi_stream.full() )
       //if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
 	////storeWordToArray(udpWord.tdata, img_inp);
-	//storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word, image_loaded);
+	storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word, image_loaded);
 	//udpWord.tdata += 1;
 	//udpWord.tdata += image_loaded;
-        sRxpToTxp_Data.write(udpWord);
+        //sRxpToTxp_Data.write(udpWord);
+	sRxpToTxp_Data.write(NetworkWord(img_in_axi_stream.read(), udpWord.tkeep , udpWord.tlast));
         if(udpWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
