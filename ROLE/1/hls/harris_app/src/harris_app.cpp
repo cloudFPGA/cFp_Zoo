@@ -224,10 +224,10 @@ void pProcPath(
 	//  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
 	//}
 	img_out_axi_stream.write(img_in_axi_stream.read());
-	//if (img_out_axi_stream.full())
-	//{
+	if (img_out_axi_stream.full())
+	{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
-	//} 
+	} 
       }
       break;
       
@@ -240,14 +240,14 @@ void pProcPath(
 	if ( img_out_axi_stream.empty() ) 
 	{
 	  newWord = temp;//NetworkWord(temp, 255, 1);
-	  temp.tlast = 1;
+	  //temp.tlast = 1;
 	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
 	else
 	{
 	  newWord = temp;//NetworkWord(temp, 255, 0);
-	  temp.tlast = 1;
+	  //temp.tlast = 1;
 	  (*processed_word_tx)++;
 	}
 	/*
