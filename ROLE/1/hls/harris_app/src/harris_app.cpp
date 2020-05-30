@@ -23,11 +23,11 @@
 #include "../include/xf_harris_config.h"
 
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
-//#include "../../../../../../cFp_BringUp/ROLE/hls/udp_app_flash/src/udp_app_flash.hpp"
 
 using hlslib::Stream;
 
-#define Data_t ap_uint<INPUT_PTR_WIDTH>
+//#define Data_t ap_uint<INPUT_PTR_WIDTH>
+#define Data_t NetworkWord
 
 //stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
 //stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
@@ -84,10 +84,10 @@ void storeWordToAxiStream(
   //v.keep = word.tkeep;
   //v.last = word.tlast;
   
-  Data_t v;
-  v = word.tdata;
+  //Data_t v;
+  //v = word.tdata;
   
-  img_in_axi_stream.write(v);
+  img_in_axi_stream.write(word);
   
   if (*processed_word < IMG_PACKETS-1) {
     (*processed_word)++;
@@ -98,7 +98,7 @@ void storeWordToAxiStream(
     *image_loaded = 1;
   }
   //printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u\n", (uint64_t)v.data, (uint64_t)v.data, *processed_word);
-  printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u, *image_loaded = %u\n", (uint64_t)v, (uint64_t)v, *processed_word, *image_loaded);
+  //printf("DEBUG in storeWordToAxiStream: input = %u = 0x%16.16llX , *processed_word = %u, *image_loaded = %u\n", (uint64_t)v, (uint64_t)v, *processed_word, *image_loaded);
 }
 
 
@@ -120,7 +120,7 @@ void pRXPath(
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkWord>                              &sRxpToTxp_Data,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+	Stream<Data_t, IMG_PACKETS>                      &img_in_axi_stream,
         NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word, 
 	unsigned int                                     *image_loaded
@@ -159,7 +159,7 @@ void pRXPath(
 	//udpWord.tdata += 1;
 	//udpWord.tdata += image_loaded;
         //sRxpToTxp_Data.write(udpWord);
-	sRxpToTxp_Data.write(NetworkWord(img_in_axi_stream.read(), udpWord.tkeep , udpWord.tlast));
+	//sRxpToTxp_Data.write(img_in_axi_stream.read());
         if(udpWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -209,7 +209,7 @@ void pProcPath(
 //        HarrisFSM = PROCESSING_PACKET;
 //	*processed_word_tx = 0;
 //      }
-      if (img_in_axi_stream.full())
+      if (!img_in_axi_stream.empty())
       {
 	HarrisFSM = PROCESSING_PACKET;
       }      
@@ -224,10 +224,10 @@ void pProcPath(
 	//  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
 	//}
 	img_out_axi_stream.write(img_in_axi_stream.read());
-	if (img_out_axi_stream.full())
-	{
+	//if (img_out_axi_stream.full())
+	//{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
-	} 
+	//} 
       }
       break;
       
@@ -239,13 +239,15 @@ void pProcPath(
 	Data_t temp = img_out_axi_stream.read();
 	if ( img_out_axi_stream.empty() ) 
 	{
-	  newWord = NetworkWord(temp, 255, 1);
+	  newWord = temp;//NetworkWord(temp, 255, 1);
+	  temp.tlast = 1;
 	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
 	else
 	{
-	  newWord = NetworkWord(temp, 255, 0);
+	  newWord = temp;//NetworkWord(temp, 255, 0);
+	  temp.tlast = 1;
 	  (*processed_word_tx)++;
 	}
 	/*
@@ -458,14 +460,14 @@ processed_word);
   }
    -------------------------------------------------------------------------------------------- */
   
-  /*
+  
   pProcPath(sRxpToTxp_Data,
 	    img_in_axi_stream,
 	    img_out_axi_stream,
 	    &processed_word_tx,
 	    &image_loaded
   );
-  */
+  
 
 
   
