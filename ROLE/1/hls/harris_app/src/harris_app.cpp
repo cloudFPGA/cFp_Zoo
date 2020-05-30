@@ -127,8 +127,8 @@ void pRXPath(
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    #pragma HLS DATAFLOW interval=1
-    // #pragma  HLS INLINE
+    //#pragma HLS DATAFLOW interval=1
+     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     UdpWord    udpWord;
 
@@ -191,8 +191,8 @@ void pProcPath(
 	      )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    #pragma HLS DATAFLOW interval=1
-
+    //#pragma HLS DATAFLOW interval=1
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
     uint16_t Thresh = 442;
@@ -296,8 +296,8 @@ void pTXPath(
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    #pragma HLS DATAFLOW interval=1
-
+    //#pragma HLS DATAFLOW interval=1
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     UdpWord      udpWordTx;
     NetworkMeta  meta_in = NetworkMeta();
