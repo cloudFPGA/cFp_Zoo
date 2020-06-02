@@ -229,13 +229,13 @@ void pProcPath(
       {
 	//if (img_in_axi_stream.full())
 	//{
-	//  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+	  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
 	//}
-	oldWord = img_in_axi_stream.read();
-	img_out_axi_stream.write(oldWord);
+	//oldWord = img_in_axi_stream.read();
+	//img_out_axi_stream.write(oldWord);
 	//if (oldWord.last == 1)
-	if ( (!img_out_axi_stream.empty()) && ((*processed_word_tx)++ == IMG_PACKETS-1) )
-	//if ( !img_out_axi_stream.empty() )  
+	//if ( (!img_out_axi_stream.empty()) && ((*processed_word_tx)++ == IMG_PACKETS-1) )
+	if ( !img_out_axi_stream.empty() )  
 	{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	} 
@@ -248,19 +248,20 @@ void pProcPath(
       {
 	
 	Data_t temp = img_out_axi_stream.read();
-	newWord = NetworkWord(temp.data, temp.keep, temp.last);
 	if ( img_out_axi_stream.empty() ) 
 	{
-	  //temp.tlast = 1;
+	  temp.last = 1;
 	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
-	//else
-	//{
-	//  newWord = NetworkWord(temp.data, temp.keep, temp.last);
-	  //temp.tlast = 1;
+	else
+	{
+	  temp.last = 0;
 	  //(*processed_word_tx)++;
-	//}
+	}
+	//TODO: find why Vitis kernel does not set keep and last by itself
+	temp.keep = 255;
+	newWord = NetworkWord(temp.data, temp.keep, temp.last); 
 	/*
 	if (*processed_word_tx < IMG_PACKETS - 1) {
 	  //newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);
