@@ -57,6 +57,8 @@ CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attribu
 					 `pkg-config --libs opencv` `xml2-config --cflags --libs` \
 					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
+					 
+LDFLAGS = -lpthread					 
 
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)
@@ -74,7 +76,7 @@ endif
 	mkdir -p ./${ipName}_prj/solution1
 	mkdir -p ./${ipName}_prj/solution1/fcsim/
 	mkdir -p ./${ipName}_prj/solution1/fcsim/build
-	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS)
+	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS) $(LDFLAGS)
 
 fcsim: fcompile
 	@make logo

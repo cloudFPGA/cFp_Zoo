@@ -22,9 +22,11 @@
 
 #include "../include/xf_harris_config.h"
 
-#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+//#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+//#include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
 
-using hlslib::Stream;
+//using hlslib::Stream;
+using hls::stream;
 
 //#define Data_t ap_uint<INPUT_PTR_WIDTH>
 #define Data_t NetworkWord
@@ -73,7 +75,8 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS],
  *****************************************************************************/
 void storeWordToAxiStream(
   NetworkWord word, 
-  Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+  //Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+  stream<Data_t>                                   &img_in_axi_stream,
   unsigned int *processed_word, 
   unsigned int *image_loaded)
 {   
@@ -120,7 +123,8 @@ void pRXPath(
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkWord>                              &sRxpToTxp_Data,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	Stream<Data_t, IMG_PACKETS>                      &img_in_axi_stream,
+	//Stream<Data_t, IMG_PACKETS>                      &img_in_axi_stream,
+	stream<Data_t>                                   &img_in_axi_stream,
         NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word, 
 	unsigned int                                     *image_loaded
@@ -149,8 +153,8 @@ void pRXPath(
 
     case PROCESSING_PACKET:
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET\n");
-      if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full()  && !img_in_axi_stream.full() )
-      //if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
+      //if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full()  && !img_in_axi_stream.full() )
+      if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
@@ -184,8 +188,10 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                               &sRxpToTxp_Data,
-	      Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
-              Stream<Data_t, IMG_PACKETS>                          &img_out_axi_stream,
+	      //Stream<Data_t, IMG_PACKETS>                          &img_in_axi_stream,
+              //Stream<Data_t, IMG_PACKETS>                          &img_out_axi_stream,
+	      stream<Data_t>                          &img_in_axi_stream,
+              stream<Data_t>                          &img_out_axi_stream,
 	      unsigned int                                      *processed_word_tx, 
 	      unsigned int                                      *image_loaded
 	      )
@@ -194,6 +200,7 @@ void pProcPath(
     //#pragma HLS DATAFLOW interval=1
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
+    NetworkWord oldWord;
     NetworkWord newWord;
     uint16_t Thresh = 442;
     float K = 0.04;
@@ -223,8 +230,9 @@ void pProcPath(
 	//{
 	//  cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
 	//}
-	img_out_axi_stream.write(img_in_axi_stream.read());
-	if (img_out_axi_stream.full())
+	oldWord = img_in_axi_stream.read();
+	img_out_axi_stream.write(oldWord);
+	if (oldWord.tlast == 1)
 	{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	} 
@@ -398,11 +406,15 @@ void harris_app(
   static unsigned int processed_word_tx;
   static unsigned int image_loaded;
   const int img_packets = IMG_PACKETS;
-  //static hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >  img_in_axi_stream ("img_in_axi_stream" );
-  //static hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> > img_out_axi_stream("img_out_axi_stream");
   
-  static Stream<Data_t, IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
-  static Stream<Data_t, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
+  //static stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >  img_in_axi_stream ("img_in_axi_stream" );
+  //static stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> > img_out_axi_stream("img_out_axi_stream");
+  
+  static stream<Data_t> img_in_axi_stream ("img_in_axi_stream" );
+  static stream<Data_t> img_out_axi_stream("img_out_axi_stream"); 
+  
+  //static Stream<Data_t, IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
+  //static Stream<Data_t, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
   
   //ap_uint<INPUT_PTR_WIDTH> img_inp[IMGSIZE];
   //ap_uint<OUTPUT_PTR_WIDTH> img_out[IMGSIZE];
@@ -423,6 +435,39 @@ void harris_app(
 #pragma HLS stream variable=img_out_axi_stream depth=img_packets
   
 
+  /*
+  // Dataflow functions running in parallel
+  HLSLIB_DATAFLOW_INIT();
+  
+  HLSLIB_DATAFLOW_FUNCTION(pRXPath, 
+			   siSHL_This_Data,
+			   siNrc_meta,
+			   sRxpToTxp_Data,
+			   sRxtoTx_Meta,
+			   img_in_axi_stream,
+			   meta_tmp,
+			   &processed_word_rx,
+			   &image_loaded);
+  
+  HLSLIB_DATAFLOW_FUNCTION(pProcPath,
+			   sRxpToTxp_Data,
+		           img_in_axi_stream,
+		           img_out_axi_stream,
+		           &processed_word_tx,
+		           &image_loaded); 
+
+  HLSLIB_DATAFLOW_FUNCTION(pTXPath,
+			   soTHIS_Shl_Data,
+			   soNrc_meta,
+			   sRxpToTxp_Data,
+			   sRxtoTx_Meta,
+			   pi_rank,
+			   pi_size,
+			   &processed_word_tx,
+			   &image_loaded);
+
+  HLSLIB_DATAFLOW_FINALIZE();
+  */
   
  pRXPath(
 	siSHL_This_Data,
@@ -507,7 +552,6 @@ processed_word);
 	&processed_word_tx,
 	&image_loaded
 	);
-  
   
   
   

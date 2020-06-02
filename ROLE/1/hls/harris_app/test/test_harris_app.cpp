@@ -591,7 +591,7 @@ int main(int argc, char** argv) {
         //there are 2 streams from the the App to the Role
         NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
         siUdp_meta.write(NetworkMetaStream(tmp_meta));
-        siUdp_meta.write(NetworkMetaStream(tmp_meta));
+        //siUdp_meta.write(NetworkMetaStream(tmp_meta));
         //set correct node_rank and cluster_size
         node_rank = 1;
         cluster_size = 2;
