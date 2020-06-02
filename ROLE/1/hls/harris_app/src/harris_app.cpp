@@ -145,11 +145,11 @@ void pRXPath(
       {
         meta_tmp = siNrc_meta.read();
         meta_tmp.tlast = 1; //just to be sure...
-        *processed_word = 0;
-	*image_loaded = 0;
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
+      *processed_word = 0;
+      *image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
