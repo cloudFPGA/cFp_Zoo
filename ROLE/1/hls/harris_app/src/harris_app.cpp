@@ -29,7 +29,8 @@
 using hls::stream;
 
 //#define Data_t ap_uint<INPUT_PTR_WIDTH>
-#define Data_t NetworkWord
+//#define Data_t NetworkWord
+#define Data_t ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
 
 //stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data");
 //stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
@@ -82,15 +83,15 @@ void storeWordToAxiStream(
 {   
   #pragma HLS INLINE
   
-  //ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> v;
-  //v.data = word.tdata;
-  //v.keep = word.tkeep;
-  //v.last = word.tlast;
+  Data_t v;
+  v.data = word.tdata;
+  v.keep = word.tkeep;
+  v.last = word.tlast;
   
   //Data_t v;
   //v = word.tdata;
   
-  img_in_axi_stream.write(word);
+  img_in_axi_stream.write(v);
   
   if (*processed_word < IMG_PACKETS-1) {
     (*processed_word)++;
@@ -200,7 +201,7 @@ void pProcPath(
     //#pragma HLS DATAFLOW interval=1
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
-    NetworkWord oldWord;
+    Data_t oldWord;
     NetworkWord newWord;
     uint16_t Thresh = 442;
     float K = 0.04;
@@ -211,15 +212,15 @@ void pProcPath(
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
-//      if ( (*image_loaded) == 1 )
-//      {
-//        HarrisFSM = PROCESSING_PACKET;
-//	*processed_word_tx = 0;
-//      }
-      if (!img_in_axi_stream.empty())
+      if ( (*image_loaded) == 1 )
       {
-	HarrisFSM = PROCESSING_PACKET;
-      }      
+        HarrisFSM = PROCESSING_PACKET;
+	*processed_word_tx = 0;
+      }
+      //if (!img_in_axi_stream.empty())
+      //{
+	//HarrisFSM = PROCESSING_PACKET;
+      //}      
       break;
 
     case PROCESSING_PACKET:
@@ -232,7 +233,9 @@ void pProcPath(
 	//}
 	oldWord = img_in_axi_stream.read();
 	img_out_axi_stream.write(oldWord);
-	if (oldWord.tlast == 1)
+	//if (oldWord.last == 1)
+	if ( (!img_out_axi_stream.empty()) && ((*processed_word_tx)++ == IMG_PACKETS-1) )
+	//if ( !img_out_axi_stream.empty() )  
 	{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	} 
@@ -245,19 +248,19 @@ void pProcPath(
       {
 	
 	Data_t temp = img_out_axi_stream.read();
+	newWord = NetworkWord(temp.data, temp.keep, temp.last);
 	if ( img_out_axi_stream.empty() ) 
 	{
-	  newWord = temp;//NetworkWord(temp, 255, 1);
 	  //temp.tlast = 1;
 	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
-	else
-	{
-	  newWord = temp;//NetworkWord(temp, 255, 0);
+	//else
+	//{
+	//  newWord = NetworkWord(temp.data, temp.keep, temp.last);
 	  //temp.tlast = 1;
-	  (*processed_word_tx)++;
-	}
+	  //(*processed_word_tx)++;
+	//}
 	/*
 	if (*processed_word_tx < IMG_PACKETS - 1) {
 	  //newWord = NetworkWord(img_out_axi_stream.read().data, 255, 0);

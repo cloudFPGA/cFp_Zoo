@@ -210,6 +210,8 @@ eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 - Connect to a ZYC2 x86 node:  
   ssh -Y ubuntu@10.12.2.100
 
+- On Wireshark filter line:
+  udp.port==2718
 
 ## Content from previous README (cFp_Build)
 (keeping it here for reference, but not related to cFp_Vitis yet)
