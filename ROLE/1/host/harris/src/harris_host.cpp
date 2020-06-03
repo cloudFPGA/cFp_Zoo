@@ -23,6 +23,9 @@
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
 
+// For HOST TB uncomment the following
+// #define TB_SIM_CFP_VITIS
+
 using namespace std;
 using namespace cv;
 
@@ -42,9 +45,12 @@ int main(int argc, char * argv[]) {
     int recvMsgSize; // Size of received message
     
     try {
+        #ifndef TB_SIM_CFP_VITIS
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
-	
+	#else
+        UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
+        #endif
         cv::Mat frame, send;
         vector < uchar > encoded;
 		
