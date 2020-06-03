@@ -42,8 +42,9 @@ int main(int argc, char * argv[]) {
     int recvMsgSize; // Size of received message
     
     try {
-        UDPSocket sock;
-
+        UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
+	                          // bind() in the UDPSocket constructor
+	
         cv::Mat frame, send;
         vector < uchar > encoded;
 		
