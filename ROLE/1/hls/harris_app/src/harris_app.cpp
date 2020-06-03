@@ -169,7 +169,7 @@ void pRXPath(
  * @param[out] sRxpToTxp_Data
  * @param[in]  img_in_axi_stream
  * @param[in]  img_out_axi_stream
- * @param[out] processed_word_tx
+ * @param[out] processed_word_rx
  * @param[in]  image_loaded
  *
  * @return Nothing.
@@ -181,7 +181,6 @@ void pProcPath(
 	      stream<Data_t>                         &img_in_axi_stream,
               stream<Data_t>                         &img_out_axi_stream,
 	      unsigned int                           *processed_word_rx,
-	      unsigned int                           *processed_word_tx, 
 	      unsigned int                           *image_loaded
 	      )
 {
@@ -202,8 +201,7 @@ void pProcPath(
       if ( (*image_loaded) == 1 )
       {
         HarrisFSM = PROCESSING_PACKET;
-	//*processed_word_rx = 0;
-	*processed_word_tx = 0;
+	*processed_word_rx = 0;
       }
       break;
 
@@ -228,7 +226,6 @@ void pProcPath(
 	if ( img_out_axi_stream.empty() ) 
 	{
 	  temp.last = 1;
-	  *processed_word_tx = 0;
 	  HarrisFSM = WAIT_FOR_META;
 	}
 	else
@@ -265,6 +262,7 @@ void pTXPath(
         stream<NetworkMetaStream>   &soNrc_meta,
 	stream<NetworkWord>         &sRxpToTxp_Data,
 	stream<NetworkMetaStream>   &sRxtoTx_Meta,
+        unsigned int                *processed_word_tx, 
         ap_uint<32>                 *pi_rank,
         ap_uint<32>                 *pi_size
 	    )
@@ -281,6 +279,7 @@ void pTXPath(
     case WAIT_FOR_STREAM_PAIR:
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR\n", dequeueFSM);
       //-- Forward incoming chunk to SHELL
+      *processed_word_tx = 0;
       if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
@@ -301,6 +300,8 @@ void pTXPath(
         meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
         soNrc_meta.write(meta_out_stream);
 
+	(*processed_word_tx)++;
+	
         if(udpWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
@@ -314,13 +315,18 @@ void pTXPath(
       {
         udpWordTx = sRxpToTxp_Data.read();
 
+	if(udpWordTx.tlast == 1)
+	{
+	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
+	}	
+	
+	(*processed_word_tx)++;
+	if (*processed_word_tx == 125) // = 1000 / (64b/8b), so for 32*32 125 is equal to 1000B out of 1024B (3x8B on 2nd packet )
+	{
+	    udpWordTx.tlast = 1;
+	}
+	
         soTHIS_Shl_Data.write(udpWordTx);
-
-        if(udpWordTx.tlast == 1)
-        {
-          dequeueFSM = WAIT_FOR_STREAM_PAIR;
-        }
-
       }
       break;
   }
@@ -410,7 +416,7 @@ void harris_app(
 			   sRxpToTxp_Data,
 		           img_in_axi_stream,
 		           img_out_axi_stream,
-		           &processed_word_tx,
+		           &processed_word_rx,
 		           &image_loaded); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
@@ -418,6 +424,7 @@ void harris_app(
 			   soNrc_meta,
 			   sRxpToTxp_Data,
 			   sRxtoTx_Meta,
+			   &processed_word_tx,
 			   pi_rank,
 			   pi_size);
 
@@ -438,7 +445,6 @@ void harris_app(
 	    img_in_axi_stream,
 	    img_out_axi_stream,
 	    &processed_word_rx,
-	    &processed_word_tx,
 	    &image_loaded);  
  
   pTXPath(
@@ -446,6 +452,7 @@ void harris_app(
         soNrc_meta,
 	sRxpToTxp_Data,
 	sRxtoTx_Meta,
+        &processed_word_tx,
         pi_rank,
         pi_size);
   

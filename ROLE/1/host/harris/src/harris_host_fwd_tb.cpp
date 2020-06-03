@@ -145,7 +145,6 @@ int main(int argc, char * argv[]) {
 	    clock_t last_cycle_tx = clock();
             for (int i = 0; i < total_pack; i++) {
 		sock.sendTo( & frame.data[i * PACK_SIZE], PACK_SIZE, sourceAddress, sourcePort);
-		//sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, sourceAddress, sourcePort);
 	    }
             
             clock_t next_cycle_tx = clock();

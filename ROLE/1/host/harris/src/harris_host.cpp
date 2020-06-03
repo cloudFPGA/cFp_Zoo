@@ -104,17 +104,6 @@ int main(int argc, char * argv[]) {
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	    cout << "INFO: Bytes in last packet  = " << bytes_in_last_pack << endl;
 	    
-	    //printf("DEBUG: send.total=%u\n", send.total());
-	    //printf("DEBUG: send.channels=%u\n", send.channels());
-	    //printf("DEBUG: encoded.size()=%u\n", encoded.size());
-	    
-	    // If the image has channels we should flatten it to ensure the correct transmission
-	    //uint totalElements = send.total() * send.channels(); // Note: image.total() == rows*cols.
-	    //printf("DEBUG: totalElements=%u\n", totalElements);
-	    //cv::Mat flat = send.reshape(1, totalElements); // 1xN mat of 1 channel, O(1) operation
-	    //if(!send.isContinuous()) {
-	    //  flat = flat.clone(); // O(N)
-	    //}    
 	    unsigned int sending_now = PACK_SIZE;
 	    
 	    // TX Loop
