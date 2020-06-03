@@ -1,6 +1,6 @@
-[![Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+## cFp_Vitis
 
-# cFp_Vitis
+[![Doc Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 cloudFPGA project (cFp) for Xilinx Vitis library
 
@@ -15,7 +15,7 @@ Documentation: https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/
 ![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)
 
 
-## System configurattion
+### System configurattion
 
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
@@ -31,30 +31,27 @@ rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 ```
 
 
-## Vitis libraries support
+### Vitis libraries support
 
 The following Vitis accelerated libraries are supported by cFp_Vitis:
 
-- [ ] blas
-- [ ] data_compression
-- [ ] database
-- [ ] dsp
-- [ ] quantitative_finance
-- [ ] security
-- [ ] solver
-- [x] vision
+- [ ] BLAS
+- [ ] Data Compression
+- [ ] Database
+- [ ] DSP
+- [ ] Quantitative Finance
+- [ ] Security
+- [ ] Solver
+- [x] Vision
   - [x] harris
 
 
-
-
-
-### Vitis Vision Harris Corner Detector dive in 
+#### Vitis Vision Harris Corner Detector dive in 
 
 ![Oveview of Vitis Vision Harris Corner Detector](./doc/harris_overview.png)
 
 
-#### Repository and environment setup
+##### Repository and environment setup
 
 ```bash
 git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Vitis.git
@@ -63,7 +60,7 @@ source ./env/setenv.sh
 ```
 
 
-#### Intergration of Vitis Vision Harris with cloudFPGA
+##### Intergration of Vitis Vision Harris with cloudFPGA
 
 In the following figure it is shown how straightforward is to intergrate a function from Vitis libraries with cloudFPGA project.
 
@@ -75,7 +72,7 @@ For cFp_Vitis we are using the Themisto Shell already equipeed with a network st
 A small FSM takes care of the data casting between network and AXI streams.
 
 
-#### Harris Simulation 
+##### Harris Simulation 
 
 The testbench of Harris is highlighted below:
 
@@ -103,7 +100,7 @@ Basic files/modules:
   5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
 
   
-##### Harris image size 
+###### Harris image size 
 
 The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/include/config.h 
 through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
@@ -111,9 +108,9 @@ provided has other dimensions, the `cv::resize` function will be used to adjust 
   
 **Note:** Remember to run `make clean` every time you change those definitions.
   
-##### Run simulation
+###### Run simulation
 
-###### HLS TB
+####### HLS TB
   
 ```bash
 cd ./ROLE/1/hls/harris_app
@@ -122,7 +119,7 @@ make csim   # to run simulation using Vivado's gcc
 make cosim  # to run co-simulation using Vivado
 ```
 
-###### Optional steps
+####### Optional steps
 
 ```bash
 cd ./ROLE/1/hls/harris_app
@@ -131,7 +128,7 @@ make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
 ```
 
-###### Host TB
+####### Host TB
   
 ```bash
 # Compile sources
@@ -162,31 +159,34 @@ eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
 ```
 
-#### Harris Synthesis
+##### Harris Synthesis
 
+Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-steps synthesis 
+procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
+the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1. 
 
-##### Only the Harris IP
+###### The Themisto SHELL
 ```bash
-cd cFp_Vitis/ROLE/1/hls/harris_app
-make csynth # to run HLS using Vivado
+cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
+make all # with Vivado HLS == 2017.4
 ```
 
-##### The Harris IP with the Themisto SHELL
-```bash
-cd cFp_Vitis/ROLE/1
-make all # with Vivado HLS >= 2019.1
-```
-
-##### The complete cFp_Vitis
+###### The complete cFp_Vitis
 ```bash
 cd cFp_Vitis
-make monolithic # with Vivado HLS == 2017.4
+make monolithic # with Vivado HLS >= 2019.1
+```
+
+Optional HLS only for the Harris IP (e.g. to check synthesizability)
+```bash
+cd cFp_Vitis/ROLE/1/hls/harris_app
+make csynth # with Vivado HLS >= 2019.1
 ```
 
 
-#### Harris cF Demo
+##### Harris cF Demo
 
-TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming 192.168.1.10 and port 1234
+TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
 
 ```bash
@@ -196,24 +196,27 @@ cmake ../
 make -j 2
 cd cFp_Vitis/ROLE/1/host/harris/build
 # Usage: ./harris_host <Server> <Server Port> <optional input image>
-./harris_host 192.168.1.10 1234 ../../../hls/harris_app/test/8x8.png
+./harris_host 10.12.200.153 2718 ../../../hls/harris_app/test/8x8.png
 # You should expect the output in the file <optional input image>_fpga_out.png
 eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
 ```
 
-#### Usefull commands
+##### Usefull commands
 
 - Connect to ZYC2 network through openvpn:
+
   `sudo openvpn --config zyc2-vpn-user.ovpn --auth-user-pass up-user`
 
-- Connect to a ZYC2 x86 node:  
-  ssh -Y ubuntu@10.12.2.100
+- Connect to a ZYC2 x86 node:
+
+  `ssh -Y ubuntu@10.12.2.100`
 
 - On Wireshark filter line:
-  udp.port==2718
 
-## Content from previous README (cFp_Build)
+  `udp.port==2718`
+
+### Content from previous README (cFp_Build)
 (keeping it here for reference, but not related to cFp_Vitis yet)
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
@@ -243,7 +246,7 @@ For distributing the routing tables, **`POST /cluster`** must be used.
 The following depicts an example API call, assuming that the cFp_Triangle bitfile was uploaded as image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
 ![POST /cluster example](./doc/post_cluster.png)
 
-## Firewall issues
+### Firewall issues
 
 Some firewalls may block network packets if there is not a connection to the remote machine/port.
 Hence, to get the Triangle example to work, the following commands may be necessary to be executed (as root):
