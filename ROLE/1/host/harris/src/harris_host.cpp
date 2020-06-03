@@ -24,7 +24,13 @@
 #include "opencv2/opencv.hpp"
 
 // For HOST TB uncomment the following
-// #define TB_SIM_CFP_VITIS
+ #define TB_SIM_CFP_VITIS
+
+void delay(unsigned int mseconds)
+{
+    clock_t goal = mseconds + clock();
+    while (goal > clock());
+}
 
 using namespace std;
 using namespace cv;
@@ -89,8 +95,14 @@ int main(int argc, char * argv[]) {
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
 	    
-            int total_pack = 1 + (send.total() - 1) / PACK_SIZE;
+            int total_pack  = 1 + (send.total() - 1) / PACK_SIZE;
+            int total_bytes = total_pack * PACK_SIZE;
+            int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
+
 	    cout << "INFO: Total packets to send = " << total_pack << endl;
+            cout << "INFO: Total bytes to send = " << send.total() << endl;
+	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
+	    cout << "INFO: Bytes in last packet  = " << bytes_in_last_pack << endl;
 	    
 	    //printf("DEBUG: send.total=%u\n", send.total());
 	    //printf("DEBUG: send.channels=%u\n", send.channels());
@@ -103,11 +115,15 @@ int main(int argc, char * argv[]) {
 	    //if(!send.isContinuous()) {
 	    //  flat = flat.clone(); // O(N)
 	    //}    
+	    unsigned int sending_now = PACK_SIZE;
 	    
 	    // TX Loop
             for (int i = 0; i < total_pack; i++) {
-		sock.sendTo( & send.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
-		//sock.sendTo( & flat.data[i * PACK_SIZE], PACK_SIZE, servAddress, servPort);
+                if ( i == total_pack - 1 ) {
+                    sending_now = bytes_in_last_pack;
+                }
+		sock.sendTo( & send.data[i * PACK_SIZE], sending_now, servAddress, servPort);
+		delay(100);  
 	    }
             
             clock_t next_cycle_tx = clock();

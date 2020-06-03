@@ -1,0 +1,11 @@
+[
+  {
+    "image_id": "d031b5a9-c3d8-4775-98db-e3de936a63e3",
+    "node_id": 1
+  },
+  {
+    "image_id": "NON_FPGA",
+    "node_ip":  "10.12.2.100",
+    "node_id": 0
+  }
+]

@@ -140,8 +140,8 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
-      *processed_word = 0;
-      *image_loaded = 0;
+      //*processed_word = 0;
+      //*image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
@@ -180,6 +180,7 @@ void pProcPath(
               //Stream<Data_t, IMG_PACKETS>          &img_out_axi_stream,
 	      stream<Data_t>                         &img_in_axi_stream,
               stream<Data_t>                         &img_out_axi_stream,
+	      unsigned int                           *processed_word_rx,
 	      unsigned int                           *processed_word_tx, 
 	      unsigned int                           *image_loaded
 	      )
@@ -201,7 +202,9 @@ void pProcPath(
       if ( (*image_loaded) == 1 )
       {
         HarrisFSM = PROCESSING_PACKET;
+	*processed_word_rx = 0;
 	*processed_word_tx = 0;
+	*image_loaded = 0;
       }
       break;
 
@@ -398,7 +401,6 @@ void harris_app(
   HLSLIB_DATAFLOW_FUNCTION(pRXPath, 
 			   siSHL_This_Data,
 			   siNrc_meta,
-			   sRxpToTxp_Data,
 			   sRxtoTx_Meta,
 			   img_in_axi_stream,
 			   meta_tmp,
@@ -418,9 +420,7 @@ void harris_app(
 			   sRxpToTxp_Data,
 			   sRxtoTx_Meta,
 			   pi_rank,
-			   pi_size,
-			   &processed_word_tx,
-			   &image_loaded);
+			   pi_size);
 
   HLSLIB_DATAFLOW_FINALIZE();
   */
@@ -438,6 +438,7 @@ void harris_app(
   pProcPath(sRxpToTxp_Data,
 	    img_in_axi_stream,
 	    img_out_axi_stream,
+	    &processed_word_rx,
 	    &processed_word_tx,
 	    &image_loaded);  
  

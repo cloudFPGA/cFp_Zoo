@@ -52,13 +52,18 @@ int main(int argc, char * argv[]) {
 #endif
     
 	    int total_pack = 1 + (FRAME_WIDTH * FRAME_HEIGHT - 1) / PACK_SIZE;
+            int bytes_in_last_pack = (FRAME_WIDTH * FRAME_HEIGHT) - (total_pack - 1) * PACK_SIZE;	    
+	    int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
 	    
 	    // RX Loop
             for (int i = 0; i < total_pack; i++) {
+	        if ( i == total_pack - 1 ) {
+                    receiving_now = bytes_in_last_pack;
+                }
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
-                if (recvMsgSize != PACK_SIZE) {
+                if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
 #ifdef INPUT_FROM_CAMERA
                     continue;
