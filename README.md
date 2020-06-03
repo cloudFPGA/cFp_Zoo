@@ -4,7 +4,8 @@
 
 cloudFPGA project (cFp) for Xilinx Vitis library
 
-Documentation: https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/
+- [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/example_projects.html#cfp-vitis)
+- [Code documentation](https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/)
 
 **Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Xilinx Vitis](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
 ```
@@ -215,6 +216,9 @@ eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 - On Wireshark filter line:
 
   `udp.port==2718`
+  
+- sometimes it accelerates the build process of `make monolithic` if:
+execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
 
 ### Content from previous README (cFp_Build)
 (keeping it here for reference, but not related to cFp_Vitis yet)

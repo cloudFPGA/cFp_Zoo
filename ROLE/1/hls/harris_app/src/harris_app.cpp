@@ -141,7 +141,7 @@ void pRXPath(
         enqueueFSM = PROCESSING_PACKET;
       }
       //*processed_word = 0;
-      //*image_loaded = 0;
+      *image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
@@ -202,9 +202,8 @@ void pProcPath(
       if ( (*image_loaded) == 1 )
       {
         HarrisFSM = PROCESSING_PACKET;
-	*processed_word_rx = 0;
+	//*processed_word_rx = 0;
 	*processed_word_tx = 0;
-	*image_loaded = 0;
       }
       break;
 
