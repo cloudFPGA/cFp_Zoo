@@ -26,14 +26,46 @@
 // For HOST TB uncomment the following
  #define TB_SIM_CFP_VITIS
 
+
+using namespace std;
+using namespace cv;
+
+
 void delay(unsigned int mseconds)
 {
     clock_t goal = mseconds + clock();
     while (goal > clock());
 }
 
-using namespace std;
-using namespace cv;
+
+/*****************************************************************************
+ * @brief Mark the points found by Harris into the image.
+ * 
+ * @return Nothing
+ ******************************************************************************/
+void markPointsOnImage(cv::Mat& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
+
+   for (int j = 0; j < imgOutput.rows; j++) {
+      for (int i = 0; i < (imgOutput.cols); i++) {
+	  //for CV_8UC1
+          unsigned char pix = imgOutput.at<unsigned char>(j,i);  //.read(j * (imgOutput.cols) + i);
+          if (pix != 0) {
+	      cv::Point tmp;
+              tmp.x = i;
+              tmp.y = j;
+              if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
+		  hls_points.push_back(tmp);
+	      }
+              short int y, x;
+              y = j;
+              x = i;
+              if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+	  }
+      }
+   }
+}
+
+
 
   /**
    *   Main testbench and user-application for Harris on host. Client
@@ -170,6 +202,15 @@ int main(int argc, char * argv[]) {
 	    
 	    // We save the image received from network after being processed by harris HLS TB
 	    imwrite(out_file, frame);
+	      
+            cv::Mat out_img;
+            out_img = send.clone();
+
+            std::vector<cv::Point> hls_points;
+	    
+	    /* Mark HLS points on the image */
+	    markPointsOnImage(frame, send, out_img, hls_points);
+	    
 	    
 	    waitKey(1000*FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA

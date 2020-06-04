@@ -304,7 +304,7 @@ void pTXPath(
         meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
         meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
-	meta_out_stream.tdata.len = meta_in.len; 
+	//meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
 	(*processed_word_tx)++;
@@ -386,6 +386,7 @@ void harris_app(
   static unsigned int processed_word_tx;
   static unsigned int image_loaded;
   const int img_packets = IMG_PACKETS;
+  const int tot_transfers = TOT_TRANSFERS;
   static stream<Data_t> img_in_axi_stream ("img_in_axi_stream" );
   static stream<Data_t> img_out_axi_stream("img_out_axi_stream"); 
   //static Stream<Data_t, IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
@@ -395,8 +396,8 @@ void harris_app(
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
-//#pragma HLS STREAM variable=sRxpToTxp_Data depth=1500 
-//#pragma HLS STREAM variable=sRxtoTx_Meta depth=1500 
+//#pragma HLS STREAM variable=sRxpToTxp_Data depth=TOT_TRANSFERS 
+#pragma HLS STREAM variable=sRxtoTx_Meta depth=tot_transfers 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=HarrisFSM
