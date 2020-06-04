@@ -397,7 +397,7 @@ void harris_app(
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
 //#pragma HLS STREAM variable=sRxpToTxp_Data depth=TOT_TRANSFERS 
-#pragma HLS STREAM variable=sRxtoTx_Meta depth=tot_transfers 
+#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=HarrisFSM

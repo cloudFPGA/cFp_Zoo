@@ -92,19 +92,19 @@ int main(int argc, char * argv[]) {
 	    
 	    // Select simulation mode, default fcsim
 	    string exec_cmd = "make fcsim -j 4";
-	    string ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png";
+	    string ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/hls_out.jpg";
 	    if (argc == 3) {
 	      if (atoi(argv[2]) == 2) {
 		exec_cmd = "make csim";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/csim/build/output_hls.png";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/csim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 3) {
 		exec_cmd = "make cosim";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/cosim/build/output_hls.png";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/cosim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/output_hls.png";
+		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/hls_out.jpg";
 	      }
 	    }
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file

@@ -28,8 +28,7 @@
 
 #ifndef _XF_OCV_REF_HPP_
 #define _XF_OCV_REF_HPP_
-
-#include "xf_harris_config.h"
+#include "xf_config_params.h"
 
 using namespace cv;
 using namespace std;

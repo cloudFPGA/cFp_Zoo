@@ -22,6 +22,7 @@
 #include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
+#include "../../../hls/harris_app/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
 
 // For HOST TB uncomment the following
  #define TB_SIM_CFP_VITIS
@@ -43,7 +44,11 @@ void delay(unsigned int mseconds)
  * 
  * @return Nothing
  ******************************************************************************/
-void markPointsOnImage(cv::Mat& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
+void markPointsOnImage(cv::Mat& imgOutput, 
+		       cv::Mat& in_img, 
+		       cv::Mat& out_img, 
+		       std::vector<cv::Point>& hw_points) 
+{
 
    for (int j = 0; j < imgOutput.rows; j++) {
       for (int i = 0; i < (imgOutput.cols); i++) {
@@ -54,12 +59,12 @@ void markPointsOnImage(cv::Mat& imgOutput, cv::Mat& in_img, cv::Mat& out_img, st
               tmp.x = i;
               tmp.y = j;
               if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
-		  hls_points.push_back(tmp);
+		  hw_points.push_back(tmp);
 	      }
               short int y, x;
               y = j;
               x = i;
-              if (j > 0) cv::circle(out_img, cv::Point(x, y), 5, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+              if (j > 0) cv::circle(out_img, cv::Point(x, y), 1, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
 	  }
       }
    }
@@ -77,19 +82,40 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 
+    
+    //------------------------------------------------------
+    //-- STEP-1 : Socket and variables definition
+    //------------------------------------------------------
     string servAddress = argv[1]; // First arg: server address
     unsigned short servPort = Socket::resolveService(argv[2], "udp");
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     
+    float Th;
+    if (FILTER_WIDTH == 3) {
+        Th = 30532960.00;
+    } else if (FILTER_WIDTH == 5) {
+        Th = 902753878016.0;
+    } else if (FILTER_WIDTH == 7) {
+        Th = 41151168289701888.000000;
+    }    
+    
     try {
+          
+        //------------------------------------------------------
+        //-- STEP-2 : Initialize socket connection
+        //------------------------------------------------------      
         #ifndef TB_SIM_CFP_VITIS
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
 	#else
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
         #endif
-        cv::Mat frame, send;
+        
+        //---------------------------------------------------------------------
+        //-- STEP-3 : Initialize an OpenCV Mat either from image or from camera
+        //---------------------------------------------------------------------  
+        cv::Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
 #ifdef INPUT_FROM_CAMERA
@@ -111,18 +137,14 @@ int main(int argc, char * argv[]) {
 	  printf("INFO: Succesfully loaded image ... %s!\n", argv[3]);
 	}
 #endif
-        clock_t last_cycle_tx = clock();
 #ifdef INPUT_FROM_CAMERA	
         while (1) {
             cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
 #endif
             resize(frame, send, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
-	    
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
-	    
             imshow("host_send", send);
-	    
 	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
@@ -130,16 +152,35 @@ int main(int argc, char * argv[]) {
             unsigned int total_pack  = 1 + (send.total() - 1) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
             unsigned int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
+	    assert(total_pack == TOT_TRANSFERS);
 
 	    cout << "INFO: Total packets to send = " << total_pack << endl;
             cout << "INFO: Total bytes to send = " << send.total() << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	    cout << "INFO: Bytes in last packet  = " << bytes_in_last_pack << endl;
+	    cout << "INFO: Packet size (custom MTU) = " << PACK_SIZE << endl;
 	    
-	    assert(total_pack == TOT_TRANSFERS);
+            //--------------------------------------------------------
+            //-- STEP-4 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY (SW)
+            //--------------------------------------------------------
+            clock_t start_cycle_harris_sw = clock();
+	    ocv_out_img.create(send.rows, send.cols, CV_8U); // create memory for opencv output image
+	    ocv_ref(send, ocv_out_img, Th);
+	    clock_t end_cycle_harris_sw = clock();
+	    double duration_harris_sw = (end_cycle_harris_sw - start_cycle_harris_sw) / (double) CLOCKS_PER_SEC;
+	    cout << "INFO: SW exec. time   : " << duration_harris_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW: " << (1 / duration_harris_sw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
 	    
 	    
-	    // TX Loop
+	    //------------------------------------------------------
+            //-- STEP-5 : RUN HARRIS DETECTOR FROM cF (HW)
+            //------------------------------------------------------
+            clock_t start_cycle_harris_hw = clock();
+	    
+	    //------------------------------------------------------
+            //-- STEP-5.1 : TX Loop
+            //------------------------------------------------------
+            clock_t last_cycle_tx = clock();
 	    unsigned int sending_now = PACK_SIZE;
             for (unsigned int i = 0; i < total_pack; i++) {
                 if ( i == total_pack - 1 ) {
@@ -154,9 +195,11 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
 	    
-	    clock_t last_cycle_rx = clock();
 	    
-	    // RX Loop
+	    //------------------------------------------------------
+            //-- STEP-5.2 : RX Loop
+            //------------------------------------------------------
+	    clock_t last_cycle_rx = clock();
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
@@ -194,7 +237,16 @@ int main(int argc, char * argv[]) {
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
+	   
+	    clock_t end_cycle_harris_hw = next_cycle_rx;
 	    
+	    double duration_harris_hw = (end_cycle_harris_hw - start_cycle_harris_hw) / (double) CLOCKS_PER_SEC;
+	    cout << "INFO: HW exec. time   : " << duration_harris_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW: " << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8) << endl;	    
+	    
+	    //------------------------------------------------------
+            //-- STEP-6 : Write output files and show in windows
+            //------------------------------------------------------
 	    string out_file;
 	    out_file.assign(argv[3]);
 	    out_file += "_fpga_out.png";
@@ -206,11 +258,11 @@ int main(int argc, char * argv[]) {
             cv::Mat out_img;
             out_img = send.clone();
 
-            std::vector<cv::Point> hls_points;
+            std::vector<cv::Point> hw_points;
 	    
 	    /* Mark HLS points on the image */
-	    markPointsOnImage(frame, send, out_img, hls_points);
-	    
+	    markPointsOnImage(frame, send, out_img, hw_points);
+	    imshow("HW", out_img);
 	    
 	    waitKey(1000*FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA
