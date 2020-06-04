@@ -304,6 +304,7 @@ void pTXPath(
         meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
         meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
+	meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
 	(*processed_word_tx)++;
