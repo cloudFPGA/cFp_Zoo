@@ -27,7 +27,6 @@
 // For HOST TB uncomment the following
 // #define TB_SIM_CFP_VITIS
 
-
 using namespace std;
 using namespace cv;
 
@@ -120,7 +119,7 @@ int main(int argc, char * argv[]) {
 		
 #ifdef INPUT_FROM_CAMERA
         VideoCapture cap(0); // Grab the camera
-        namedWindow("send", WINDOW_AUTOSIZE);
+        namedWindow("send", CV_WINDOW_NORMAL);
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
             exit(1);
@@ -144,6 +143,7 @@ int main(int argc, char * argv[]) {
 #endif
             resize(frame, send, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
+	    namedWindow("host_send", CV_WINDOW_NORMAL);
             imshow("host_send", send);
 	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
 	    // will return such a continuous Mat, but we should check it.
@@ -168,8 +168,8 @@ int main(int argc, char * argv[]) {
 	    ocv_ref(send, ocv_out_img, Th);
 	    clock_t end_cycle_harris_sw = clock();
 	    double duration_harris_sw = (end_cycle_harris_sw - start_cycle_harris_sw) / (double) CLOCKS_PER_SEC;
-	    cout << "INFO: SW exec. time   : " << duration_harris_sw << " seconds" << endl;
-            cout << "INFO: Effective FPS SW: " << (1 / duration_harris_sw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
+	    cout << "INFO: SW exec. time   :" << duration_harris_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW:" << (1 / duration_harris_sw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
 	    
 	    
 	    //------------------------------------------------------
@@ -230,7 +230,7 @@ int main(int argc, char * argv[]) {
 		exit(1);
 #endif
             }
-            namedWindow("host_recv", WINDOW_AUTOSIZE);
+            namedWindow("host_recv", CV_WINDOW_NORMAL);
             imshow("host_recv", frame);
             
             clock_t next_cycle_rx = clock();
@@ -241,30 +241,53 @@ int main(int argc, char * argv[]) {
 	    clock_t end_cycle_harris_hw = next_cycle_rx;
 	    
 	    double duration_harris_hw = (end_cycle_harris_hw - start_cycle_harris_hw) / (double) CLOCKS_PER_SEC;
-	    cout << "INFO: HW exec. time   : " << duration_harris_hw << " seconds" << endl;
-            cout << "INFO: Effective FPS HW: " << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8) << endl;	    
+	    cout << "INFO: HW exec. time   :" << duration_harris_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8) << endl;	    
 	    
 	    //------------------------------------------------------
             //-- STEP-6 : Write output files and show in windows
             //------------------------------------------------------
-	    string out_file;
-	    out_file.assign(argv[3]);
-	    out_file += "_fpga_out.png";
-	    cout << "INFO: The output file is stored at: " << out_file << endl; 
-	    
-	    // We save the image received from network after being processed by harris HLS TB
-	    imwrite(out_file, frame);
+	    string out_img_file, out_points_file;
+	    out_img_file.assign(argv[3]);
+	    out_img_file += "_fpga_img_out.png";
+	    out_points_file.assign(argv[3]);
+	    out_points_file += "_fpga_points_out.png";
+	    cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
+	    cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
 	      
             cv::Mat out_img;
             out_img = send.clone();
-
             std::vector<cv::Point> hw_points;
 	    
 	    /* Mark HLS points on the image */
 	    markPointsOnImage(frame, send, out_img, hw_points);
-	    imshow("HW", out_img);
 	    
-	    waitKey(1000*FRAME_INTERVAL);
+	    std::ostringstream oss;
+            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8);
+	    std::string windowName = "cFp_Vitis End2End"; //oss.str();
+	    /*
+	    string msg = "cFp_Vitis";
+	    cv::Scalar color(255, 0, 0);
+	    int fontFace = cv::FONT_HERSHEY_DUPLEX;
+	    double fontScale = 0.5;
+	    int thickness = 1;
+	    cv::putText(out_img,
+            msg, //text
+            cv::Point(10, out_img.rows / 2), //top-left position
+            fontFace,
+            fontScale,
+            color, //font color
+            thickness);
+	    */
+	    namedWindow(windowName, CV_WINDOW_NORMAL);
+	    imshow(windowName, out_img);
+	    //moveWindow(windowName, 0, 0);
+	    
+	    // We save the image received from network after being processed by Harris HW or HOST TB
+	    imwrite(out_img_file, out_img);
+	    imwrite(out_points_file, frame);
+	    
+	    waitKey(FRAME_INTERVAL);
 #ifdef INPUT_FROM_CAMERA
 	}
 #endif
