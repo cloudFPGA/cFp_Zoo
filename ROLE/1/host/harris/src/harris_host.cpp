@@ -24,9 +24,6 @@
 #include "opencv2/opencv.hpp"
 #include "../../../hls/harris_app/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
 
-// For HOST TB uncomment the following
-// #define TB_SIM_CFP_VITIS
-
 using namespace std;
 using namespace cv;
 
@@ -63,7 +60,7 @@ void markPointsOnImage(cv::Mat& imgOutput,
               short int y, x;
               y = j;
               x = i;
-              if (j > 0) cv::circle(out_img, cv::Point(x, y), 1, cv::Scalar(0, 0, 255, 255), 1, 8, 0);
+              if (j > 0) cv::circle(out_img, cv::Point(x, y), 4, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
 	  }
       }
    }
@@ -117,8 +114,8 @@ int main(int argc, char * argv[]) {
         cv::Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
-#ifdef INPUT_FROM_CAMERA
-        VideoCapture cap(0); // Grab the camera
+#ifdef INPUT_FROM_VIDEO
+        VideoCapture cap(VIDEO_SOURCE); // Grab the camera
         namedWindow("send", CV_WINDOW_NORMAL);
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
@@ -136,7 +133,7 @@ int main(int argc, char * argv[]) {
 	  printf("INFO: Succesfully loaded image ... %s!\n", argv[3]);
 	}
 #endif
-#ifdef INPUT_FROM_CAMERA	
+#ifdef INPUT_FROM_VIDEO	
         while (1) {
             cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
@@ -210,7 +207,7 @@ int main(int argc, char * argv[]) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
                 if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << receiving_now << endl;
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
                     continue;
 #else
 		    exit(1);
@@ -224,7 +221,7 @@ int main(int argc, char * argv[]) {
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "receive failure!" << endl;
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
                 continue;
 #else
 		exit(1);
@@ -247,14 +244,6 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-6 : Write output files and show in windows
             //------------------------------------------------------
-	    string out_img_file, out_points_file;
-	    out_img_file.assign(argv[3]);
-	    out_img_file += "_fpga_img_out.png";
-	    out_points_file.assign(argv[3]);
-	    out_points_file += "_fpga_points_out.png";
-	    cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
-	    cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
-	      
             cv::Mat out_img;
             out_img = send.clone();
             std::vector<cv::Point> hw_points;
@@ -282,13 +271,20 @@ int main(int argc, char * argv[]) {
 	    namedWindow(windowName, CV_WINDOW_NORMAL);
 	    imshow(windowName, out_img);
 	    //moveWindow(windowName, 0, 0);
-	    
+#ifndef INPUT_FROM_VIDEO	    
+	    string out_img_file, out_points_file;
+	    out_img_file.assign(argv[3]);
+	    out_img_file += "_fpga_img_out.png";
+	    out_points_file.assign(argv[3]);
+	    out_points_file += "_fpga_points_out.png";
+	    cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
+	    cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
 	    // We save the image received from network after being processed by Harris HW or HOST TB
 	    imwrite(out_img_file, out_img);
 	    imwrite(out_points_file, frame);
-	    
+#endif	    
 	    waitKey(FRAME_INTERVAL);
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
 	}
 #endif
 	// Destructor closes the socket

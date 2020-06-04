@@ -589,7 +589,7 @@ void ocv_ref(cv::Mat img_gray, cv::Mat& ocv_out_img, float Th) {
             if (temp1 > 0.0) sum += temp1;
         }
     }
-    float meanval = sum / (img_gray.rows * img_gray.cols);
+    //float meanval = sum / (img_gray.rows * img_gray.cols);
 
     // Step five: Apply Threshold
     for (int i = 0; i < img_gray.rows; i++) {

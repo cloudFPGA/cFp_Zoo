@@ -46,7 +46,7 @@ int main(int argc, char * argv[]) {
 
         // RX Step
         clock_t last_cycle_rx = clock();
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
         while (1) {
             // Block until receive message from a client
 #endif
@@ -65,7 +65,7 @@ int main(int argc, char * argv[]) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
                 if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
                     continue;
 #else
 		    exit(1);
@@ -79,7 +79,7 @@ int main(int argc, char * argv[]) {
             cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
-#ifdef INPUT_FROM_CAMERA
+#ifdef INPUT_FROM_VIDEO
                 continue;
 #else
 		exit(1);
@@ -157,7 +157,7 @@ int main(int argc, char * argv[]) {
             last_cycle_tx = next_cycle_tx;
 	    
 	    
-#ifdef INPUT_FROM_CAMERA	    
+#ifdef INPUT_FROM_VIDEO	    
         }
 #endif
     } catch (SocketException & e) {
