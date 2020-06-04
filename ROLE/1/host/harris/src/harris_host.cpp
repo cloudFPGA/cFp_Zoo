@@ -25,7 +25,7 @@
 #include "../../../hls/harris_app/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
 
 // For HOST TB uncomment the following
- #define TB_SIM_CFP_VITIS
+// #define TB_SIM_CFP_VITIS
 
 
 using namespace std;
