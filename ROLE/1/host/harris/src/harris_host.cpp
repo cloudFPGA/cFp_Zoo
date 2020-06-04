@@ -48,7 +48,7 @@ int main(int argc, char * argv[]) {
     string servAddress = argv[1]; // First arg: server address
     unsigned short servPort = Socket::resolveService(argv[2], "udp");
     char buffer[BUF_LEN]; // Buffer for echo string
-    int recvMsgSize; // Size of received message
+    unsigned int recvMsgSize; // Size of received message
     
     try {
         #ifndef TB_SIM_CFP_VITIS
@@ -95,19 +95,21 @@ int main(int argc, char * argv[]) {
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
 	    
-            int total_pack  = 1 + (send.total() - 1) / PACK_SIZE;
-            int total_bytes = total_pack * PACK_SIZE;
-            int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
+            unsigned int total_pack  = 1 + (send.total() - 1) / PACK_SIZE;
+            unsigned int total_bytes = total_pack * PACK_SIZE;
+            unsigned int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
 
 	    cout << "INFO: Total packets to send = " << total_pack << endl;
             cout << "INFO: Total bytes to send = " << send.total() << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	    cout << "INFO: Bytes in last packet  = " << bytes_in_last_pack << endl;
 	    
-	    unsigned int sending_now = PACK_SIZE;
+	    assert(total_pack == TOT_TRANSFERS);
+	    
 	    
 	    // TX Loop
-            for (int i = 0; i < total_pack; i++) {
+	    unsigned int sending_now = PACK_SIZE;
+            for (unsigned int i = 0; i < total_pack; i++) {
                 if ( i == total_pack - 1 ) {
                     sending_now = bytes_in_last_pack;
                 }
@@ -123,19 +125,23 @@ int main(int argc, char * argv[]) {
 	    clock_t last_cycle_rx = clock();
 	    
 	    // RX Loop
+	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
-            for (int i = 0; i < total_pack; i++) {
+            for (unsigned int i = 0; i < total_pack; i++) {
+                if ( i == total_pack - 1 ) {
+                    receiving_now = bytes_in_last_pack;
+                }
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
-                if (recvMsgSize != PACK_SIZE) {
-                    cerr << "Received unexpected size pack:" << recvMsgSize << endl;
+                if (recvMsgSize != receiving_now) {
+                    cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << receiving_now << endl;
 #ifdef INPUT_FROM_CAMERA
                     continue;
 #else
 		    exit(1);
 #endif
                 }
-                memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
+                memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;

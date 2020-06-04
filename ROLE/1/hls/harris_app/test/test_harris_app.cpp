@@ -314,7 +314,7 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     string      datFile = "../../../../test/" + outFileName;
     UdpWord     udpWord;
     bool        rc = OK;
-    unsigned int vals_per_line = 8;
+    unsigned int bytes_per_line = 8;
     
     //-- STEP-1 : OPEN FILE
     outFileStream.open(datFile.c_str());
@@ -324,26 +324,28 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     }
     printf("came to dumpImgToFile: _img.rows=%u, img.cols=%u\n", _img.rows, _img.cols);
     
-    ap_uint<8> value[vals_per_line];
+    ap_uint<8> value[bytes_per_line];
     
     //-- STEP-2 : DUMP IMAGE DATA TO FILE
-    for (unsigned int count = 0, j = 0; j < _img.rows; j++) {
+    for (unsigned int total_bytes = 0, j = 0; j < _img.rows; j++) {
       int l = 0;
-	for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=vals_per_line, count+=vals_per_line) {
+	for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line) {
 	  //if (NPIX == XF_NPPC8) {
-	    for (unsigned int k = 0; k < vals_per_line; k++) {
+	    for (unsigned int k = 0; k < bytes_per_line; k++) {
 	      value[k] = _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i + k);
 	    }
 	    udpWord.tdata = pack_ap_uint_64_(value);
 	    udpWord.tkeep = 255;
-	    if (count >= (_img.rows * _img.cols - vals_per_line)) {
+	    // We are signaling a packet termination either at the end of the image or the end of MTU
+	    if ((total_bytes >= (_img.rows * _img.cols - bytes_per_line)) || 
+	        ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
 	      udpWord.tlast = 1;
 	    }
 	    else {
 	      udpWord.tlast = 0;
 	    }
             printf("[%4.4d] IMG TB is dumping image to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-                    simCnt, datFile.c_str(), count, value,
+                    simCnt, datFile.c_str(), total_bytes, value,
                     udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
             if (!dumpDataToFile(&udpWord, outFileStream)) {
 	      rc = KO;
@@ -588,11 +590,12 @@ int main(int argc, char** argv) {
             nrErr++;
         }
 
-        //there are 2 streams from the the App to the Role
+        //there are TOT_TRANSFERS streams from the the App to the Role
         NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-        siUdp_meta.write(NetworkMetaStream(tmp_meta));
-        //siUdp_meta.write(NetworkMetaStream(tmp_meta));
-        //set correct node_rank and cluster_size
+	for (int i=0; i<TOT_TRANSFERS; i++) {
+	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
+	}        
+	//set correct node_rank and cluster_size
         node_rank = 1;
         cluster_size = 2;
     }
@@ -653,7 +656,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      assert(i == 1);
+      assert(i == TOT_TRANSFERS);
     }
     else {
       printf("Error No metadata received...\n");

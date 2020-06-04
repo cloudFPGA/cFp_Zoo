@@ -71,7 +71,7 @@ int main(int argc, char * argv[]) {
 		    exit(1);
 #endif
                 }
-                memcpy( & longbuf[i * PACK_SIZE], buffer, PACK_SIZE);
+                memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
 
             cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
@@ -142,9 +142,13 @@ int main(int argc, char * argv[]) {
 	    assert(frame.isContinuous());
 	    
 	    // TX Loop
+	    unsigned int sending_now = PACK_SIZE;
 	    clock_t last_cycle_tx = clock();
             for (int i = 0; i < total_pack; i++) {
-		sock.sendTo( & frame.data[i * PACK_SIZE], PACK_SIZE, sourceAddress, sourcePort);
+                if ( i == total_pack - 1 ) {
+                    sending_now = bytes_in_last_pack;
+		}
+		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
 	    }
             
             clock_t next_cycle_tx = clock();

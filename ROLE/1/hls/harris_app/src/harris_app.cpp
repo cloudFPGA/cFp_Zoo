@@ -70,7 +70,7 @@ void storeWordToAxiStream(
   NetworkWord word, 
   //Stream<Data_t, IMG_PACKETS>   &img_in_axi_stream,
   stream<Data_t>                  &img_in_axi_stream,
-  unsigned int *processed_word, 
+  unsigned int *processed_word_rx, 
   unsigned int *image_loaded)
 {   
   #pragma HLS INLINE
@@ -85,12 +85,12 @@ void storeWordToAxiStream(
   
   img_in_axi_stream.write(v);
   
-  if (*processed_word < IMG_PACKETS-1) {
-    (*processed_word)++;
+  if (*processed_word_rx < IMG_PACKETS-1) {
+    (*processed_word_rx)++;
   }
   else {
-    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_word = 0.\n");
-    *processed_word = 0;
+    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_word_rx = 0.\n");
+    *processed_word_rx = 0;
     *image_loaded = 1;
   }
 }
@@ -119,7 +119,7 @@ void pRXPath(
 	//Stream<Data_t, IMG_PACKETS>                      &img_in_axi_stream,
 	stream<Data_t>                                   &img_in_axi_stream,
         NetworkMetaStream                                meta_tmp,
-	unsigned int                                     *processed_word, 
+	unsigned int                                     *processed_word_rx, 
 	unsigned int                                     *image_loaded
 	    )
 {
@@ -132,7 +132,7 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
-      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META\n");
+      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n", *processed_word_rx);
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
@@ -140,17 +140,17 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
-      //*processed_word = 0;
+      //*processed_word_rx = 0;
       *image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET\n");
+      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u\n", *processed_word_rx);
       if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
         udpWord = siSHL_This_Data.read();
-	storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word, image_loaded);
+	storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word_rx, image_loaded);
         if(udpWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -277,9 +277,15 @@ void pTXPath(
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
-      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR\n", dequeueFSM);
+      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", dequeueFSM, *processed_word_tx);
       //-- Forward incoming chunk to SHELL
       *processed_word_tx = 0;
+      
+      printf("!sRxpToTxp_Data.empty()=%d\n", !sRxpToTxp_Data.empty());
+      printf("!sRxtoTx_Meta.empty()=%d\n", !sRxtoTx_Meta.empty());
+      printf("!soTHIS_Shl_Data.full()=%d\n", !soTHIS_Shl_Data.full());
+      printf("!soNrc_meta.full()=%d\n", !soNrc_meta.full());
+      
       if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
@@ -310,7 +316,7 @@ void pTXPath(
       break;
 
     case PROCESSING_PACKET: 
-      printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET\n", dequeueFSM);
+      printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", dequeueFSM, *processed_word_tx);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         udpWordTx = sRxpToTxp_Data.read();
@@ -321,9 +327,10 @@ void pTXPath(
 	}	
 	
 	(*processed_word_tx)++;
-	if (*processed_word_tx == 125) // = 1000 / (64b/8b), so for 32*32 125 is equal to 1000B out of 1024B (3x8B on 2nd packet )
+	if (((*processed_word_tx)*8) % PACK_SIZE == 0) // = 1000 / (64b/8b), so for 32*32 125 is equal to 1000B out of 1024B (3x8B on 2nd packet )
 	{
 	    udpWordTx.tlast = 1;
+	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
 	
         soTHIS_Shl_Data.write(udpWordTx);

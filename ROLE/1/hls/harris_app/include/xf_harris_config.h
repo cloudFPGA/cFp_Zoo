@@ -51,9 +51,6 @@
 #define NPIX XF_NPPC1
 #endif
 
-//#define WIDTH 8
-//#define HEIGHT 8
-
 #define WIDTH FRAME_WIDTH
 #define HEIGHT FRAME_HEIGHT
 
