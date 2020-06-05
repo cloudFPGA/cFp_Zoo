@@ -145,7 +145,6 @@ int main(int argc, char * argv[]) {
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << num_frame++ << endl;
-	    }
 	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
