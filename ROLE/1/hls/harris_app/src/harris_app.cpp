@@ -5,8 +5,7 @@
  * @date       May 2020
  *----------------------------------------------------------------------------
  *
- * @details    : This application implements a set of UDP-oriented tests and
- *  functions which are embedded into the Flash of the cloudFPGA role.
+ * @details      This application implements a UDP-oriented Vitis function.
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
@@ -22,10 +21,14 @@
 
 #include "../include/xf_harris_config.h"
 
-//#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
-//#include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
+#ifdef USE_HLSLIB_DATAFLOW
+#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+#include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
+#endif
 
-//using hlslib::Stream;
+#ifdef USE_HLSLIB_STREAM
+using hlslib::Stream;
+#endif
 using hls::stream;
 
 //#define Data_t ap_uint<INPUT_PTR_WIDTH>
@@ -94,8 +97,6 @@ void storeWordToAxiStream(
     *image_loaded = 1;
   }
 }
-
-
 
 
 
@@ -277,7 +278,8 @@ void pTXPath(
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
-      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", dequeueFSM, *processed_word_tx);
+      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
+	     dequeueFSM, *processed_word_tx);
       //-- Forward incoming chunk to SHELL
       *processed_word_tx = 0;
       
@@ -317,18 +319,23 @@ void pTXPath(
       break;
 
     case PROCESSING_PACKET: 
-      printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", dequeueFSM, *processed_word_tx);
+      printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
+	     dequeueFSM, *processed_word_tx);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         udpWordTx = sRxpToTxp_Data.read();
 
+	// This is a normal termination of the axi stream from vitis functions
 	if(udpWordTx.tlast == 1)
 	{
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}	
 	
+	// This is our own termination based on the custom MTU we have set in PACK_SIZE.
+	// TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
+	//       in order to have a functional bitstream for any MTU size
 	(*processed_word_tx)++;
-	if (((*processed_word_tx)*8) % PACK_SIZE == 0) // = 1000 / (64b/8b), so for 32*32 125 is equal to 1000B out of 1024B (3x8B on 2nd packet )
+	if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
 	{
 	    udpWordTx.tlast = 1;
 	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
@@ -408,7 +415,15 @@ void harris_app(
 #pragma HLS stream variable=img_out_axi_stream depth=img_packets
   
 
+#ifdef USE_HLSLIB_DATAFLOW
   /*
+   * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
+   * and full) during simulation. It can also be synthesized but cannot be used in co-simulation.
+   * Practically we use hlslib when we want to run simulation as close as possible to the HW, by 
+   * executing all functions of dataflow in thread-safe parallel executions, i.e the function 
+   * HLSLIB_DATAFLOW_FINALIZE() acts as a barrier for the threads spawned to serve every function 
+   * called in HLSLIB_DATAFLOW_FUNCTION(func, args...).
+   */
   // Dataflow functions running in parallel
   HLSLIB_DATAFLOW_INIT();
   
@@ -438,8 +453,8 @@ void harris_app(
 			   pi_size);
 
   HLSLIB_DATAFLOW_FINALIZE();
-  */
   
+#else // USE_HLSLIB_DATAFLOW
  pRXPath(
 	siSHL_This_Data,
         siNrc_meta,
@@ -464,7 +479,7 @@ void harris_app(
         &processed_word_tx,
         pi_rank,
         pi_size);
-  
+#endif // USE_HLSLIB_DATAFLOW
 }
 
 

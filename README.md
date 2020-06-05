@@ -83,6 +83,7 @@ The testbench is offered in two flavors:
 - HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
+  
   ```c
   // Calling the actual TB over its typical makefile procedure, but passing the save file
   string str_command = "cd ../../../hls/harris_app && make clean && \
@@ -111,7 +112,7 @@ provided has other dimensions, the `cv::resize` function will be used to adjust 
   
 ###### Run simulation
 
-####### HLS TB
+**HLS TB**
   
 ```bash
 cd ./ROLE/1/hls/harris_app
@@ -120,7 +121,7 @@ make csim   # to run simulation using Vivado's gcc
 make cosim  # to run co-simulation using Vivado
 ```
 
-####### Optional steps
+**Optional steps**
 
 ```bash
 cd ./ROLE/1/hls/harris_app
@@ -129,7 +130,7 @@ make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
 ```
 
-####### Host TB
+**Host TB**
   
 ```bash
 # Compile sources
@@ -217,43 +218,49 @@ eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
 
   `udp.port==2718`
   
-- sometimes it accelerates the build process of `make monolithic` if:
-execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
+- Quick bitgen:
 
-### Content from previous README (cFp_Build)
-(keeping it here for reference, but not related to cFp_Vitis yet)
+  sometimes it accelerates the build process of `make monolithic` if:
+  execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
+
+- Editing videos for input to the Harris example:
+  
+  `ffmpeg -i The_Mast_Walk_by_Alex_Thomson.mp4 -ss 00:00:39 -t 00:00:17 -async 1 -strict -2 cut.mp4 -c copy`
+  `frame= 1025 fps= 42 q=-1.0 Lsize=   10487kB time=00:00:41.00 bitrate=2095.0kbits/s   `
+  `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
+
+##### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
-$ ping <FPGA 1>
-$ ping <FPGA 2>
-# Terminal 1
-nc -u <FPGA 1> 2718   # without -u for TCP
-# Terminal 2
-nc -lu 2718           # without -u for TCP
+$ ./harris_host <Server> <Server Port> <optional input image>
 ```
 
-Then the packets will be send from Terminal 1 to 2.
+The packets will be send from Host (CPU) Terminal 1 to FPGA and they will be received back in the 
+same terminal by a single host application using the `sendTo()` and `receiveFrom()` socket methods.
 
 For more details, `tcpdump -i <interface> -nn -s0 -vv -X port 2718` could be helpful.
 
-
-The *Role* is the same for both FPGAs, because which destination the packets will have is determined by the `node_id`/`node_rank` and `cluster_size`
+The *Role* can be replicated to many FPGA nodes in order to create a pipline of processing.
+Which destination the packets will have is determined by the `node_id`/`node_rank` and `cluster_size`
 (VHDL ports`piFMC_ROLE_rank` and `piFMC_ROLE_size`).
 
-
-The **Role forwards the packet always to `(node_rank + 1) % cluster_size`** (for UDP and TCP packets), so this example works also for more or less then two FPGAs, actually.
-
+The **Role can be configured to forward the packet always to `(node_rank + 1) % cluster_size`** 
+(for UDP and TCP packets), so this example works also for more or less then two FPGAs, actually.
+curretnly, the default example supports one CPU node and one FPGA node.
 
 
 For distributing the routing tables, **`POST /cluster`** must be used.
-The following depicts an example API call, assuming that the cFp_Triangle bitfile was uploaded as image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
+The following depicts an example API call, assuming that the cFp_Vitis bitfile was uploaded as 
+image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
 ![POST /cluster example](./doc/post_cluster.png)
 
 ### Firewall issues
 
 Some firewalls may block network packets if there is not a connection to the remote machine/port.
-Hence, to get the Triangle example to work, the following commands may be necessary to be executed (as root):
+Hence, to get the Triangle example to work, the following commands may be necessary to be executed 
+(as root):
+
 ```
 $ firewall-cmd --zone=public --add-port=2718-2750/udp --permanent
 $ firewall-cmd --reload

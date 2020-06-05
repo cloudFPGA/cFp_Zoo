@@ -34,16 +34,30 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
+void print_cFpVitis(void)
+{
+        cout <<  "                                                          " << endl;
+	cout <<  "...build with:                                            " << endl;
+	cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
+	cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
+	cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
+	cout <<  "                                                          " << endl;
+}
+
 
 /*****************************************************************************
  * @brief Mark the points found by Harris into the image.
  * 
  * @return Nothing
  ******************************************************************************/
-void markPointsOnImage(cv::Mat& imgOutput, 
-		       cv::Mat& in_img, 
-		       cv::Mat& out_img, 
-		       std::vector<cv::Point>& hw_points) 
+void markPointsOnImage(Mat& imgOutput, 
+		       Mat& in_img, 
+		       Mat& out_img, 
+		       vector<Point>& hw_points) 
 {
 
    for (int j = 0; j < imgOutput.rows; j++) {
@@ -51,7 +65,7 @@ void markPointsOnImage(cv::Mat& imgOutput,
 	  //for CV_8UC1
           unsigned char pix = imgOutput.at<unsigned char>(j,i);  //.read(j * (imgOutput.cols) + i);
           if (pix != 0) {
-	      cv::Point tmp;
+	      Point tmp;
               tmp.x = i;
               tmp.y = j;
               if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
@@ -60,7 +74,7 @@ void markPointsOnImage(cv::Mat& imgOutput,
               short int y, x;
               y = j;
               x = i;
-              if (j > 0) cv::circle(out_img, cv::Point(x, y), 4, cv::Scalar(0, 0, 255, 255), 2, 8, 0);
+              if (j > 0) circle(out_img, Point(x, y), 2, Scalar(0, 0, 255, 255), 1, 8, 0);
 	  }
       }
    }
@@ -86,7 +100,7 @@ int main(int argc, char * argv[]) {
     unsigned short servPort = Socket::resolveService(argv[2], "udp");
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
-    
+    unsigned int num_frame = 0;
     float Th;
     if (FILTER_WIDTH == 3) {
         Th = 30532960.00;
@@ -95,6 +109,7 @@ int main(int argc, char * argv[]) {
     } else if (FILTER_WIDTH == 7) {
         Th = 41151168289701888.000000;
     }    
+    print_cFpVitis();
     
     try {
           
@@ -108,15 +123,14 @@ int main(int argc, char * argv[]) {
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
         #endif
         
-        //---------------------------------------------------------------------
-        //-- STEP-3 : Initialize an OpenCV Mat either from image or from camera
-        //---------------------------------------------------------------------  
-        cv::Mat frame, send, ocv_out_img;
+        //---------------------------------------------------------------------------
+        //-- STEP-3 : Initialize an OpenCV Mat either from image or from video/camera
+        //---------------------------------------------------------------------------
+        Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
 #ifdef INPUT_FROM_VIDEO
         VideoCapture cap(VIDEO_SOURCE); // Grab the camera
-        namedWindow("send", CV_WINDOW_NORMAL);
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
             exit(1);
@@ -135,10 +149,18 @@ int main(int argc, char * argv[]) {
 #endif
 #ifdef INPUT_FROM_VIDEO	
         while (1) {
+            cout << " ___________________________________________________________________ " << endl;
+            cout << "/                                                                   \\" << endl;
+	    cout << "INFO: Frame # " << num_frame++ << endl;
+            clock_t start_cycle_main = clock();
             cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
 #endif
-            resize(frame, send, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
+		resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
+		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
+	    }
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
 	    namedWindow("host_send", CV_WINDOW_NORMAL);
             imshow("host_send", send);
@@ -151,11 +173,11 @@ int main(int argc, char * argv[]) {
             unsigned int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
-	    cout << "INFO: Total packets to send = " << total_pack << endl;
-            cout << "INFO: Total bytes to send = " << send.total() << endl;
+	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
+            cout << "INFO: Total bytes to send/receive   = " << send.total() << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
-	    cout << "INFO: Bytes in last packet  = " << bytes_in_last_pack << endl;
-	    cout << "INFO: Packet size (custom MTU) = " << PACK_SIZE << endl;
+	    cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+	    cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 	    
             //--------------------------------------------------------
             //-- STEP-4 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY (SW)
@@ -164,9 +186,11 @@ int main(int argc, char * argv[]) {
 	    ocv_out_img.create(send.rows, send.cols, CV_8U); // create memory for opencv output image
 	    ocv_ref(send, ocv_out_img, Th);
 	    clock_t end_cycle_harris_sw = clock();
-	    double duration_harris_sw = (end_cycle_harris_sw - start_cycle_harris_sw) / (double) CLOCKS_PER_SEC;
-	    cout << "INFO: SW exec. time   :" << duration_harris_sw << " seconds" << endl;
-            cout << "INFO: Effective FPS SW:" << (1 / duration_harris_sw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
+	    double duration_harris_sw = (end_cycle_harris_sw - start_cycle_harris_sw) / 
+	                                (double) CLOCKS_PER_SEC;
+	    cout << "INFO: SW exec. time:" << duration_harris_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW:" << (1 / duration_harris_sw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
 	    
 	    
 	    //------------------------------------------------------
@@ -189,7 +213,8 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
+                 total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
 	    
 	    
@@ -206,7 +231,8 @@ int main(int argc, char * argv[]) {
                 }
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
                 if (recvMsgSize != receiving_now) {
-                    cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << receiving_now << endl;
+                    cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
+                            receiving_now << endl;
 #ifdef INPUT_FROM_VIDEO
                     continue;
 #else
@@ -232,37 +258,41 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
 	   
 	    clock_t end_cycle_harris_hw = next_cycle_rx;
 	    
-	    double duration_harris_hw = (end_cycle_harris_hw - start_cycle_harris_hw) / (double) CLOCKS_PER_SEC;
-	    cout << "INFO: HW exec. time   :" << duration_harris_hw << " seconds" << endl;
-            cout << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8) << endl;	    
+	    double duration_harris_hw = (end_cycle_harris_hw - start_cycle_harris_hw) / 
+	                                (double) CLOCKS_PER_SEC;
+	    cout << "INFO: HW exec. time:" << duration_harris_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8) << endl;	    
 	    
 	    //------------------------------------------------------
             //-- STEP-6 : Write output files and show in windows
             //------------------------------------------------------
-            cv::Mat out_img;
+            Mat out_img;
             out_img = send.clone();
-            std::vector<cv::Point> hw_points;
+            vector<Point> hw_points;
 	    
 	    /* Mark HLS points on the image */
 	    markPointsOnImage(frame, send, out_img, hw_points);
 	    
-	    std::ostringstream oss;
-            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8);
-	    std::string windowName = "cFp_Vitis End2End"; //oss.str();
+	    ostringstream oss;
+            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_harris_hw) << 
+                   " \tkbps:" << (PACK_SIZE * total_pack / duration_harris_hw / 1024 * 8);
+	    string windowName = "cFp_Vitis End2End"; //oss.str();
 	    /*
 	    string msg = "cFp_Vitis";
-	    cv::Scalar color(255, 0, 0);
-	    int fontFace = cv::FONT_HERSHEY_DUPLEX;
+	    Scalar color(255, 0, 0);
+	    int fontFace = FONT_HERSHEY_DUPLEX;
 	    double fontScale = 0.5;
 	    int thickness = 1;
-	    cv::putText(out_img,
+	    putText(out_img,
             msg, //text
-            cv::Point(10, out_img.rows / 2), //top-left position
+            Point(10, out_img.rows / 2), //top-left position
             fontFace,
             fontScale,
             color, //font color
@@ -284,6 +314,10 @@ int main(int argc, char * argv[]) {
 	    imwrite(out_points_file, frame);
 #endif	    
 	    waitKey(FRAME_INTERVAL);
+	    clock_t next_cycle_main = clock();
+            double duration_main = (next_cycle_main - start_cycle_main) / (double) CLOCKS_PER_SEC;
+            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
+            cout << "\\___________________________________________________________________/" << endl;
 #ifdef INPUT_FROM_VIDEO
 	}
 #endif

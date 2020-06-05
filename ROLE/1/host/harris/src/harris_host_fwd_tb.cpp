@@ -119,7 +119,8 @@ int main(int argc, char * argv[]) {
 	    	    	    	    
 	    clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_rx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
     
 
@@ -153,7 +154,8 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * total_pack / duration_tx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
 	    
 	    
