@@ -19,6 +19,7 @@
 #include <iostream>                     // For cout and cerr
 #include <cstdlib>                      // For atoi()
 #include <assert.h>                     // For assert()
+#include <string>                       // For to_string
 #include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
@@ -129,34 +130,28 @@ int main(int argc, char * argv[]) {
         Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
-#ifdef INPUT_FROM_VIDEO
         VideoCapture cap(argv[3]); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
             exit(1);
         }
-#else
-	frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
+	//frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 
-	if (!frame.data) {
-	  printf("ERROR: Failed to load the image ... %s!\n", argv[3]);
-	  return -1;
-	}
-	else {
-	  printf("INFO: Succesfully loaded image ... %s!\n", argv[3]);
-	}
-#endif
-#ifdef INPUT_FROM_VIDEO
         while (1) {
-#endif
+            clock_t start_cycle_main = clock();
+	    cap >> frame;
+            if (frame.empty()) break; // if input is an image, the loop will be executed once
+            if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
+	    if (!frame.data) {
+	      printf("ERROR: Failed to load a frame from %s!\n", argv[3]);
+	      return -1;
+	    }
+	    else {
+	      printf("INFO: Succesfully loaded frame from %s!\n", argv[3]);
+	    }
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << num_frame++ << endl;
-            clock_t start_cycle_main = clock();
-#ifdef INPUT_FROM_VIDEO
-	    cap >> frame;
-            if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
-#endif
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
@@ -209,7 +204,7 @@ int main(int argc, char * argv[]) {
                     sending_now = bytes_in_last_pack;
                 }
 		sock.sendTo( & send.data[i * PACK_SIZE], sending_now, servAddress, servPort);
-		delay(100);  
+		delay(1000);  
 	    }
             
             clock_t next_cycle_tx = clock();
@@ -234,11 +229,8 @@ int main(int argc, char * argv[]) {
                 if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
                             receiving_now << endl;
-#ifdef INPUT_FROM_VIDEO
                     continue;
-#else
-		    exit(1);
-#endif
+
                 }
                 memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
@@ -248,11 +240,8 @@ int main(int argc, char * argv[]) {
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "receive failure!" << endl;
-#ifdef INPUT_FROM_VIDEO
                 continue;
-#else
-		exit(1);
-#endif
+
             }
             namedWindow("host_recv", CV_WINDOW_NORMAL);
             imshow("host_recv", frame);
@@ -302,12 +291,12 @@ int main(int argc, char * argv[]) {
 	    namedWindow(windowName, CV_WINDOW_NORMAL);
 	    imshow(windowName, out_img);
 	    //moveWindow(windowName, 0, 0);
-#ifndef INPUT_FROM_VIDEO	    
+#ifdef WRITE_OUTPUT_FILE
 	    string out_img_file, out_points_file;
 	    out_img_file.assign(argv[3]);
-	    out_img_file += "_fpga_img_out.png";
+	    out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
 	    out_points_file.assign(argv[3]);
-	    out_points_file += "_fpga_points_out.png";
+	    out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
 	    cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
 	    cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
 	    // We save the image received from network after being processed by Harris HW or HOST TB
@@ -319,11 +308,9 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
             cout << "\\___________________________________________________________________/" << endl
             << endl;
-#ifdef INPUT_FROM_VIDEO
-	}
-#endif
+	} // while loop
+	
 	// Destructor closes the socket
-
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);

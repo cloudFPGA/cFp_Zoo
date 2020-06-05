@@ -10,7 +10,7 @@ foreach(dir ${dirs})
   message(STATUS "Included dir='${dir}'")
 endforeach()
 
-set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check")
+set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11")
 
 add_executable( harris_host_fwd_tb src/harris_host_fwd_tb.cpp src/PracticalSocket.cpp )
 target_link_libraries( harris_host_fwd_tb ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )

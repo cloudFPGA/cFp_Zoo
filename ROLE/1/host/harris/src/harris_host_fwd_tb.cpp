@@ -46,10 +46,8 @@ int main(int argc, char * argv[]) {
 
         // RX Step
         clock_t last_cycle_rx = clock();
-#ifdef INPUT_FROM_VIDEO
         while (1) {
             // Block until receive message from a client
-#endif
     
 	    int total_pack = 1 + (FRAME_WIDTH * FRAME_HEIGHT - 1) / PACK_SIZE;
             int bytes_in_last_pack = (FRAME_WIDTH * FRAME_HEIGHT) - (total_pack - 1) * PACK_SIZE;	    
@@ -65,11 +63,7 @@ int main(int argc, char * argv[]) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
                 if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
-#ifdef INPUT_FROM_VIDEO
                     continue;
-#else
-		    exit(1);
-#endif
                 }
                 memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
@@ -79,11 +73,7 @@ int main(int argc, char * argv[]) {
             cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
-#ifdef INPUT_FROM_VIDEO
                 continue;
-#else
-		exit(1);
-#endif
             }
             imshow("tb_recv", frame);
 	    
@@ -156,12 +146,9 @@ int main(int argc, char * argv[]) {
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
                     total_pack / duration_tx / 1024 * 8) << endl;
-            last_cycle_tx = next_cycle_tx;
-	    
-	    
-#ifdef INPUT_FROM_VIDEO	    
+            last_cycle_tx = next_cycle_tx; 
         }
-#endif
+
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);
