@@ -16,7 +16,9 @@
  *****************************************************************************/
 
 //------------------------------------  USEFUL MACROS --------------------------------------------
-#define CEIL(a, b)     (((a) + (b-1)) / (b)) /** Ceiling function without using math.h            */
+
+/** Ceiling function without using math.h                                                         */
+#define CEIL(a, b)     (((a) + (b-1)) / (b)) 
 
 
 
@@ -45,8 +47,9 @@
                                        
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
-#define TOT_TRANSFERS CEIL(FRAME_HEIGHT*FRAME_WIDTH, PACK_SIZE)  /** The total TxRx transfers for 
-                                                                     a predefined MTU=PACK_SIZE   */
+
+/** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
+#define TOT_TRANSFERS CEIL(FRAME_HEIGHT*FRAME_WIDTH, PACK_SIZE)  
 
 
 

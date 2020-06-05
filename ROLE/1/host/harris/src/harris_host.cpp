@@ -140,6 +140,7 @@ int main(int argc, char * argv[]) {
         while (1) {
             clock_t start_cycle_main = clock();
 	    cap >> frame;
+	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
             if (frame.empty()) break; // if input is an image, the loop will be executed once
             if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
 	    if (!frame.data) {
@@ -148,10 +149,10 @@ int main(int argc, char * argv[]) {
 	    }
 	    else {
 	      printf("INFO: Succesfully loaded frame from %s!\n", argv[3]);
-	    }
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << num_frame++ << endl;
+	    }
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
