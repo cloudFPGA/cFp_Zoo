@@ -612,7 +612,8 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     while (!nrErr) {
 
-        if (simCnt < IMG_PACKETS*2+10)
+        if (simCnt < IMG_PACKETS*3+10) // Keep enough simulation time for sequntially executing the 
+	                               // FSMs of the main 3 functions (Rx-Proc-Tx)
         {
             stepDut();
 

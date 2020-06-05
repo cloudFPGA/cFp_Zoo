@@ -130,14 +130,13 @@ int main(int argc, char * argv[]) {
         vector < uchar > encoded;
 		
 #ifdef INPUT_FROM_VIDEO
-        VideoCapture cap(VIDEO_SOURCE); // Grab the camera
+        VideoCapture cap(argv[3]); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera";
             exit(1);
         }
 #else
 	frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
-	
 
 	if (!frame.data) {
 	  printf("ERROR: Failed to load the image ... %s!\n", argv[3]);
@@ -147,17 +146,19 @@ int main(int argc, char * argv[]) {
 	  printf("INFO: Succesfully loaded image ... %s!\n", argv[3]);
 	}
 #endif
-#ifdef INPUT_FROM_VIDEO	
+#ifdef INPUT_FROM_VIDEO
         while (1) {
+#endif
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << num_frame++ << endl;
             clock_t start_cycle_main = clock();
-            cap >> frame;
+#ifdef INPUT_FROM_VIDEO
+	    cap >> frame;
             if(frame.size().width==0)continue;//simple integrity check; skip erroneous data...
 #endif
+	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
-		resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
 	    }
@@ -314,10 +315,10 @@ int main(int argc, char * argv[]) {
 	    imwrite(out_points_file, frame);
 #endif	    
 	    waitKey(FRAME_INTERVAL);
-	    clock_t next_cycle_main = clock();
-            double duration_main = (next_cycle_main - start_cycle_main) / (double) CLOCKS_PER_SEC;
+            double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
-            cout << "\\___________________________________________________________________/" << endl;
+            cout << "\\___________________________________________________________________/" << endl
+            << endl;
 #ifdef INPUT_FROM_VIDEO
 	}
 #endif

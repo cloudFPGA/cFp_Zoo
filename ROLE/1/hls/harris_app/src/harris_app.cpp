@@ -283,10 +283,12 @@ void pTXPath(
       //-- Forward incoming chunk to SHELL
       *processed_word_tx = 0;
       
+      /*
       printf("!sRxpToTxp_Data.empty()=%d\n", !sRxpToTxp_Data.empty());
       printf("!sRxtoTx_Meta.empty()=%d\n", !sRxtoTx_Meta.empty());
       printf("!soTHIS_Shl_Data.full()=%d\n", !soTHIS_Shl_Data.full());
       printf("!soNrc_meta.full()=%d\n", !soNrc_meta.full());
+      */
       
       if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
