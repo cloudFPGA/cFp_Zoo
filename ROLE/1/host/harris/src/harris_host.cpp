@@ -124,9 +124,9 @@ int main(int argc, char * argv[]) {
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
         #endif
         
-        //---------------------------------------------------------------------------
-        //-- STEP-3 : Initialize an OpenCV Mat either from image or from video/camera
-        //---------------------------------------------------------------------------
+        //------------------------------------------------------------------------------------
+        //-- STEP-3 : Initialize a Greyscale OpenCV Mat either from image or from video/camera
+        //------------------------------------------------------------------------------------
         Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
@@ -140,19 +140,13 @@ int main(int argc, char * argv[]) {
         while (1) {
             clock_t start_cycle_main = clock();
 	    cap >> frame;
-	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
             if (frame.empty()) break; // if input is an image, the loop will be executed once
             if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
-	    if (!frame.data) {
-	      printf("ERROR: Failed to load a frame from %s!\n", argv[3]);
-	      return -1;
-	    }
-	    else {
-	      printf("INFO: Succesfully loaded frame from %s!\n", argv[3]);
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << num_frame++ << endl;
 	    }
+	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
