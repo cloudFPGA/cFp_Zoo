@@ -5,7 +5,7 @@
 cloudFPGA project (cFp) for Xilinx Vitis library
 
 - [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/example_projects.html#cfp-vitis)
-- [Code documentation](https://pages.github.ibm.com/cloudFPGA/cFp_Vitis/)
+- [Code documentation](https://pages.github.ibm.com/cloudFPGA/Dox/group__cFp__Vitis.html)
 
 **Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Xilinx Vitis](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
 ```

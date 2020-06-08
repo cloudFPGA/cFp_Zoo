@@ -306,7 +306,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
  ******************************************************************************/
-bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
+bool dumpImgToFile(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img,
 		   const string   outFileName)
 {
     string      strLine;
@@ -327,7 +327,8 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
     ap_uint<8> value[bytes_per_line];
     
     //-- STEP-2 : DUMP IMAGE DATA TO FILE
-    for (unsigned int total_bytes = 0, j = 0; j < _img.rows; j++) {
+    for (unsigned int total_bytes = 0, chan =0 ; chan < _img.channels(); chan++) {
+    for (unsigned int j = 0; j < _img.rows; j++) {
       int l = 0;
 	for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line) {
 	  //if (NPIX == XF_NPPC8) {
@@ -337,7 +338,7 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
 	    udpWord.tdata = pack_ap_uint_64_(value);
 	    udpWord.tkeep = 255;
 	    // We are signaling a packet termination either at the end of the image or the end of MTU
-	    if ((total_bytes >= (_img.rows * _img.cols - bytes_per_line)) || 
+	    if ((total_bytes >= (_img.rows * _img.cols * _img.channels() - bytes_per_line)) || 
 	        ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
 	      udpWord.tlast = 1;
 	    }
@@ -354,7 +355,7 @@ bool dumpImgToFile(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _img,
 	  //}
 	}
     }
-    
+    }
     //-- STEP-3: CLOSE FILE
     outFileStream.close();
 
@@ -436,7 +437,7 @@ unsigned int writeCornersIntoFile(cv::Mat& in_img, cv::Mat& ocv_out_img, cv::Mat
  * 
  * @return Nothing
  ******************************************************************************/
-void markPointsOnImage(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
+void markPointsOnImage(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& imgOutput, cv::Mat& in_img, cv::Mat& out_img, std::vector<cv::Point>& hls_points) {
 
         for (int j = 0; j < imgOutput.rows; j++) {
             int l = 0;
@@ -543,18 +544,18 @@ int main(int argc, char** argv) {
 
     #if NO
 
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
 
     imgInput.copyTo(in_img.data);
-    //	imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
+    //	imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
 	
     ap_uint<INPUT_PTR_WIDTH> imgInputArray[in_img.rows * in_img.cols];
     ap_uint<OUTPUT_PTR_WIDTH> imgOutputArrayTb[in_img.rows * in_img.cols];
     ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
   
-    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
+    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
 	
     if (!dumpImgToFile(imgInput, "ifsSHL_Uaf_Data.dat")) {
       nrErr++;
@@ -564,12 +565,12 @@ int main(int argc, char** argv) {
 
     #if RO
 
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
 
     // imgInput.copyTo(img_gray.data);
-    imgInput = xf::cv::imread<XF_8UC1, HEIGHT, WIDTH, XF_NPPC8>(argv[1], 0);
+    imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8>(argv[1], 0);
 
     #endif
     
@@ -671,7 +672,7 @@ int main(int argc, char** argv) {
       printf("### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
-    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
 
 
     //------------------------------------------------------
@@ -717,7 +718,7 @@ int main(int argc, char** argv) {
 
     // L2 Vitis Harris
     cornerHarrisAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
-    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
     // L1 Vitis Harris 
     //harris_accel(imgInput, imgOutput, Thresh, k);
@@ -730,38 +731,39 @@ int main(int argc, char** argv) {
 
     #endif
 
-        /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
-        xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
-        xf::cv::imwrite("hls_out.jpg", imgOutput);
+    /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
+    xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
+    xf::cv::imwrite("hls_out.jpg", imgOutput);
 
-        unsigned int val;
-        unsigned short int row, col;
+    unsigned int val;
+    unsigned short int row, col;
 
-        cv::Mat out_img;
-        out_img = in_img.clone();
+    cv::Mat out_img;
+    out_img = in_img.clone();
 
-        std::vector<cv::Point> hls_points;
-        std::vector<cv::Point> ocv_points;
-        std::vector<cv::Point> common_pts;
+    std::vector<cv::Point> hls_points;
+    std::vector<cv::Point> ocv_points;
+    std::vector<cv::Point> common_pts;
 
-	
-	xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>* select_imgOutput;
-	
-	
-	// Select which output you want to process for image outputs and corners comparisons:
-	// &imgOutput   : The processed image by Harris IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
-	// &imgOutputTb : The processed image by Harris IP in this testbench (i.e. I/O traffic is done in testbench)
-	select_imgOutput = &imgOutput;
-	
-	/* Mark HLS points on the image */
-	markPointsOnImage(*select_imgOutput, in_img, out_img, hls_points);
+    xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>* select_imgOutput;
+
+    // Select which output you want to process for image outputs and corners comparisons:
+    // &imgOutput   : The processed image by Harris IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
+    // &imgOutputTb : The processed image by Harris IP in this testbench (i.e. I/O traffic is done in testbench)
+    select_imgOutput = &imgOutput;
  
-	/* Write HLS and Opencv corners into a file */
-	//nrErr += 
-	writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
-	
-	
+    // Mark HLS points on the image 
+    markPointsOnImage(*select_imgOutput, in_img, out_img, hls_points);
+ 
+    // Write HLS and Opencv corners into a file 
+    //nrErr += 
+    writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
 
+    // Gamma Correction TB
+    xf::cv::imwrite("gammacorrection_in_hls.jpg", imgInput);
+    gammacorrection_accel(imgInput, imgOutput, 0.1);
+    xf::cv::imwrite("gammacorrection_out_hls.jpg", imgOutput);
+    
 
     return(nrErr);
 }

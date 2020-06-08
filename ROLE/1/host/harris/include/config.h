@@ -39,17 +39,23 @@
 #define BUF_LEN 65540              
 
 /** If defined, output images will be written                                                     */
-//  #define WRITE_OUTPUT_FILE  
+  #define WRITE_OUTPUT_FILE  
 
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
 //  #define TB_SIM_CFP_VITIS           
 
-                                       
+
+  
+#define INPUT_TYPE_HOST CV_8UC1
+
+  
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
+#define FRAME_TOTAL FRAME_HEIGHT * FRAME_WIDTH //* 3
+
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
-#define TOT_TRANSFERS CEIL(FRAME_HEIGHT*FRAME_WIDTH, PACK_SIZE)  
+#define TOT_TRANSFERS CEIL(FRAME_TOTAL, PACK_SIZE)  
 
 
 

@@ -49,8 +49,8 @@ int main(int argc, char * argv[]) {
         while (1) {
             // Block until receive message from a client
     
-	    int total_pack = 1 + (FRAME_WIDTH * FRAME_HEIGHT - 1) / PACK_SIZE;
-            int bytes_in_last_pack = (FRAME_WIDTH * FRAME_HEIGHT) - (total_pack - 1) * PACK_SIZE;	    
+	    int total_pack = 1 + (FRAME_TOTAL - 1) / PACK_SIZE;
+            int bytes_in_last_pack = (FRAME_TOTAL) - (total_pack - 1) * PACK_SIZE;	    
 	    int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
@@ -70,7 +70,7 @@ int main(int argc, char * argv[]) {
 
             cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
-            cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
+            cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;

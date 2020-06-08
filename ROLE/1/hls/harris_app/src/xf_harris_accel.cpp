@@ -108,12 +108,12 @@ void cornerHarrisAccelStream(
     const int pCOLS = WIDTH;
     const int pNPC1 = NPIX;
 
-    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> in_mat(rows, cols);
+    xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPIX> in_mat(rows, cols);
     // clang-format off
     #pragma HLS stream variable=in_mat.data depth=2
     // clang-format on
 
-    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
+    xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
     // clang-format off
     #pragma HLS stream variable=out_mat.data depth=2
     // clang-format on
@@ -122,11 +122,13 @@ void cornerHarrisAccelStream(
     #pragma HLS DATAFLOW
     // clang-format on
 
-    xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(
+    xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(
       img_in_axi_stream, in_mat);  
-    xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, XF_8UC1, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
-      in_mat, out_mat, threshold, k);
-    xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(
+    //xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
+    //  in_mat, out_mat, threshold, k);
+    float gammaval = 0.2;
+    xf::cv::gammacorrection<IN_TYPE, OUT_TYPE, HEIGHT, WIDTH, NPC1>(in_mat, out_mat, gammaval);    
+    xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(
       out_mat, img_out_axi_stream);
     
     
@@ -134,6 +136,11 @@ void cornerHarrisAccelStream(
 //}
 
 
+void gammacorrection_accel(xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPC1>& imgInput1,
+                           xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPC1>& imgOutput,
+                           float gammaval) {
+    xf::cv::gammacorrection<IN_TYPE, OUT_TYPE, HEIGHT, WIDTH, NPC1>(imgInput1, imgOutput, gammaval);
+}
 
 
 

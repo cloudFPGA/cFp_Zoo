@@ -456,7 +456,7 @@ void harris_app(
 
   HLSLIB_DATAFLOW_FINALIZE();
   
-#else // USE_HLSLIB_DATAFLOW
+#else // !USE_HLSLIB_DATAFLOW
  pRXPath(
 	siSHL_This_Data,
         siNrc_meta,

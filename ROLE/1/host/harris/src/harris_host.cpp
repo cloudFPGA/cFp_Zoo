@@ -144,9 +144,11 @@ int main(int argc, char * argv[]) {
             if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
-	    cout << "INFO: Frame # " << num_frame++ << endl;
+	    cout << "INFO: Frame # " << ++num_frame << endl;
 	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+	    cout << send.total() << endl;
+	    cout << send.total() << endl;
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
@@ -158,13 +160,13 @@ int main(int argc, char * argv[]) {
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
 	    
-            unsigned int total_pack  = 1 + (send.total() - 1) / PACK_SIZE;
+            unsigned int total_pack  = 1 + (send.total() * send.channels() - 1) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
-            unsigned int bytes_in_last_pack = send.total() - (total_pack - 1) * PACK_SIZE;
+            unsigned int bytes_in_last_pack = send.total() * send.channels() - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-            cout << "INFO: Total bytes to send/receive   = " << send.total() << endl;
+            cout << "INFO: Total bytes to send/receive   = " << send.total() * send.channels() << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	    cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
 	    cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
@@ -173,7 +175,7 @@ int main(int argc, char * argv[]) {
             //-- STEP-4 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY (SW)
             //--------------------------------------------------------
             clock_t start_cycle_harris_sw = clock();
-	    ocv_out_img.create(send.rows, send.cols, CV_8U); // create memory for opencv output image
+	    ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
 	    ocv_ref(send, ocv_out_img, Th);
 	    clock_t end_cycle_harris_sw = clock();
 	    double duration_harris_sw = (end_cycle_harris_sw - start_cycle_harris_sw) / 
@@ -231,7 +233,7 @@ int main(int argc, char * argv[]) {
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
  
-            frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, CV_8UC1, longbuf); // OR vec.data() instead of ptr
+            frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "receive failure!" << endl;
                 continue;
