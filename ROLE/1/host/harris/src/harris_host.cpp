@@ -300,7 +300,7 @@ int main(int argc, char * argv[]) {
 #endif
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
-	    if (num_frame == 0) {
+	    if (num_frame == 1) {
 	      out_img_file.assign(argv[3]);
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
 	      out_points_file.assign(argv[3]);
@@ -311,7 +311,7 @@ int main(int argc, char * argv[]) {
 	      imwrite(out_img_file, out_img);
 	      imwrite(out_points_file, frame);
 	    }
-	    else if (num_frame >= 1) {
+	    else if (num_frame > 1) {
 	      // If the frame is empty, break immediately
 	      if (frame.empty()) {
 		break;
