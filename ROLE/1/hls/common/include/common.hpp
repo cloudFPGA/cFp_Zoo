@@ -21,10 +21,10 @@
 #include <stdio.h>
 #include <string>
 #include <hls_stream.h>
-#include "../../harris_app/include/harris_app.hpp"
+#include "../../harris/include/harris.hpp"
 #include "common/xf_headers.hpp"
-#include "../../harris_app/include/xf_harris_config.h"
-#include "../../harris_app/include/xf_ocv_ref.hpp"
+#include "../../harris/include/xf_harris_config.h"
+#include "../../harris/include/xf_ocv_ref.hpp"
 
 
 //---------------------------------------------------------

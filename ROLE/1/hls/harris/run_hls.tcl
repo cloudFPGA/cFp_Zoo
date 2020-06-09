@@ -23,7 +23,7 @@
 
 # User defined settings
 #-------------------------------------------------
-set projectName    "harris_app"
+set projectName    "harris"
 set solutionName   "solution1"
 set xilPartName    "xcku060-ffva1156-2-i"
 

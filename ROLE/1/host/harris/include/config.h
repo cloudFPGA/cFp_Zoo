@@ -39,10 +39,10 @@
 #define BUF_LEN 65540              
 
 /** If defined, output images will be written                                                     */
-  #define WRITE_OUTPUT_FILE  
+#define WRITE_OUTPUT_FILE  
 
 /** If defined, images will be shown in pop-up windows                                            */
-  //#define SHOW_WINDOWS  
+//  #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
 //  #define TB_SIM_CFP_VITIS           

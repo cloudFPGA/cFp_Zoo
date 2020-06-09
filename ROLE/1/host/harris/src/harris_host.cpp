@@ -23,7 +23,7 @@
 #include "../include/PracticalSocket.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
-#include "../../../hls/harris_app/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
+#include "../../../hls/harris/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
 
 using namespace std;
 using namespace cv;

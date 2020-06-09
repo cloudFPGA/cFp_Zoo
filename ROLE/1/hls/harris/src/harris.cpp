@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file       harris_app.cpp
+ * @file       harris.cpp
  * @brief      The Role for a Harris Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
@@ -17,7 +17,7 @@
  * \{
  *****************************************************************************/
 
-#include "../include/harris_app.hpp"
+#include "../include/harris.hpp"
 #include "../include/xf_harris_config.h"
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -357,7 +357,7 @@ void pTXPath(
  * @deprecated  This functions is using deprecated AXI stream interface 
  * @return Nothing.
  *****************************************************************************/
-void harris_app(
+void harris(
 
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,

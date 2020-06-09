@@ -15,7 +15,7 @@
 # ******************************************************************************
 
 # Name of the HLS core to build
-ipName =harris_app
+ipName =harris
 
 DEPS := $(shell find ./src/ -type f)
 
@@ -107,7 +107,7 @@ cosim_view:
 
 clean:
 	rm -rf ${ipName}_prj $(obj)
-	rm -f vivado*.log
+	rm -f vivado*.log vivado_pid*.str hs_err_pid*.log csim.log fcsim.log
 
 	
 logo:

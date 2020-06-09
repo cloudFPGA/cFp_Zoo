@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file       harris_app.hpp
+ * @file       harris.hpp
  * @brief      The Role for a Harris Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
@@ -70,7 +70,7 @@ typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your nee
 #define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
 
 
-void harris_app(
+void harris(
 
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,

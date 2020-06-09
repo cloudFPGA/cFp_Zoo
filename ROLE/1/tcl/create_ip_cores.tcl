@@ -384,7 +384,7 @@ update_ip_catalog
 # IBM-HSL-IP : UDP Harris Application Flash
 #------------------------------------------------------------------------------
 set ipModName "HarrisApplication"
-set ipName    "harris_app"
+set ipName    "harris"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"

@@ -1,5 +1,5 @@
 /*****************************************************************************
- * @file       : test_harris_app.cpp
+ * @file       : test_harris.cpp
  * @brief      : Testbench for Harris.
  *
  * System:     : cloudFPGA
@@ -61,7 +61,7 @@ ap_uint<1>                  piSHL_This_MmioCaptPktEn;
 //-- SHELL / Uaf / Udp Interfaces
 stream<UdpWord>             sSHL_Uaf_Data ("sSHL_Uaf_Data");
 stream<UdpWord>             sUAF_Shl_Data ("sUAF_Shl_Data");
-stream<UdpWord>             image_stream_from_harris_app ("image_stream_from_harris_app");
+stream<UdpWord>             image_stream_from_harris ("image_stream_from_harris");
 
 ap_uint<32>                 s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
@@ -80,7 +80,7 @@ int         simCnt;
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
-    harris_app(
+    harris(
         &node_rank, &cluster_size,
       sSHL_Uaf_Data, sUAF_Shl_Data,
       siUdp_meta, soUdp_meta,

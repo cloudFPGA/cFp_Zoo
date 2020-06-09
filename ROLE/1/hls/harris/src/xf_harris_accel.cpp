@@ -124,10 +124,10 @@ void cornerHarrisAccelStream(
 
     xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(
       img_in_axi_stream, in_mat);  
-    //xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
-    //  in_mat, out_mat, threshold, k);
-    float gammaval = 0.2;
-    xf::cv::gammacorrection<IN_TYPE, OUT_TYPE, HEIGHT, WIDTH, NPC1>(in_mat, out_mat, gammaval);    
+    xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
+      in_mat, out_mat, threshold, k);
+    //float gammaval = 0.2;
+    //xf::cv::gammacorrection<IN_TYPE, OUT_TYPE, HEIGHT, WIDTH, NPC1>(in_mat, out_mat, gammaval);    
     xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(
       out_mat, img_out_axi_stream);
     

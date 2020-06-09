@@ -83,23 +83,23 @@ int main(int argc, char * argv[]) {
             imshow("tb_recv", frame);
 	    
 	    // We save the image received from network in order to process it with the harris HLS TB
-	    imwrite("../../../hls/harris_app/test/input_from_udp_to_fpga.png", frame);
+	    imwrite("../../../hls/harris/test/input_from_udp_to_fpga.png", frame);
 	    
 	    // Select simulation mode, default fcsim
 	    string exec_cmd = "make fcsim -j 4";
-	    string ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/hls_out.jpg";
+	    string ouf_file = "../../../hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
 	    if (argc == 3) {
 	      if (atoi(argv[2]) == 2) {
 		exec_cmd = "make csim";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/csim/build/hls_out.jpg";
+		ouf_file = "../../../hls/harris/harris_prj/solution1/csim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 3) {
 		exec_cmd = "make cosim";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/cosim/build/hls_out.jpg";
+		ouf_file = "../../../hls/harris/harris_prj/solution1/cosim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";
-		ouf_file = "../../../hls/harris_app/harris_app_prj/solution1/fcsim/build/hls_out.jpg";
+		ouf_file = "../../../hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
 	      }
 	    }
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
@@ -109,7 +109,7 @@ int main(int argc, char * argv[]) {
 	    if (num_frame == 1) {
 	      clean_cmd = "make clean && ";
 	    }
-	    string str_command = "cd ../../../hls/harris_app && " + clean_cmd + "\
+	    string str_command = "cd ../../../hls/harris && " + clean_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
 				  cd ../../host/harris/build/ "; 
 	    const char *command = str_command.c_str(); 
