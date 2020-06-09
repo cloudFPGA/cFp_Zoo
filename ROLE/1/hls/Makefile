@@ -10,9 +10,9 @@
 # *
 # ******************************************************************************
 
-.PHONY: all clean mem_test_flash harris_app
+.PHONY: all clean mem_test_flash harris
 
-all: mem_test_flash harris_app
+all: mem_test_flash harris
 
 
 *:
