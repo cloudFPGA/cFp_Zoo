@@ -17,7 +17,7 @@
  * \{
  *****************************************************************************/
 
-#include "common.cpp"
+#include "../../common/src/common.cpp"
 
 using namespace std;
 
@@ -54,20 +54,20 @@ using namespace std;
 //------------------------------------------------------
 
 //-- SHELL / Uaf / Mmio / Config Interfaces
-//ap_uint<2>          piSHL_This_MmioEchoCtrl;
-ap_uint<1>          piSHL_This_MmioPostPktEn;
-ap_uint<1>          piSHL_This_MmioCaptPktEn;
+//ap_uint<2>                piSHL_This_MmioEchoCtrl;
+ap_uint<1>                  piSHL_This_MmioPostPktEn;
+ap_uint<1>                  piSHL_This_MmioCaptPktEn;
 
 //-- SHELL / Uaf / Udp Interfaces
-stream<UdpWord>   sSHL_Uaf_Data ("sSHL_Uaf_Data");
-stream<UdpWord>   sUAF_Shl_Data ("sUAF_Shl_Data");
-stream<UdpWord>   image_stream_from_harris_app ("image_stream_from_harris_app");
+stream<UdpWord>             sSHL_Uaf_Data ("sSHL_Uaf_Data");
+stream<UdpWord>             sUAF_Shl_Data ("sUAF_Shl_Data");
+stream<UdpWord>             image_stream_from_harris_app ("image_stream_from_harris_app");
 
-ap_uint<32>             s_udp_rx_ports = 0x0;
+ap_uint<32>                 s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
 stream<NetworkMetaStream>   soUdp_meta          ("soUdp_meta");
-ap_uint<32>             node_rank;
-ap_uint<32>             cluster_size;
+ap_uint<32>                 node_rank;
+ap_uint<32>                 cluster_size;
 
 //------------------------------------------------------
 //-- TESTBENCH GLOBAL VARIABLES

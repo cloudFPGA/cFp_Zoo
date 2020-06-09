@@ -49,6 +49,8 @@ set repoDir      ${currDir}/../../ip
 #-------------------------------------------------
 set hlsSim $env(hlsSim)
 set hlsCoSim $env(hlsCoSim)
+set hlsSyn $env(hlsSyn)
+
 if { [info exists env(SimFile)] } {
   set SimFile $env(SimFile)
 }
@@ -62,9 +64,10 @@ set_top       ${projectName}
 
 set vitis_flags  "-D__SDSVHLS__ -std=c++0x"
 
-if { $hlsSim || $hlsCoSim} {
-  set hlslib_flags "-std=c++11"
-} else {
+if { $hlsSim} {
+  set hlslib_flags "-std=c++11 "
+}
+if { $hlsSyn || $hlsCoSim}  {
   set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS"
 }
 # the -I flag without trailing '/'!!
@@ -85,8 +88,10 @@ if { $hlsSim } {
   csim_design -compiler gcc -clean -argv "${SimFile}"
 } else {
 
-  csynth_design
-
+  if { $hlsSyn } {
+    csynth_design
+  }
+  
   if { $hlsCoSim } {
     cosim_design -compiler gcc -trace_level all -argv "${SimFile}"
   } else {

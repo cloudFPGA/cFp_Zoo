@@ -109,7 +109,14 @@ int main(int argc, char * argv[]) {
         Th = 902753878016.0;
     } else if (FILTER_WIDTH == 7) {
         Th = 41151168289701888.000000;
-    }    
+    }
+    string out_img_file, out_points_file;
+    string out_video_file;
+    // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
+    out_video_file.assign(argv[3]);
+    out_video_file += "_fpga_img_out.avi";
+    VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
+   
     print_cFpVitis();
     
     try {
@@ -154,8 +161,10 @@ int main(int argc, char * argv[]) {
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
 	    }
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
+#ifdef SHOW_WINDOWS
 	    namedWindow("host_send", CV_WINDOW_NORMAL);
             imshow("host_send", send);
+#endif
 	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
@@ -239,9 +248,10 @@ int main(int argc, char * argv[]) {
                 continue;
 
             }
+#ifdef SHOW_WINDOWS            
             namedWindow("host_recv", CV_WINDOW_NORMAL);
             imshow("host_recv", frame);
-            
+#endif
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
@@ -284,20 +294,32 @@ int main(int argc, char * argv[]) {
             color, //font color
             thickness);
 	    */
+#ifdef SHOW_WINDOWS
 	    namedWindow(windowName, CV_WINDOW_NORMAL);
 	    imshow(windowName, out_img);
+#endif
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
-	    string out_img_file, out_points_file;
-	    out_img_file.assign(argv[3]);
-	    out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
-	    out_points_file.assign(argv[3]);
-	    out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
-	    cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
-	    cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
-	    // We save the image received from network after being processed by Harris HW or HOST TB
-	    imwrite(out_img_file, out_img);
-	    imwrite(out_points_file, frame);
+	    if (num_frame == 1) {
+	      out_img_file.assign(argv[3]);
+	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
+	      out_points_file.assign(argv[3]);
+	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
+	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
+	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
+	      // We save the image received from network after being processed by Harris HW or HOST TB
+	      imwrite(out_img_file, out_img);
+	      imwrite(out_points_file, frame);
+	    }
+	    else if (num_frame > 1) {
+	      // If the frame is empty, break immediately
+	      if (frame.empty()) {
+		break;
+	      }
+	      cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
+	      // Write the frame into the file 'outcpp.avi'
+	      video.write(frame);
+	    }
 #endif	    
 	    waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
@@ -306,6 +328,13 @@ int main(int argc, char * argv[]) {
             << endl;
 	} // while loop
 	
+	// When everything done, release the video capture and write object
+	cap.release();
+	video.release();
+
+        // Closes all the windows
+	destroyAllWindows();
+	  
 	// Destructor closes the socket
     } catch (SocketException & e) {
         cerr << e.what() << endl;

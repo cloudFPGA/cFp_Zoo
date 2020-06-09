@@ -18,7 +18,6 @@
  *****************************************************************************/
 
 #include "../include/harris_app.hpp"
-
 #include "../include/xf_harris_config.h"
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -133,7 +132,8 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
-      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n", *processed_word_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n",
+	     *processed_word_rx);
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
@@ -146,7 +146,8 @@ void pRXPath(
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u\n", *processed_word_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u\n",
+	     *processed_word_rx);
       if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
