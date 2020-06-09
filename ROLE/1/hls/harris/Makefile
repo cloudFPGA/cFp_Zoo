@@ -33,7 +33,7 @@ assert_env:
 ${ipName}_prj/solution1/impl/ip: $(DEPS)
 	@#rm -rf $@
 	rm -rf ${ipName}_prj
-	export hlsSim=0; export hlsCoSim=0; vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; vivado_hls -f run_hls.tcl
 	@#touch ${ipName}_prj
 	@touch $@
 	@touch ../../.ip_guard
