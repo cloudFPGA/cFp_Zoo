@@ -300,7 +300,7 @@ int main(int argc, char * argv[]) {
 #endif
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
-	    if (num_frame == 1) {
+	    if (num_frame == 0) {
 	      out_img_file.assign(argv[3]);
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
 	      out_points_file.assign(argv[3]);
@@ -311,14 +311,20 @@ int main(int argc, char * argv[]) {
 	      imwrite(out_img_file, out_img);
 	      imwrite(out_points_file, frame);
 	    }
-	    else if (num_frame > 1) {
+	    else if (num_frame >= 1) {
 	      // If the frame is empty, break immediately
 	      if (frame.empty()) {
 		break;
 	      }
 	      cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
-	      // Write the frame into the file 'outcpp.avi'
-	      video.write(frame);
+	      Mat tovideo;
+	      if (frame.channels() != 1) {
+		tovideo = frame;
+	      }
+	      else {
+		cvtColor(frame, tovideo, COLOR_GRAY2BGR);
+	      }
+	      video.write(tovideo);
 	    }
 #endif	    
 	    waitKey(FRAME_INTERVAL);

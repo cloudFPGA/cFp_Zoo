@@ -44,6 +44,7 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
 - [ ] Security
 - [ ] Solver
 - [x] Vision
+  - [x] gammacorrection
   - [x] harris
 
 

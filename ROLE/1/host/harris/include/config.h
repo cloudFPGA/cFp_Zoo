@@ -24,10 +24,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 128           
+#define FRAME_HEIGHT 256           
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  128        
+#define FRAME_WIDTH  256        
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -45,7 +45,7 @@
   //#define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-  #define TB_SIM_CFP_VITIS           
+//  #define TB_SIM_CFP_VITIS           
 
 
 /*  For The OpenCV type fot th input image. TODO: We have to automatically fix it for every kernel*/

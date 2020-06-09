@@ -34,7 +34,9 @@ int main(int argc, char * argv[]) {
     }
 
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
-
+    unsigned int num_frame = 0;
+    string clean_cmd;
+	    
     namedWindow("tb_recv", WINDOW_AUTOSIZE);
     try {
         UDPSocket sock(servPort);
@@ -52,6 +54,9 @@ int main(int argc, char * argv[]) {
 	    int total_pack = 1 + (FRAME_TOTAL - 1) / PACK_SIZE;
             int bytes_in_last_pack = (FRAME_TOTAL) - (total_pack - 1) * PACK_SIZE;	    
 	    int receiving_now = PACK_SIZE;
+            cout << " ___________________________________________________________________ " << endl;
+            cout << "/                                                                   \\" << endl;
+	    cout << "INFO: Proxy tb Frame # " << ++num_frame << endl;	    
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
 	    
@@ -98,7 +103,13 @@ int main(int argc, char * argv[]) {
 	      }
 	    }
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
-	    string str_command = "cd ../../../hls/harris_app && make clean && \
+	    // Skip the rebuilding phase on the 2nd run. However ensure that it's a clean recompile
+	    // the first time.
+	    clean_cmd = " ";
+	    if (num_frame == 1) {
+	      clean_cmd = "make clean && ";
+	    }
+	    string str_command = "cd ../../../hls/harris_app && " + clean_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
 				  cd ../../host/harris/build/ "; 
 	    const char *command = str_command.c_str(); 
@@ -147,7 +158,8 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
                     total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx; 
-        }
+            cout << "\\___________________________________________________________________/" << endl;
+        } // while loop
 
     } catch (SocketException & e) {
         cerr << e.what() << endl;

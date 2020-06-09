@@ -421,7 +421,7 @@ void harris_app(
 #ifdef USE_HLSLIB_DATAFLOW
   /*
    * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
-   * and full) during simulation. It can also be synthesized but cannot be used in co-simulation.
+   * and full) during simulation. It can also be both synthesized and used in co-simulation.
    * Practically we use hlslib when we want to run simulation as close as possible to the HW, by 
    * executing all functions of dataflow in thread-safe parallel executions, i.e the function 
    * HLSLIB_DATAFLOW_FINALIZE() acts as a barrier for the threads spawned to serve every function 
