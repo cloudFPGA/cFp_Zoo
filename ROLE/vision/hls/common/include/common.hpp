@@ -22,9 +22,11 @@
 #include <string>
 #include <hls_stream.h>
 #include "../../harris/include/harris.hpp"
+#include "../../gammacorrection/include/gammacorrection.hpp"
 #include "common/xf_headers.hpp"
 #include "../../harris/include/xf_harris_config.h"
 #include "../../harris/include/xf_ocv_ref.hpp"
+#include "../../gammacorrection/include/xf_gammacorrection_config.h" 
 
 
 //---------------------------------------------------------

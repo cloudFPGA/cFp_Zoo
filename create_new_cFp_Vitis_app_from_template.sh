@@ -8,10 +8,12 @@
 # Choose the kernel which will be the "template" from which the new directries/files will be generated
 template_kernel="harris"
 template_kernel2="Harris"
+template_kernel3="HARRIS"
 
 # Choose the na,e of the new kernel/files/dirs
 new_kernel="gammacorrection"
 new_kernel2="Gammacorrection"
+new_kernel3="GAMMACORRECTION"
 
 function replace() {
     files="$(find -L "$1" -type f)";
@@ -31,6 +33,7 @@ function replace() {
         fi        
         rpl ${template_kernel} ${new_kernel} ${filen}
         rpl ${template_kernel2} ${new_kernel2} ${filen}
+        rpl ${template_kernel3} ${new_kernel3} ${filen}
     done
 }
 

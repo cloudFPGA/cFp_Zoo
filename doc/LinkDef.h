@@ -9,6 +9,8 @@
  * \brief This is the accelerated functions of Vitis Vision sub-library from Vitis Open Source Library.
  */
 
+
+//*********** Harris*****************************
 /** \defgroup Harris Harris
  *  @ingroup VitisVision
  *
@@ -27,3 +29,23 @@
  * \brief This is a subgroup of Harris accelerated function with only synthesizable (Vivado HLS) functions/classes.
  */
 
+
+
+//*********** Gammacorrection ********************
+/** \defgroup Gammacorrection Gammacorrection
+ *  @ingroup VitisVision
+ *
+ * \brief This is the Gammacorrection accelerated function from Vitis Vision Open Source Library.
+ */
+
+/** \defgroup GammacorrectionTB Gammacorrection Testbench
+ *  @ingroup Gammacorrection
+ *
+ * \brief This is a subgroup of Gammacorrection accelerated function with only testbench-related functions/classes/.
+ */
+
+/** \defgroup GammacorrectionHLS Gammacorrection Vivado HLS
+ *  @ingroup Gammacorrection
+ *
+ * \brief This is a subgroup of Gammacorrection accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ */

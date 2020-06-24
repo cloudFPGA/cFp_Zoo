@@ -1,6 +1,6 @@
 /*****************************************************************************
- * @file       : test_harris.cpp
- * @brief      : Testbench for Harris.
+ * @file       : test_gammacorrection.cpp
+ * @brief      : Testbench for Gammacorrection.
  *
  * System:     : cloudFPGA
  * Component   : Role
@@ -12,8 +12,8 @@
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup HarrisTB
- * @addtogroup HarrisTB
+ * @ingroup GammacorrectionTB
+ * @addtogroup GammacorrectionTB
  * \{
  *****************************************************************************/
 
@@ -61,7 +61,7 @@ ap_uint<1>                  piSHL_This_MmioCaptPktEn;
 //-- SHELL / Uaf / Udp Interfaces
 stream<UdpWord>             sSHL_Uaf_Data ("sSHL_Uaf_Data");
 stream<UdpWord>             sUAF_Shl_Data ("sUAF_Shl_Data");
-stream<UdpWord>             image_stream_from_harris ("image_stream_from_harris");
+stream<UdpWord>             image_stream_from_gammacorrection ("image_stream_from_gammacorrection");
 
 ap_uint<32>                 s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
@@ -80,7 +80,7 @@ int         simCnt;
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
-    harris(
+    gammacorrection(
         &node_rank, &cluster_size,
       sSHL_Uaf_Data, sUAF_Shl_Data,
       siUdp_meta, soUdp_meta,
@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
     nrErr  = 0;
 
     //------------------------------------------------------
-    //-- TESTBENCH LOCAL VARIABLES FOR HARRIS
+    //-- TESTBENCH LOCAL VARIABLES FOR GAMMACORRECTION
     //------------------------------------------------------
     cv::Mat in_img, img_gray;
     cv::Mat hls_out_img, ocv_out_img;
@@ -188,7 +188,7 @@ int main(int argc, char** argv) {
     
     
     //------------------------------------------------------
-    //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
+    //-- STEP-1.2 : RUN GAMMACORRECTION DETECTOR FROM OpenCV LIBRARY
     //------------------------------------------------------
     ocv_ref(in_img, ocv_out_img, Th);
 
@@ -327,18 +327,18 @@ int main(int argc, char** argv) {
 
     #if NO
 
-    // L2 Vitis Harris
-    cornerHarrisAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
+    // L2 Vitis Gammacorrection
+    GammacorrectionAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
     xf::cv::Array2xfMat<INPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
-    // L1 Vitis Harris 
-    //harris_accel(imgInput, imgOutput, Thresh, k);
+    // L1 Vitis Gammacorrection 
+    //gammacorrection_accel(imgInput, imgOutput, Thresh, k);
 	
     #endif
 
     #if RO
 
-    harris_accel(imgInput, imgOutputTb, Thresh, k);
+    gammacorrection_accel(imgInput, imgOutputTb, Thresh, k);
 
     #endif
 
@@ -359,8 +359,8 @@ int main(int argc, char** argv) {
     xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>* select_imgOutput;
 
     // Select which output you want to process for image outputs and corners comparisons:
-    // &imgOutput   : The processed image by Harris IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
-    // &imgOutputTb : The processed image by Harris IP in this testbench (i.e. I/O traffic is done in testbench)
+    // &imgOutput   : The processed image by Gammacorrection IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
+    // &imgOutputTb : The processed image by Gammacorrection IP in this testbench (i.e. I/O traffic is done in testbench)
     select_imgOutput = &imgOutput;
  
     // Mark HLS points on the image 
@@ -369,6 +369,12 @@ int main(int argc, char** argv) {
     // Write HLS and Opencv corners into a file 
     //nrErr += 
     writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
+
+    // Gamma Correction TB
+    xf::cv::imwrite("gammacorrection_in_hls.jpg", imgInput);
+    gammacorrection_accel(imgInput, imgOutput, 0.1);
+    xf::cv::imwrite("gammacorrection_out_hls.jpg", imgOutput);
+    
 
     return(nrErr);
 }
