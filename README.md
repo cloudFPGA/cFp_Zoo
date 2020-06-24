@@ -47,7 +47,30 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
   - [x] gammacorrection
   - [x] harris
 
+### Vivado/Vitis tool support
 
+The versions below are supported by cFp_Vitis. As of today we follow a hybrid development approach
+where a specific part of `SHELL` code is synthesized using `Vivado 2017.4`, while the rest of the 
+HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
+
+#### For the SHELL (cFDK's code)
+
+- [x] 2017
+  - [x] 2017.4
+- [ ] 2018
+- [ ] 2019
+- [ ] 2020
+
+#### For the ROLE (user's code)
+
+- [ ] 2017
+- [ ] 2018
+- [x] 2019
+  - [x] 2019.1
+  - [x] 2019.2
+- [ ] 2020
+
+  
 #### Vitis Vision Harris Corner Detector dive in 
 
 ![Oveview of Vitis Vision Harris Corner Detector](./doc/harris_overview.png)
@@ -87,25 +110,25 @@ The testbench is offered in two flavors:
   
   ```c
   // Calling the actual TB over its typical makefile procedure, but passing the save file
-  string str_command = "cd ../../../hls/harris_app && make clean && \
+  string str_command = "cd ../../../../ROLE/vision/hls/harris/ && " + clean_cmd + "\
   INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
-  cd ../../host/harris/build/ "; 
+  cd ../../../../HOST/vision/harris/build/ "; 
   const char *command = str_command.c_str(); 
   cout << "Calling TB with command:" << command << endl; 
   system(command); 
   ```
 
 Basic files/modules:
-  1. [harris_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send an image to the FPGA for processing with Harris Corner Detector algorithm. This file is part of both the `HLS TB` and the `Host TB`
-  2. [harris_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/src/harris_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
-  3. [test_harris_app.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/hls/harris_app/src/harris_app.cpp): The typical Vivado HLS testbench of Harris IP, when this is wrapped in a Themisto Shell.
+  1. [harris_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/harris/src/harris_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send an image to the FPGA for processing with Harris Corner Detector algorithm. This file is part of both the `HLS TB` and the `Host TB`
+  2. [harris_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/harris/src/harris_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
+  3. [test_harris_app.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/hls/harris_app/src/harris_app.cpp): The typical Vivado HLS testbench of Harris IP, when this is wrapped in a Themisto Shell.
   4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
   5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
 
   
 ###### Harris image size 
 
-The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/1/host/harris/include/config.h 
+The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/harris/include/config.h 
 through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
 provided has other dimensions, the `cv::resize` function will be used to adjust the image (scale) to `FRAME_HEIGHT x FRAME_WIDTH`.
   
@@ -116,7 +139,7 @@ provided has other dimensions, the `cv::resize` function will be used to adjust 
 **HLS TB**
   
 ```bash
-cd ./ROLE/1/hls/harris_app
+cd ./ROLE/vision/hls/harris_app
 make fcsim -j 4  # to run simulation using your system's gcc (with 4 threads)
 make csim   # to run simulation using Vivado's gcc
 make cosim  # to run co-simulation using Vivado
@@ -125,7 +148,7 @@ make cosim  # to run co-simulation using Vivado
 **Optional steps**
 
 ```bash
-cd ./ROLE/1/hls/harris_app
+cd ./ROLE/vision/hls/harris_app
 make callgraph # to run fcsim and then execute the binary in Valgrind's callgraph tool
 make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
@@ -135,7 +158,7 @@ make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck 
   
 ```bash
 # Compile sources
-cd ./ROLE/1/host/harris
+cd ./HOST/vision/harris
 mkdir build && cd build
 cmake ../
 make -j 2
@@ -148,17 +171,16 @@ make -j 2
 # Open another terminal and prepare env
 cd cFp_Vitis
 source ./env/setenv.sh
-cd ./ROLE/1/host/harris/build
+cd ./HOST/vision/harris/build
 # Usage: ./harris_host <Server> <Server Port> <optional input image>
-./harris_host localhost 1234 ../../../hls/harris_app/test/8x8.png
-
+./harris_host localhost 1234 ../../../../ROLE/vision/hls/harris/test/8x8.png
 
 # What happens is that the user application (harris_host) is sending an input image file to 
 # intermediate listener (harris_host_fwd_tb) through socket. The latter receives the payload and 
 # reconstructs the image. Then it is calling the HLS TB by firstly compiling the HLS TB files. The 
 # opposite data flow is realized for taking the results back and reconstruct the FPGA output image.
-# You should expect the output in the file <optional input image>_fpga_out.png
-eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
+# You should expect the output in the file <optional input image>_fpga_out_frame_#.png
+eog ../../../../ROLE/vision/hls/harris/test/8x8.png_fpga_points_out_frame_1.png
 
 ```
 
@@ -182,7 +204,7 @@ make monolithic # with Vivado HLS >= 2019.1
 
 Optional HLS only for the Harris IP (e.g. to check synthesizability)
 ```bash
-cd cFp_Vitis/ROLE/1/hls/harris_app
+cd cFp_Vitis/ROLE/vision/hls/harris_app
 make csynth # with Vivado HLS >= 2019.1
 ```
 
@@ -193,15 +215,15 @@ TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of 
 
 
 ```bash
-cd ./ROLE/1/host/harris
+cd ./ROLE/vision/host/harris
 mkdir build && cd build
 cmake ../
 make -j 2
-cd cFp_Vitis/ROLE/1/host/harris/build
+cd cFp_Vitis/ROLE/vision/host/harris/build
 # Usage: ./harris_host <Server> <Server Port> <optional input image>
-./harris_host 10.12.200.153 2718 ../../../hls/harris_app/test/8x8.png
-# You should expect the output in the file <optional input image>_fpga_out.png
-eog ../../../hls/harris_app/test/8x8.png_fpga_out.png
+./harris_host 10.12.200.153 2718 ../../../../ROLE/vision/hls/harris/test/8x8.png
+# You should expect the output in the file <optional input image>_fpga_out_frame_#.png
+eog ../../../../ROLE/vision/hls/harris/test/8x8.png_fpga_points_out_frame_1.png
 
 ```
 
