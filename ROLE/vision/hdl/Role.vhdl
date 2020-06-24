@@ -137,7 +137,7 @@ entity Role_Themisto is
     moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
     moMEM_Mp1_AWADDR                : out   std_ulogic_vector(32 downto 0);
     moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
-    moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
     moMEM_Mp1_AWBURST               : out   std_ulogic_vector(1 downto 0);
     moMEM_Mp1_AWVALID               : out   std_ulogic;
     moMEM_Mp1_AWREADY               : in    std_ulogic;
@@ -153,7 +153,7 @@ entity Role_Themisto is
     moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
     moMEM_Mp1_ARADDR                : out   std_ulogic_vector(32 downto 0);
     moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
-    moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
     moMEM_Mp1_ARBURST               : out   std_ulogic_vector(1 downto 0);
     moMEM_Mp1_ARVALID               : out   std_ulogic;
     moMEM_Mp1_ARREADY               : in    std_ulogic;
@@ -164,24 +164,9 @@ entity Role_Themisto is
     moMEM_Mp1_RVALID                : in    std_ulogic;
     moMEM_Mp1_RREADY                : out   std_ulogic;
 
-    --------------------------------------------------------
-    -- SHELL / Mmio / AppFlash Interface
-    --------------------------------------------------------
-    ---- [DIAG_CTRL_1] -----------------
-    piSHL_Mmio_Mc1_MemTestCtrl          : in    std_ulogic_vector(1 downto 0);
-    ---- [DIAG_STAT_1] -----------------
-    poSHL_Mmio_Mc1_MemTestStat          : out   std_ulogic_vector(1 downto 0);
-    ---- [DIAG_CTRL_2] -----------------
-    piSHL_Mmio_UdpEchoCtrl              : in    std_ulogic_vector(  1 downto 0);
-    piSHL_Mmio_UdpPostDgmEn             : in    std_ulogic;
-    piSHL_Mmio_UdpCaptDgmEn             : in    std_ulogic;
-    piSHL_Mmio_TcpEchoCtrl              : in    std_ulogic_vector(  1 downto 0);
-    piSHL_Mmio_TcpPostSegEn             : in    std_ulogic;
-    piSHL_Mmio_TcpCaptSegEn             : in    std_ulogic;
     ---- [APP_RDROL] -------------------
-    poSHL_Mmio_RdReg                    : out  std_logic_vector( 15 downto 0);
-    --- [APP_WRROL] --------------------
-    piSHL_Mmio_WrReg                    : in   std_logic_vector( 15 downto 0);
+    -- to be use as ROLE VERSION IDENTIFICATION --
+    poSHL_Mmio_RdReg                    : out   std_ulogic_vector( 15 downto 0);
 
     --------------------------------------------------------
     -- TOP : Secondary Clock (Asynchronous)
@@ -207,66 +192,14 @@ end Role_Themisto;
 
 architecture Flash of Role_Themisto is
 
-  constant cUSE_DEPRECATED_DIRECTIVES       : boolean := true;
+  constant cUSE_DEPRECATED_DIRECTIVES       : boolean := false;
 
   --============================================================================
   --  SIGNAL DECLARATIONS
   --============================================================================  
 
 
-  ----============================================================================
-  ---- TEMPORARY PROC: ROLE / Nts0 / Tcp Interface to AVOID UNDEFINED CONTENT
-  ----============================================================================
-  -------- Input AXI-Write Stream Interface --------
-  --signal sROL_Shl_Nts0_Tcp_Axis_tready      : std_ulogic;
-  --signal sSHL_Rol_Nts0_Tcp_Axis_tdata       : std_ulogic_vector( 63 downto 0);
-  --signal sSHL_Rol_Nts0_Tcp_Axis_tkeep       : std_ulogic_vector(  7 downto 0);
-  --signal sSHL_Rol_Nts0_Tcp_Axis_tlast       : std_ulogic;
-  --signal sSHL_Rol_Nts0_Tcp_Axis_tvalid      : std_ulogic;
-  -------- Output AXI-Write Stream Interface -------
-  --signal sROL_Shl_Nts0_Tcp_Axis_tdata       : std_ulogic_vector( 63 downto 0);
-  --signal sROL_Shl_Nts0_Tcp_Axis_tkeep       : std_ulogic_vector(  7 downto 0);
-  --signal sROL_Shl_Nts0_Tcp_Axis_tlast       : std_ulogic;
-  --signal sROL_Shl_Nts0_Tcp_Axis_tvalid      : std_ulogic;
-  --signal sSHL_Rol_Nts0_Tcp_Axis_tready      : std_ulogic;
-
-  ----============================================================================
-  ---- TEMPORARY PROC: ROLE / Mem / Mp0 Interface to AVOID UNDEFINED CONTENT
-  ----============================================================================
-  --------  Stream Read Command --------------
-  --signal sROL_Shl_Mem_Mp0_Axis_RdCmd_tdata  : std_ulogic_vector( 71 downto 0);
-  --signal sROL_Shl_Mem_Mp0_Axis_RdCmd_tvalid : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_RdCmd_tready : std_ulogic;
-  -------- Stream Read Status ----------------
-  --signal sROL_Shl_Mem_Mp0_Axis_RdSts_tready : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_RdSts_tdata  : std_ulogic_vector(  7 downto 0);
-  --signal sSHL_Rol_Mem_Mp0_Axis_RdSts_tvalid : std_ulogic;
-  -------- Stream Data Input Channel ---------
-  --signal sROL_Shl_Mem_Mp0_Axis_Read_tready  : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_Read_tdata   : std_ulogic_vector(511 downto 0);
-  --signal sSHL_Rol_Mem_Mp0_Axis_Read_tkeep   : std_ulogic_vector( 63 downto 0);
-  --signal sSHL_Rol_Mem_Mp0_Axis_Read_tlast   : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_Read_tvalid  : std_ulogic;
-  -------- Stream Write Command --------------
-  --signal sROL_Shl_Mem_Mp0_Axis_WrCmd_tdata  : std_ulogic_vector( 71 downto 0);
-  --signal sROL_Shl_Mem_Mp0_Axis_WrCmd_tvalid : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_WrCmd_tready : std_ulogic;
-  -------- Stream Write Status ---------------
-  --signal sROL_Shl_Mem_Mp0_Axis_WrSts_tready : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_WrSts_tdata  : std_ulogic_vector(  7 downto 0);
-  --signal sSHL_Rol_Mem_Mp0_Axis_WrSts_tvalid : std_ulogic;
-  -------- Stream Data Output Channel --------
-  --signal sROL_Shl_Mem_Mp0_Axis_Write_tdata  : std_ulogic_vector(511 downto 0);
-  --signal sROL_Shl_Mem_Mp0_Axis_Write_tkeep  : std_ulogic_vector( 63 downto 0);
-  --signal sROL_Shl_Mem_Mp0_Axis_Write_tlast  : std_ulogic;
-  --signal sROL_Shl_Mem_Mp0_Axis_Write_tvalid : std_ulogic;
-  --signal sSHL_Rol_Mem_Mp0_Axis_Write_tready : std_ulogic;
-
-  ------ ROLE EMIF Registers ---------------
-  -- signal sSHL_ROL_EMIF_2B_Reg               : std_logic_vector( 15 downto 0);
-  -- signal sROL_SHL_EMIF_2B_Reg               : std_logic_vector( 15 downto 0);
-
-  signal EMIF_inv   : std_logic_vector(7 downto 0);
+  -- signal EMIF_inv   : std_logic_vector(7 downto 0);
 
   -- I hate Vivado HLS 
   signal sReadTlastAsVector : std_logic_vector(0 downto 0);
@@ -278,13 +211,14 @@ architecture Flash of Role_Themisto is
   signal sMetaOutTlastAsVector_Tcp : std_logic_vector(0 downto 0);
   signal sMetaInTlastAsVector_Tcp  : std_logic_vector(0 downto 0);
 
-  --============================================================================
-  --  VARIABLE DECLARATIONS
-  --============================================================================  
   signal sUdpPostCnt : std_ulogic_vector(9 downto 0);
   signal sTcpPostCnt : std_ulogic_vector(9 downto 0);
 
-  signal sMemTestDebugOut : std_logic_vector(15 downto 0);
+  --signal sMemTestDebugOut : std_logic_vector(15 downto 0);
+  
+  --============================================================================
+  --  VARIABLE DECLARATIONS
+  --============================================================================  
 
   --===========================================================================
   --== COMPONENT DECLARATIONS
@@ -339,48 +273,6 @@ architecture Flash of Role_Themisto is
 
 
 
-  component MemTestFlash is
-    port (
-           ap_clk                     : IN STD_LOGIC;
-           ap_rst_n                   : IN STD_LOGIC;
-           ap_start                   : IN STD_LOGIC;
-           ap_done                    : OUT STD_LOGIC;
-           ap_idle                    : OUT STD_LOGIC;
-           ap_ready                   : OUT STD_LOGIC;
-           piSysReset_V               : IN STD_LOGIC_VECTOR (0 downto 0);
-           piSysReset_V_ap_vld        : IN STD_LOGIC;
-           piMMIO_diag_ctrl_V         : IN STD_LOGIC_VECTOR (1 downto 0);
-           piMMIO_diag_ctrl_V_ap_vld  : IN STD_LOGIC;
-           poMMIO_diag_stat_V         : OUT STD_LOGIC_VECTOR (1 downto 0);
-           poMMIO_diag_stat_V_ap_vld  : OUT STD_LOGIC;
-           poDebug_V                  : OUT STD_LOGIC_VECTOR (15 downto 0);
-           poDebug_V_ap_vld           : OUT STD_LOGIC;
-           soMemRdCmdP0_TDATA         : OUT STD_LOGIC_VECTOR (79 downto 0);
-           soMemRdCmdP0_TVALID        : OUT STD_LOGIC;
-           soMemRdCmdP0_TREADY        : IN STD_LOGIC;
-           siMemRdStsP0_TDATA         : IN STD_LOGIC_VECTOR (7 downto 0);
-           siMemRdStsP0_TVALID        : IN STD_LOGIC;
-           siMemRdStsP0_TREADY        : OUT STD_LOGIC;
-           siMemReadP0_TDATA          : IN STD_LOGIC_VECTOR (511 downto 0);
-           siMemReadP0_TVALID         : IN STD_LOGIC;
-           siMemReadP0_TREADY         : OUT STD_LOGIC;
-           siMemReadP0_TKEEP          : IN STD_LOGIC_VECTOR (63 downto 0);
-           siMemReadP0_TLAST          : IN STD_LOGIC_VECTOR (0 downto 0);
-           soMemWrCmdP0_TDATA         : OUT STD_LOGIC_VECTOR (79 downto 0);
-           soMemWrCmdP0_TVALID        : OUT STD_LOGIC;
-           soMemWrCmdP0_TREADY        : IN STD_LOGIC;
-           siMemWrStsP0_TDATA         : IN STD_LOGIC_VECTOR (7 downto 0);
-           siMemWrStsP0_TVALID        : IN STD_LOGIC;
-           siMemWrStsP0_TREADY        : OUT STD_LOGIC;
-           soMemWriteP0_TDATA         : OUT STD_LOGIC_VECTOR (511 downto 0);
-           soMemWriteP0_TVALID        : OUT STD_LOGIC;
-           soMemWriteP0_TREADY        : IN STD_LOGIC;
-           soMemWriteP0_TKEEP         : OUT STD_LOGIC_VECTOR (63 downto 0);
-           soMemWriteP0_TLAST         : OUT STD_LOGIC_VECTOR (0 downto 0) 
-         );
-  end component MemTestFlash;
-
-
   --===========================================================================
   --== FUNCTION DECLARATIONS  [TODO-Move to a package]
   --===========================================================================
@@ -414,8 +306,11 @@ architecture Flash of Role_Themisto is
 
 begin
 
-  poSHL_Mmio_RdReg <= sMemTestDebugOut when (unsigned(piSHL_Mmio_WrReg) /= 0) else 
-   x"BEEF"; 
+  --poSHL_Mmio_RdReg <= sMemTestDebugOut when (unsigned(piSHL_Mmio_WrReg) /= 0) else 
+  -- x"BEEF"; 
+  -- to be use as ROLE VERSION IDENTIFICATION --
+  poSHL_Mmio_RdReg <= x"BEEF";
+  
 
   --################################################################################
   --#                                                                              #
@@ -555,67 +450,21 @@ begin
   --DEBUGING:
   --poROL_Nrc_Tcp_Rx_ports <= (others => '0');
 
-
   --################################################################################
-  --#                                                                              #
-  --#    #    #  ######  #    #  ######                                            #
-  --#    ##  ##  #       ##  ##    #    ###### ###### ######                       #
-  --#    # ## #  #####   # ## #    #    #      #        #                          #
-  --#    #    #  #       #    #    #    ####   ######   #                          #
-  --#    #    #  #       #    #    #    #           #   #                          #
-  --#    #    #  ######  #    #    #    ###### ######   #                          #
-  --#                                                                              #
+  --  1st Memory Port dummy connections
   --################################################################################
-
-  sReadTlastAsVector(0)     <= siMEM_Mp0_Read_tlast;
-  soMEM_Mp0_Write_tlast <= sWriteTlastAsVector(0);
-  --sResetAsVector(0) <= piSHL_156_25Rst;
-  --sResetAsVector(0) <= piSHL_ROL_EMIF_2B_Reg(0);
-  sResetAsVector(0) <= piMMIO_Ly7_Rst;
-
-  MEM_TEST: MemTestFlash 
-  port map(
-            ap_clk                     => piSHL_156_25Clk,
-            ap_rst_n                   => (not piSHL_156_25Rst),
-            --ap_rst_n                   => '1',
-            --ap_start                   => '1',
-            ap_start                   => piMMIO_Ly7_En,
-            piSysReset_V               => sResetAsVector,
-            piSysReset_V_ap_vld        => '1',
-            piMMIO_diag_ctrl_V         => piSHL_Mmio_Mc1_MemTestCtrl,
-            piMMIO_diag_ctrl_V_ap_vld  => '1',
-            poMMIO_diag_stat_V         => poSHL_Mmio_Mc1_MemTestStat,
-            --poDebug_V                  => poSHL_Mmio_RdReg,
-            poDebug_V                  => sMemTestDebugOut,
-
-            soMemRdCmdP0_TDATA         => soMEM_Mp0_RdCmd_tdata,
-            soMemRdCmdP0_TVALID        => soMEM_Mp0_RdCmd_tvalid,
-            soMemRdCmdP0_TREADY        => soMEM_Mp0_RdCmd_tready,
-
-            siMemRdStsP0_TDATA         => siMEM_Mp0_RdSts_tdata,
-            siMemRdStsP0_TVALID        => siMEM_Mp0_RdSts_tvalid,
-            siMemRdStsP0_TREADY        => siMEM_Mp0_RdSts_tready,
-
-            siMemReadP0_TDATA          => siMEM_Mp0_Read_tdata ,
-            siMemReadP0_TVALID         => siMEM_Mp0_Read_tvalid,
-            siMemReadP0_TREADY         => siMEM_Mp0_Read_tready,
-            siMemReadP0_TKEEP          => siMEM_Mp0_Read_tkeep,
-            siMemReadP0_TLAST          => sReadTlastAsVector,
-
-            soMemWrCmdP0_TDATA         => soMEM_Mp0_WrCmd_tdata ,
-            soMemWrCmdP0_TVALID        => soMEM_Mp0_WrCmd_tvalid,
-            soMemWrCmdP0_TREADY        => soMEM_Mp0_WrCmd_tready,
-
-            siMemWrStsP0_TDATA         => siMEM_Mp0_WrSts_tdata ,
-            siMemWrStsP0_TVALID        => siMEM_Mp0_WrSts_tvalid,
-            siMemWrStsP0_TREADY        => siMEM_Mp0_WrSts_tready,
-
-            soMemWriteP0_TDATA         => soMEM_Mp0_Write_tdata ,
-            soMemWriteP0_TVALID        => soMEM_Mp0_Write_tvalid,
-            soMemWriteP0_TREADY        => soMEM_Mp0_Write_tready,
-            soMemWriteP0_TKEEP         => soMEM_Mp0_Write_tkeep ,
-            soMemWriteP0_TLAST         => sWriteTlastAsVector
-          );
+    soMEM_Mp0_RdCmd_tdata   <= (others => '0');
+    soMEM_Mp0_RdCmd_tvalid  <= '0';
+    siMEM_Mp0_RdSts_tready  <= '0';
+    siMEM_Mp0_Read_tready   <= '0';
+    soMEM_Mp0_WrCmd_tdata   <= (others => '0');
+    soMEM_Mp0_WrCmd_tvalid  <= '0';
+    siMEM_Mp0_WrSts_tready  <= '0';
+    soMEM_Mp0_Write_tdata   <= (others => '0');
+    soMEM_Mp0_Write_tkeep   <= (others => '0');
+    soMEM_Mp0_Write_tlast   <= '0';
+    soMEM_Mp0_Write_tvalid  <= '0';
+    
 
   --################################################################################
   --  2nd Memory Port dummy connections
