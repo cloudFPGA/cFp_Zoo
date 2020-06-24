@@ -33,7 +33,7 @@
 
 /** This is our custom MTU. We must use a multiple of 8 (Bytes per transaction)! 1450 4086 udp pack 
  * size; note that OSX limits < 8100 bytes                                                        */
-#define PACK_SIZE 1024          
+#define PACK_SIZE 1024
 
 /** Larger than maximum UDP packet size                                                           */
 #define BUF_LEN 65540              

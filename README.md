@@ -20,7 +20,7 @@ cloudFPGA project (cFp) for Xilinx Vitis library
 
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
-sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev
+sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev rename rpl
 ```
 
 You may also need these steps for Ubuntu 18.04 & Vitis 2019.2 :

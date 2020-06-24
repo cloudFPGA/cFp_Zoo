@@ -1,7 +1,14 @@
 #/bin/sh
 # @author DID
+# @brief A script that creates the files and directories for a new Vitis kernel based on a previous 
+#        which acts as a template.
+# @note Change the two following variables and launch the script with no arguments in this folder.
 
+
+# Choose the kernel which will be the "template" from which the new directries/files will be generated
 template_kernel="harris"
+
+# Choose the na,e of the new kernel/files/dirs
 new_kernel="safe"
 
 function replace() {
