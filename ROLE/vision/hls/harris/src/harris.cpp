@@ -332,7 +332,7 @@ void pTXPath(
 	if(udpWordTx.tlast == 1)
 	{
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
-	}	
+	}
 	
 	// This is our own termination based on the custom MTU we have set in PACK_SIZE.
 	// TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header

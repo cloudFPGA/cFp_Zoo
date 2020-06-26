@@ -68,7 +68,8 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 - [x] 2019
   - [x] 2019.1
   - [x] 2019.2
-- [ ] 2020
+- [x] 2020
+  - [x] 2020.1
 
   
 #### Vitis Vision Harris Corner Detector dive in 

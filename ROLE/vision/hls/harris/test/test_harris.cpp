@@ -129,6 +129,9 @@ int main(int argc, char** argv) {
     }
     else {
       printf("Succesfully loaded image ... %s\n!", argv[1]);
+      assert(in_img.total() == FRAME_WIDTH * FRAME_HEIGHT);
+      // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
+      assert(PACK_SIZE % 8 == 0);
     }
 
     uint16_t Thresh; // Threshold for HLS

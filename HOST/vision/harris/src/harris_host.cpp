@@ -161,6 +161,8 @@ int main(int argc, char * argv[]) {
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
 	    }
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
+	    // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
+	    assert(PACK_SIZE % 8 == 0);
 #ifdef SHOW_WINDOWS
 	    namedWindow("host_send", CV_WINDOW_NORMAL);
             imshow("host_send", send);
