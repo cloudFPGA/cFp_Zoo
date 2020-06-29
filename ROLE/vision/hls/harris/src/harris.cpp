@@ -295,6 +295,12 @@ void pTXPath(
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
         udpWordTx = sRxpToTxp_Data.read();
+
+	// in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
+	if (PACK_SIZE == 8) 
+	{
+	    udpWordTx.tlast = 1;
+	}
         soTHIS_Shl_Data.write(udpWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;

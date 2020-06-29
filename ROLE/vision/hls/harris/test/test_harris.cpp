@@ -272,6 +272,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
+      //printf("DEBUG: i=%u\tTOT_TRANSFERS=%u\n", i, TOT_TRANSFERS);
       assert(i == TOT_TRANSFERS);
     }
     else {
