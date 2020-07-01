@@ -139,7 +139,7 @@ int main(int argc, char * argv[]) {
 		
         VideoCapture cap(argv[3]); // Grab the camera
         if (!cap.isOpened()) {
-            cerr << "OpenCV Failed to open camera";
+            cerr << "OpenCV Failed to open camera" << endl;
             exit(1);
         }
 	//frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
