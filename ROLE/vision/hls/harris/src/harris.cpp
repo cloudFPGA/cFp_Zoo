@@ -127,7 +127,7 @@ void pRXPath(
     //#pragma HLS DATAFLOW interval=1
      #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
-    UdpWord    udpWord;
+    NetworkWord    netWord;
 
   switch(enqueueFSM)
   {
@@ -151,9 +151,9 @@ void pRXPath(
       if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
-        udpWord = siSHL_This_Data.read();
-	storeWordToAxiStream(udpWord, img_in_axi_stream, processed_word_rx, image_loaded);
-        if(udpWord.tlast == 1)
+        netWord = siSHL_This_Data.read();
+	storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, image_loaded);
+        if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
         }
@@ -273,7 +273,7 @@ void pTXPath(
     //#pragma HLS DATAFLOW interval=1
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
-    UdpWord      udpWordTx;
+    NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
   
   switch(dequeueFSM)
@@ -294,14 +294,14 @@ void pTXPath(
       if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
-        udpWordTx = sRxpToTxp_Data.read();
+        netWordTx = sRxpToTxp_Data.read();
 
 	// in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
 	if (PACK_SIZE == 8) 
 	{
-	    udpWordTx.tlast = 1;
+	    netWordTx.tlast = 1;
 	}
-        soTHIS_Shl_Data.write(udpWordTx);
+        soTHIS_Shl_Data.write(netWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;
         NetworkMetaStream meta_out_stream = NetworkMetaStream();
@@ -320,7 +320,7 @@ void pTXPath(
 
 	(*processed_word_tx)++;
 	
-        if(udpWordTx.tlast != 1)
+        if(netWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
         }
@@ -332,10 +332,10 @@ void pTXPath(
 	     dequeueFSM, *processed_word_tx);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
-        udpWordTx = sRxpToTxp_Data.read();
+        netWordTx = sRxpToTxp_Data.read();
 
 	// This is a normal termination of the axi stream from vitis functions
-	if(udpWordTx.tlast == 1)
+	if(netWordTx.tlast == 1)
 	{
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
@@ -346,11 +346,11 @@ void pTXPath(
 	(*processed_word_tx)++;
 	if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
 	{
-	    udpWordTx.tlast = 1;
+	    netWordTx.tlast = 1;
 	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
 	
-        soTHIS_Shl_Data.write(udpWordTx);
+        soTHIS_Shl_Data.write(netWordTx);
       }
       break;
   }

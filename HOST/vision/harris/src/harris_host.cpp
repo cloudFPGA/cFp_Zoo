@@ -134,7 +134,7 @@ int main(int argc, char * argv[]) {
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
 	#else
-	TCPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
+	TCPSocket sock(servAddress, servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the TCPSocket constructor
 	#endif
 	#else
