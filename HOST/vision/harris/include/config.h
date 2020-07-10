@@ -24,16 +24,16 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 256
+#define FRAME_HEIGHT 8
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  256
+#define FRAME_WIDTH  8
 
 #define FRAME_INTERVAL (1000/30)
 
 /** This is our custom MTU. We must use a multiple of 8 (Bytes per transaction)! 1450 4086 udp pack 
  * size; note that OSX limits < 8100 bytes                                                        */
-#define PACK_SIZE 1368
+#define PACK_SIZE 1024
 
 /** Larger than maximum UDP packet size                                                           */
 #define BUF_LEN 65540              
@@ -45,13 +45,14 @@
 //  #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS           
+  #define TB_SIM_CFP_VITIS           
 
 
 /*  For The OpenCV type fot th input image. TODO: We have to automatically fix it for every kernel*/
 #define INPUT_TYPE_HOST CV_8UC1
 
-  
+/** The network socket type: tcp or udp                                                           */
+#define NET_TYPE tcp
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
@@ -60,6 +61,7 @@
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
 #define TOT_TRANSFERS CEIL(FRAME_TOTAL, PACK_SIZE)  
 
-
+#define tcp 0
+#define udp 1
 
 /*! \} */

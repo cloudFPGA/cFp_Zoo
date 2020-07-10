@@ -238,7 +238,7 @@ architecture Flash of Role_Themisto is
            piFMC_ROL_size_V        : in std_logic_vector (31 downto 0);
       --piSMC_ROL_size_V_ap_vld : in std_logic;
       --------------------------------------------------------
-      -- From SHELL / Udp Data Interfaces
+      -- From SHELL / Udp-Tcp Data Interfaces
       --------------------------------------------------------
            siSHL_This_Data_tdata     : in  std_logic_vector( 63 downto 0);
            siSHL_This_Data_tkeep     : in  std_logic_vector(  7 downto 0);
@@ -246,7 +246,7 @@ architecture Flash of Role_Themisto is
            siSHL_This_Data_tvalid    : in  std_logic;
            siSHL_This_Data_tready    : out std_logic;
       --------------------------------------------------------
-      -- To SHELL / Udp Data Interfaces
+      -- To SHELL / Udp-Tcp Data Interfaces
       --------------------------------------------------------
            soTHIS_Shl_Data_tdata     : out std_logic_vector( 63 downto 0);
            soTHIS_Shl_Data_tkeep     : out std_logic_vector(  7 downto 0);
@@ -413,7 +413,7 @@ begin
              piFMC_ROL_size_V         => piFMC_ROLE_size,
              --piFMC_ROL_size_V_ap_vld  => '1',
              --------------------------------------------------------
-             -- From SHELL / Udp Data Interfaces
+             -- From SHELL / Tcp Data Interfaces
              --------------------------------------------------------
              siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
              siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
@@ -421,7 +421,7 @@ begin
              siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
              siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
              --------------------------------------------------------
-             -- To SHELL / Udp Data Interfaces
+             -- To SHELL / Tcp Data Interfaces
              --------------------------------------------------------
              soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
              soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
@@ -442,7 +442,7 @@ begin
              soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
 
              poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
-           --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
+           --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
            );
 
   --end generate;

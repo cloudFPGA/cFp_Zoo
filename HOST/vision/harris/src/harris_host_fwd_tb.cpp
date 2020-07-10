@@ -39,8 +39,12 @@ int main(int argc, char * argv[]) {
 	    
     namedWindow("tb_recv", WINDOW_AUTOSIZE);
     try {
+      	#if NET_TYPE == udp
         UDPSocket sock(servPort);
-
+	#else
+	TCPServerSocket servSock(servPort);     // Server Socket object
+	TCPSocket *sock = servSock.accept();     // Wait for a client to connect
+	#endif
         char buffer[BUF_LEN]; // Buffer for echo string
         int recvMsgSize; // Size of received message
         string sourceAddress; // Address of datagram source
@@ -60,12 +64,33 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
 	    
+	    #if NET_TYPE == tcp
+	    // TCP client handling
+	    cout << "Handling client ";
+	    try {
+	      cout << sock->getForeignAddress() << ":";
+	    } catch (SocketException e) {
+	      cerr << "Unable to get foreign address" << endl;
+	    }
+	    try {
+	      cout << sock->getForeignPort();
+	    } catch (SocketException e) {
+	      cerr << "Unable to get foreign port" << endl;
+	    }
+	    cout << endl;
+	    #endif
+	    
+	    
 	    // RX Loop
             for (int i = 0; i < total_pack; i++) {
 	        if ( i == total_pack - 1 ) {
                     receiving_now = bytes_in_last_pack;
                 }
+		#if NET_TYPE == udp
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
+		#else
+		recvMsgSize = sock->recv(buffer, receiving_now);
+		#endif
                 if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
                     continue;
@@ -94,7 +119,7 @@ int main(int argc, char * argv[]) {
 		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/csim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 3) {
-		exec_cmd = "make cosim";
+		exec_cmd = "make csynth && make cosim";
 		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/cosim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 4) {
@@ -115,9 +140,9 @@ int main(int argc, char * argv[]) {
 	    const char *command = str_command.c_str(); 
   	    cout << "Calling TB with command:" << command << endl; 
 	    system(command); 
-	    
+
             free(longbuf);
-	    	    	    	    
+
 	    clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
@@ -150,7 +175,11 @@ int main(int argc, char * argv[]) {
                 if ( i == total_pack - 1 ) {
                     sending_now = bytes_in_last_pack;
 		}
+		#if NET_TYPE == udp
 		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
+		#else
+		sock->send( & frame.data[i * PACK_SIZE], sending_now);
+		#endif
 	    }
             
             clock_t next_cycle_tx = clock();
@@ -159,7 +188,7 @@ int main(int argc, char * argv[]) {
                     total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx; 
             cout << "\\___________________________________________________________________/" << endl;
-        } // while loop
+        break;} // while loop
 
     } catch (SocketException & e) {
         cerr << e.what() << endl;

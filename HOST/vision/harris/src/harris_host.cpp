@@ -98,7 +98,12 @@ int main(int argc, char * argv[]) {
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
     string servAddress = argv[1]; // First arg: server address
+    #if NET_TYPE == udp
     unsigned short servPort = Socket::resolveService(argv[2], "udp");
+    #else
+    unsigned short servPort = atoi(argv[2]);
+    #endif
+    
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     unsigned int num_frame = 0;
@@ -125,10 +130,20 @@ int main(int argc, char * argv[]) {
         //-- STEP-2 : Initialize socket connection
         //------------------------------------------------------      
         #ifndef TB_SIM_CFP_VITIS
+	#if NET_TYPE == udp
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
 	#else
+	TCPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
+	                          // bind() in the TCPSocket constructor
+	#endif
+	#else
+	#if NET_TYPE == udp
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
+	#else
+        //TCPSocket sock(servPort); // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
+	TCPSocket sock(servAddress, servPort);        
+	#endif
         #endif
         
         //------------------------------------------------------------------------------------
@@ -210,7 +225,11 @@ int main(int argc, char * argv[]) {
                 if ( i == total_pack - 1 ) {
                     sending_now = bytes_in_last_pack;
                 }
+		#if NET_TYPE == udp
 		sock.sendTo( & send.data[i * PACK_SIZE], sending_now, servAddress, servPort);
+		#else
+		sock.send( & send.data[i * PACK_SIZE], sending_now);
+		#endif
 		delay(1000);  
 	    }
             
@@ -232,8 +251,12 @@ int main(int argc, char * argv[]) {
                 if ( i == total_pack - 1 ) {
                     receiving_now = bytes_in_last_pack;
                 }
+		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
-                if (recvMsgSize != receiving_now) {
+		#else
+		recvMsgSize = sock.recv(buffer, receiving_now);
+		#endif
+		if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
                             receiving_now << endl;
                     continue;
