@@ -88,8 +88,8 @@ void markPointsOnImage(Mat& imgOutput,
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
-    if ((argc < 2) || (argc > 3)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << "  <Server Port> <optional input image>\n";
+    if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
         exit(1);
     }
 
@@ -97,11 +97,11 @@ int main(int argc, char * argv[]) {
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
-    //string servAddress = argv[1]; // First arg: server address
+    string servAddress = argv[1]; // First arg: server address
     #if NET_TYPE == udp
-    unsigned short servPort = Socket::resolveService(argv[1], "udp");
+    unsigned short servPort = Socket::resolveService(argv[2], "udp");
     #else
-    unsigned short servPort = atoi(argv[1]);
+    unsigned short servPort = atoi(argv[2]);
     #endif
     
     char buffer[BUF_LEN]; // Buffer for echo string
@@ -118,7 +118,7 @@ int main(int argc, char * argv[]) {
     string out_img_file, out_points_file;
     string out_video_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
-    out_video_file.assign(argv[2]);
+    out_video_file.assign(argv[3]);
     out_video_file += "_fpga_img_out.avi";
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
    
@@ -134,19 +134,15 @@ int main(int argc, char * argv[]) {
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
 	#else
-	//TCPSocket sock(servAddress, servPort); // NOTE: It is very important to set port here in order to call 
+	TCPSocket sock(servAddress, servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the TCPSocket constructor
-	TCPServerSocket servSock(servPort);
-	TCPSocket *sock = servSock.accept();
 	#endif
 	#else
 	#if NET_TYPE == udp
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
 	#else
         //TCPSocket sock(servPort); // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
-	//TCPSocket sock(servAddress, servPort); 
-	TCPServerSocket servSock(servPort);
-	TCPSocket *sock = servSock.accept();
+	TCPSocket sock(servAddress, servPort);        
 	#endif
         #endif
         
@@ -156,7 +152,7 @@ int main(int argc, char * argv[]) {
         Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 		
-        VideoCapture cap(argv[2]); // Grab the camera
+        VideoCapture cap(argv[3]); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera" << endl;
             exit(1);
@@ -232,7 +228,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
 		sock.sendTo( & send.data[i * PACK_SIZE], sending_now, servAddress, servPort);
 		#else
-		sock->send( & send.data[i * PACK_SIZE], sending_now);
+		sock.send( & send.data[i * PACK_SIZE], sending_now);
 		#endif
 		delay(1000);  
 	    }
@@ -258,7 +254,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
-		recvMsgSize = sock->recv(buffer, receiving_now);
+		recvMsgSize = sock.recv(buffer, receiving_now);
 		#endif
 		if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
@@ -269,7 +265,7 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
 
-            //cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
  
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
@@ -330,9 +326,9 @@ int main(int argc, char * argv[]) {
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
 	    if (num_frame == 1) {
-	      out_img_file.assign(argv[2]);
+	      out_img_file.assign(argv[3]);
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
-	      out_points_file.assign(argv[2]);
+	      out_points_file.assign(argv[3]);
 	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
 	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
 	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 

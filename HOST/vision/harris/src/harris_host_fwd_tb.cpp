@@ -28,12 +28,12 @@ using namespace cv;
    */
 int main(int argc, char * argv[]) {
 
-    if ((argc < 3) || (argc > 4)) { // Test for correct number of parameters
-        cerr << "Usage: " << argv[0] << " <Server addr> <Server Port> <optional simulation mode>" << endl;
+    if ((argc < 2) || (argc > 3)) { // Test for correct number of parameters
+        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode>" << endl;
         exit(1);
     }
-    string servAddress = argv[1];
-    unsigned short servPort = atoi(argv[2]); // First arg:  local port
+
+    unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_frame = 0;
     string clean_cmd;
 	    
@@ -42,14 +42,30 @@ int main(int argc, char * argv[]) {
       	#if NET_TYPE == udp
         UDPSocket sock(servPort);
 	#else
-	//TCPServerSocket servSock(servPort);     // Server Socket object
-	//TCPSocket *sock = servSock.accept();     // Wait for a client to connect
-	TCPSocket sock(servAddress, servPort);
+	TCPServerSocket servSock(servPort);     // Server Socket object
+	TCPSocket *sock = servSock.accept();     // Wait for a client to connect
 	#endif
         char buffer[BUF_LEN]; // Buffer for echo string
         int recvMsgSize; // Size of received message
         string sourceAddress; // Address of datagram source
         unsigned short sourcePort; // Port of datagram source
+	    
+	#if NET_TYPE == tcp
+	// TCP client handling
+	cout << "Handling client ";
+	try {
+	  cout << sock->getForeignAddress() << ":";
+	} catch (SocketException e) {
+	    cerr << "Unable to get foreign address" << endl;
+	  }
+	try {
+	  cout << sock->getForeignPort();
+	} catch (SocketException e) {
+	    cerr << "Unable to get foreign port" << endl;
+	  }
+	cout << endl;
+	#endif
+	    
 
         // RX Step
         clock_t last_cycle_rx = clock();
@@ -65,23 +81,6 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
 	    
-	    #if NET_TYPE == tcp
-	    // TCP client handling
-	    cout << "Handling client ";
-	    try {
-	      cout << sock.getForeignAddress() << ":";
-	    } catch (SocketException e) {
-	      cerr << "Unable to get foreign address" << endl;
-	    }
-	    try {
-	      cout << sock.getForeignPort();
-	    } catch (SocketException e) {
-	      cerr << "Unable to get foreign port" << endl;
-	    }
-	    cout << endl;
-	    #endif
-	    
-	    
 	    // RX Loop
             for (int i = 0; i < total_pack; i++) {
 	        if ( i == total_pack - 1 ) {
@@ -90,7 +89,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
 		#else
-		recvMsgSize = sock.recv(buffer, receiving_now);
+		recvMsgSize = sock->recv(buffer, receiving_now);
 		#endif
                 if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
@@ -179,7 +178,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
 		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
 		#else
-		sock.send( & frame.data[i * PACK_SIZE], sending_now);
+		sock->send( & frame.data[i * PACK_SIZE], sending_now);
 		#endif
 	    }
             
@@ -190,7 +189,7 @@ int main(int argc, char * argv[]) {
             last_cycle_tx = next_cycle_tx; 
             cout << "\\___________________________________________________________________/" << endl;
         break;} // while loop
-
+        delete sock;
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);
