@@ -124,8 +124,8 @@ int main(int argc, char * argv[]) {
    
     print_cFpVitis();
     
-    try {
-          
+    //try {
+          /*
         //------------------------------------------------------
         //-- STEP-2 : Initialize socket connection
         //------------------------------------------------------      
@@ -145,7 +145,7 @@ int main(int argc, char * argv[]) {
 	TCPSocket sock(servAddress, servPort);        
 	#endif
         #endif
-        
+        */
         //------------------------------------------------------------------------------------
         //-- STEP-3 : Initialize a Greyscale OpenCV Mat either from image or from video/camera
         //------------------------------------------------------------------------------------
@@ -159,11 +159,11 @@ int main(int argc, char * argv[]) {
         }
 	//frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 
-        while (1) {
+        //while (1) {
             clock_t start_cycle_main = clock();
 	    cap >> frame;
-            if (frame.empty()) break; // if input is an image, the loop will be executed once
-            if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
+            //if (frame.empty()) break; // if input is an image, the loop will be executed once
+            //if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << ++num_frame << endl;
@@ -219,7 +219,32 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-5.1 : TX Loop
             //------------------------------------------------------
-            clock_t last_cycle_tx = clock();
+            
+    try {
+          
+        //------------------------------------------------------
+        //-- STEP-2 : Initialize socket connection
+        //------------------------------------------------------      
+        #ifndef TB_SIM_CFP_VITIS
+	#if NET_TYPE == udp
+        UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
+	                          // bind() in the UDPSocket constructor
+	#else
+	TCPSocket sock(servAddress, servPort); // NOTE: It is very important to set port here in order to call 
+	                          // bind() in the TCPSocket constructor
+	#endif
+	#else
+	#if NET_TYPE == udp
+        UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
+	#else
+        //TCPSocket sock(servPort); // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
+	TCPSocket sock(servAddress, servPort);        
+	#endif
+        #endif	    
+	    
+	    
+	    
+	    clock_t last_cycle_tx = clock();
 	    unsigned int sending_now = PACK_SIZE;
             for (unsigned int i = 0; i < total_pack; i++) {
                 if ( i == total_pack - 1 ) {
@@ -240,11 +265,17 @@ int main(int argc, char * argv[]) {
             last_cycle_tx = next_cycle_tx;
 	    
 	    
+	    	// Destructor closes the socket
+    } catch (SocketException & e) {
+        cerr << e.what() << endl;
+        exit(1);
+    }
+	try {    
 	    //------------------------------------------------------
             //-- STEP-5.2 : RX Loop
             //------------------------------------------------------
 	    
-	    TCPServerSocket servSock(32771);     // Server Socket object
+	    TCPServerSocket servSock(servPort);     // Server Socket object
 	    TCPSocket *servsock = servSock.accept();     // Wait for a client to connect	    
 	    
 	    
@@ -291,7 +322,7 @@ int main(int argc, char * argv[]) {
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "receive failure!" << endl;
-                continue;
+                //continue;
 
             }
 #ifdef SHOW_WINDOWS            
@@ -359,9 +390,9 @@ int main(int argc, char * argv[]) {
 	    }
 	    else if (num_frame > 1) {
 	      // If the frame is empty, break immediately
-	      if (frame.empty()) {
-		break;
-	      }
+	      //if (frame.empty()) {
+		//break;
+	      //}
 	      cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
 	      Mat tovideo;
 	      if (frame.channels() != 1) {
@@ -378,7 +409,7 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
             cout << "\\___________________________________________________________________/" << endl
             << endl;
-	} // while loop
+	//} // while loop
 	
 	// When everything done, release the video capture and write object
 	cap.release();
