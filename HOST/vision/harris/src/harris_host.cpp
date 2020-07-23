@@ -243,6 +243,27 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-5.2 : RX Loop
             //------------------------------------------------------
+	    
+	    TCPServerSocket servSock(32771);     // Server Socket object
+	    TCPSocket *servsock = servSock.accept();     // Wait for a client to connect	    
+	    
+	    
+	#if NET_TYPE == tcp
+	// TCP client handling
+	cout << "Handling client ";
+	try {
+	  cout << servsock->getForeignAddress() << ":";
+	} catch (SocketException e) {
+	    cerr << "Unable to get foreign address" << endl;
+	  }
+	try {
+	  cout << servsock->getForeignPort();
+	} catch (SocketException e) {
+	    cerr << "Unable to get foreign port" << endl;
+	  }
+	cout << endl;
+	#endif	    
+	    
 	    clock_t last_cycle_rx = clock();
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
@@ -254,7 +275,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
-		recvMsgSize = sock.recv(buffer, receiving_now);
+		recvMsgSize = servsock->recv(buffer, receiving_now);
 		#endif
 		if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 

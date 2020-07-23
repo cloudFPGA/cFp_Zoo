@@ -18,6 +18,8 @@ cloudFPGA project (cFp) for Xilinx Vitis library
 
 ### System configurattion
 
+#### Ubuntu
+
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
 sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev rename rpl
@@ -31,6 +33,11 @@ sudo apt-get install ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 ```
 
+#### CentOS/EL7
+```
+sudo yum groupinstall 'Development Tools'
+sudo yum install cmake opencv-devel
+```
 
 ### Vitis libraries support
 

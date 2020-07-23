@@ -43,7 +43,7 @@ int main(int argc, char * argv[]) {
         UDPSocket sock(servPort);
 	#else
 	TCPServerSocket servSock(servPort);     // Server Socket object
-	TCPSocket *sock = servSock.accept();     // Wait for a client to connect
+	TCPSocket *servsock = servSock.accept();     // Wait for a client to connect
 	#endif
         char buffer[BUF_LEN]; // Buffer for echo string
         int recvMsgSize; // Size of received message
@@ -54,12 +54,12 @@ int main(int argc, char * argv[]) {
 	// TCP client handling
 	cout << "Handling client ";
 	try {
-	  cout << sock->getForeignAddress() << ":";
+	  cout << servsock->getForeignAddress() << ":";
 	} catch (SocketException e) {
 	    cerr << "Unable to get foreign address" << endl;
 	  }
 	try {
-	  cout << sock->getForeignPort();
+	  cout << servsock->getForeignPort();
 	} catch (SocketException e) {
 	    cerr << "Unable to get foreign port" << endl;
 	  }
@@ -89,7 +89,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
 		#else
-		recvMsgSize = sock->recv(buffer, receiving_now);
+		recvMsgSize = servsock->recv(buffer, receiving_now);
 		#endif
                 if (recvMsgSize != receiving_now) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
@@ -169,6 +169,11 @@ int main(int argc, char * argv[]) {
 	    assert(frame.isContinuous());
 	    
 	    // TX Loop
+	    string servAddress = "localhost";
+	    TCPSocket sock(servAddress, 32771); // NOTE: It is very important to set port here in order to call 
+
+	    
+	    
 	    unsigned int sending_now = PACK_SIZE;
 	    clock_t last_cycle_tx = clock();
             for (int i = 0; i < total_pack; i++) {
@@ -178,7 +183,7 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
 		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
 		#else
-		sock->send( & frame.data[i * PACK_SIZE], sending_now);
+		sock.send( & frame.data[i * PACK_SIZE], sending_now);
 		#endif
 	    }
             
@@ -189,7 +194,9 @@ int main(int argc, char * argv[]) {
             last_cycle_tx = next_cycle_tx; 
             cout << "\\___________________________________________________________________/" << endl;
         break;} // while loop
-        delete sock;
+        #if NET_TYPE == tcp
+        delete servsock;
+	#endif
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);
