@@ -169,8 +169,8 @@ int main(int argc, char * argv[]) {
 	    assert(frame.isContinuous());
 	    
 	    // TX Loop
-	    string servAddress = "localhost";
-	    TCPSocket sock(servAddress, 32771); // NOTE: It is very important to set port here in order to call 
+	    //string servAddress = "localhost";
+	    //TCPSocket sock(servAddress, 32771); // NOTE: It is very important to set port here in order to call 
 
 	    
 	    
@@ -183,7 +183,8 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp
 		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
 		#else
-		sock.send( & frame.data[i * PACK_SIZE], sending_now);
+		//sock.send( & frame.data[i * PACK_SIZE], sending_now);
+		servsock->send( & frame.data[i * PACK_SIZE], sending_now);
 		#endif
 	    }
             

@@ -45,14 +45,14 @@
 //  #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-  #define TB_SIM_CFP_VITIS           
+//  #define TB_SIM_CFP_VITIS           
 
 
 /*  For The OpenCV type fot th input image. TODO: We have to automatically fix it for every kernel*/
 #define INPUT_TYPE_HOST CV_8UC1
 
 /** The network socket type: tcp or udp                                                           */
-#define NET_TYPE tcp
+#define NET_TYPE udp
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 

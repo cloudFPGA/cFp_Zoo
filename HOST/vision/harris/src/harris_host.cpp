@@ -169,8 +169,6 @@ int main(int argc, char * argv[]) {
 	    cout << "INFO: Frame # " << ++num_frame << endl;
 	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
-	    cout << send.total() << endl;
-	    cout << send.total() << endl;
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
@@ -191,6 +189,7 @@ int main(int argc, char * argv[]) {
             unsigned int bytes_in_last_pack = send.total() * send.channels() - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
+	    cout << "INFO: Network socket : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
             cout << "INFO: Total bytes to send/receive   = " << send.total() * send.channels() << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
@@ -243,7 +242,7 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-5.2 : RX Loop
             //------------------------------------------------------
-	    
+	    /*
 	    TCPServerSocket servSock(servPort);     // Server Socket object
 	    TCPSocket *servsock = servSock.accept();     // Wait for a client to connect	    
 	    
@@ -262,7 +261,7 @@ int main(int argc, char * argv[]) {
 	    cerr << "Unable to get foreign port" << endl;
 	  }
 	cout << endl;
-	#endif	    
+	#endif	  */  
 	    
 	    clock_t last_cycle_rx = clock();
 	    unsigned int receiving_now = PACK_SIZE;
@@ -275,7 +274,8 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
-		recvMsgSize = servsock->recv(buffer, receiving_now);
+		//recvMsgSize = servsock->recv(buffer, receiving_now);
+		recvMsgSize = sock.recv(buffer, receiving_now);
 		#endif
 		if (recvMsgSize != receiving_now) {
                     cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 

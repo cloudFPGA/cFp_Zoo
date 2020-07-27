@@ -308,13 +308,16 @@ void pTXPath(
         meta_out_stream.tlast = 1;
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
-        //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
         meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
-        //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
-
-        meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
+        //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
-        meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
+        //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
+        //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
+        //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
+        meta_out_stream.tdata.dst_port = meta_in.src_port;
+        meta_out_stream.tdata.src_port = meta_in.dst_port;
+	
+	
 	//meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
