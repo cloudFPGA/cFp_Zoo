@@ -129,22 +129,16 @@ int main(int argc, char * argv[]) {
         //------------------------------------------------------
         //-- STEP-2 : Initialize socket connection
         //------------------------------------------------------      
-        #ifndef TB_SIM_CFP_VITIS
 	#if NET_TYPE == udp
+        #ifndef TB_SIM_CFP_VITIS
         UDPSocket sock(servPort); // NOTE: It is very important to set port here in order to call 
 	                          // bind() in the UDPSocket constructor
-	#else
-	TCPSocket sock(servAddress, servPort); // NOTE: It is very important to set port here in order to call 
-	                          // bind() in the TCPSocket constructor
-	#endif
-	#else
-	#if NET_TYPE == udp
+	#else // TB_SIM_CFP_VITIS
         UDPSocket sock; // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
-	#else
-        //TCPSocket sock(servPort); // NOTE: In HOST TB the port is already binded by harris_host_fwd_tb.cpp
-	TCPSocket sock(servAddress, servPort);        
-	#endif
-        #endif
+	#endif // TB_SIM_CFP_VITIS
+	#else // tcp
+	TCPSocket sock(servAddress, servPort);
+        #endif // udp/tcp
         
         //------------------------------------------------------------------------------------
         //-- STEP-3 : Initialize a Greyscale OpenCV Mat either from image or from video/camera
@@ -241,28 +235,7 @@ int main(int argc, char * argv[]) {
 	    
 	    //------------------------------------------------------
             //-- STEP-5.2 : RX Loop
-            //------------------------------------------------------
-	    /*
-	    TCPServerSocket servSock(servPort);     // Server Socket object
-	    TCPSocket *servsock = servSock.accept();     // Wait for a client to connect	    
-	    
-	    
-	#if NET_TYPE == tcp
-	// TCP client handling
-	cout << "Handling client ";
-	try {
-	  cout << servsock->getForeignAddress() << ":";
-	} catch (SocketException e) {
-	    cerr << "Unable to get foreign address" << endl;
-	  }
-	try {
-	  cout << servsock->getForeignPort();
-	} catch (SocketException e) {
-	    cerr << "Unable to get foreign port" << endl;
-	  }
-	cout << endl;
-	#endif	  */  
-	    
+            //------------------------------------------------------    
 	    clock_t last_cycle_rx = clock();
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;

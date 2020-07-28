@@ -169,11 +169,6 @@ int main(int argc, char * argv[]) {
 	    assert(frame.isContinuous());
 	    
 	    // TX Loop
-	    //string servAddress = "localhost";
-	    //TCPSocket sock(servAddress, 32771); // NOTE: It is very important to set port here in order to call 
-
-	    
-	    
 	    unsigned int sending_now = PACK_SIZE;
 	    clock_t last_cycle_tx = clock();
             for (int i = 0; i < total_pack; i++) {

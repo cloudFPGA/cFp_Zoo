@@ -247,7 +247,7 @@ eog ../../../../ROLE/vision/hls/harris/test/8x8.png_fpga_points_out_frame_1.png
 
 - On Wireshark filter line:
 
-  `udp.port==2718`
+  `udp.port==2718` or `tcp.port==2718`
   
 - Quick bitgen:
 
