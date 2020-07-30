@@ -5,7 +5,7 @@
  * @date       May 2020
  *----------------------------------------------------------------------------
  *
- * @details      This application implements a UDP-oriented Vitis function.
+ * @details      This application implements a UDP/TCP-oriented Vitis function.
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
@@ -415,7 +415,6 @@ void harris(
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
-//#pragma HLS STREAM variable=sRxpToTxp_Data depth=TOT_TRANSFERS 
 #pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM

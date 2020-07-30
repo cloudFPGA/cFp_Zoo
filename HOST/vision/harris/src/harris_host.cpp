@@ -240,10 +240,11 @@ int main(int argc, char * argv[]) {
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
-            for (unsigned int i = 0; i < total_pack; i++) {
-                if ( i == total_pack - 1 ) {
-                    receiving_now = bytes_in_last_pack;
-                }
+            for (unsigned int i = 0; i < send.total(); ) {
+	        //cout << "DEBUG: " << i << endl;
+                //if ( i == total_pack - 1 ) {
+                //    receiving_now = bytes_in_last_pack;
+                //}
 		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
@@ -251,12 +252,13 @@ int main(int argc, char * argv[]) {
 		recvMsgSize = sock.recv(buffer, receiving_now);
 		#endif
 		if (recvMsgSize != receiving_now) {
-                    cerr << "Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
+                    cerr << "WARNING: Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
                             receiving_now << endl;
-                    continue;
-
+                    //continue;
                 }
-                memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
+                memcpy( & longbuf[i], buffer, receiving_now);
+		//cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
+		i += recvMsgSize;
             }
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
