@@ -79,15 +79,16 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
  * @brief Initialize an input array from a file with format "tdata tkeep tlast"
  *
  * @param[in]  inpFileName the name of the input file to read from.
- * @param[out] imgOutputArray the array to write the tdata only field from the file.
+ * @param[out] imgArray the array to write the tdata only field from the file.
  * @return OK if successful otherwise KO.
  ******************************************************************************/
-bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray, int simCnt) {
-    string      strLine;
-    ifstream    inpFileStream;
-    string      datFile = "../../../../test/" + inpFileName;
-    UdpWord     udpWord;
-    unsigned int index = 0;
+bool setInputFileToArray(const string inpFileName, ap_uint<OUTPUT_PTR_WIDTH>* imgArray, int simCnt) {
+    string                   strLine;
+    ifstream                 inpFileStream;
+    string                   datFile = "../../../../test/" + inpFileName;
+    UdpWord                  udpWord;
+    unsigned int             index = 0;
+    ap_uint<OUTPUT_PTR_WIDTH> current_tdata;
     
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
@@ -104,11 +105,16 @@ bool setInputFileToArray(const string inpFileName, ap_uint<64>* imgOutputArray, 
             getline(inpFileStream, strLine);
             if (strLine.empty()) continue;
             sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
-	    imgOutputArray[index++] = udpWord.tdata; //FIXME: check possible seg.fault
-            // Print Data to console
-            printf("[%4.4d] TB is filling input array from [%s] - Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-	      simCnt, inpFileName.c_str(),
-              udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
+	    for (unsigned int i=0; i<(BITS_PER_10GBITETHRNET_AXI_PACKET/OUTPUT_PTR_WIDTH); i++) {
+	      current_tdata = (ap_uint<OUTPUT_PTR_WIDTH>)(udpWord.tdata >> i*8);//FIXME: check 
+	                                                                       // possible seg.fault
+	      imgArray[index++] = current_tdata;
+	      // Print Data to console
+	      printf("[%4.4d] TB is filling input array from [%s] - Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d, current_tdata=0x%16.16llX} \n",
+		      simCnt, inpFileName.c_str(),
+		      udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int(), 
+		      current_tdata.to_long());
+	    }
         }
     }
 

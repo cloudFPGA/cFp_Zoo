@@ -78,7 +78,7 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const std::string dataStre
  * @param[out] imgOutputArray the array to write the tdata only field from the file.
  * @return OK if successful otherwise KO.
  ******************************************************************************/
-bool setInputFileToArray(const std::string inpFileName, ap_uint<64>* imgOutputArray, int simCnt);
+bool setInputFileToArray(const std::string inpFileName, ap_uint<OUTPUT_PTR_WIDTH>* imgArray, int simCnt);
 
 
 /*****************************************************************************

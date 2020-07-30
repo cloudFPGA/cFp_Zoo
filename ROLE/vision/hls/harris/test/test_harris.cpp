@@ -169,7 +169,7 @@ int main(int argc, char** argv) {
     ap_uint<OUTPUT_PTR_WIDTH> imgOutputArrayTb[in_img.rows * in_img.cols];
     ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
   
-    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
+    xf::cv::xfMat2Array<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
 	
     if (!dumpImgToFile(imgInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
@@ -226,9 +226,10 @@ int main(int argc, char** argv) {
     //-- STEP-3 : MAIN TRAFFIC LOOP
     //------------------------------------------------------
     while (!nrErr) {
-
-        if (simCnt < IMG_PACKETS*3+10) // Keep enough simulation time for sequntially executing the 
-	                               // FSMs of the main 3 functions (Rx-Proc-Tx)
+	
+        // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions 
+        // (Rx-Proc-Tx)
+        if (simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10) 
         {
             stepDut();
 
@@ -287,7 +288,7 @@ int main(int argc, char** argv) {
       printf("### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
-    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
+    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
 
 
     //------------------------------------------------------
@@ -333,7 +334,7 @@ int main(int argc, char** argv) {
 
     // L2 Vitis Harris
     cornerHarrisAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
-    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
     // L1 Vitis Harris 
     //harris_accel(imgInput, imgOutput, Thresh, k);

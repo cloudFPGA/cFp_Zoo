@@ -24,10 +24,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 256
+#define FRAME_HEIGHT 128
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  256
+#define FRAME_WIDTH  128
 
 #define FRAME_INTERVAL (1000/30)
 

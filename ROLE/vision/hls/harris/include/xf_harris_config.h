@@ -48,7 +48,7 @@
 
 
 #define CH_TYPE XF_GRAY
-#define INPUT_PTR_WIDTH 64
+#define INPUT_PTR_WIDTH 8
 #define OUTPUT_PTR_WIDTH 64
 /*
  * Pack pixels in and write into streams
@@ -66,7 +66,13 @@
 
 #define IMGSIZE FRAME_TOTAL
 
-#define IMG_PACKETS IMGSIZE/(INPUT_PTR_WIDTH/8)
+#define BITS_PER_10GBITETHRNET_AXI_PACKET 64
+#define BYTES_PER_10GBITETHRNET_AXI_PACKET (BITS_PER_10GBITETHRNET_AXI_PACKET/8)
+
+#define IMG_PACKETS IMGSIZE/(BYTES_PER_10GBITETHRNET_AXI_PACKET)
+
+#define MIN_RX_LOOPS IMG_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH)
+#define MIN_TX_LOOPS IMG_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/OUTPUT_PTR_WIDTH)
 
 #define IN_TYPE XF_8UC1
 #define OUT_TYPE XF_8UC1
@@ -82,7 +88,7 @@ void cornerHarrisAccelArray(ap_uint<INPUT_PTR_WIDTH>* img_inp,
 
 void cornerHarrisAccelStream(
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
-    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     int rows, int cols, int threshold, int k);
 
 void gammacorrection_accel(xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPC1>& imgInput1,

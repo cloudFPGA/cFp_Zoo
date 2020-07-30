@@ -30,9 +30,8 @@ using hlslib::Stream;
 #endif
 using hls::stream;
 
-//#define Data_t ap_uint<INPUT_PTR_WIDTH>
-//#define Data_t NetworkWord
-#define Data_t ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
+#define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
+#define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
@@ -70,29 +69,38 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS],
  *****************************************************************************/
 void storeWordToAxiStream(
   NetworkWord word, 
-  //Stream<Data_t, IMG_PACKETS>   &img_in_axi_stream,
-  stream<Data_t>                  &img_in_axi_stream,
-  unsigned int *processed_word_rx, 
+  //Stream<Data_t_in, IMG_PACKETS>   &img_in_axi_stream,
+  stream<Data_t_in>                  &img_in_axi_stream,
+  unsigned int *processed_word_rx,
+  unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
   #pragma HLS INLINE
+  Data_t_in v;
   
-  Data_t v;
-  v.data = word.tdata;
-  v.keep = word.tkeep;
-  v.last = word.tlast;
-  
-  //Data_t v;
   //v = word.tdata;
-  
-  img_in_axi_stream.write(v);
-  
+  for (unsigned int i=0; i<(BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH); i++) {
+    #pragma HLS PIPELINE
+    v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
+    v.keep = word.tkeep;
+    v.last = word.tlast;
+    img_in_axi_stream.write(v);
+  }
+  /*
   if (*processed_word_rx < IMG_PACKETS-1) {
     (*processed_word_rx)++;
   }
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_word_rx = 0.\n");
     *processed_word_rx = 0;
+    *image_loaded = 1;
+  }*/
+  if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
+    (*processed_bytes_rx) += BYTES_PER_10GBITETHRNET_AXI_PACKET;
+  }
+  else {
+    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+    *processed_bytes_rx = 0;
     *image_loaded = 1;
   }
 }
@@ -116,10 +124,11 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	//Stream<Data_t, IMG_PACKETS>                      &img_in_axi_stream,
-	stream<Data_t>                                   &img_in_axi_stream,
+	//Stream<Data_t_in, IMG_PACKETS>                   &img_in_axi_stream,
+	stream<Data_t_in>                                &img_in_axi_stream,
         NetworkMetaStream                                meta_tmp,
-	unsigned int                                     *processed_word_rx, 
+	unsigned int                                     *processed_word_rx,
+	unsigned int                                     *processed_bytes_rx,
 	unsigned int                                     *image_loaded
 	    )
 {
@@ -132,8 +141,8 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
-      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n",
-	     *processed_word_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
+	     *processed_word_rx, *processed_bytes_rx);
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
@@ -141,18 +150,18 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
-      //*processed_word_rx = 0;
       *image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u\n",
-	     *processed_word_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
+	     *processed_word_rx, *processed_bytes_rx);
       if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, image_loaded);
+	storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
+			     image_loaded);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -178,11 +187,12 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
-	      //Stream<Data_t, IMG_PACKETS>          &img_in_axi_stream,
-              //Stream<Data_t, IMG_PACKETS>          &img_out_axi_stream,
-	      stream<Data_t>                         &img_in_axi_stream,
-              stream<Data_t>                         &img_out_axi_stream,
+	      //Stream<Data_t_in, IMG_PACKETS>       &img_in_axi_stream,
+              //Stream<Data_t_out, IMG_PACKETS>      &img_out_axi_stream,
+	      stream<Data_t_in>                      &img_in_axi_stream,
+              stream<Data_t_out>                     &img_out_axi_stream,
 	      unsigned int                           *processed_word_rx,
+	      unsigned int                           *processed_bytes_rx, 
 	      unsigned int                           *image_loaded
 	      )
 {
@@ -204,6 +214,7 @@ void pProcPath(
       {
         HarrisFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
+	*processed_bytes_rx = 0;
       }
       break;
 
@@ -224,7 +235,7 @@ void pProcPath(
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	Data_t temp = img_out_axi_stream.read();
+	Data_t_out temp = img_out_axi_stream.read();
 	if ( img_out_axi_stream.empty() ) 
 	{
 	  temp.last = 1;
@@ -402,14 +413,15 @@ void harris(
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
   static unsigned int processed_word_rx;
+  static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
   static unsigned int image_loaded;
   const int img_packets = IMG_PACKETS;
   const int tot_transfers = TOT_TRANSFERS;
-  static stream<Data_t> img_in_axi_stream ("img_in_axi_stream" );
-  static stream<Data_t> img_out_axi_stream("img_out_axi_stream"); 
-  //static Stream<Data_t, IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
-  //static Stream<Data_t, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
+  static stream<Data_t_in>  img_in_axi_stream ("img_in_axi_stream" );
+  static stream<Data_t_out> img_out_axi_stream("img_out_axi_stream"); 
+  //static Stream<Data_t_in,  IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
+  //static Stream<Data_t_out, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   
@@ -445,6 +457,7 @@ void harris(
 			   img_in_axi_stream,
 			   meta_tmp,
 			   &processed_word_rx,
+			   &processed_bytes_rx,
 			   &image_loaded);
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
@@ -452,6 +465,7 @@ void harris(
 		           img_in_axi_stream,
 		           img_out_axi_stream,
 		           &processed_word_rx,
+			   &processed_bytes_rx,
 		           &image_loaded); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
@@ -473,6 +487,7 @@ void harris(
 	img_in_axi_stream,
         meta_tmp,	 
         &processed_word_rx,
+	&processed_bytes_rx,
 	&image_loaded);
   
   
@@ -480,6 +495,7 @@ void harris(
 	    img_in_axi_stream,
 	    img_out_axi_stream,
 	    &processed_word_rx,
+	    &processed_bytes_rx,
 	    &image_loaded);  
  
   pTXPath(
