@@ -27,6 +27,9 @@
 
 
 #include "../include/xf_harris_config.h"
+#include <iostream>                     // For cout and cerr
+
+using namespace std;
 
 /*****************************************************************************
  * @brief   Top-level accelerated function of the Harris Application with 
@@ -90,6 +93,8 @@ void cornerHarrisAccelArray(
 //}
 
 
+#ifndef FAKE_Harris
+
 /*****************************************************************************
  * @brief   Top-level accelerated function of the Harris Application with 
  * array I/F
@@ -133,7 +138,43 @@ void cornerHarrisAccelStream(
     
     
 }
-//}
 
+#else // FAKE_Harris
+/*****************************************************************************
+ * @brief   Top-level accelerated function of the Harris Application with 
+ * array I/F
+ * @ingroup HarrisHLS
+ *
+ * @return Nothing.
+ *****************************************************************************/
+//extern "C" {
+void fakeCornerHarrisAccelStream(
+    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    unsigned int min_rx_loops,
+    unsigned int min_tx_loops) {
+  
+  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> tmp_in;
+  ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> tmp_out;
+  for (unsigned int i=0; i<min_rx_loops; i++) { 
+    cout << "Consuming input...i=" << i << endl;
+    if ((img_in_axi_stream.empty()) || (i == min_rx_loops-1)) {
+      cout << "Empty" << endl;
+      break;
+    }
+    tmp_in = img_in_axi_stream.read();  
+  }
+  tmp_out.data = tmp_in.data; // known silent dirty casting here when INPUT_PTR_WIDTH != OUTPUT_PTR_WIDTH
+  for (unsigned int i=0; i<min_tx_loops; i++) { 
+    cout << "Filling output...i=" << i << endl;
+    if ((img_out_axi_stream.full()) || (i == min_tx_loops-1)) {
+      cout << "Full" << endl;
+      break;
+    }
+    img_out_axi_stream.write(tmp_out);  
+  }
+}
+
+#endif // FAKE_Harris
 
 /*! \} */

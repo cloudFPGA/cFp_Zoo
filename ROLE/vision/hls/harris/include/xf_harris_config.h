@@ -78,11 +78,18 @@
 #define OUT_TYPE XF_8UC1
 
 // Enable it to use the dataflow mode of hlslib
-//#define USE_HLSLIB_DATAFLOW
+// #define USE_HLSLIB_DATAFLOW
 
 // Enable it to use the Stream class of hlslib
-//#define USE_HLSLIB_STREAM
+// #define USE_HLSLIB_STREAM
 
+// Enable it to fake the call of actual Harris kernel and instead consume input data and write back 
+// the last element from the input to every output value. This option is used dor debugging.
+// #define FAKE_Harris
+
+
+
+// Function prototypes
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst,
                   unsigned short Thresh,
@@ -96,6 +103,12 @@ void cornerHarrisAccelStream(
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     int rows, int cols, int threshold, int k);
+
+void fakeCornerHarrisAccelStream(
+    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    unsigned int min_rx_loops,
+    unsigned int min_tx_loops);
 
 void gammacorrection_accel(xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPC1>& imgInput1,
                            xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPC1>& imgOutput,

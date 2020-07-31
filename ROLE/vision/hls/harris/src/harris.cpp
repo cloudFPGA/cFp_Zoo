@@ -78,12 +78,13 @@ void storeWordToAxiStream(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  #pragma HLS INLINE
+  //#pragma HLS INLINE
   Data_t_in v;
-  
+  const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
   //v = word.tdata;
-  for (unsigned int i=0; i<(BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH); i++) {
-    #pragma HLS PIPELINE
+  for (unsigned int i=0; i<loop_cnt; i++) {
+    //#pragma HLS PIPELINE
+    #pragma HLS UNROLL factor=loop_cnt
     v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
     v.keep = word.tkeep;
     v.last = word.tlast;
@@ -231,7 +232,11 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
+	#ifdef FAKE_Harris
+	fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	#else
 	cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+	#endif
 	if ( !img_out_axi_stream.empty() )  
 	{
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
