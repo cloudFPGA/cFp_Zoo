@@ -77,6 +77,12 @@
 #define IN_TYPE XF_8UC1
 #define OUT_TYPE XF_8UC1
 
+// Enable it to use the dataflow mode of hlslib
+//#define USE_HLSLIB_DATAFLOW
+
+// Enable it to use the Stream class of hlslib
+//#define USE_HLSLIB_STREAM
+
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst,
                   unsigned short Thresh,

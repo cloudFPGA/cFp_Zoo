@@ -68,9 +68,12 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS],
  * @return Nothing.
  *****************************************************************************/
 void storeWordToAxiStream(
-  NetworkWord word, 
-  //Stream<Data_t_in, IMG_PACKETS>   &img_in_axi_stream,
-  stream<Data_t_in>                  &img_in_axi_stream,
+  NetworkWord word,
+  #ifdef USE_HLSLIB_STREAM
+  Stream<Data_t_in, MIN_RX_LOOPS>   &img_in_axi_stream,
+  #else
+  stream<Data_t_in>                 &img_in_axi_stream,
+  #endif
   unsigned int *processed_word_rx,
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
@@ -124,9 +127,12 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	//Stream<Data_t_in, IMG_PACKETS>                   &img_in_axi_stream,
+	#ifdef USE_HLSLIB_STREAM
+	Stream<Data_t_in, MIN_RX_LOOPS>          &img_in_axi_stream,
+	#else
 	stream<Data_t_in>                                &img_in_axi_stream,
-        NetworkMetaStream                                meta_tmp,
+	#endif
+	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
 	unsigned int                                     *processed_bytes_rx,
 	unsigned int                                     *image_loaded
@@ -187,10 +193,13 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
-	      //Stream<Data_t_in, IMG_PACKETS>       &img_in_axi_stream,
-              //Stream<Data_t_out, IMG_PACKETS>      &img_out_axi_stream,
+	      #ifdef USE_HLSLIB_STREAM
+	      Stream<Data_t_in, MIN_RX_LOOPS>        &img_in_axi_stream,
+              Stream<Data_t_out, MIN_TX_LOOPS>       &img_out_axi_stream,
+	      #else
 	      stream<Data_t_in>                      &img_in_axi_stream,
               stream<Data_t_out>                     &img_out_axi_stream,
+	      #endif
 	      unsigned int                           *processed_word_rx,
 	      unsigned int                           *processed_bytes_rx, 
 	      unsigned int                           *image_loaded
@@ -416,12 +425,16 @@ void harris(
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
   static unsigned int image_loaded;
-  const int img_packets = IMG_PACKETS;
+  const int img_in_axi_stream_depth = MIN_RX_LOOPS;
+  const int img_out_axi_stream_depth = MIN_TX_LOOPS;
   const int tot_transfers = TOT_TRANSFERS;
+#ifdef USE_HLSLIB_DATAFLOW
+  static hlslib::Stream<Data_t_in,  MIN_RX_LOOPS> img_in_axi_stream ("img_in_axi_stream");
+  static hlslib::Stream<Data_t_out, MIN_TX_LOOPS> img_out_axi_stream ("img_out_axi_stream");
+#else
   static stream<Data_t_in>  img_in_axi_stream ("img_in_axi_stream" );
   static stream<Data_t_out> img_out_axi_stream("img_out_axi_stream"); 
-  //static Stream<Data_t_in,  IMG_PACKETS>  img_in_axi_stream ("img_in_axi_stream");
-  //static Stream<Data_t_out, IMG_PACKETS>  img_out_axi_stream ("img_out_axi_stream");
+#endif
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   
@@ -434,8 +447,8 @@ void harris(
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=image_loaded
-#pragma HLS stream variable=img_in_axi_stream depth=img_packets
-#pragma HLS stream variable=img_out_axi_stream depth=img_packets
+#pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
+#pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
   
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -459,7 +472,7 @@ void harris(
 			   &processed_word_rx,
 			   &processed_bytes_rx,
 			   &image_loaded);
-  
+  /*
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
 		           img_in_axi_stream,
@@ -467,7 +480,7 @@ void harris(
 		           &processed_word_rx,
 			   &processed_bytes_rx,
 		           &image_loaded); 
-
+*/
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
 			   soNrc_meta,
