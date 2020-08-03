@@ -81,14 +81,22 @@ void storeWordToAxiStream(
   //#pragma HLS INLINE
   Data_t_in v;
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
+  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
+  unsigned int bytes_with_keep = 0;
   //v = word.tdata;
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
-    #pragma HLS UNROLL factor=loop_cnt
+    //#pragma HLS UNROLL factor=loop_cnt
+    printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
+    if ((word.tkeep >> i) == 0) {
+      printf("WARNING: value with tkeep=0 at i=%u\n", i);
+      continue; 
+    }
     v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
     v.keep = word.tkeep;
     v.last = word.tlast;
     img_in_axi_stream.write(v);
+    bytes_with_keep += bytes_per_loop;
   }
   /*
   if (*processed_word_rx < IMG_PACKETS-1) {
@@ -100,7 +108,7 @@ void storeWordToAxiStream(
     *image_loaded = 1;
   }*/
   if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
-    (*processed_bytes_rx) += BYTES_PER_10GBITETHRNET_AXI_PACKET;
+    (*processed_bytes_rx) += bytes_with_keep;
   }
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
@@ -129,7 +137,7 @@ void pRXPath(
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
 	#ifdef USE_HLSLIB_STREAM
-	Stream<Data_t_in, MIN_RX_LOOPS>          &img_in_axi_stream,
+	Stream<Data_t_in, MIN_RX_LOOPS>                  &img_in_axi_stream,
 	#else
 	stream<Data_t_in>                                &img_in_axi_stream,
 	#endif
@@ -477,7 +485,7 @@ void harris(
 			   &processed_word_rx,
 			   &processed_bytes_rx,
 			   &image_loaded);
-  /*
+  
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
 		           img_in_axi_stream,
@@ -485,7 +493,7 @@ void harris(
 		           &processed_word_rx,
 			   &processed_bytes_rx,
 		           &image_loaded); 
-*/
+
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
 			   soNrc_meta,

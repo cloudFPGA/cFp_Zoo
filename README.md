@@ -294,6 +294,7 @@ Hence, to get the Triangle example to work, the following commands may be necess
 
 ```
 $ firewall-cmd --zone=public --add-port=2718-2750/udp --permanent
+$ firewall-cmd --zone=public --add-port=2718-2750/tcp --permanent
 $ firewall-cmd --reload
 ```
 
