@@ -249,7 +249,7 @@ int main(int argc, char * argv[]) {
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
 		//recvMsgSize = servsock->recv(buffer, receiving_now);
-		recvMsgSize = sock.recv(buffer, receiving_now);
+		recvMsgSize = sock.recv(buffer, BUF_LEN);
 		#endif
 		if (recvMsgSize != receiving_now) {
                     cerr << "WARNING: Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
