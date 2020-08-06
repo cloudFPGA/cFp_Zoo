@@ -248,7 +248,6 @@ int main(int argc, char * argv[]) {
 		#if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
 		#else
-		//recvMsgSize = servsock->recv(buffer, receiving_now);
 		recvMsgSize = sock.recv(buffer, BUF_LEN);
 		#endif
 		if (recvMsgSize != receiving_now) {
@@ -256,7 +255,7 @@ int main(int argc, char * argv[]) {
                             receiving_now << endl;
                     //continue;
                 }
-                memcpy( & longbuf[i], buffer, receiving_now);
+                memcpy( & longbuf[i], buffer, recvMsgSize);
 		//cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
 		i += recvMsgSize;
             }
