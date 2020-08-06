@@ -330,52 +330,52 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: HarrisApplication
-  port map (
+--  UAF: HarrisApplication
+--  port map (
+--
+--             ------------------------------------------------------
+--             -- From SHELL / Clock and Reset
+--             ------------------------------------------------------
+--             ap_clk                      => piSHL_156_25Clk,
+--             ap_rst_n                    => (not piMMIO_Ly7_Rst),
+--             ap_start                    => piMMIO_Ly7_En,
+--            
+--             piFMC_ROL_rank_V         => piFMC_ROLE_rank,
+--             --piFMC_ROL_rank_V_ap_vld  => '1',
+--             piFMC_ROL_size_V         => piFMC_ROLE_size,
+--             --piFMC_ROL_size_V_ap_vld  => '1',
+--             --------------------------------------------------------
+--             -- From SHELL / Udp Data Interfaces
+--             --------------------------------------------------------
+--             siSHL_This_Data_tdata     => siNRC_Udp_Data_tdata,
+--             siSHL_This_Data_tkeep     => siNRC_Udp_Data_tkeep,
+--             siSHL_This_Data_tlast     => siNRC_Udp_Data_tlast,
+--             siSHL_This_Data_tvalid    => siNRC_Udp_Data_tvalid,
+--             siSHL_This_Data_tready    => siNRC_Udp_Data_tready,
+--             --------------------------------------------------------
+--             -- To SHELL / Udp Data Interfaces
+--             --------------------------------------------------------
+--             soTHIS_Shl_Data_tdata     => soNRC_Udp_Data_tdata,
+--             soTHIS_Shl_Data_tkeep     => soNRC_Udp_Data_tkeep,
+--             soTHIS_Shl_Data_tlast     => soNRC_Udp_Data_tlast,
+--             soTHIS_Shl_Data_tvalid    => soNRC_Udp_Data_tvalid,
+--             soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready, 
 
-             ------------------------------------------------------
-             -- From SHELL / Clock and Reset
-             ------------------------------------------------------
-             ap_clk                      => piSHL_156_25Clk,
-             ap_rst_n                    => (not piMMIO_Ly7_Rst),
-             ap_start                    => piMMIO_Ly7_En,
-            
-             piFMC_ROL_rank_V         => piFMC_ROLE_rank,
-             --piFMC_ROL_rank_V_ap_vld  => '1',
-             piFMC_ROL_size_V         => piFMC_ROLE_size,
-             --piFMC_ROL_size_V_ap_vld  => '1',
-             --------------------------------------------------------
-             -- From SHELL / Udp Data Interfaces
-             --------------------------------------------------------
-             siSHL_This_Data_tdata     => siNRC_Udp_Data_tdata,
-             siSHL_This_Data_tkeep     => siNRC_Udp_Data_tkeep,
-             siSHL_This_Data_tlast     => siNRC_Udp_Data_tlast,
-             siSHL_This_Data_tvalid    => siNRC_Udp_Data_tvalid,
-             siSHL_This_Data_tready    => siNRC_Udp_Data_tready,
-             --------------------------------------------------------
-             -- To SHELL / Udp Data Interfaces
-             --------------------------------------------------------
-             soTHIS_Shl_Data_tdata     => soNRC_Udp_Data_tdata,
-             soTHIS_Shl_Data_tkeep     => soNRC_Udp_Data_tkeep,
-             soTHIS_Shl_Data_tlast     => soNRC_Udp_Data_tlast,
-             soTHIS_Shl_Data_tvalid    => soNRC_Udp_Data_tvalid,
-             soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready, 
+--             siNrc_meta_TDATA          =>  siNRC_Role_Udp_Meta_TDATA    ,
+--             siNrc_meta_TVALID         =>  siNRC_Role_Udp_Meta_TVALID   ,
+--             siNrc_meta_TREADY         =>  siNRC_Role_Udp_Meta_TREADY   ,
+--             siNrc_meta_TKEEP          =>  siNRC_Role_Udp_Meta_TKEEP    ,
+--             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Udp,
 
-             siNrc_meta_TDATA          =>  siNRC_Role_Udp_Meta_TDATA    ,
-             siNrc_meta_TVALID         =>  siNRC_Role_Udp_Meta_TVALID   ,
-             siNrc_meta_TREADY         =>  siNRC_Role_Udp_Meta_TREADY   ,
-             siNrc_meta_TKEEP          =>  siNRC_Role_Udp_Meta_TKEEP    ,
-             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Udp,
-
-             soNrc_meta_TDATA          =>  soROLE_Nrc_Udp_Meta_TDATA  ,
-             soNrc_meta_TVALID         =>  soROLE_Nrc_Udp_Meta_TVALID ,
-             soNrc_meta_TREADY         =>  soROLE_Nrc_Udp_Meta_TREADY ,
-             soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP  ,
-             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
-
-             poROL_NRC_Rx_ports_V        => poROL_Nrc_Udp_Rx_ports
-           --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
-           );
+--             soNrc_meta_TDATA          =>  soROLE_Nrc_Udp_Meta_TDATA  ,
+--             soNrc_meta_TVALID         =>  soROLE_Nrc_Udp_Meta_TVALID ,
+--             soNrc_meta_TREADY         =>  soROLE_Nrc_Udp_Meta_TREADY ,
+--             soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP  ,
+--             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
+--
+--             poROL_NRC_Rx_ports_V        => poROL_Nrc_Udp_Rx_ports
+--           --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
+--           );
 
   --end generate;
   
