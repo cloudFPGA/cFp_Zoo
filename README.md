@@ -232,8 +232,12 @@ cd cFp_Vitis/ROLE/vision/host/harris/build
 ./harris_host 10.12.200.153 2718 ../../../../ROLE/vision/hls/harris/test/8x8.png
 # You should expect the output in the file <optional input image>_fpga_out_frame_#.png
 eog ../../../../ROLE/vision/hls/harris/test/8x8.png_fpga_points_out_frame_1.png
-
 ```
+
+**NOTE:** The cFp_Vitis ROLE (FPGA part) is equipped with both the UDP and TCP offload engines. At 
+runtime, on host, to select one over the other, you simply need to change in [config.h](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/HOST/vision/harris/include/config.h) 
+file the define `#define NET_TYPE udp` (choose either udp or tcp).
+
 
 ##### Usefull commands
 

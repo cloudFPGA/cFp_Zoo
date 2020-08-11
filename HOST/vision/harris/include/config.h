@@ -24,10 +24,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 512
+#define FRAME_HEIGHT 256
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  512
+#define FRAME_WIDTH  256
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -42,7 +42,7 @@
 #define WRITE_OUTPUT_FILE  
 
 /** If defined, images will be shown in pop-up windows                                            */
-//  #define SHOW_WINDOWS  
+  #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
 //  #define TB_SIM_CFP_VITIS
