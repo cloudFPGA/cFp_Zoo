@@ -465,13 +465,20 @@ void harris(
   
 
 #ifdef USE_HLSLIB_DATAFLOW
-  /*
+  /*! @copybrief harris()
+   *  Harris is eanbled with hlslib support
+   */
+  /*! @copydoc harris()
    * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
    * and full) during simulation. It can also be both synthesized and used in co-simulation.
    * Practically we use hlslib when we want to run simulation as close as possible to the HW, by 
    * executing all functions of dataflow in thread-safe parallel executions, i.e the function 
    * HLSLIB_DATAFLOW_FINALIZE() acts as a barrier for the threads spawned to serve every function 
    * called in HLSLIB_DATAFLOW_FUNCTION(func, args...).
+   */
+   /*! @copydetails harris()
+   * hlslib is a collection of C++ headers, CMake files, and examples, aimed at improving the 
+   * quality of life of HLS developers. More info at: https://github.com/definelicht/hlslib
    */
   // Dataflow functions running in parallel
   HLSLIB_DATAFLOW_INIT();
