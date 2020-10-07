@@ -48,11 +48,12 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
 - [ ] Database
 - [ ] DSP
 - [ ] Quantitative Finance
+  - [ ] MC European Engine 
 - [ ] Security
 - [ ] Solver
 - [x] Vision
-  - [x] gammacorrection
-  - [x] harris
+  - [x] Gamma Correction
+  - [x] Harris
 
 ### Vivado/Vitis tool support
 
