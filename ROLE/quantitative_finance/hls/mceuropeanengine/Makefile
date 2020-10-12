@@ -21,6 +21,8 @@ DEPS := $(shell find ./src/ -type f)
 
 .PHONY: all csim cosim_view
 
+include ./Makefile.rules
+
 all: ${ipName}_prj/solution1/impl/ip
 
 
@@ -47,15 +49,23 @@ VITISBINDIR := `dirname ${CHECK_VITIS}`
 INPUT_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_mceuropeanengine_example."
 
 src = ./src/${ipName}.cpp \
+			./src/mc_euro_k.cpp \
 			./test/test_${ipName}.cpp
 
 obj = $(src:.cpp=.o)
 CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attributes \
-					 -D__SDSVHLS__ -std=c++0x \
+					 -D__SDSVHLS__ -std=c++0x -std=c++11 \
 					 `xml2-config --cflags --libs` \
-					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls 
-					 
-LDFLAGS = -lpthread					 
+					 -I$(VIVADOBINDIR)/../include \
+					 -I$(VIVADOBINDIR)/../include/hls/linear_algebra/utils \
+					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
+					 -I$(cFpRootDir)Vitis_Libraries/quantitative_finance/L1/include \
+					 -I$(cFpRootDir)Vitis_Libraries/quantitative_finance/L2/include
+
+LDFLAGS = -lpthread -lm $(LFLAG) 
+
+
+
 
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)
@@ -69,11 +79,11 @@ ifdef CHECK_VITIS
 else
 	@echo Vitis was not found in PATH
 endif
-	mkdir -p ./${ipName}_prj
-	mkdir -p ./${ipName}_prj/solution1
-	mkdir -p ./${ipName}_prj/solution1/fcsim/
-	mkdir -p ./${ipName}_prj/solution1/fcsim/build
-	$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS) $(LDFLAGS)
+	$(Verb)mkdir -p ./${ipName}_prj
+	$(Verb)mkdir -p ./${ipName}_prj/solution1
+	$(Verb)mkdir -p ./${ipName}_prj/solution1/fcsim/
+	$(Verb)mkdir -p ./${ipName}_prj/solution1/fcsim/build
+	$(Verb)$(CXX) -o ./${ipName}_prj/solution1/fcsim/build/fcsim $^ $(CXXFLAGS) $(LDFLAGS) 
 
 fcsim: fcompile
 	@make logo
@@ -103,8 +113,8 @@ cosim_view:
 	cd ./$(ipName)_prj/solution1/sim/verilog/; vivado -source open_wave.tcl
 
 clean:
-	rm -rf ${ipName}_prj $(obj)
-	rm -f vivado*.log vivado_pid*.str hs_err_pid*.log csim.log fcsim.log
+	$(Verb)rm -rf ${ipName}_prj $(obj)
+	$(Verb)rm -f vivado*.log vivado_pid*.str hs_err_pid*.log csim.log fcsim.log
 
 	
 logo:
