@@ -34,6 +34,8 @@
 
 #include "network.hpp"
 
+#include "kernel_mceuropeanengine.hpp"
+
 using namespace hls;
 
 

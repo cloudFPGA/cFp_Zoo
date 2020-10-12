@@ -41,7 +41,19 @@ PacketFsmType MCEuropeanEngineFSM  = WAIT_FOR_META;
 typedef char word_t[8];
 
 
-
+int print_result(int cu_number, double* out, double golden, double max_tol) {
+    std::cout << "FPGA result:\n";
+    for (int i = 0; i < cu_number; ++i) {
+        if (std::fabs(out[0] - golden) > max_tol) {
+            std::cout << "            Kernel " << i << " - " << out[0] << "            golden - " << golden
+                      << std::endl;
+            return -1;
+        } else {
+            std::cout << "            Kernel " << i << " - " << out[0] << std::endl;
+        }
+    }
+    return 0;
+}
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -106,6 +118,48 @@ void pRXPath(
 	memcpy(&netWord.tdata, (char*) text, 64/8);
 	
 	sRxpToTxp_Data.write(netWord);
+	
+	
+	//////////// logic for mceuropean start
+	
+	// test data
+	unsigned int timeSteps = 1;
+	DtUsed requiredTolerance = 0.02;
+	DtUsed underlying = 36;
+	DtUsed riskFreeRate = 0.06;
+	DtUsed volatility = 0.20;
+	DtUsed dividendYield = 0.0;
+	DtUsed strike = 40;
+	unsigned int optionType = 1;
+	DtUsed timeLength = 1;
+	unsigned int seeds[4] = {4332, 441242, 42, 13342};
+	unsigned int requiredSamples = 10; //0; // 262144; // 48128;//0;//1024;//0;
+	unsigned int maxSamples = 10;
+	//
+	unsigned int loop_nm = 1;
+	DtUsed out[OUTDEP];
+	
+	kernel_mc(loop_nm,
+                          seeds[0],
+                          underlying,
+                          volatility,
+                          dividendYield,
+                          riskFreeRate, // model parameter
+                          timeLength,
+                          strike,
+                          optionType, // option parameter
+                          out,
+                          requiredTolerance,
+                          requiredSamples,
+                          timeSteps,
+                          maxSamples);
+	
+	DtUsed golden = 3.834522;
+	DtUsed max_diff = requiredTolerance;
+	print_result(1, out, golden, max_diff);
+	
+	//////////// logic for mceuropean end
+	
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;

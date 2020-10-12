@@ -49,7 +49,7 @@ VITISBINDIR := `dirname ${CHECK_VITIS}`
 INPUT_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_mceuropeanengine_example."
 
 src = ./src/${ipName}.cpp \
-			./src/mc_euro_k.cpp \
+			./src/kernel_mc.cpp \
 			./test/test_${ipName}.cpp
 
 obj = $(src:.cpp=.o)

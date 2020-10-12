@@ -13,25 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _XF_FINTECH_MCENGINE_TOP_HPP_
-#define _XF_FINTECH_MCENGINE_TOP_HPP_
+#ifndef KERNEL_MCEUROPEANENGINHE_H
+#define KERNEL_MCEUROPEANENGINHE_H
 
-#include "xf_fintech/enums.hpp"
-#include "xf_fintech/mc_engine.hpp"
-#include "xf_fintech/rng.hpp"
-typedef float TEST_DT;
+#define DtUsed double
+#define MCM_NM 8
+#define OUTDEP 1024
 
-//extern "C" 
-void mc_euro_k(TEST_DT underlying,
-                          TEST_DT volatility,
-                          TEST_DT dividendYield,
-                          TEST_DT riskFreeRate, // model parameter
-                          TEST_DT timeLength,
-                          TEST_DT strike,
+extern "C" void kernel_mc(unsigned int loop_nm,
+                          unsigned int seed,
+                          DtUsed underlying,
+                          DtUsed volatility,
+                          DtUsed dividendYield,
+                          DtUsed riskFreeRate, // model parameter
+                          DtUsed timeLength,
+                          DtUsed strike,
                           unsigned int optionType, // option parameter
-                          ap_uint<32> seed[2],
-                          TEST_DT output[1],
-                          TEST_DT requiredTolerance,
+                          DtUsed out[OUTDEP],
+                          DtUsed requiredTolerance,
                           unsigned int requiredSamples,
-                          unsigned int timeSteps);
+                          unsigned int timeSteps,
+                          unsigned int maxSamples);
 #endif
