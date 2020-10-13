@@ -40,6 +40,11 @@
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
 
+#define FRAME_TOTAL INSIZE + OUTSIZE
+
+/** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
+#define TOT_TRANSFERS CEIL(FRAME_TOTAL, PACK_SIZE)  
+
 #define tcp 0
 #define udp 1
 

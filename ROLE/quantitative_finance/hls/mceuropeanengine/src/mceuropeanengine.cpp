@@ -30,30 +30,77 @@ using hlslib::Stream;
 #endif
 using hls::stream;
 
-#define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
-#define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
-
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType MCEuropeanEngineFSM  = WAIT_FOR_META;
 
-
-typedef char word_t[8];
-
-
-int print_result(int cu_number, double* out, double golden, double max_tol) {
-    std::cout << "FPGA result:\n";
-    for (int i = 0; i < cu_number; ++i) {
-        if (std::fabs(out[0] - golden) > max_tol) {
-            std::cout << "            Kernel " << i << " - " << out[0] << "            golden - " << golden
-                      << std::endl;
-            return -1;
-        } else {
-            std::cout << "            Kernel " << i << " - " << out[0] << std::endl;
-        }
-    }
-    return 0;
+/*****************************************************************************
+ * @brief   Store a word from ethernet to local memory
+ * @return Nothing.
+ *****************************************************************************/
+void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IN_PACKETS], 
+		      unsigned int *processed_word, unsigned int *image_loaded)
+{
+  #pragma HLS INLINE
+  
+  img[*processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
+  printf("DEBUG in storeWordToArray: input = %u = 0x%16.16llX \n", input, input);
+  printf("DEBUG in storeWordToArray: img[%u]= %u = 0x%16.16llX \n", *processed_word, 
+  (uint64_t)img[*processed_word], (uint64_t)img[*processed_word]);
+  if (*processed_word < IN_PACKETS-1) {
+    *processed_word++;
+  }
+  else {
+    printf("DEBUG in storeWordToArray: WARNING - you've reached the max depth of img[%u]. Will put *processed_word = 0.\n", *processed_word);
+    *processed_word = 0;
+    *image_loaded = 1;
+  }
 }
+
+
+/*****************************************************************************
+ * @brief   Store a word from ethernet to a local AXI stream
+ * @return Nothing.
+ *****************************************************************************/
+void storeWordToAxiStream(
+  NetworkWord word,
+  varin &instruct,
+  unsigned int *processed_word_rx,
+  unsigned int *processed_bytes_rx,
+  unsigned int *image_loaded)
+{   
+  //#pragma HLS INLINE
+  ap_uint<INPUT_PTR_WIDTH> v;
+  const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
+  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
+  unsigned int bytes_with_keep = 0;
+  //v = word.tdata;
+  for (unsigned int i=0; i<loop_cnt; i++) {
+    //#pragma HLS PIPELINE
+    //#pragma HLS UNROLL factor=loop_cnt
+    printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
+    if ((word.tkeep >> i) == 0) {
+      printf("WARNING: value with tkeep=0 at i=%u\n", i);
+      continue; 
+    }
+    v = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
+    //v.keep = word.tkeep;
+    //v.last = word.tlast;
+    //img_in_axi_stream.write(v);
+    bytes_with_keep += bytes_per_loop;
+  }
+
+  if (*processed_bytes_rx < INSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
+    (*processed_bytes_rx) += bytes_with_keep;
+  }
+  else {
+    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+    *processed_bytes_rx = 0;
+    *image_loaded = 1;
+  }
+}
+
+
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -64,6 +111,7 @@ int print_result(int cu_number, double* out, double golden, double max_tol) {
  * @param[out] img_in_axi_stream
  * @param[out] meta_tmp
  * @param[out] processed_word
+ * @param[out] image_loaded
  *
  * @return Nothing.
  ******************************************************************************/
@@ -71,10 +119,11 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	stream<NetworkWord>                              &sRxpToTxp_Data,
+	varin                                            &instruct,
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
-	unsigned int                                     *processed_bytes_rx
+	unsigned int                                     *processed_bytes_rx,
+	unsigned int                                     *image_loaded
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -82,8 +131,7 @@ void pRXPath(
      #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
-    word_t text;
-    
+
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
@@ -96,70 +144,18 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
+      *image_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
 	     *processed_word_rx, *processed_bytes_rx);
-      if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full() )
+      if ( !siSHL_This_Data.empty() )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	/* Read in one word_t */
-	memcpy((char*) text, &netWord.tdata, 64/8);
-	
-	/* Convert lower cases to upper cases byte per byte */
-	mceuropeanengine_conversion:
-	for (unsigned int i = 0; i < sizeof(text); i++ ) {
-//#pragma HLS UNROLL
-	    if (text[i] >= 'a' && text[i] <= 'z')
-		text[i] = text[i] - ('a' - 'A');
-	}
-	memcpy(&netWord.tdata, (char*) text, 64/8);
-	
-	sRxpToTxp_Data.write(netWord);
-	
-	
-	//////////// logic for mceuropean start
-	
-	// test data
-	unsigned int timeSteps = 1;
-	DtUsed requiredTolerance = 0.02;
-	DtUsed underlying = 36;
-	DtUsed riskFreeRate = 0.06;
-	DtUsed volatility = 0.20;
-	DtUsed dividendYield = 0.0;
-	DtUsed strike = 40;
-	unsigned int optionType = 1;
-	DtUsed timeLength = 1;
-	unsigned int seeds[4] = {4332, 441242, 42, 13342};
-	unsigned int requiredSamples = 10; //0; // 262144; // 48128;//0;//1024;//0;
-	unsigned int maxSamples = 10;
-	//
-	unsigned int loop_nm = 1;
-	DtUsed out[OUTDEP];
-	
-	kernel_mc(loop_nm,
-                          seeds[0],
-                          underlying,
-                          volatility,
-                          dividendYield,
-                          riskFreeRate, // model parameter
-                          timeLength,
-                          strike,
-                          optionType, // option parameter
-                          out,
-                          requiredTolerance,
-                          requiredSamples,
-                          timeSteps,
-                          maxSamples);
-	
-	DtUsed golden = 3.834522;
-	DtUsed max_diff = requiredTolerance;
-	print_result(1, out, golden, max_diff);
-	
-	//////////// logic for mceuropean end
-	
+	storeWordToAxiStream(netWord, instruct, processed_word_rx, processed_bytes_rx, 
+			     image_loaded);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -171,6 +167,84 @@ void pRXPath(
  
 }
 
+
+/*****************************************************************************
+ * @brief Processing Path - Main processing FSM for Vitis kernels.
+ *
+ * @param[out] sRxpToTxp_Data
+ * @param[in]  img_in_axi_stream
+ * @param[in]  img_out_axi_stream
+ * @param[out] processed_word_rx
+ * @param[in]  image_loaded
+ *
+ * @return Nothing.
+ ******************************************************************************/
+void pProcPath(
+	      stream<NetworkWord>                    &sRxpToTxp_Data,
+	      varin                                  &instruct,
+	      DtUsed                                 *out,
+	      unsigned int                           *processed_word_rx,
+	      unsigned int                           *processed_bytes_rx, 
+	      unsigned int                           *image_loaded
+	      )
+{
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+    //#pragma HLS DATAFLOW interval=1
+    #pragma  HLS INLINE
+    //-- LOCAL VARIABLES ------------------------------------------------------
+    NetworkWord newWord;
+    uint16_t Thresh = 442;
+    float K = 0.04;
+    uint16_t k = K * (1 << 16); // Convert to Q0.16 format
+  
+  
+  switch(MCEuropeanEngineFSM)
+  {
+    case WAIT_FOR_META: 
+      printf("DEBUG in pProcPath: WAIT_FOR_META\n");
+      if ( (*image_loaded) == 1 )
+      {
+        MCEuropeanEngineFSM = PROCESSING_PACKET;
+	*processed_word_rx = 0;
+	*processed_bytes_rx = 0;
+      }
+      break;
+
+    case PROCESSING_PACKET:
+      printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
+      //if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
+      {
+	//kernel_mc(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
+      }
+      break;
+      
+    case MCEUROPEANENGINE_RETURN_RESULTS:
+      printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS\n");
+      if ( !sRxpToTxp_Data.full() )
+      {
+	
+	//Data_t_out temp = img_out_axi_stream.read();
+	bool last;
+	//if ( img_out_axi_stream.empty() ) 
+	{
+	  last = 1;
+	  MCEuropeanEngineFSM = WAIT_FOR_META;
+	}
+	//else
+	//{
+	  last = 0;
+	//}
+	//TODO: find why Vitis kernel does not set keep and last by itself
+	unsigned int keep = 255;
+	newWord = NetworkWord(1, keep, last); 
+	sRxpToTxp_Data.write(newWord);
+      }
+      break;
+      
+  } // end switch
+ 
+}
 
 
 
@@ -325,28 +399,37 @@ void mceuropeanengine(
 
 
   //-- LOCAL VARIABLES ------------------------------------------------------
-  static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
+  static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
+  static unsigned int image_loaded;
+  const int img_in_axi_stream_depth = MIN_RX_LOOPS;
+  const int img_out_axi_stream_depth = MIN_TX_LOOPS;
+  const int tot_transfers = TOT_TRANSFERS;
+  varin instruct;
+  DtUsed out[OUTDEP];
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
+#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=MCEuropeanEngineFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
-
+#pragma HLS reset variable=image_loaded
+#pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
+#pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
   
 
 #ifdef USE_HLSLIB_DATAFLOW
   /*! @copybrief mceuropeanengine()
-   *  MCEuropeanEngine is eanbled with hlslib support
+   *  MCEuropeanEngineFSM is enabled with hlslib support
    */
   /*! @copydoc mceuropeanengine()
    * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
@@ -367,10 +450,19 @@ void mceuropeanengine(
 			   siSHL_This_Data,
 			   siNrc_meta,
 			   sRxtoTx_Meta,
+			   img_in_axi_stream,
 			   meta_tmp,
-			   sRxpToTxp_Data,
 			   &processed_word_rx,
-			   &processed_bytes_rx);
+			   &processed_bytes_rx,
+			   &image_loaded);
+  
+  HLSLIB_DATAFLOW_FUNCTION(pProcPath,
+			   sRxpToTxp_Data,
+		           img_in_axi_stream,
+		           img_out_axi_stream,
+		           &processed_word_rx,
+			   &processed_bytes_rx,
+		           &image_loaded); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
@@ -388,11 +480,20 @@ void mceuropeanengine(
 	siSHL_This_Data,
         siNrc_meta,
 	sRxtoTx_Meta,
-	sRxpToTxp_Data,
-        meta_tmp,
+	instruct,
+        meta_tmp, 
         &processed_word_rx,
-	&processed_bytes_rx);
+	&processed_bytes_rx,
+	&image_loaded);
   
+  
+  pProcPath(sRxpToTxp_Data,
+	    instruct,
+	    out,
+	    &processed_word_rx,
+	    &processed_bytes_rx,
+	    &image_loaded);  
+ 
   pTXPath(
         soTHIS_Shl_Data,
         soNrc_meta,

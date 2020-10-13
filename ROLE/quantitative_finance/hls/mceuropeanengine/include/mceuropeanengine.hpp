@@ -49,7 +49,38 @@ enum EchoCtrl {
 };
 
 
+#define INPUT_PTR_WIDTH 64
+#define OUTPUT_PTR_WIDTH 64
 
+
+struct varin {
+  unsigned int loop_nm;
+  unsigned int seed;
+  DtUsed underlying;
+  DtUsed volatility;
+  DtUsed dividendYield;
+  DtUsed riskFreeRate;
+  DtUsed timeLength;
+  DtUsed strike;
+  unsigned int optionType; // bool
+  DtUsed requiredTolerance;
+  unsigned int requiredSamples;
+  unsigned int timeSteps;
+  unsigned int maxSamples;
+};
+
+
+#define INSIZE sizeof(varin)
+#define OUTSIZE sizeof(DtUsed)*OUTDEP
+
+#define BITS_PER_10GBITETHRNET_AXI_PACKET 64
+#define BYTES_PER_10GBITETHRNET_AXI_PACKET (BITS_PER_10GBITETHRNET_AXI_PACKET/8)
+
+#define IN_PACKETS INSIZE/(BYTES_PER_10GBITETHRNET_AXI_PACKET)
+#define OUT_PACKETS OUTSIZE/(BYTES_PER_10GBITETHRNET_AXI_PACKET)
+
+#define MIN_RX_LOOPS IN_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH)
+#define MIN_TX_LOOPS OUT_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/OUTPUT_PTR_WIDTH)
 
 #define WAIT_FOR_META 0
 #define WAIT_FOR_STREAM_PAIR 1
@@ -57,7 +88,6 @@ enum EchoCtrl {
 #define MCEUROPEANENGINE_RETURN_RESULTS 3
 
 #define PacketFsmType uint8_t
-
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
