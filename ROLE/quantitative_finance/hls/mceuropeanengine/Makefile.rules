@@ -1,0 +1,74 @@
+
+
+
+### Switch for displaying detailed information.
+VERBOSE = 1
+
+
+ifdef VERBOSE
+  Verb :=
+else
+  Verb := @
+endif
+
+
+__SIM_MATHHLS__ = 1
+__SIM_FPO__ = 1
+
+AUTOPILOT_MACH := lnx64
+
+CHECK_VIVADO := $(shell command -v vivado 2> /dev/null)
+VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
+
+AUTOPILOT_ROOT := $(VIVADOBINDIR)/..
+AUTOPILOT_TOOL := ${AUTOPILOT_ROOT}/${AUTOPILOT_MACH}/tools
+
+ifndef HLS_FPO_LIB_PATH
+   HLS_FPO_LIB_PATH = $(AUTOPILOT_TOOL)/fpo_v7_0
+endif
+
+ifndef HLS_MATHHLS_LIB_PATH
+  HLS_MATHHLS_LIB_PATH = $(AUTOPILOT_ROOT)/$(AUTOPILOT_MACH)/lib/csim
+endif
+
+FPOLIB = $(HLS_FPO_LIB_PATH)
+MATHHLSLIB = $(HLS_MATHHLS_LIB_PATH)
+
+ifdef __SIM_MATHHLS__
+
+  ifdef __USE_CLANG__
+    ifeq ($(AUTOPILOT_MACH),win64)
+      LFLAG += -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsmc++-CLANG39-x64
+    else
+      LFLAG += -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsmc++-CLANG39
+    endif
+  else
+    ifeq ($(AUTOPILOT_MACH),win64)
+      LFLAG += -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsmc++-GCC62-x64
+    else
+      LFLAG += -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsmc++-GCC46
+    endif
+  endif
+
+  ifndef __SIM_MATHSTD__
+    ifdef __USE_CLANG__
+      ifeq ($(AUTOPILOT_MACH),win64)
+        LFLAG += -fno-builtin -fno-inline -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsm-CLANG39-x64
+      else
+        LFLAG += -fno-builtin -fno-inline -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsm-CLANG39
+      endif
+    else
+      ifeq ($(AUTOPILOT_MACH),win64)
+        LFLAG += -fno-builtin -fno-inline -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsm-GCC62-x64
+      else
+        LFLAG += -fno-builtin -fno-inline -Wl,-rpath,"$(MATHHLSLIB)" -L "$(MATHHLSLIB)" -lhlsm-GCC46
+      endif
+    endif
+  endif
+
+  export LD_LIBRARY_PATH := ${LD_LIBRARY_PATH}:$(MATHHLSLIB)
+endif
+
+ifdef __SIM_FPO__
+   LFLAG += -Wl,-rpath,"$(FPOLIB)" -L "$(FPOLIB)" -lgmp -lmpfr -lIp_floating_point_v7_0_bitacc_cmodel
+endif
