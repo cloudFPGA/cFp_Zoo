@@ -325,7 +325,7 @@ bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
  * @param[out] strOutput the output string to set.
  * @return OK if successful otherwise KO.
  ******************************************************************************/
-bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
+bool dumpFileToArray(const string inpFileName, DtUsed* out, int simCnt) {
     string      strLine;
     ifstream    inpFileStream;
     string      datFile = "../../../../test/" + inpFileName;
@@ -333,7 +333,7 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
     unsigned int i = 0;
     unsigned int bytes_per_line = 8;
     ap_uint<8> value[bytes_per_line];
-    
+    intToFloatUnion intToFloat;
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
     if ( !inpFileStream ) {
@@ -346,19 +346,16 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
 
         if (!inpFileStream.eof()) {
 
-            getline(inpFileStream, strLine);
-            if (strLine.empty()) continue;
-            sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
-            // Write to strOutput
-	    //printf("Debug: (char)udpWord.tdata.to_long()=%c\n", (char)udpWord.tdata.to_long());
-	    unpack_ap_uint_64_(udpWord.tdata, value);
-	    for (unsigned int k = 0; k < bytes_per_line; k++) {
-		charOutput[i++] = value[k];
-		// Print Data to console
-		//printf("[%4.4d] TB is filling string with character %c\n",
-                //   simCnt, (char)value[k]);
-	    }
-        }
+          getline(inpFileStream, strLine);
+          if (strLine.empty()) continue;
+          sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
+	  //unpack_ap_uint_64_(udpWord.tdata, value);
+
+	  intToFloatUnion intToFloat;
+	  intToFloat.i  = (DtUsedInt)(udpWord.tdata);
+	  assert(i<OUTDEP);
+	  out[i++] = intToFloat.f;
+	}
     }
 
     //-- STEP-3: CLOSE FILE
@@ -408,12 +405,12 @@ __file_read(const char *fname, char *buff, size_t len)
 }
 
 static inline ssize_t
-__file_write(const char *fname, const char *buff, size_t len)
+writeArrayToFile(const char *fname, DtUsed* out)
 {
 	int rc;
 	FILE *fp;
 
-	if ((fname == NULL) || (buff == NULL) || (len == 0))
+	if ((fname == NULL) || (out == NULL))
 		return -EINVAL;
 
 	fp = fopen(fname, "w+");
@@ -422,12 +419,14 @@ __file_write(const char *fname, const char *buff, size_t len)
 			fname, strerror(errno));
 		return -ENODEV;
 	}
-	rc = fwrite(buff, len, 1, fp);
-	if (rc == -1) {
+	for (unsigned int i = 0; i < OUTDEP; i++) {
+	    rc = fprintf(fp,"%f\n", out[i]);
+	    if (rc == -1) {
 		fprintf(stderr, "err: Cannot write to %s: %s\n",
 			fname, strerror(errno));
 		fclose(fp);
 		return -EIO;
+	    }
 	}
 	fclose(fp);
 	return rc;

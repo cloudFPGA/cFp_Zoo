@@ -136,13 +136,14 @@ int main(int argc, char** argv) {
     instruct.requiredSamples = 0; // 262144; // 48128;//0;//1024;//0;
     instruct.maxSamples = 0;
     unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
-    unsigned int tot_trasnfers = (CEIL(INSIZE + OUTSIZE, PACK_SIZE));
-    //char *charOutput = (char*)malloc(strInput.length() * sizeof(char));
-    //char *charInput = (char*)malloc(strInput.length() * sizeof(char));
-    //if (!charOutput || !charInput) {
-    //    printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
-    //    return -1;
-    //}
+    unsigned int tot_trasnfers_in  = (CEIL(INSIZE, PACK_SIZE));
+    unsigned int tot_trasnfers_out = (CEIL(OUTSIZE, PACK_SIZE));
+    
+    DtUsed *out = (DtUsed*)malloc(OUTDEP * sizeof(DtUsed));
+    if (!out) {
+        printf("ERROR: Cannot allocate memory for output array. Aborting...\n");
+        return -1;
+    }
     
     
     //------------------------------------------------------
@@ -161,9 +162,9 @@ int main(int argc, char** argv) {
             nrErr++;
         }
 
-        //there are tot_trasnfers streams from the the App to the Role
+        //there are tot_trasnfers_in streams from the the App to the Role
         NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-	for (int i=0; i<tot_trasnfers; i++) {
+	for (int i=0; i<tot_trasnfers_in; i++) {
 	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
 	}        
 	//set correct node_rank and cluster_size
@@ -229,7 +230,8 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      assert(i == tot_trasnfers);
+      printf("i=%u, tot_trasnfers_in + tot_trasnfers_out=%u\n", i,tot_trasnfers_in + tot_trasnfers_out);
+      assert(i == tot_trasnfers_in + tot_trasnfers_out);
     }
     else {
       printf("Error No metadata received...\n");
@@ -239,27 +241,16 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
-    /*
-    if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
-      printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
+    
+    if (!dumpFileToArray("ofsUAF_Shl_Data.dat", out, simCnt)) {
+      printf("### ERROR : Failed to set array from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
-    printf("Input string : ");
-    for (int i = 0; i < strInput.length(); i++)
-       printf("%c", charInput[i]); 
-    printf("\n");    
-    if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
-      printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
-      nrErr++;
-    }
-    __file_write("./hls_out.txt", charOutput, strInput.length());
-    printf("Output string: ");
-    for (int i = 0; i < strInput.length(); i++)
-       printf("%c", charOutput[i]); 
-    printf("\n");
-    */
+    writeArrayToFile("./hls_out.txt", out);
+    printf("Output val: %f\n", out[0]);
+    
     //------------------------------------------------------
-    //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
+    //-- STEP-6 : COMPARE OUTPUT AND GOLDEN FILE STREAMS
     //------------------------------------------------------
     int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
                                             ../../../../test/verify_UAF_Shl_Data.dat");

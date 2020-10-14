@@ -183,8 +183,7 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	storeWordToStruct(netWord, instruct, processed_word_rx, processed_bytes_rx, 
-			     struct_loaded);
+	storeWordToStruct(netWord, instruct, processed_word_rx, processed_bytes_rx, struct_loaded);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -222,11 +221,9 @@ void pProcPath(
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
-    uint16_t Thresh = 442;
-    float K = 0.04;
-    uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-  
-  
+    unsigned int processed_word_proc = 0;
+    intToFloatUnion intToFloat;
+    
   switch(MCEuropeanEngineFSM)
   {
     case WAIT_FOR_META: 
@@ -236,6 +233,7 @@ void pProcPath(
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
 	*processed_bytes_rx = 0;
+	processed_word_proc = 0;
       }
       break;
 
@@ -243,6 +241,11 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       //if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
+	#ifdef FAKE_MCEuropeanEngine
+	for (unsigned int i = 0; i < OUTDEP; i++) {
+	  out[i] = (DtUsed)i;
+	}
+	#else
 	kernel_mc(instruct->loop_nm,
                            instruct->seed,
                            instruct->underlying,
@@ -257,35 +260,35 @@ void pProcPath(
                            instruct->requiredSamples,
                            instruct->timeSteps,
                            instruct->maxSamples);
+	#endif
 	MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
       }
       break;
       
     case MCEUROPEANENGINE_RETURN_RESULTS:
       printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS\n");
-      if ( !sRxpToTxp_Data.full() )
-      {
-	
-	//Data_t_out temp = img_out_axi_stream.read();
-	bool last;
-	//if ( img_out_axi_stream.empty() ) 
+      for (unsigned int i = 0; i < OUTDEP; i++) {
+	if ( !sRxpToTxp_Data.full() )
 	{
-	  last = 1;
-	  MCEuropeanEngineFSM = WAIT_FOR_META;
+	  bool last;
+	  if ( i ==  OUTDEP-1 ) 
+	  {
+	    last = 1;
+	    MCEuropeanEngineFSM = WAIT_FOR_META;
+	  }
+	  else
+	  {
+	    last = 0;
+	  }
+	  //TODO: find why Vitis kernel does not set keep and last by itself
+	  unsigned int keep = 255;
+	  intToFloat.f = out[i];
+	  newWord = NetworkWord((ap_uint<64>)intToFloat.i, keep, last); 
+	  sRxpToTxp_Data.write(newWord);
 	}
-	//else
-	//{
-	  last = 0;
-	//}
-	//TODO: find why Vitis kernel does not set keep and last by itself
-	unsigned int keep = 255;
-	newWord = NetworkWord(1, keep, last); 
-	sRxpToTxp_Data.write(newWord);
       }
       break;
-      
   } // end switch
- 
 }
 
 
@@ -318,7 +321,8 @@ void pTXPath(
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
-  
+    NetworkMetaStream meta_out_stream = NetworkMetaStream();
+    
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
@@ -347,7 +351,7 @@ void pTXPath(
         soTHIS_Shl_Data.write(netWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;
-        NetworkMetaStream meta_out_stream = NetworkMetaStream();
+        
         meta_out_stream.tlast = 1;
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
@@ -360,9 +364,7 @@ void pTXPath(
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
 	
-	
-	//meta_out_stream.tdata.len = meta_in.len; 
-        soNrc_meta.write(meta_out_stream);
+        //soNrc_meta.write(meta_out_stream);
 
 	(*processed_word_tx)++;
 	
@@ -376,13 +378,27 @@ void pTXPath(
     case PROCESSING_PACKET: 
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
 	     dequeueFSM, *processed_word_tx);
-      if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
+      if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full() && !soNrc_meta.full())
       {
+	NetworkMetaStream meta_out_stream = NetworkMetaStream();
+        meta_out_stream.tlast = 1;
+        meta_out_stream.tkeep = 0xFF; //just to be sure
+
+        meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
+        //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
+        meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
+        //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
+        //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
+        //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
+        meta_out_stream.tdata.dst_port = meta_in.src_port;
+        meta_out_stream.tdata.src_port = meta_in.dst_port;
+	
         netWordTx = sRxpToTxp_Data.read();
 
 	// This is a normal termination of the axi stream from vitis functions
 	if(netWordTx.tlast == 1)
 	{
+	  soNrc_meta.write(meta_out_stream);
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
 	
@@ -393,9 +409,9 @@ void pTXPath(
 	if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
 	{
 	    netWordTx.tlast = 1;
-	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
+	    //dequeueFSM = WAIT_FOR_STREAM_PAIR;
+	    soNrc_meta.write(meta_out_stream);
 	}
-	
         soTHIS_Shl_Data.write(netWordTx);
       }
       break;

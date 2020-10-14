@@ -96,6 +96,8 @@ union intToFloatUnion{
 
 #define PacketFsmType uint8_t
 
+#define FAKE_MCEuropeanEngine
+
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
