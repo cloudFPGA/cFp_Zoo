@@ -110,39 +110,45 @@ int main(int argc, char** argv) {
     simCnt = 0;
     nrErr  = 0;
 
-    if (argc != 2) {
-        printf("Usage : %s <input string> , provided %d\n", argv[0], argc);
+    if (argc != 1) {
+        printf("Usage : %s <no arguments>. Provided %d\n", argv[0], argc);
         return -1;
     }
-    string strInput = argv[1];
     
-    if (!strInput.length()) {
-        printf("ERROR: Empty string provided. Aborting...\n");
-        return -1;
-    }
-    else {
-      printf("Succesfully loaded string ... %s\n", argv[1]);
-      // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
-      assert(PACK_SIZE % 8 == 0);
-    }
+    // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
+    assert(PACK_SIZE % 8 == 0);
     
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MCEUROPEANENGINE
     //------------------------------------------------------
-    unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
-    unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE));
-    char *charOutput = (char*)malloc(strInput.length() * sizeof(char));
-    char *charInput = (char*)malloc(strInput.length() * sizeof(char));
-    if (!charOutput || !charInput) {
-        printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
-        return -1;
-    }
+    varin instruct;
+    instruct.loop_nm = 1024;    
+    instruct.timeSteps = 1;
+    instruct.requiredTolerance = 0.02;
+    instruct.underlying = 36;
+    instruct.riskFreeRate = 0.06;
+    instruct.volatility = 0.20;
+    instruct.dividendYield = 0.0;
+    instruct.strike = 40;
+    instruct.optionType = 1;
+    instruct.timeLength = 1;
+    instruct.seed = 4332 ; // 441242, 42, 13342;
+    instruct.requiredSamples = 0; // 262144; // 48128;//0;//1024;//0;
+    instruct.maxSamples = 0;
+    unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
+    unsigned int tot_trasnfers = (CEIL(INSIZE + OUTSIZE, PACK_SIZE));
+    //char *charOutput = (char*)malloc(strInput.length() * sizeof(char));
+    //char *charInput = (char*)malloc(strInput.length() * sizeof(char));
+    //if (!charOutput || !charInput) {
+    //    printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
+    //    return -1;
+    //}
     
     
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-    if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
+    if (!dumpStructToFile(&instruct, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
 
@@ -233,6 +239,7 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
+    /*
     if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
@@ -250,7 +257,7 @@ int main(int argc, char** argv) {
     for (int i = 0; i < strInput.length(); i++)
        printf("%c", charOutput[i]); 
     printf("\n");
-
+    */
     //------------------------------------------------------
     //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------

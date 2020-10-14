@@ -72,6 +72,10 @@ struct varin {
   DtUsedInt maxSamples;
 };
 
+union intToFloatUnion{
+    DtUsed f;
+    DtUsedInt i;
+};
 
 #define INSIZE sizeof(varin)
 #define OUTSIZE sizeof(DtUsed)*OUTDEP

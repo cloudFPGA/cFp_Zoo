@@ -201,7 +201,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
  ******************************************************************************/
-bool dumpStringToFile(string s, const string   outFileName, int simCnt)
+bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
 {
     string      strLine;
     ofstream    outFileStream;
@@ -216,27 +216,87 @@ bool dumpStringToFile(string s, const string   outFileName, int simCnt)
         cout << "### ERROR : Could not open the output data file " << datFile << endl;
         return(KO);
     }
-    printf("came to dumpStringToFile: s.length()=%u\n", s.length());
+    printf("came to dumpStructToFile: s size=%u\n", INSIZE);
     
     ap_uint<8> value[bytes_per_line];
     unsigned int total_bytes = 0;
 
+    
+    intToFloatUnion intToFloat;
+    
     //-- STEP-2 : DUMP STRING DATA TO FILE
-	for (unsigned int i = 0; i < s.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
-	  //if (NPIX == XF_NPPC8) {
-	    for (unsigned int k = 0; k < bytes_per_line; k++) {
-	      if (i+k < s.length()) {
-		value[k] = s[i+k];
-	      }
-	      else {
-		value[k] = 0;
-	      }
-	      printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
-	    }
-	    udpWord.tdata = pack_ap_uint_64_(value);
+	for (unsigned int i = 0, j = 0; i < INSIZE; i+=sizeof(DtUsed), j++, total_bytes+=bytes_per_line) {
+	  
+	  
+	  
+	  
+	  switch(j)
+	  {
+	    case 0:
+	      intToFloat.i = instruct->loop_nm;
+	      printf("DEBUG instruct->loop_nm = %u\n", instruct->loop_nm);
+	      break;
+	    case 1:
+	      intToFloat.i = instruct->seed;
+	      printf("DEBUG instruct->seed = %u\n", instruct->seed);
+	      break;  
+	    case 2:
+	      intToFloat.f = instruct->underlying;
+	      printf("DEBUG instruct->underlying = %f\n", instruct->underlying);
+	      break;
+	    case 3:
+	      intToFloat.f = instruct->volatility;
+	      printf("DEBUG instruct->volatility = %f\n", instruct->volatility);
+	      break;
+	    case 4:
+	      intToFloat.f = instruct->dividendYield;
+	      printf("DEBUG instruct->dividendYield = %f\n", instruct->dividendYield);
+	      break;
+	    case 5:
+	      intToFloat.f = instruct->riskFreeRate;
+	      printf("DEBUG instruct->riskFreeRate = %f\n", instruct->riskFreeRate);
+	      break;
+	    case 6:
+	      intToFloat.f = instruct->timeLength;
+	      printf("DEBUG instruct->timeLength = %f\n", instruct->timeLength);
+	      break;  
+	    case 7:
+	      intToFloat.f = instruct->strike;
+	      printf("DEBUG instruct->strike = %f\n", instruct->strike);
+	      break;
+	    case 8:
+	      intToFloat.i = instruct->optionType;
+	      printf("DEBUG instruct->optionType = %u\n", instruct->optionType);
+	      break;
+	    case 9:
+	      intToFloat.f = instruct->requiredTolerance;
+	      printf("DEBUG instruct->requiredTolerance = %f\n", instruct->requiredTolerance);
+	      break;
+	    case 10:
+	      intToFloat.i = instruct->requiredSamples;
+	      printf("DEBUG instruct->requiredSamples = %u\n", instruct->requiredSamples);
+	      break;
+	    case 11:
+	      intToFloat.i = instruct->timeSteps;
+	      printf("DEBUG instruct->timeSteps = %u\n", instruct->timeSteps);
+	      break;  
+	    case 12:
+	      intToFloat.i = instruct->maxSamples;
+	      printf("DEBUG instruct->maxSamples = %u\n", instruct->maxSamples);
+	      break;
+	    default:
+	      printf("ERROR: unknown value %u\n", j);
+	      rc = KO;
+	      break;
+	  }
+	  
+	  
+	  
+	  
+	    udpWord.tdata = (ap_uint<64>)intToFloat.i;
 	    udpWord.tkeep = 255;
 	    // We are signaling a packet termination either at the end of the image or the end of MTU
-	    if ((total_bytes >= (s.length() - bytes_per_line)) || 
+	    if ((total_bytes >= (INSIZE - bytes_per_line)) || 
 	        ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
 	      udpWord.tlast = 1;
 	    }

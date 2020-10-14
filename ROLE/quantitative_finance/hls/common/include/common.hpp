@@ -121,7 +121,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
                          const std::string  dataStreamName, const std::string outFileName, int simCnt);
 
 
-bool dumpStringToFile(std::string s, const std::string outFileName, int simCnt);
+bool dumpStructToFile(varin *s, const std::string outFileName, int simCnt);
 
 static inline ssize_t
 __file_size(const char *fname);

@@ -87,7 +87,7 @@ endif
 
 fcsim: fcompile
 	@make logo
-	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ $(INPUT_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build && ./$@
 	
 memchecksim: fcompile
 	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim $(INPUT_STRING)

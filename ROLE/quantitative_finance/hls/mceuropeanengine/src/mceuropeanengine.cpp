@@ -34,10 +34,6 @@ PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType MCEuropeanEngineFSM  = WAIT_FOR_META;
 
-union intToFloatUnion{
-    DtUsed f;
-    DtUsedInt i;
-};
 
 /*****************************************************************************
  * @brief   Store a word from ethernet to a local AXI stream
