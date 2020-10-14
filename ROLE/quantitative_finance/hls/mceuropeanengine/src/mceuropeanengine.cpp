@@ -34,43 +34,23 @@ PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType MCEuropeanEngineFSM  = WAIT_FOR_META;
 
-/*****************************************************************************
- * @brief   Store a word from ethernet to local memory
- * @return Nothing.
- *****************************************************************************/
-void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IN_PACKETS], 
-		      unsigned int *processed_word, unsigned int *image_loaded)
-{
-  #pragma HLS INLINE
-  
-  img[*processed_word] = (ap_uint<INPUT_PTR_WIDTH>) input;
-  printf("DEBUG in storeWordToArray: input = %u = 0x%16.16llX \n", input, input);
-  printf("DEBUG in storeWordToArray: img[%u]= %u = 0x%16.16llX \n", *processed_word, 
-  (uint64_t)img[*processed_word], (uint64_t)img[*processed_word]);
-  if (*processed_word < IN_PACKETS-1) {
-    *processed_word++;
-  }
-  else {
-    printf("DEBUG in storeWordToArray: WARNING - you've reached the max depth of img[%u]. Will put *processed_word = 0.\n", *processed_word);
-    *processed_word = 0;
-    *image_loaded = 1;
-  }
-}
-
+union intToFloatUnion{
+    DtUsed f;
+    DtUsedInt i;
+};
 
 /*****************************************************************************
  * @brief   Store a word from ethernet to a local AXI stream
  * @return Nothing.
  *****************************************************************************/
-void storeWordToAxiStream(
+void storeWordToStruct(
   NetworkWord word,
-  varin &instruct,
+  varin *instruct,
   unsigned int *processed_word_rx,
   unsigned int *processed_bytes_rx,
-  unsigned int *image_loaded)
+  unsigned int *struct_loaded)
 {   
   //#pragma HLS INLINE
-  ap_uint<INPUT_PTR_WIDTH> v;
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
   unsigned int bytes_with_keep = 0;
@@ -83,10 +63,63 @@ void storeWordToAxiStream(
       printf("WARNING: value with tkeep=0 at i=%u\n", i);
       continue; 
     }
-    v = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
-    //v.keep = word.tkeep;
-    //v.last = word.tlast;
-    //img_in_axi_stream.write(v);
+    intToFloatUnion intToFloat;
+    intToFloat.i  = (DtUsedInt)(word.tdata >> i*loop_cnt);
+    switch((*processed_word_rx)++)
+      {
+	case 0:
+	  instruct->loop_nm = intToFloat.i;
+	  printf("DEBUG instruct->loop_nm = %u\n", instruct->loop_nm);
+	  break;
+	case 1:
+	  instruct->seed = intToFloat.i;
+	  printf("DEBUG instruct->seed = %u\n", instruct->seed);
+	  break;  
+	case 2:
+	  instruct->underlying = intToFloat.f;
+	  printf("DEBUG instruct->underlying = %f\n", instruct->underlying);
+	  break;
+	case 3:
+	  instruct->volatility = intToFloat.f;
+	  printf("DEBUG instruct->volatility = %f\n", instruct->volatility);
+	  break;
+	case 4:
+	  instruct->dividendYield = intToFloat.f;
+	  printf("DEBUG instruct->dividendYield = %f\n", instruct->dividendYield);
+	  break;
+	case 5:
+	  instruct->riskFreeRate = intToFloat.f;
+	  printf("DEBUG instruct->riskFreeRate = %f\n", instruct->riskFreeRate);
+	  break;
+	case 6:
+	  instruct->timeLength = intToFloat.f;
+	  printf("DEBUG instruct->timeLength = %f\n", instruct->timeLength);
+	  break;  
+	case 7:
+	  instruct->strike = intToFloat.f;
+	  printf("DEBUG instruct->strike = %f\n", instruct->strike);
+	  break;
+	case 8:
+	  instruct->optionType = intToFloat.i;
+	  printf("DEBUG instruct->optionType = %u\n", instruct->optionType);
+	  break;
+	case 9:
+	  instruct->requiredTolerance = intToFloat.f;
+	  printf("DEBUG instruct->requiredTolerance = %f\n", instruct->requiredTolerance);
+	  break;
+	case 10:
+	  instruct->requiredSamples = intToFloat.i;
+	  printf("DEBUG instruct->requiredSamples = %u\n", instruct->requiredSamples);
+	  break;
+	case 11:
+	  instruct->timeSteps = intToFloat.i;
+	  printf("DEBUG instruct->timeSteps = %u\n", instruct->timeSteps);
+	  break;  
+	case 12:
+	  instruct->maxSamples = intToFloat.i;
+	  printf("DEBUG instruct->maxSamples = %u\n", instruct->maxSamples);
+	  break;
+      }
     bytes_with_keep += bytes_per_loop;
   }
 
@@ -94,9 +127,9 @@ void storeWordToAxiStream(
     (*processed_bytes_rx) += bytes_with_keep;
   }
   else {
-    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+    printf("DEBUG in storeWordToStruct: WARNING - you've reached the max depth of struct. Will put *processed_bytes_rx = 0.\n");
     *processed_bytes_rx = 0;
-    *image_loaded = 1;
+    *struct_loaded = 1;
   }
 }
 
@@ -111,7 +144,7 @@ void storeWordToAxiStream(
  * @param[out] img_in_axi_stream
  * @param[out] meta_tmp
  * @param[out] processed_word
- * @param[out] image_loaded
+ * @param[out] struct_loaded
  *
  * @return Nothing.
  ******************************************************************************/
@@ -119,11 +152,11 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	varin                                            &instruct,
+	varin                                            *instruct,
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
 	unsigned int                                     *processed_bytes_rx,
-	unsigned int                                     *image_loaded
+	unsigned int                                     *struct_loaded
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -144,7 +177,7 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
-      *image_loaded = 0;
+      *struct_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
@@ -154,8 +187,8 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	storeWordToAxiStream(netWord, instruct, processed_word_rx, processed_bytes_rx, 
-			     image_loaded);
+	storeWordToStruct(netWord, instruct, processed_word_rx, processed_bytes_rx, 
+			     struct_loaded);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -175,17 +208,17 @@ void pRXPath(
  * @param[in]  img_in_axi_stream
  * @param[in]  img_out_axi_stream
  * @param[out] processed_word_rx
- * @param[in]  image_loaded
+ * @param[in]  struct_loaded
  *
  * @return Nothing.
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
-	      varin                                  &instruct,
+	      varin                                  *instruct,
 	      DtUsed                                 *out,
 	      unsigned int                           *processed_word_rx,
 	      unsigned int                           *processed_bytes_rx, 
-	      unsigned int                           *image_loaded
+	      unsigned int                           *struct_loaded
 	      )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -202,7 +235,7 @@ void pProcPath(
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
-      if ( (*image_loaded) == 1 )
+      if ( (*struct_loaded) == 1 )
       {
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
@@ -214,7 +247,20 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       //if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
-	//kernel_mc(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	kernel_mc(instruct->loop_nm,
+                           instruct->seed,
+                           instruct->underlying,
+                           instruct->volatility,
+                           instruct->dividendYield,
+                           instruct->riskFreeRate, // model parameter
+                           instruct->timeLength,
+                           instruct->strike,
+                           instruct->optionType, // option parameter
+                           out,
+                           instruct->requiredTolerance,
+                           instruct->requiredSamples,
+                           instruct->timeSteps,
+                           instruct->maxSamples);
 	MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
       }
       break;
@@ -405,7 +451,7 @@ void mceuropeanengine(
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
-  static unsigned int image_loaded;
+  static unsigned int struct_loaded;
   const int img_in_axi_stream_depth = MIN_RX_LOOPS;
   const int img_out_axi_stream_depth = MIN_TX_LOOPS;
   const int tot_transfers = TOT_TRANSFERS;
@@ -422,7 +468,7 @@ void mceuropeanengine(
 #pragma HLS reset variable=MCEuropeanEngineFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
-#pragma HLS reset variable=image_loaded
+#pragma HLS reset variable=struct_loaded
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
   
@@ -454,7 +500,7 @@ void mceuropeanengine(
 			   meta_tmp,
 			   &processed_word_rx,
 			   &processed_bytes_rx,
-			   &image_loaded);
+			   &struct_loaded);
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
@@ -462,7 +508,7 @@ void mceuropeanengine(
 		           img_out_axi_stream,
 		           &processed_word_rx,
 			   &processed_bytes_rx,
-		           &image_loaded); 
+		           &struct_loaded); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
@@ -480,19 +526,19 @@ void mceuropeanengine(
 	siSHL_This_Data,
         siNrc_meta,
 	sRxtoTx_Meta,
-	instruct,
+	&instruct,
         meta_tmp, 
         &processed_word_rx,
 	&processed_bytes_rx,
-	&image_loaded);
+	&struct_loaded);
   
   
   pProcPath(sRxpToTxp_Data,
-	    instruct,
+	    &instruct,
 	    out,
 	    &processed_word_rx,
 	    &processed_bytes_rx,
-	    &image_loaded);  
+	    &struct_loaded);  
  
   pTXPath(
         soTHIS_Shl_Data,

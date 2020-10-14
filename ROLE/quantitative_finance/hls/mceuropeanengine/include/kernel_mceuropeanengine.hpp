@@ -20,18 +20,24 @@
 #define MCM_NM 8
 #define OUTDEP 1024
 
-extern "C" void kernel_mc(unsigned int loop_nm,
-                          unsigned int seed,
+#if DtUsed == double
+#define DtUsedInt long unsigned int
+#elif DtUsed == float
+#define DtUsedInt unsigned int
+#endif
+
+extern "C" void kernel_mc(DtUsedInt loop_nm,
+                          DtUsedInt seed,
                           DtUsed underlying,
                           DtUsed volatility,
                           DtUsed dividendYield,
                           DtUsed riskFreeRate, // model parameter
                           DtUsed timeLength,
                           DtUsed strike,
-                          unsigned int optionType, // option parameter
+                          DtUsedInt optionType, // option parameter
                           DtUsed out[OUTDEP],
                           DtUsed requiredTolerance,
-                          unsigned int requiredSamples,
-                          unsigned int timeSteps,
-                          unsigned int maxSamples);
+                          DtUsedInt requiredSamples,
+                          DtUsedInt timeSteps,
+                          DtUsedInt maxSamples);
 #endif

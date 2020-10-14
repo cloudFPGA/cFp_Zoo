@@ -48,25 +48,28 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
-
+#if DtUsed == double
 #define INPUT_PTR_WIDTH 64
+#elif DtUsed == float
+#define INPUT_PTR_WIDTH 32
+#endif
 #define OUTPUT_PTR_WIDTH 64
 
 
 struct varin {
-  unsigned int loop_nm;
-  unsigned int seed;
+  DtUsedInt loop_nm;
+  DtUsedInt seed;
   DtUsed underlying;
   DtUsed volatility;
   DtUsed dividendYield;
   DtUsed riskFreeRate;
   DtUsed timeLength;
   DtUsed strike;
-  unsigned int optionType; // bool
+  DtUsedInt optionType; // bool
   DtUsed requiredTolerance;
-  unsigned int requiredSamples;
-  unsigned int timeSteps;
-  unsigned int maxSamples;
+  DtUsedInt requiredSamples;
+  DtUsedInt timeSteps;
+  DtUsedInt maxSamples;
 };
 
 

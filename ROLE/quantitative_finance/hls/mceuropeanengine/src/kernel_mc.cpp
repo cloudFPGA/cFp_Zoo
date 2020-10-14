@@ -18,20 +18,20 @@
 #include "xf_fintech/mc_engine.hpp"
 #include "xf_fintech/rng.hpp"
 
-extern "C" void kernel_mc(unsigned int loop_nm,
-                          unsigned int seed,
+extern "C" void kernel_mc(DtUsedInt loop_nm,
+                          DtUsedInt seed,
                           DtUsed underlying,
                           DtUsed volatility,
                           DtUsed dividendYield,
                           DtUsed riskFreeRate, // model parameter
                           DtUsed timeLength,
                           DtUsed strike,
-                          unsigned int optionType, // option parameter
+                          DtUsedInt optionType, // option parameter
                           DtUsed out[OUTDEP],
                           DtUsed requiredTolerance,
-                          unsigned int requiredSamples,
-                          unsigned int timeSteps,
-                          unsigned int maxSamples) {
+                          DtUsedInt requiredSamples,
+                          DtUsedInt timeSteps,
+                          DtUsedInt maxSamples) {
 #pragma HLS INTERFACE m_axi port = out bundle = gmem latency = 125
 
 #pragma HLS INTERFACE s_axilite port = loop_nm bundle = control
