@@ -8,8 +8,8 @@
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup VitisVision 
- * @addtogroup VitisVision 
+ * @ingroup VitisQuantitativeFinance 
+ * @addtogroup VitisQuantitativeFinance 
  * \{
  *****************************************************************************/
 
@@ -112,25 +112,22 @@ bool dumpFileToString(const std::string inpFileName, std::string strOutput, int 
 /*****************************************************************************
  * @brief Fill an output file with data from an output stream.
  *
- * @param[in] sDataStream,    the output data stream to set.
- * @param[in] dataStreamName, the name of the data stream.
- * @param[in] outFileName,    the name of the output file to write to.
- * @return OK if successful, otherwise KO.
+ * @param[in] sDataStream     the output data stream to set.
+ * @param[in] dataStreamName  the name of the data stream.
+ * @param[in] outFileName     the name of the output file to write to.
+ * @return                    OK if successful, otherwise KO.
  ******************************************************************************/
 bool getOutputDataStream(stream<UdpWord> &sDataStream,
                          const std::string  dataStreamName, const std::string outFileName, int simCnt);
 
-
+/*****************************************************************************
+ * @brief Fill an output file with data from an output stream.
+ *
+ * @param[in] s            the struct with configuration parameters for MCEuropeanEngine.
+ * @param[in] outFileName  the name of the output file to write to.
+ * @return                 OK if successful, otherwise KO.
+ ******************************************************************************/
 bool dumpStructToFile(varin *s, const std::string outFileName, int simCnt);
-
-static inline ssize_t
-__file_size(const char *fname);
-
-static inline ssize_t
-__file_read(const char *fname, char *buff, size_t len);
-
-static inline ssize_t
-__file_write(const char *fname, const char *buff, size_t len);
 
 #endif
 

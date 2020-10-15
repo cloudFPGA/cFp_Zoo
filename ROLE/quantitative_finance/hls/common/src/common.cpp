@@ -8,8 +8,8 @@
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup VitisVision 
- * @addtogroup VitisVision 
+ * @ingroup VitisQuantitativeFinance 
+ * @addtogroup VitisQuantitativeFinance 
  * \{
  *****************************************************************************/
 
@@ -216,8 +216,6 @@ bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
         cout << "### ERROR : Could not open the output data file " << datFile << endl;
         return(KO);
     }
-    printf("came to dumpStructToFile: s size=%u\n", INSIZE);
-    
     ap_uint<8> value[bytes_per_line];
     unsigned int total_bytes = 0;
 
@@ -226,19 +224,15 @@ bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
     
     //-- STEP-2 : DUMP STRING DATA TO FILE
 	for (unsigned int i = 0, j = 0; i < INSIZE; i+=sizeof(DtUsed), j++, total_bytes+=bytes_per_line) {
-	  
-	  
-	  
-	  
 	  switch(j)
 	  {
 	    case 0:
 	      intToFloat.i = instruct->loop_nm;
-	      printf("DEBUG instruct->loop_nm = %u\n", instruct->loop_nm);
+	      printf("DEBUG instruct->loop_nm = %u\n", (unsigned int)instruct->loop_nm);
 	      break;
 	    case 1:
 	      intToFloat.i = instruct->seed;
-	      printf("DEBUG instruct->seed = %u\n", instruct->seed);
+	      printf("DEBUG instruct->seed = %u\n", (unsigned int)instruct->seed);
 	      break;  
 	    case 2:
 	      intToFloat.f = instruct->underlying;
@@ -266,7 +260,7 @@ bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
 	      break;
 	    case 8:
 	      intToFloat.i = instruct->optionType;
-	      printf("DEBUG instruct->optionType = %u\n", instruct->optionType);
+	      printf("DEBUG instruct->optionType = %u\n", (unsigned int)instruct->optionType);
 	      break;
 	    case 9:
 	      intToFloat.f = instruct->requiredTolerance;
@@ -274,24 +268,21 @@ bool dumpStructToFile(varin *instruct, const string outFileName, int simCnt)
 	      break;
 	    case 10:
 	      intToFloat.i = instruct->requiredSamples;
-	      printf("DEBUG instruct->requiredSamples = %u\n", instruct->requiredSamples);
+	      printf("DEBUG instruct->requiredSamples = %u\n", (unsigned int)instruct->requiredSamples);
 	      break;
 	    case 11:
 	      intToFloat.i = instruct->timeSteps;
-	      printf("DEBUG instruct->timeSteps = %u\n", instruct->timeSteps);
+	      printf("DEBUG instruct->timeSteps = %u\n", (unsigned int)instruct->timeSteps);
 	      break;  
 	    case 12:
 	      intToFloat.i = instruct->maxSamples;
-	      printf("DEBUG instruct->maxSamples = %u\n", instruct->maxSamples);
+	      printf("DEBUG instruct->maxSamples = %u\n", (unsigned int)instruct->maxSamples);
 	      break;
 	    default:
 	      printf("ERROR: unknown value %u\n", j);
 	      rc = KO;
 	      break;
 	  }
-	  
-	  
-	  
 	  
 	    udpWord.tdata = (ap_uint<64>)intToFloat.i;
 	    udpWord.tkeep = 255;
@@ -364,45 +355,6 @@ bool dumpFileToArray(const string inpFileName, DtUsed* out, int simCnt) {
     return(OK);
 }
 
-static inline ssize_t
-__file_size(const char *fname)
-{
-	int rc;
-	struct stat s;
-
-	rc = lstat(fname, &s);
-	if (rc != 0) {
-		fprintf(stderr, "err: Cannot find %s!\n", fname);
-		return rc;
-	}
-	return s.st_size;
-}
-
-static inline ssize_t
-__file_read(const char *fname, char *buff, size_t len)
-{
-	int rc;
-	FILE *fp;
-
-	if ((fname == NULL) || (buff == NULL) || (len == 0))
-		return -EINVAL;
-
-	fp = fopen(fname, "r");
-	if (!fp) {
-		fprintf(stderr, "err: Cannot open file %s: %s\n",
-			fname, strerror(errno));
-		return -ENODEV;
-	}
-	rc = fread(buff, len, 1, fp);
-	if (rc == -1) {
-		fprintf(stderr, "err: Cannot read from %s: %s\n",
-			fname, strerror(errno));
-		fclose(fp);
-		return -EIO;
-	}
-	fclose(fp);
-	return rc;
-}
 
 static inline ssize_t
 writeArrayToFile(const char *fname, DtUsed* out)

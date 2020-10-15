@@ -1,13 +1,9 @@
 /*****************************************************************************
- * @file       : test_mceuropeanengine.cpp
- * @brief      : Testbench for MCEuropeanEngine.
+ * @file       test_mceuropeanengine.cpp
+ * @brief      Testbench for MCEuropeanEngine
  *
- * System:     : cloudFPGA
- * Component   : Role
- * Language    : Vivado HLS
- *
- * Created: April 2020
- * Authors: FAB, WEI, NGL, DID
+ * @date April 2020
+ * @authors    FAB, WEI, NGL, DID
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
@@ -61,7 +57,6 @@ ap_uint<1>                  piSHL_This_MmioCaptPktEn;
 //-- SHELL / Uaf / Udp Interfaces
 stream<UdpWord>             sSHL_Uaf_Data ("sSHL_Uaf_Data");
 stream<UdpWord>             sUAF_Shl_Data ("sUAF_Shl_Data");
-stream<UdpWord>             image_stream_from_mceuropeanengine ("image_stream_from_mceuropeanengine");
 
 ap_uint<32>                 s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
@@ -72,7 +67,7 @@ ap_uint<32>                 cluster_size;
 //------------------------------------------------------
 //-- TESTBENCH GLOBAL VARIABLES
 //------------------------------------------------------
-int         simCnt;
+unsigned int simCnt;
 
 
 /*****************************************************************************
@@ -136,8 +131,8 @@ int main(int argc, char** argv) {
     instruct.requiredSamples = 0; // 262144; // 48128;//0;//1024;//0;
     instruct.maxSamples = 0;
     unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
-    unsigned int tot_trasnfers_in  = (CEIL(INSIZE, PACK_SIZE));
-    unsigned int tot_trasnfers_out = (CEIL(OUTSIZE, PACK_SIZE));
+    unsigned int tot_trasnfers_in  = TOT_TRANSFERS_IN;
+    unsigned int tot_trasnfers_out = TOT_TRANSFERS_OUT;
     
     DtUsed *out = (DtUsed*)malloc(OUTDEP * sizeof(DtUsed));
     if (!out) {
@@ -147,14 +142,14 @@ int main(int argc, char** argv) {
     
     
     //------------------------------------------------------
-    //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
+    //-- STEP-1.1 : CREATE FILE FROM INPUT CONFIGURATION
     //------------------------------------------------------
     if (!dumpStructToFile(&instruct, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
 
     //------------------------------------------------------
-    //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
+    //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAM
     //------------------------------------------------------
     if (nrErr == 0) {
         if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat", simCnt)) { 
@@ -164,7 +159,7 @@ int main(int argc, char** argv) {
 
         //there are tot_trasnfers_in streams from the the App to the Role
         NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-	for (int i=0; i<tot_trasnfers_in; i++) {
+	for (unsigned int i = 0; i < tot_trasnfers_in; i++) {
 	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
 	}        
 	//set correct node_rank and cluster_size

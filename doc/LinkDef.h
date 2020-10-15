@@ -9,6 +9,11 @@
  * \brief This is the accelerated functions of Vitis Vision sub-library from Vitis Open Source Library.
  */
 
+/** \defgroup VitisQuantitativeFinance Vitis Vision
+ *  @ingroup cFp_Vitis
+ *
+ * \brief This is the accelerated functions of Vitis Quantitative Finance sub-library from Vitis Open Source Library.
+ */
 
 //*********** Harris*****************************
 /** \defgroup Harris Harris

@@ -65,11 +65,11 @@ void storeWordToStruct(
       {
 	case 0:
 	  instruct->loop_nm = intToFloat.i;
-	  printf("DEBUG instruct->loop_nm = %u\n", instruct->loop_nm);
+	  printf("DEBUG instruct->loop_nm = %u\n", (unsigned int)instruct->loop_nm);
 	  break;
 	case 1:
 	  instruct->seed = intToFloat.i;
-	  printf("DEBUG instruct->seed = %u\n", instruct->seed);
+	  printf("DEBUG instruct->seed = %u\n", (unsigned int)instruct->seed);
 	  break;  
 	case 2:
 	  instruct->underlying = intToFloat.f;
@@ -97,7 +97,7 @@ void storeWordToStruct(
 	  break;
 	case 8:
 	  instruct->optionType = intToFloat.i;
-	  printf("DEBUG instruct->optionType = %u\n", instruct->optionType);
+	  printf("DEBUG instruct->optionType = %u\n", (unsigned int)instruct->optionType);
 	  break;
 	case 9:
 	  instruct->requiredTolerance = intToFloat.f;
@@ -105,15 +105,17 @@ void storeWordToStruct(
 	  break;
 	case 10:
 	  instruct->requiredSamples = intToFloat.i;
-	  printf("DEBUG instruct->requiredSamples = %u\n", instruct->requiredSamples);
+	  printf("DEBUG instruct->requiredSamples = %u\n", (unsigned int)instruct->requiredSamples);
 	  break;
 	case 11:
 	  instruct->timeSteps = intToFloat.i;
-	  printf("DEBUG instruct->timeSteps = %u\n", instruct->timeSteps);
+	  printf("DEBUG instruct->timeSteps = %u\n", (unsigned int)instruct->timeSteps);
 	  break;  
 	case 12:
 	  instruct->maxSamples = intToFloat.i;
-	  printf("DEBUG instruct->maxSamples = %u\n", instruct->maxSamples);
+	  printf("DEBUG instruct->maxSamples = %u\n", (unsigned int)instruct->maxSamples);
+	  break;
+	default:
 	  break;
       }
     bytes_with_keep += bytes_per_loop;
@@ -221,7 +223,6 @@ void pProcPath(
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
-    unsigned int processed_word_proc = 0;
     intToFloatUnion intToFloat;
     
   switch(MCEuropeanEngineFSM)
@@ -233,7 +234,6 @@ void pProcPath(
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
 	*processed_bytes_rx = 0;
-	processed_word_proc = 0;
       }
       break;
 
@@ -364,14 +364,16 @@ void pTXPath(
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
 	
-        //soNrc_meta.write(meta_out_stream);
-
 	(*processed_word_tx)++;
 	
         if(netWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
         }
+        else {
+	  // Just make sure that one output packet will be sent if it is only one 64-bit packet
+	  soNrc_meta.write(meta_out_stream);
+	}
       }
       break;
 
@@ -464,11 +466,9 @@ void mceuropeanengine(
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
   static unsigned int struct_loaded;
-  const int img_in_axi_stream_depth = MIN_RX_LOOPS;
-  const int img_out_axi_stream_depth = MIN_TX_LOOPS;
+  static varin instruct;
+  static DtUsed out[OUTDEP];
   const int tot_transfers = TOT_TRANSFERS;
-  varin instruct;
-  DtUsed out[OUTDEP];
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   
@@ -481,8 +481,6 @@ void mceuropeanengine(
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=struct_loaded
-#pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
-#pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
   
 
 #ifdef USE_HLSLIB_DATAFLOW

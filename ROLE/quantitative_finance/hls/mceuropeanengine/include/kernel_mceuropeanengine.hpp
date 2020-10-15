@@ -28,15 +28,15 @@
 
 extern "C" void kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
-                          DtUsed underlying,
-                          DtUsed volatility,
-                          DtUsed dividendYield,
-                          DtUsed riskFreeRate, // model parameter
-                          DtUsed timeLength,
-                          DtUsed strike,
+                          DtUsed    underlying,
+                          DtUsed    volatility,
+                          DtUsed    dividendYield,
+                          DtUsed    riskFreeRate, // model parameter
+                          DtUsed    timeLength,
+                          DtUsed    strike,
                           DtUsedInt optionType, // option parameter
-                          DtUsed out[OUTDEP],
-                          DtUsed requiredTolerance,
+                          DtUsed    out[OUTDEP],
+                          DtUsed    requiredTolerance,
                           DtUsedInt requiredSamples,
                           DtUsedInt timeSteps,
                           DtUsedInt maxSamples);
