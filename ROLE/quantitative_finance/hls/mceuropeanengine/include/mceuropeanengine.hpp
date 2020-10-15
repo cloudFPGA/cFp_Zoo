@@ -89,10 +89,11 @@ union intToFloatUnion{
 #define MIN_RX_LOOPS IN_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH)
 #define MIN_TX_LOOPS OUT_PACKETS*(BITS_PER_10GBITETHRNET_AXI_PACKET/OUTPUT_PTR_WIDTH)
 
-#define WAIT_FOR_META 0
+#define WAIT_FOR_META        0
 #define WAIT_FOR_STREAM_PAIR 1
-#define PROCESSING_PACKET 2
-#define MCEUROPEANENGINE_RETURN_RESULTS 3
+#define PROCESSING_PACKET    2
+#define PROCESSING_WAIT      3
+#define MCEUROPEANENGINE_RETURN_RESULTS 4
 
 #define PacketFsmType uint8_t
 
@@ -101,16 +102,7 @@ union intToFloatUnion{
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
-
-#define MEMDW 64          // 512 or 128 or 64 // Bus width in bits for Host memory
-#define BPERDW (MEMDW/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64, if MEMDW=64 => BPERDW = 16
-
-#define MAX_NB_OF_ELMT_READ  16
-typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your needs
-
-#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_ELMT_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
-#define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
-
+//#define USE_HLSLIB_DATAFLOW
 
 void mceuropeanengine(
 

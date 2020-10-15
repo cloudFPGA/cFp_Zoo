@@ -175,7 +175,6 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
-      *struct_loaded = 0;
       break;
 
     case PROCESSING_PACKET:
@@ -214,7 +213,8 @@ void pProcPath(
 	      varin                                  *instruct,
 	      DtUsed                                 *out,
 	      unsigned int                           *processed_word_rx,
-	      unsigned int                           *processed_bytes_rx, 
+	      unsigned int                           *processed_bytes_rx,
+	      unsigned int                           *processed_word_proc,
 	      unsigned int                           *struct_loaded
 	      )
 {
@@ -224,7 +224,9 @@ void pProcPath(
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
     intToFloatUnion intToFloat;
-    
+    static bool finished = 0;
+    #pragma HLS reset variable=finished
+
   switch(MCEuropeanEngineFSM)
   {
     case WAIT_FOR_META: 
@@ -234,6 +236,9 @@ void pProcPath(
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
 	*processed_bytes_rx = 0;
+	*struct_loaded = 0;
+	*processed_word_proc= 0;
+	finished = 0;
       }
       break;
 
@@ -241,12 +246,7 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       //if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
-	#ifdef FAKE_MCEuropeanEngine
-	for (unsigned int i = 0; i < OUTDEP; i++) {
-	  out[i] = (DtUsed)i;
-	}
-	#else
-	kernel_mc(instruct->loop_nm,
+	finished = kernel_mc(instruct->loop_nm,
                            instruct->seed,
                            instruct->underlying,
                            instruct->volatility,
@@ -260,33 +260,37 @@ void pProcPath(
                            instruct->requiredSamples,
                            instruct->timeSteps,
                            instruct->maxSamples);
-	#endif
-	MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
+	MCEuropeanEngineFSM = PROCESSING_WAIT;
+      }
+      break;
+    case PROCESSING_WAIT:
+      printf("DEBUG in pProcPath: PROCESSING_WAIT\n");
+      {
+	if (finished) {
+	  MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
+	}
       }
       break;
       
     case MCEUROPEANENGINE_RETURN_RESULTS:
       printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS\n");
-      for (unsigned int i = 0; i < OUTDEP; i++) {
-	if ( !sRxpToTxp_Data.full() )
-	{
+      //for (unsigned int i = 0; i < OUTDEP; i++) {
+	if ( !sRxpToTxp_Data.full() ) {
 	  bool last;
-	  if ( i ==  OUTDEP-1 ) 
-	  {
+	  if ( (*processed_word_proc) == OUTDEP-1 )  {
 	    last = 1;
 	    MCEuropeanEngineFSM = WAIT_FOR_META;
 	  }
-	  else
-	  {
+	  else {
 	    last = 0;
 	  }
 	  //TODO: find why Vitis kernel does not set keep and last by itself
 	  unsigned int keep = 255;
-	  intToFloat.f = out[i];
+	  intToFloat.f = out[(*processed_word_proc)++];
 	  newWord = NetworkWord((ap_uint<64>)intToFloat.i, keep, last); 
 	  sRxpToTxp_Data.write(newWord);
 	}
-      }
+      //}
       break;
   } // end switch
 }
@@ -465,7 +469,8 @@ void mceuropeanengine(
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
-  static unsigned int struct_loaded;
+  static unsigned int processed_word_proc;
+  static unsigned int struct_loaded = 0;
   static varin instruct;
   static DtUsed out[OUTDEP];
   const int tot_transfers = TOT_TRANSFERS;
@@ -480,6 +485,7 @@ void mceuropeanengine(
 #pragma HLS reset variable=MCEuropeanEngineFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
+#pragma HLS reset variable=processed_word_proc
 #pragma HLS reset variable=struct_loaded
   
 
@@ -506,7 +512,7 @@ void mceuropeanengine(
 			   siSHL_This_Data,
 			   siNrc_meta,
 			   sRxtoTx_Meta,
-			   img_in_axi_stream,
+			   &instruct,
 			   meta_tmp,
 			   &processed_word_rx,
 			   &processed_bytes_rx,
@@ -514,10 +520,11 @@ void mceuropeanengine(
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
-		           img_in_axi_stream,
-		           img_out_axi_stream,
+		           &instruct,
+			   out,
 		           &processed_word_rx,
 			   &processed_bytes_rx,
+			   &processed_word_proc,
 		           &struct_loaded); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
@@ -548,6 +555,7 @@ void mceuropeanengine(
 	    out,
 	    &processed_word_rx,
 	    &processed_bytes_rx,
+	    &processed_word_proc,
 	    &struct_loaded);  
  
   pTXPath(

@@ -90,10 +90,10 @@ fcsim: fcompile
 	cd ./${ipName}_prj/solution1/fcsim/build && ./$@
 	
 memchecksim: fcompile
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim $(INPUT_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim
 
 callgraph: fcsim
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim $(INPUT_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim
 
 kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
@@ -102,10 +102,10 @@ csynth: assert_env
 	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; vivado_hls -f run_hls.tcl
 
 csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=$(INPUT_STRING); vivado_hls -f run_hls.tcl
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; vivado_hls -f run_hls.tcl
 
 cosim: assert_env
-	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimString=$(INPUT_STRING); vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; vivado_hls -f run_hls.tcl
 	#@#rm -rf ${ipName}_prj
 
 cosim_view:

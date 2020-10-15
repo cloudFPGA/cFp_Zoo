@@ -51,10 +51,6 @@ set hlsSim $env(hlsSim)
 set hlsCoSim $env(hlsCoSim)
 set hlsSyn $env(hlsSyn)
 
-if { [info exists env(SimString)] } {
-  set SimString $env(SimString)
-}
-
 # Open and Setup Project
 #-------------------------------------------------
 open_project  ${projectName}_prj
@@ -71,7 +67,7 @@ if { $hlsSyn || $hlsCoSim}  {
   set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS"
 }
 # the -I flag without trailing '/'!!
-add_files     ${srcDir}/mc_euro_k.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${vitis_flags} -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${hlslib_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${vitis_flags} ${hlslib_flags}"
+add_files     ${srcDir}/kernel_mc.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${vitis_flags} -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${hlslib_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${vitis_flags} ${hlslib_flags}"
 add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include  ${vitis_flags} ${hlslib_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${vitis_flags} ${hlslib_flags}"
 add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${vitis_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L1/include -I$env(cFpRootDir)/Vitis_Libraries/quantitative_finance/L2/include ${vitis_flags}"
 
@@ -85,7 +81,7 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -O -compiler gcc -argv "`${SimString}`"
+  csim_design -O -compiler gcc
 } else {
 
   if { $hlsSyn } {
@@ -93,7 +89,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${SimString}"
+    cosim_design -compiler gcc -trace_level all
   } else {
 
   # Export RTL

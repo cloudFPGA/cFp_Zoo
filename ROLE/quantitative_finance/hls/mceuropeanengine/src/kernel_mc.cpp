@@ -15,10 +15,12 @@
  */
 // top header file
 #include "../include/kernel_mceuropeanengine.hpp"
+#include "../include/mceuropeanengine.hpp"
+
 #include "xf_fintech/mc_engine.hpp"
 #include "xf_fintech/rng.hpp"
 
-extern "C" void kernel_mc(DtUsedInt loop_nm,
+extern "C" bool kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
                           DtUsed underlying,
                           DtUsed volatility,
@@ -32,6 +34,7 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt requiredSamples,
                           DtUsedInt timeSteps,
                           DtUsedInt maxSamples) {
+/*
 #pragma HLS INTERFACE m_axi port = out bundle = gmem latency = 125
 
 #pragma HLS INTERFACE s_axilite port = loop_nm bundle = control
@@ -49,7 +52,7 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
 #pragma HLS INTERFACE s_axilite port = maxSamples bundle = control
 #pragma HLS INTERFACE s_axilite port = optionType bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
-
+*/
 #pragma HLS data_pack variable = out
 #ifndef __SYNTHESIS__
 #ifdef XF_DEBUG
@@ -68,7 +71,12 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
     std::cout << "maxSamples=" << maxSamples << std::endl;
 #endif
 #endif
-
+    bool finished = 0;
+#ifdef FAKE_MCEuropeanEngine
+	for (unsigned int i = 0; i < OUTDEP; i++) {
+	  out[i] = (DtUsed)i;
+	}
+#else
     ap_uint<32> seeds[MCM_NM];
     for (int i = 0; i < MCM_NM; ++i) {
         seeds[i] = seed + i * 1000;
@@ -78,4 +86,7 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
                                                       strike, optionType, seeds, &out[i], requiredTolerance,
                                                       requiredSamples, timeSteps, maxSamples);
     }
+#endif
+finished = 1;
+return finished;
 }

@@ -26,7 +26,7 @@
 #define DtUsedInt unsigned int
 #endif
 
-extern "C" void kernel_mc(DtUsedInt loop_nm,
+extern "C" bool kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
                           DtUsed    underlying,
                           DtUsed    volatility,
