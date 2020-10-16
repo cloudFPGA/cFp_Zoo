@@ -22,8 +22,8 @@
 #include <string>
 #include <hls_stream.h>
 #include <sys/stat.h>
-#include "../../mceuropeanengine/include/mceuropeanengine.hpp"
 #include "../../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/include/config.h"
+#include "../../mceuropeanengine/include/mceuropeanengine.hpp"
 
 
 //---------------------------------------------------------

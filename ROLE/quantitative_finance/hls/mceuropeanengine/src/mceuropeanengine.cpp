@@ -17,8 +17,8 @@
  * \{
  *****************************************************************************/
 
-#include "../include/mceuropeanengine.hpp"
 #include "../../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/include/config.h"
+#include "../include/mceuropeanengine.hpp"
 
 #ifdef USE_HLSLIB_DATAFLOW
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"

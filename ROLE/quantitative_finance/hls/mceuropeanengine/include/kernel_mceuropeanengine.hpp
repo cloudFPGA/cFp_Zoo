@@ -16,16 +16,6 @@
 #ifndef KERNEL_MCEUROPEANENGINHE_H
 #define KERNEL_MCEUROPEANENGINHE_H
 
-#define DtUsed double
-#define MCM_NM 8
-#define OUTDEP 126
-
-#if DtUsed == double
-#define DtUsedInt long unsigned int
-#elif DtUsed == float
-#define DtUsedInt unsigned int
-#endif
-
 extern "C" bool kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
                           DtUsed    underlying,

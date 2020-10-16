@@ -56,27 +56,6 @@ enum EchoCtrl {
 #define OUTPUT_PTR_WIDTH 64
 
 
-struct varin {
-  DtUsedInt loop_nm;
-  DtUsedInt seed;
-  DtUsed underlying;
-  DtUsed volatility;
-  DtUsed dividendYield;
-  DtUsed riskFreeRate;
-  DtUsed timeLength;
-  DtUsed strike;
-  DtUsedInt optionType; // bool
-  DtUsed requiredTolerance;
-  DtUsedInt requiredSamples;
-  DtUsedInt timeSteps;
-  DtUsedInt maxSamples;
-};
-
-union intToFloatUnion{
-    DtUsed f;
-    DtUsedInt i;
-};
-
 #define INSIZE sizeof(varin)
 #define OUTSIZE sizeof(DtUsed)*OUTDEP
 
@@ -97,6 +76,9 @@ union intToFloatUnion{
 
 #define PacketFsmType uint8_t
 
+/* Instead of the actual MCE IP, use sipmle logic that assigns values on out. For fast HLS cim/cosim
+ * uncomment this, else keep it commented.
+ */
 #define FAKE_MCEuropeanEngine
 
 #define DEFAULT_TX_PORT 2718

@@ -63,7 +63,7 @@ int uppercase(char *s_servAddress, char *s_servPort, char *input_str, char *outp
 int main(int argc, char *argv[])
 {
     if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <input string> <optional output string>\n";
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> \n";
         exit(1);
     }
 #endif
@@ -132,6 +132,21 @@ int main(int argc, char *argv[])
             cerr << "Empty string provided. Aborting...\n\n" << endl;
             exit(1);
         }
+        varin instruct;
+	instruct.loop_nm = OUTDEP;    
+	instruct.timeSteps = 1;
+	instruct.requiredTolerance = 0.02;
+	instruct.underlying = 36;
+	instruct.riskFreeRate = 0.06;
+	instruct.volatility = 0.20;
+	instruct.dividendYield = 0.0;
+	instruct.strike = 40;
+	instruct.optionType = 1;
+	instruct.timeLength = 1;
+	instruct.seed = 4332 ; // 441242, 42, 13342;
+	instruct.requiredSamples = 1; // 262144; // 48128;//0;//1024;//0;
+	instruct.maxSamples = 1;
+        
     
         clock_t start_cycle_main = clock();
         cout << " ___________________________________________________________________ " << endl;

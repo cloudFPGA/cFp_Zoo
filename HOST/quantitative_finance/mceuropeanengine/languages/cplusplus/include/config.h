@@ -37,15 +37,53 @@
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp
 
-//----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
+/** The data type of MCEuropeanEngine, that determines the precision. Either float or double.     */
+#define DtUsed double
 
+/** The number of MCEuropean Engines running in parallel with differnet seed.                     */
+#define MCM_NM 8
+
+/** The number of execution loops, thus the depth of the output values' vector.                   */
+#define OUTDEP 126
+
+//----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
 #define TOT_TRANSFERS_IN (CEIL(INSIZE, PACK_SIZE));
 #define TOT_TRANSFERS_OUT (CEIL(OUTSIZE, PACK_SIZE));
 #define TOT_TRANSFERS TOT_TRANSFERS_IN + TOT_TRANSFERS_OUT
 
+#if DtUsed == double
+#define DtUsedInt long unsigned int
+#elif DtUsed == float
+#define DtUsedInt unsigned int
+#endif
+
 #define tcp 0
 #define udp 1
+
+//---------------------------------  USER DEFINED STRUCTS ------------------------------------------
+
+struct varin {
+  DtUsedInt loop_nm;
+  DtUsedInt seed;
+  DtUsed    underlying;
+  DtUsed    volatility;
+  DtUsed    dividendYield;
+  DtUsed    riskFreeRate;
+  DtUsed    timeLength;
+  DtUsed    strike;
+  DtUsedInt optionType;
+  DtUsed    requiredTolerance;
+  DtUsedInt requiredSamples;
+  DtUsedInt timeSteps;
+  DtUsedInt maxSamples;
+};
+
+union intToFloatUnion{
+    DtUsed f;
+    DtUsedInt i;
+};
+
 
 /*! \} */

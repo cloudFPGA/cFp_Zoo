@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 // top header file
+#include "../../common/include/common.hpp"
 #include "../include/kernel_mceuropeanengine.hpp"
-#include "../include/mceuropeanengine.hpp"
 
 #include "xf_fintech/mc_engine.hpp"
 #include "xf_fintech/rng.hpp"
