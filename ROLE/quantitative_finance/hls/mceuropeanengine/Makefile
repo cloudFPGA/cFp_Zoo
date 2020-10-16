@@ -46,7 +46,7 @@ VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
 CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
-INPUT_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_mceuropeanengine_example."
+INPUT_FILE ?= "./etc/mce.conf"
 
 src = ./src/${ipName}.cpp \
 			./src/kernel_mc.cpp \
@@ -87,13 +87,13 @@ endif
 
 fcsim: fcompile
 	@make logo
-	cd ./${ipName}_prj/solution1/fcsim/build && ./$@
+	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ ../../../../${INPUT_FILE}
 	
 memchecksim: fcompile
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim ../../../../${INPUT_FILE}
 
 callgraph: fcsim
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim ../../../../${INPUT_FILE}
 
 kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
@@ -102,10 +102,10 @@ csynth: assert_env
 	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; vivado_hls -f run_hls.tcl
 
 csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; vivado_hls -f run_hls.tcl
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimFile=../../../../$(INPUT_FILE); vivado_hls -f run_hls.tcl
 
 cosim: assert_env
-	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; vivado_hls -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimFile=../../../../$(INPUT_FILE); vivado_hls -f run_hls.tcl
 	#@#rm -rf ${ipName}_prj
 
 cosim_view:

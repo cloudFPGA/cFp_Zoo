@@ -385,4 +385,88 @@ writeArrayToFile(const char *fname, DtUsed* out)
 }
 
 
+/*****************************************************************************
+ * @brief Fill an output file with data from an image.
+ * 
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+unsigned int 
+readFileConfigToStruct(const char *fname, varin *instruct) {
+
+    if ((fname == NULL) || (instruct == NULL))
+	return -EINVAL;
+    
+    std::ifstream ifile(fname, std::ios::in);
+
+    //check to see that the file was opened correctly:
+    if (!ifile.is_open()) {
+        std::cerr << "There was a problem opening the input file!\n";
+        return -EIO;
+    }
+    unsigned int i, j;
+    for (i = 0, j = 0; i < INSIZE; i+=sizeof(DtUsed), j++) {
+      switch(j)
+      {
+	case 0:
+	  ifile >> instruct->loop_nm;
+	  printf("DEBUG instruct->loop_nm = %u\n", (unsigned int)instruct->loop_nm);
+	  break;
+	case 1:
+	  ifile >> instruct->seed;
+	  printf("DEBUG instruct->seed = %u\n", (unsigned int)instruct->seed);
+	  break;  
+	case 2:
+	  ifile >> instruct->underlying;
+	  printf("DEBUG instruct->underlying = %f\n", instruct->underlying);
+	  break;
+	case 3:
+	  ifile >> instruct->volatility;
+	  printf("DEBUG instruct->volatility = %f\n", instruct->volatility);
+	  break;
+	case 4:
+	  ifile >> instruct->dividendYield;
+	  printf("DEBUG instruct->dividendYield = %f\n", instruct->dividendYield);
+	  break;
+	case 5:
+	  ifile >> instruct->riskFreeRate;
+	  printf("DEBUG instruct->riskFreeRate = %f\n", instruct->riskFreeRate);
+	  break;
+	case 6:
+	  ifile >> instruct->timeLength;
+	  printf("DEBUG instruct->timeLength = %f\n", instruct->timeLength);
+	  break;  
+	case 7:
+	  ifile >> instruct->strike;
+	  printf("DEBUG instruct->strike = %f\n", instruct->strike);
+	  break;
+	case 8:
+	  ifile >> instruct->optionType;
+	  printf("DEBUG instruct->optionType = %u\n", (unsigned int)instruct->optionType);
+	  break;
+	case 9:
+	  ifile >> instruct->requiredTolerance;
+	  printf("DEBUG instruct->requiredTolerance = %f\n", instruct->requiredTolerance);
+	  break;
+	case 10:
+	  ifile >> instruct->requiredSamples;
+	  printf("DEBUG instruct->requiredSamples = %u\n", (unsigned int)instruct->requiredSamples);
+	  break;
+	case 11:
+	  ifile >> instruct->timeSteps;
+	  printf("DEBUG instruct->timeSteps = %u\n", (unsigned int)instruct->timeSteps);
+	  break;  
+	case 12:
+	  ifile >> instruct->maxSamples;
+	  printf("DEBUG instruct->maxSamples = %u\n", (unsigned int)instruct->maxSamples);
+	  break;
+	default:
+	  break;
+      }
+    }
+    return (i);
+}
+
+
 /*! \} */

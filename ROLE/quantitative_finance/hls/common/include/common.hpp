@@ -129,6 +129,9 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
  ******************************************************************************/
 bool dumpStructToFile(varin *s, const std::string outFileName, int simCnt);
 
+static inline unsigned int 
+readFileConfigToStruct(const char *fname, varin *instruct);
+
 #endif
 
 /*! \} */

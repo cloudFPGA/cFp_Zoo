@@ -54,6 +54,89 @@ fileRead(const char *fname, DtUsed *buff, size_t len) {
 
 
 
+
+/*****************************************************************************
+ * @brief Fill an output file with data from an image.
+ * 
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+unsigned int 
+writeStructToConfFile(const char *fname, varin *instruct) {
+
+    if ((fname == NULL) || (instruct == NULL))
+	return -EINVAL;
+    
+    std::ofstream ifile(fname);
+
+    //check to see that the file was opened correctly:
+    if (!ifile.is_open()) {
+        std::cerr << "There was a problem creating the output file!\n";
+        return -EIO;
+    }
+    unsigned int i, j;
+    for (i = 0, j = 0; i < sizeof(varin); i+=sizeof(DtUsed), j++) {
+      switch(j)
+      {
+	case 0:
+	  ifile << instruct->loop_nm << endl;
+	  break;
+	case 1:
+	  ifile << instruct->seed << endl;
+	  break;  
+	case 2:
+	  ifile << instruct->underlying << endl;
+	  break;
+	case 3:
+	  ifile << instruct->volatility << endl;
+	  break;
+	case 4:
+	  ifile << instruct->dividendYield << endl;
+	  break;
+	case 5:
+	  ifile << instruct->riskFreeRate << endl;
+	  break;
+	case 6:
+	  ifile << instruct->timeLength << endl;
+	  break;  
+	case 7:
+	  ifile << instruct->strike << endl;
+	  break;
+	case 8:
+	  ifile << instruct->optionType << endl;
+	  break;
+	case 9:
+	  ifile << instruct->requiredTolerance << endl;
+	  break;
+	case 10:
+	  ifile << instruct->requiredSamples << endl;
+	  break;
+	case 11:
+	  ifile << instruct->timeSteps << endl;
+	  break;  
+	case 12:
+	  ifile << instruct->maxSamples << endl;
+	  break;
+	default:
+	  break;
+      }
+    }
+    ifile.close();
+    return (i);
+}
+
+
+
+
+
+
+
+
+
+
+
+
   /**
    *   Main testbench for the user-application for MCEuropeanEngine on host. Server
    *   @return O on success, 1 on fail 
@@ -142,6 +225,11 @@ int main(int argc, char * argv[]) {
 	printf("DEBUG instruct.timeSteps = %u\n", (unsigned int)instruct.timeSteps);
 	printf("DEBUG instruct.maxSamples = %u\n", (unsigned int)instruct.maxSamples);
 	    
+	if (writeStructToConfFile("../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/etc/mce_from_net.conf", &instruct) != sizeof(varin)) {
+	  cerr << "ERROR: Cannot write struct to configuration file. Aborting ..." << endl;
+	  return (-1);
+	}
+	
 	// Select simulation mode, default fcsim
 	string exec_cmd = "make fcsim -j 4";
 	string ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/fcsim/build/hls_out.txt";
@@ -167,8 +255,9 @@ int main(int argc, char * argv[]) {
 	    clean_cmd = "make clean && ";
 	}
 	    
-	string str_command = "cd ../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/ && " + clean_cmd + " " + 
-			      exec_cmd + " && cd ../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/build/ "; 
+	string str_command = "cd ../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/ && " + clean_cmd  + "\
+				  INPUT_FILE=./etc/mce_from_net.conf " + exec_cmd + " && \
+				  cd ../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/build/ "; 
 	const char *command = str_command.c_str(); 
   	cout << "Calling TB with command:" << command << endl; 
 	system(command); 

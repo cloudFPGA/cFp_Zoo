@@ -51,6 +51,10 @@ set hlsSim $env(hlsSim)
 set hlsCoSim $env(hlsCoSim)
 set hlsSyn $env(hlsSyn)
 
+if { [info exists env(SimFile)] } {
+  set SimFile $env(SimFile)
+}
+
 # Open and Setup Project
 #-------------------------------------------------
 open_project  ${projectName}_prj
@@ -81,7 +85,7 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -O -compiler gcc
+  csim_design -O -compiler gcc -argv "${SimFile}"
 } else {
 
   if { $hlsSyn } {
@@ -89,7 +93,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all
+    cosim_design -compiler gcc -trace_level all -argv "${SimFile}"
   } else {
 
   # Export RTL

@@ -105,8 +105,8 @@ int main(int argc, char** argv) {
     simCnt = 0;
     nrErr  = 0;
 
-    if (argc != 1) {
-        printf("Usage : %s <no arguments>. Provided %d\n", argv[0], argc);
+    if (argc != 2) {
+        printf("Usage : %s <configuration file>. Provided %d\n", argv[0], argc);
         return -1;
     }
     
@@ -117,19 +117,24 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR MCEUROPEANENGINE
     //------------------------------------------------------
     varin instruct;
-    instruct.loop_nm = OUTDEP;    
-    instruct.timeSteps = 1;
-    instruct.requiredTolerance = 0.02;
-    instruct.underlying = 36;
-    instruct.riskFreeRate = 0.06;
-    instruct.volatility = 0.20;
-    instruct.dividendYield = 0.0;
-    instruct.strike = 40;
-    instruct.optionType = 1;
-    instruct.timeLength = 1;
-    instruct.seed = 4332 ; // 441242, 42, 13342;
-    instruct.requiredSamples = 1; // 262144; // 48128;//0;//1024;//0;
-    instruct.maxSamples = 1;
+    const char *fname = argv[1]; //"../../../../etc/mce.conf";
+    if (readFileConfigToStruct(fname, &instruct) != INSIZE) {
+        printf("WARNING: Invalid read size of configration file %s. Will use default...\n", fname);
+	instruct.loop_nm = OUTDEP;    
+	instruct.seed = 4332 ; // 441242, 42, 13342;
+	instruct.underlying = 36;
+	instruct.volatility = 0.20;
+	instruct.dividendYield = 0.0;
+	instruct.riskFreeRate = 0.06;
+	instruct.timeLength = 1;
+	instruct.strike = 40;
+	instruct.optionType = 1;
+	instruct.requiredTolerance = 0.02;
+	instruct.requiredSamples = 1; // 262144; // 48128;//0;//1024;//0;
+	instruct.timeSteps = 1;
+	instruct.maxSamples = 1;
+    }
+    
     unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
     unsigned int tot_trasnfers_in  = TOT_TRANSFERS_IN;
     unsigned int tot_trasnfers_out = TOT_TRANSFERS_OUT;
