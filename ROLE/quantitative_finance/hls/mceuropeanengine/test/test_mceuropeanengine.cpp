@@ -76,7 +76,7 @@ unsigned int simCnt;
  ******************************************************************************/
 void stepDut() {
     mceuropeanengine(
-        &node_rank, &cluster_size,
+      &node_rank, &cluster_size,
       sSHL_Uaf_Data, sUAF_Shl_Data,
       siUdp_meta, soUdp_meta,
       &s_udp_rx_ports);

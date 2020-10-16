@@ -11,7 +11,7 @@ endforeach()
 
 set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11")
 
-add_executable( uppercase_host_fwd_tb ./src/uppercase_host_fwd_tb.cpp ../../PracticalSockets/src/PracticalSockets.cpp )
-target_link_libraries( uppercase_host_fwd_tb ${LIBXML2_LIBRARIES} )
-add_executable( uppercase_host ./src/uppercase_host.cpp ../../PracticalSockets/src/PracticalSockets.cpp )
-target_link_libraries( uppercase_host ${LIBXML2_LIBRARIES} )
+add_executable( mceuropeanengine_host_fwd_tb ./src/mceuropeanengine_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+target_link_libraries( mceuropeanengine_host_fwd_tb ${LIBXML2_LIBRARIES} )
+add_executable( mceuropeanengine_host ./src/mceuropeanengine_host.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+target_link_libraries( mceuropeanengine_host ${LIBXML2_LIBRARIES} )
