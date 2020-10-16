@@ -79,7 +79,7 @@ enum EchoCtrl {
 /* Instead of the actual MCE IP, use sipmle logic that assigns values on out. For fast HLS cim/cosim
  * uncomment this, else keep it commented.
  */
-#define FAKE_MCEuropeanEngine
+//#define FAKE_MCEuropeanEngine
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
