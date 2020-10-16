@@ -84,7 +84,7 @@ bool findCharNullPos (char * str) {
 
 
   /**
-   *   Main testbench for the user-application for Uppercase on host. Server
+   *   Main testbench for the user-application for MCEuropeanEngine on host. Server
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
@@ -195,9 +195,8 @@ int main(int argc, char * argv[]) {
 	    clean_cmd = "make clean && ";
 	}
 	    
-	string str_command = "cd ../../../../ROLE/1/hls/uppercase/ && " + clean_cmd + "\
-			      INPUT_STRING=" + input_string + " " + exec_cmd + " && \
-			      cd ../../../../HOST/languages/cplusplus/build/ "; 
+	string str_command = "cd ../../../../ROLE/1/hls/uppercase/ && " + clean_cmd + " " + 
+			      exec_cmd + " && cd ../../../../HOST/languages/cplusplus/build/ "; 
 	const char *command = str_command.c_str(); 
   	cout << "Calling TB with command:" << command << endl; 
 	system(command); 

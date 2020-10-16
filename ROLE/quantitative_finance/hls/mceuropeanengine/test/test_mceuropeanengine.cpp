@@ -117,7 +117,7 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR MCEUROPEANENGINE
     //------------------------------------------------------
     varin instruct;
-    instruct.loop_nm = 1;    
+    instruct.loop_nm = OUTDEP;    
     instruct.timeSteps = 1;
     instruct.requiredTolerance = 0.02;
     instruct.underlying = 36;
@@ -225,8 +225,8 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      printf("i=%u, tot_trasnfers_in + tot_trasnfers_out=%u\n", i,tot_trasnfers_in + tot_trasnfers_out);
-      //assert(i == tot_trasnfers_in + tot_trasnfers_out);
+      //printf("i=%u, tot_trasnfers_in=%u, tot_trasnfers_out=%u\n", i,tot_trasnfers_in, tot_trasnfers_out);
+      assert(i == tot_trasnfers_out);
     }
     else {
       printf("Error No metadata received...\n");

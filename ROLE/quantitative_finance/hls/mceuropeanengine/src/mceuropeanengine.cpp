@@ -64,7 +64,13 @@ void storeWordToStruct(
     switch((*processed_word_rx)++)
       {
 	case 0:
-	  instruct->loop_nm = intToFloat.i;
+	  if ((intToFloat.i == 0) || (intToFloat.i > OUTDEP)) {
+	    printf("WARNING Invalid instruct->loop_nm = %u. Will assign %u\n", (unsigned int)intToFloat.i, OUTDEP);
+	    instruct->loop_nm = OUTDEP;
+	  }
+	  else {
+	    instruct->loop_nm = intToFloat.i;
+	  }
 	  printf("DEBUG instruct->loop_nm = %u\n", (unsigned int)instruct->loop_nm);
 	  break;
 	case 1:
@@ -274,10 +280,9 @@ void pProcPath(
       
     case MCEUROPEANENGINE_RETURN_RESULTS:
       printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS\n");
-      //for (unsigned int i = 0; i < OUTDEP; i++) {
 	if ( !sRxpToTxp_Data.full() ) {
 	  bool last;
-	  if ( (*processed_word_proc) == OUTDEP-1 )  {
+	  if ( (*processed_word_proc) == instruct->loop_nm-1 )  {
 	    last = 1;
 	    MCEuropeanEngineFSM = WAIT_FOR_META;
 	  }
@@ -400,6 +405,7 @@ void pTXPath(
         meta_out_stream.tdata.src_port = meta_in.dst_port;
 	
         netWordTx = sRxpToTxp_Data.read();
+	(*processed_word_tx)++;
 
 	// This is a normal termination of the axi stream from vitis functions
 	if(netWordTx.tlast == 1)
@@ -407,15 +413,12 @@ void pTXPath(
 	  soNrc_meta.write(meta_out_stream);
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
-	
+	else if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
 	// This is our own termination based on the custom MTU we have set in PACK_SIZE.
 	// TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
 	//       in order to have a functional bitstream for any MTU size
-	(*processed_word_tx)++;
-	if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
 	{
 	    netWordTx.tlast = 1;
-	    //dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	    soNrc_meta.write(meta_out_stream);
 	}
         soTHIS_Shl_Data.write(netWordTx);

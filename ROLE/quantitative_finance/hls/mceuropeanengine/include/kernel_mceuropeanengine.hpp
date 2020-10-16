@@ -18,7 +18,7 @@
 
 #define DtUsed double
 #define MCM_NM 8
-#define OUTDEP 1024
+#define OUTDEP 126
 
 #if DtUsed == double
 #define DtUsedInt long unsigned int
