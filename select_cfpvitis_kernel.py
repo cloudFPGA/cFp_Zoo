@@ -91,17 +91,19 @@ if ((kernel_id < 0 ) or kernel_id >= len(kernels)):
     
 new_kernel = kernels[kernel_id]
 
-md_file = "ROLE/quantitative_finance/hdl/Role.vhdl"
+role = os.getenv('roleName1')
+
+md_file = "ROLE/"+role+"/hdl/Role.vhdl"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)
 
-md_file = "ROLE/quantitative_finance/tcl/create_ip_cores.tcl"
+md_file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)
 
-md_file = "ROLE/quantitative_finance/hls/Makefile"
+md_file = "ROLE/"+role+"/hls/Makefile"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)

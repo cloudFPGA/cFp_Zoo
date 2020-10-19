@@ -48,12 +48,12 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
 - [ ] Database
 - [ ] DSP
 - [x] Quantitative Finance
-  - [x] MC European Engine 
+  - [x] [MC European Engine](./ROLE/quantitative_finance/hls/mceuropeanengine)
 - [ ] Security
 - [ ] Solver
 - [x] Vision
-  - [x] Gamma Correction
-  - [x] Harris
+  - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
+  - [x] [Harris](./ROLE/vision/hls/harris/)
 
 ### Vivado/Vitis tool support
 
@@ -100,10 +100,6 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
   sometimes it accelerates the build process of `make monolithic` if:
   execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
 
-- Editing videos for input to the Harris example:
-  
-  `ffmpeg -i The_Mast_Walk_by_Alex_Thomson.mp4 -ss 00:00:39 -t 00:00:17 -async 1 -strict -2 cut.mp4 -c copy`
-  `frame= 1025 fps= 42 q=-1.0 Lsize=   10487kB time=00:00:41.00 bitrate=2095.0kbits/s   `
-  `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
+
 
 

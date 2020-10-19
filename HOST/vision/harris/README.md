@@ -1,6 +1,3 @@
-
-
-
 ##### Harris Host Testbench
 
 The testbench of Harris is highlighted below:
@@ -83,7 +80,15 @@ runtime, on host, to select one over the other, you simply need to change in [co
 file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
+##### Harris usefull commands
 
+- Editing videos for input to the Harris example:
+  
+  `ffmpeg -i The_Mast_Walk_by_Alex_Thomson.mp4 -ss 00:00:39 -t 00:00:17 -async 1 -strict -2 cut.mp4 -c copy`
+  `frame= 1025 fps= 42 q=-1.0 Lsize=   10487kB time=00:00:41.00 bitrate=2095.0kbits/s   `
+  `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
+
+  
 ##### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:

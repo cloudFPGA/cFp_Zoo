@@ -1,7 +1,5 @@
 #### Harris Corner Detection
 
-https://xilinx.github.io/Vitis_Libraries/vision/api-reference.html#harris-corner-detection
-
 
 ![Oveview of Vitis Vision Harris Corner Detector](../../../../doc/harris_overview.png)
 
@@ -81,6 +79,23 @@ Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-s
 procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
 the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1. 
 
+###### The Harris IP
+This is only for the HLS of Harris (e.g. to check synthesizability)
+```bash
+cd cFp_Vitis/ROLE/vision/hls
+make harris # with Vivado HLS >= 2019.1
+```
+or 
+```bash
+cd cFp_Vitis/ROLE/vision/hls/harris
+make csynth # with Vivado HLS >= 2019.1
+```
+or
+```bash
+cd cFp_Vitis/ROLE/vision/hls/harris
+vivado_hls -f run_hls.tcl # with Vivado HLS >= 2019.1
+```
+
 ###### The Themisto SHELL
 ```bash
 cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
@@ -93,15 +108,4 @@ cd cFp_Vitis
 make monolithic # with Vivado HLS >= 2019.1
 ```
 
-Optional HLS only for the Harris IP (e.g. to check synthesizability)
-```bash
-cd cFp_Vitis/ROLE/vision/hls/harris_app
-make csynth # with Vivado HLS >= 2019.1
-```
-
-
-### Synopsis:
-    - make
-      or
-    - vivado_hls -f run_hls.tcl
-    
+More info for the Harris IP: https://xilinx.github.io/Vitis_Libraries/vision/api-reference.html#harris-corner-detection
