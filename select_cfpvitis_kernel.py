@@ -55,7 +55,20 @@ def replace_markdown_links(full_md_file, new_kernel):
   
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)                     
+  
+        if search("Makefile", full_md_file):
+            search_str = ".PHONY: all clean mem_test_flash "
+            if search(search_str, s):
+                s2 = ".PHONY: all clean mem_test_flash "+new_kernel.lower()+"\n"
+                replaced = replaced + 1 
 
+            search_str = "all: mem_test_flash "
+            if search(search_str, s):
+                s2 = "all: mem_test_flash "+new_kernel.lower()+"\n"
+                replaced = replaced + 1 
+                
+            new_s = s.replace(str(s), str(s2))
+            f2.write(new_s)    
                 
     print("INFO: Replaced links of " + full_md_file + " : "+ str(replaced))
     print("#################")
@@ -83,8 +96,12 @@ full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)
 
-
 md_file = "ROLE/quantitative_finance/tcl/create_ip_cores.tcl"
+full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
+print("#################\n"+full_md_file+"\n----------------")
+replace_markdown_links(full_md_file, new_kernel)
+
+md_file = "ROLE/quantitative_finance/hls/Makefile"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)
