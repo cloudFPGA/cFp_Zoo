@@ -39,22 +39,6 @@ sudo yum groupinstall 'Development Tools'
 sudo yum install cmake opencv-devel
 ```
 
-### Vitis libraries support
-
-The following Vitis accelerated libraries are supported by cFp_Vitis:
-
-- [ ] BLAS
-- [ ] Data Compression
-- [ ] Database
-- [ ] DSP
-- [x] Quantitative Finance
-  - [x] [MC European Engine](./ROLE/quantitative_finance/hls/mceuropeanengine)
-- [ ] Security
-- [ ] Solver
-- [x] Vision
-  - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
-  - [x] [Harris](./ROLE/vision/hls/harris/)
-
 ### Vivado/Vitis tool support
 
 The versions below are supported by cFp_Vitis. As of today we follow a hybrid development approach
@@ -101,5 +85,19 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
   execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
 
 
+  
+### Vitis libraries support
 
+The following Vitis accelerated libraries are supported by cFp_Vitis:
 
+- [ ] BLAS
+- [ ] Data Compression
+- [ ] Database
+- [ ] DSP
+- [x] Quantitative Finance
+  - [x] [MC European Engine](./ROLE/quantitative_finance/hls/mceuropeanengine)
+- [ ] Security
+- [ ] Solver
+- [x] Vision
+  - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
+  - [x] [Harris](./ROLE/vision/hls/harris/)
