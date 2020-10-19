@@ -1,4 +1,4 @@
-##### Harris Host Testbench
+#### Harris Host Testbench
 
 The testbench of Harris is highlighted below:
 
@@ -58,7 +58,7 @@ eog ../../../../ROLE/vision/hls/harris/test/8x8.png_fpga_points_out_frame_1.png
 ```
 
 
-##### Harris cF End-to-End Demo
+#### Harris cF End-to-End Demo
 
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
@@ -80,7 +80,7 @@ runtime, on host, to select one over the other, you simply need to change in [co
 file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
-##### Harris usefull commands
+#### Harris usefull commands
 
 - Editing videos for input to the Harris example:
   
@@ -89,7 +89,7 @@ file the define `#define NET_TYPE udp` (choose either udp or tcp).
   `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
 
   
-##### Working with ZYC2
+#### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
@@ -115,7 +115,7 @@ The following depicts an example API call, assuming that the cFp_Vitis bitfile w
 image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
 ![POST /cluster example](../../../doc/post_cluster.png)
 
-### Firewall issues
+#### Firewall issues
 
 Some firewalls may block network packets if there is not a connection to the remote machine/port.
 Hence, to get the Triangle example to work, the following commands may be necessary to be executed 
@@ -130,5 +130,5 @@ $ firewall-cmd --reload
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
 
 
-###### Acknowledgement and Copyright
+##### Acknowledgement and Copyright
 This software part of this project is built upon various open-source libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/) and [OpenCV 3](http://opencv.org/) ; please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.

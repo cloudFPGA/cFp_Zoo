@@ -1,4 +1,4 @@
-#### cFp Monte Carlo European Pricing Engine
+### cFp Monte Carlo European Pricing Engine
 
 This is the implementation of a common option pricing engine, specifically the Monte Carlo European Option pricing engine (MCEuropeanEngine), on cloudFPGA platform. 
 The MCEuropeanEngine IP is privided by the open source Xilinx ® Vitis™ Quantitative Finance library, which is a fundamental library aimed at providing a comprehensive FPGA acceleration library for quantitative finance. 

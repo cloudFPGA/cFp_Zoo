@@ -1,4 +1,4 @@
-#### cFp Harris Corner Detection
+### cFp Harris Corner Detection
 
 This is the implementation of the common Harris corner detector (Harris), on cloudFPGA platform. 
 The Harris IP is privided by the open source Xilinx ® Vitis™ Vision library, which is a fundamental library aimed at providing a comprehensive FPGA acceleration library for computer vision algorithms. 
@@ -6,7 +6,7 @@ The Harris IP is privided by the open source Xilinx ® Vitis™ Vision library, 
 ![Oveview of Vitis Vision Harris Corner Detector](../../../../doc/harris_overview.png)
 
 
-##### Repository and environment setup
+#### Repository and environment setup
 
 ```bash
 git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Vitis.git
@@ -15,7 +15,7 @@ source ./env/setenv.sh
 ```
 
 
-##### Intergration of Vitis Vision Harris with cloudFPGA
+#### Intergration of Vitis Vision Harris with cloudFPGA
 
 In the following figure it is shown how straightforward is to intergrate a function from Vitis libraries with cloudFPGA project.
 
@@ -27,7 +27,7 @@ For cFp_Vitis we are using the Themisto Shell already equipeed with a network st
 A small FSM takes care of the data casting between network and AXI streams.
 
 
-##### Harris Simulation 
+#### Harris Simulation 
 
 The testbench of Harris is highlighted below:
 
@@ -46,7 +46,7 @@ Basic files/module for the HLS TB:
   5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
 
   
-###### Harris image size 
+##### Harris image size 
 
 The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/harris/include/config.h 
 through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
@@ -54,7 +54,7 @@ provided has other dimensions, the `cv::resize` function will be used to adjust 
   
 **Note:** Remember to run `make clean` every time you change those definitions.
   
-###### Run simulation
+##### Run simulation
 
 **HLS TB**
   
@@ -75,13 +75,13 @@ make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck 
 ```
 
 
-##### Harris Synthesis
+#### Harris Synthesis
 
 Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-steps synthesis 
 procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
 the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1. 
 
-###### The Harris IP
+##### The Harris IP
 This is only for the HLS of Harris (e.g. to check synthesizability)
 ```bash
 cd cFp_Vitis/ROLE/vision/hls
@@ -98,13 +98,13 @@ cd cFp_Vitis/ROLE/vision/hls/harris
 vivado_hls -f run_hls.tcl # with Vivado HLS >= 2019.1
 ```
 
-###### The Themisto SHELL
+##### The Themisto SHELL
 ```bash
 cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
 make all # with Vivado HLS == 2017.4
 ```
 
-###### The complete cFp_Vitis
+##### The complete cFp_Vitis
 ```bash
 cd cFp_Vitis
 make monolithic # with Vivado HLS >= 2019.1
