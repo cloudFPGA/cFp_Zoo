@@ -1,5 +1,7 @@
-#### Harris Corner Detection
+#### cFp Harris Corner Detection
 
+This is the implementation of the common Harris corner detector (Harris), on cloudFPGA platform. 
+The Harris IP is privided by the open source Xilinx ® Vitis™ Vision library, which is a fundamental library aimed at providing a comprehensive FPGA acceleration library for computer vision algorithms. 
 
 ![Oveview of Vitis Vision Harris Corner Detector](../../../../doc/harris_overview.png)
 
