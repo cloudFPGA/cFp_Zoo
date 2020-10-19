@@ -336,37 +336,6 @@ set_property target_language Verilog [current_project]
 ###############################################################################
 my_puts ""
 
-# [HOWTO] # VIVADO-IP : AXI Register Slice 
-# [HOWTO] #------------------------------------------------------------------------------
-# [HOWTO] #  Signal Properties
-# [HOWTO] 
-# [HOWTO] # VIVADO-IP : AXI Register Slice 
-# [HOWTO] #------------------------------------------------------------------------------
-# [HOWTO] #  Signal Properties
-# [HOWTO] #    [Yes] : Enable TREADY
-# [HOWTO] #    [8]   : TDATA Width (bytes)
-# [HOWTO] #    [No]  : Enable TSTRB
-# [HOWTO] #    [Yes] : Enable TKEEP
-# [HOWTO] #    [Yes] : Enable TLAST
-# [HOWTO] #    [0]   : TID Width (bits)
-# [HOWTO] #    [0]   : TDEST Width (bits)
-# [HOWTO] #    [0]   : TUSER Width (bits)
-# [HOWTO] #    [No]  : Enable ACLKEN
-# [HOWTO] #------------------------------------------------------------------------------
-# [HOWTO] set ipModName "AxisRegisterSlice_64"
-# [HOWTO] set ipName    "axis_register_slice"
-# [HOWTO] set ipVendor  "xilinx.com"
-# [HOWTO] set ipLibrary "ip"
-# [HOWTO] set ipVersion "1.1"
-# [HOWTO] set ipCfgList  [ list CONFIG.TDATA_NUM_BYTES {8} \
-# [HOWTO]                       CONFIG.HAS_TKEEP {1} \
-# [HOWTO]                       CONFIG.HAS_TLAST {1} ]
-# [HOWTO] 
-# [HOWTO] set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-# [HOWTO] 
-# [HOWTO] if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
-
-
 ################################################################################
 ##
 ##  PHASE-2: Creating HLS-based cores
@@ -381,10 +350,10 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : UDP Harris Application Flash
+# IBM-HSL-IP : MCEuropeanEngine Application Flash
 #------------------------------------------------------------------------------
-set ipModName "HarrisApplication"
-set ipName    "harris"
+set ipModName "MCEuropeanEngineApplication"
+set ipName "mceuropeanengine"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
@@ -394,20 +363,6 @@ set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName
 
 if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
-
-#------------------------------------------------------------------------------  
-# IBM-HSL-IP : MemTest Flash
-#------------------------------------------------------------------------------
-set ipModName "MemTestFlash"
-set ipName    "mem_test_flash_main"
-set ipVendor  "IBM"
-set ipLibrary "hls"
-set ipVersion "1.0"
-set ipCfgList  [ list ]
-
-set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-
-if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
 
 
