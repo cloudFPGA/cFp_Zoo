@@ -331,7 +331,7 @@ void pTXPath(
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
     NetworkMetaStream meta_out_stream = NetworkMetaStream();
-    
+   
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:

@@ -44,7 +44,7 @@
 #define MCM_NM 7
 
 /** The number of execution loops, thus the depth of the output values' vector.                   */
-#define OUTDEP 20
+#define OUTDEP 10
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
