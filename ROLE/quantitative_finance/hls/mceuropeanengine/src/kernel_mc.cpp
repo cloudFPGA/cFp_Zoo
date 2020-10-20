@@ -73,8 +73,11 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
 #endif
     bool finished = 0;
 #ifdef FAKE_MCEuropeanEngine
+	DtUsed offset = underlying + volatility + dividendYield + riskFreeRate + timeLength + strike +
+	                (DtUsed)optionType + (DtUsed)seed + requiredTolerance + (DtUsed)requiredSamples + 
+	                (DtUsed)timeSteps + (DtUsed)maxSamples;
 	for (unsigned int i = 0; i < OUTDEP; i++) {
-	  out[i] = (DtUsed)i;
+	  out[i] = (DtUsed)i + offset;
 	}
 #else
     ap_uint<32> seeds[MCM_NM];

@@ -398,52 +398,52 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
---  TAF: MCEuropeanEngineApplication
---  port map (
+  TAF: MCEuropeanEngineApplication
+  port map (
 
              ------------------------------------------------------
              -- From SHELL / Clock and Reset
              ------------------------------------------------------
---             ap_clk                      => piSHL_156_25Clk,
---             ap_rst_n                    => (not piMMIO_Ly7_Rst),
---             ap_start                    => piMMIO_Ly7_En,
+             ap_clk                      => piSHL_156_25Clk,
+             ap_rst_n                    => (not piMMIO_Ly7_Rst),
+             ap_start                    => piMMIO_Ly7_En,
           
---             piFMC_ROL_rank_V         => piFMC_ROLE_rank,
+             piFMC_ROL_rank_V         => piFMC_ROLE_rank,
              --piFMC_ROL_rank_V_ap_vld  => '1',
---             piFMC_ROL_size_V         => piFMC_ROLE_size,
+             piFMC_ROL_size_V         => piFMC_ROLE_size,
              --piFMC_ROL_size_V_ap_vld  => '1',
              --------------------------------------------------------
              -- From SHELL / Tcp Data Interfaces
              --------------------------------------------------------
---             siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
---             siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
---             siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
---             siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
---             siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
+             siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
+             siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
+             siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
+             siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
+             siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
              --------------------------------------------------------
              -- To SHELL / Tcp Data Interfaces
              --------------------------------------------------------
---             soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
---             soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
---             soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
---             soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
---             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
+             soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
+             soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
+             soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
+             soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
+             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
 
---             siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
---             siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
---             siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
---             siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
---             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
+             siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
+             siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
+             siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
+             siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
+             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
 
---             soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
---             soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
---             soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
---             soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
---             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
+             soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
+             soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
+             soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
+             soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
+             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
 
---            poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
---           --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
---           );
+            poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
+           --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
+           );
 
   --end generate;
 
