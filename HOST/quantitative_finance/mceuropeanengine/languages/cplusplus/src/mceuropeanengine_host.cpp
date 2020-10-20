@@ -62,7 +62,21 @@ static void htond (double &x)
 }
 
 #ifdef PY_WRAP
-int uppercase(char *s_servAddress, char *s_servPort, char *input_str, char *output_str, bool net_type)
+void mceuropeanengine(char *s_servAddress, char *s_servPort, 
+	      DtUsedInt loop_nm,
+              DtUsedInt seed,
+              DtUsed underlying,
+              DtUsed volatility,
+              DtUsed dividendYield,
+              DtUsed riskFreeRate,
+              DtUsed timeLength,
+              DtUsed strike,
+              DtUsedInt optionType,
+              DtUsed *outarg,
+              DtUsed requiredTolerance,
+              DtUsedInt requiredSamples,
+              DtUsedInt timeSteps,
+              DtUsedInt maxSamples)
 {
 #else  
   /**
@@ -86,11 +100,11 @@ int main(int argc, char *argv[])
     assert (argc == 3);
     string s_servAddress = argv[1]; // First arg: server address
     char *s_servPort = argv[2];
-    bool net_type = NET_TYPE;
     #endif
 
     string servAddress = s_servAddress;
     unsigned short servPort;
+    bool net_type = NET_TYPE;
     if (net_type == udp) {
 	servPort = Socket::resolveService(s_servPort, "udp");
     }
@@ -132,6 +146,7 @@ int main(int argc, char *argv[])
         //-- STEP-3 : Create an input struct
         //------------------------------------------------------------------------------------
         varin instruct;
+	#ifndef PY_WRAP
 	instruct.loop_nm = OUTDEP;    
 	instruct.timeSteps = 1;
 	instruct.requiredTolerance = 0.02f;
@@ -145,6 +160,21 @@ int main(int argc, char *argv[])
 	instruct.seed = 4332 ; // 441242, 42, 13342;
 	instruct.requiredSamples = 1; // 262144; // 48128;//0;//1024;//0;
 	instruct.maxSamples = 1;
+	#else
+	instruct.loop_nm = loop_nm;    
+	instruct.timeSteps = timeSteps;
+	instruct.requiredTolerance = requiredTolerance;
+	instruct.underlying = underlying;
+	instruct.riskFreeRate = riskFreeRate;
+	instruct.volatility = volatility;
+	instruct.dividendYield = dividendYield;
+	instruct.strike = strike;
+	instruct.optionType = optionType;
+	instruct.timeLength = timeLength;
+	instruct.seed = seed;
+	instruct.requiredSamples = requiredSamples;
+	instruct.maxSamples = maxSamples;
+	#endif
         
 	assert(instruct.loop_nm > 0);
 	assert(instruct.loop_nm <= OUTDEP);
@@ -230,16 +260,18 @@ int main(int argc, char *argv[])
 
         cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
  
-	#ifdef PY_WRAP
-	char *output_string = output_str;
-	#else
+	//#ifdef PY_WRAP
+	//DtUsed *out = &outarg[0];
+	//#else
 	DtUsed *out = (DtUsed*)malloc(instruct.loop_nm*sizeof(DtUsed));
-	#endif
+	//#endif
 
 	for (unsigned int i = 0, j = 0; i < instruct.loop_nm; i++, j+=sizeof(DtUsed)) {
 	    memcpy(&out[i], &longbuf[j], sizeof(DtUsed)); 
 	}
-	
+	#ifdef PY_WRAP
+	memcpy(outarg, out, instruct.loop_nm*sizeof(DtUsed));
+	#endif
 	cout << "INFO: Received option price vector: " << endl;
 	for (unsigned int i = 0; i < instruct.loop_nm; i++) {
 	  cout << i<< " : " << out[i] << endl;
@@ -269,8 +301,9 @@ int main(int argc, char *argv[])
         cerr << e.what() << endl;
         exit(1);
     }
-
+    #ifndef PY_WRAP
     return 0;
+    #endif
 }
 
 
