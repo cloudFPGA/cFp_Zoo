@@ -61,6 +61,11 @@ workspace/
 *.dat
 env/
 dcps/
+
+# cFp_Vitis specific files
+# #---------------------
 *.png
 *.avi
 *.mp4
+mce_from_net.conf
+bitstreams
