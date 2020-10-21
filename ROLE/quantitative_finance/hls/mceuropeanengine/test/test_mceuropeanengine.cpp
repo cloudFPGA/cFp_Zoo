@@ -135,11 +135,16 @@ int main(int argc, char** argv) {
 	instruct.maxSamples = 1;
     }
     
+    if ((instruct.loop_nm == 0) || (instruct.loop_nm > OUTDEP)) {
+	    printf("WARNING tb Invalid instruct->loop_nm = %u. Will assign %u\n", (unsigned int)instruct.loop_nm, OUTDEP);
+	    instruct.loop_nm = OUTDEP;
+    }
+	  
     unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
     unsigned int tot_trasnfers_in  = TOT_TRANSFERS_IN;
     unsigned int tot_trasnfers_out = TOT_TRANSFERS_OUT;
     
-    DtUsed *out = (DtUsed*)malloc(OUTDEP * sizeof(DtUsed));
+    DtUsed *out = (DtUsed*)malloc(instruct.loop_nm * sizeof(DtUsed));
     if (!out) {
         printf("ERROR: Cannot allocate memory for output array. Aborting...\n");
         return -1;
@@ -247,8 +252,9 @@ int main(int argc, char** argv) {
       nrErr++;
     }
     writeArrayToFile("./hls_out.txt", out);
-    printf("Option price: %f\n", out[0]);
-    
+    for (unsigned int i = 0; i < instruct.loop_nm; i++) {
+	printf("Option price %u: %f\n", i, out[i]);
+    }
     //------------------------------------------------------
     //-- STEP-6 : COMPARE OUTPUT AND GOLDEN FILE STREAMS
     //------------------------------------------------------

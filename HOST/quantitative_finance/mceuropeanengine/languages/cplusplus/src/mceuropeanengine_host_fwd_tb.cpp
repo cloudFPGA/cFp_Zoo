@@ -150,7 +150,7 @@ int main(int argc, char * argv[]) {
 
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_batch = 0;
-    string clean_cmd;
+    string clean_cmd, synth_cmd;
     
     try {
       	#if NET_TYPE == udp
@@ -231,6 +231,7 @@ int main(int argc, char * argv[]) {
 	}
 	
 	// Select simulation mode, default fcsim
+	synth_cmd = " ";
 	string exec_cmd = "make fcsim -j 4";
 	string ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/fcsim/build/hls_out.txt";
 	if (argc == 3) {
@@ -239,8 +240,9 @@ int main(int argc, char * argv[]) {
 		ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/csim/build/hls_out.txt";
 	    }
 	    else if (atoi(argv[2]) == 3) {
-		exec_cmd = "make csynth && make cosim";
-		ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/sim/wrap_pc/hls_out.txt";
+		synth_cmd = "make csynth && ";
+		exec_cmd = "make cosim";     
+		ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/sim/wrapc_pc/hls_out.txt";
 	    }
 	    else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";
@@ -255,7 +257,7 @@ int main(int argc, char * argv[]) {
 	    clean_cmd = "make clean && ";
 	}
 	    
-	string str_command = "cd ../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/ && " + clean_cmd  + "\
+	string str_command = "cd ../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_FILE=./etc/mce_from_net.conf " + exec_cmd + " && \
 				  cd ../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/build/ "; 
 	const char *command = str_command.c_str(); 
@@ -271,8 +273,10 @@ int main(int argc, char * argv[]) {
 	// Reallocate longbuf for Tx size
 	free(longbuf);
 	longbuf = new char[PACK_SIZE * total_pack_tx];
+	memset(longbuf, 0, PACK_SIZE * total_pack_tx * sizeof(char));
 	DtUsed * out = new DtUsed[instruct.loop_nm];
-	
+	memset(out, 0, instruct.loop_nm * sizeof(DtUsed));
+
 	unsigned int rc = fileRead(ouf_file.c_str(), out, instruct.loop_nm);
 	if (rc < 0) {
 	    cerr << "ERROR: Cannot read file " << ouf_file << " . Aborting..."<< endl;

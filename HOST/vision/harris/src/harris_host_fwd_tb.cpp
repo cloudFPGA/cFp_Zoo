@@ -111,6 +111,7 @@ int main(int argc, char * argv[]) {
 	    imwrite("../../../../ROLE/vision/hls/harris/test/input_from_udp_to_fpga.png", frame);
 	    
 	    // Select simulation mode, default fcsim
+	    string synth_cmd = " ";
 	    string exec_cmd = "make fcsim -j 4";
 	    string ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
 	    if (argc == 3) {
@@ -119,8 +120,9 @@ int main(int argc, char * argv[]) {
 		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/csim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 3) {
-		exec_cmd = "make csynth && make cosim";
-		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/cosim/build/hls_out.jpg";
+		synth_cmd = "make csynth && ";
+		exec_cmd = "make cosim";
+		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/sim/wrapc_pc/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";
@@ -134,7 +136,7 @@ int main(int argc, char * argv[]) {
 	    if (num_frame == 1) {
 	      clean_cmd = "make clean && ";
 	    }
-	    string str_command = "cd ../../../../ROLE/vision/hls/harris/ && " + clean_cmd + "\
+	    string str_command = "cd ../../../../ROLE/vision/hls/harris/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
 				  cd ../../../../HOST/vision/harris/build/ "; 
 	    const char *command = str_command.c_str(); 

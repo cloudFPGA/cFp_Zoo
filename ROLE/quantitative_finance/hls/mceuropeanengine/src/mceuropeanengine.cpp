@@ -329,8 +329,8 @@ void pTXPath(
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
-    NetworkMeta  meta_in = NetworkMeta();
-    NetworkMetaStream meta_out_stream = NetworkMetaStream();
+    static NetworkMeta  meta_in = NetworkMeta();
+    static NetworkMetaStream meta_out_stream = NetworkMetaStream();
    
   switch(dequeueFSM)
   {
@@ -391,19 +391,6 @@ void pTXPath(
 	     dequeueFSM, *processed_word_tx);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full() && !soNrc_meta.full())
       {
-	NetworkMetaStream meta_out_stream = NetworkMetaStream();
-        meta_out_stream.tlast = 1;
-        meta_out_stream.tkeep = 0xFF; //just to be sure
-
-        meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
-        //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
-        meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
-        //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
-        //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
-        //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
-        meta_out_stream.tdata.dst_port = meta_in.src_port;
-        meta_out_stream.tdata.src_port = meta_in.dst_port;
-	
         netWordTx = sRxpToTxp_Data.read();
 	(*processed_word_tx)++;
 
