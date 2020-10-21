@@ -32,7 +32,7 @@
 #define BUF_LEN 65540              
 
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS
+  #define TB_SIM_CFP_VITIS
   
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp
@@ -44,7 +44,7 @@
 #define MCM_NM 7
 
 /** The number of execution loops, thus the depth of the output values' vector.                   */
-#define OUTDEP 10
+#define OUTDEP 2
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
@@ -54,7 +54,8 @@
 #define TOT_TRANSFERS TOT_TRANSFERS_IN + TOT_TRANSFERS_OUT
 
 #if DtUsed == double
-#define DtUsedInt long unsigned int
+//#define DtUsedInt long unsigned int
+typedef long unsigned int DtUsedInt;
 #elif DtUsed == float
 #define DtUsedInt unsigned int
 #endif

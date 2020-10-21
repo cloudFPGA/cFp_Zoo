@@ -23,7 +23,7 @@ maxSamples = 1;
     
 out = np.array([1.0,2.0]);
     
-_trieres.mceuropeanengine("localhost", "1234", loop_nm,
+out = _trieres.mceuropeanengine(loop_nm, "localhost", "1234",
                             seed,
                             underlying,
                             volatility,
@@ -32,10 +32,11 @@ _trieres.mceuropeanengine("localhost", "1234", loop_nm,
                             timeLength,
                             strike,
                             optionType,
-                            out,
                             requiredTolerance,
                             requiredSamples,
                             timeSteps,
                             maxSamples);
+
+_trieres.mceuropeanengine(loop_nm, out, seed);
 
 print(out)

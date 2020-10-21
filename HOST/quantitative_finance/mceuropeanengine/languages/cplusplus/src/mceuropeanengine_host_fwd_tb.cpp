@@ -240,7 +240,7 @@ int main(int argc, char * argv[]) {
 	    }
 	    else if (atoi(argv[2]) == 3) {
 		exec_cmd = "make csynth && make cosim";
-		ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/cosim/build/hls_out.txt";
+		ouf_file = "../../../../../../ROLE/quantitative_finance/hls/mceuropeanengine/mceuropeanengine_prj/solution1/sim/wrap_pc/hls_out.txt";
 	    }
 	    else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";

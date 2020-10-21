@@ -62,18 +62,16 @@ static void htond (double &x)
 }
 
 #ifdef PY_WRAP
-void mceuropeanengine(char *s_servAddress, char *s_servPort, 
-	      DtUsedInt loop_nm,
+void mceuropeanengine(int loop_nm, double *outarg, char *s_servAddress, char *s_servPort, 
               DtUsedInt seed,
-              DtUsed underlying,
-              DtUsed volatility,
-              DtUsed dividendYield,
-              DtUsed riskFreeRate,
-              DtUsed timeLength,
-              DtUsed strike,
+              double underlying,
+              double volatility,
+              double dividendYield,
+              double riskFreeRate,
+              double timeLength,
+              double strike,
               DtUsedInt optionType,
-              DtUsed *outarg,
-              DtUsed requiredTolerance,
+              double requiredTolerance,
               DtUsedInt requiredSamples,
               DtUsedInt timeSteps,
               DtUsedInt maxSamples)
