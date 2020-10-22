@@ -1,8 +1,8 @@
 import sys
 import os
 import numpy as np
-
-trieres_lib=os.environ['cFpRootDir'] + "/HOST/languages/python/build"
+import QuantLib as ql
+trieres_lib=os.environ['cFpRootDir'] + "HOST/quantitative_finance/mceuropeanengine/languages/python/build"
 sys.path.append(trieres_lib)
 
 import _trieres
@@ -23,7 +23,7 @@ maxSamples = 1;
     
 out = np.array([1.0,2.0]);
     
-out = _trieres.mceuropeanengine(loop_nm, "localhost", "1234",
+out = _trieres.mceuropeanengine(loop_nm, "10.12.200.92", "2718",
                             seed,
                             underlying,
                             volatility,
@@ -36,7 +36,5 @@ out = _trieres.mceuropeanengine(loop_nm, "localhost", "1234",
                             requiredSamples,
                             timeSteps,
                             maxSamples);
-
-_trieres.mceuropeanengine(loop_nm, out, seed);
 
 print(out)

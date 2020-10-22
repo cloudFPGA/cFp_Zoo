@@ -1,7 +1,7 @@
 
 /*****************************************************************************
- * @file       uppercase_host.cpp
- * @brief      Uppercase userspace application for cF (x86, ppc64).
+ * @file       mceuropeanengine_host.cpp
+ * @brief      mceuropeanengine userspace application for cF (x86, ppc64).
  *
  * @date       May 2020
  * @author     DID
@@ -9,8 +9,8 @@
  * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
  * 
- * @ingroup Uppercase
- * @addtogroup Uppercase
+ * @ingroup MCEuropeanEngine
+ * @addtogroup MCEuropeanEngine
  * \{
  *****************************************************************************/
 
@@ -52,23 +52,23 @@ void print_cFpVitis(void)
 
 
 #ifdef PY_WRAP
-void mceuropeanengine(int loop_nm, double *outarg, char *s_servAddress, char *s_servPort, 
+void mceuropeanengine(DtUsedInt loop_nm, DtUsed *outarg, char *s_servAddress, char *s_servPort, 
               DtUsedInt seed,
-              double underlying,
-              double volatility,
-              double dividendYield,
-              double riskFreeRate,
-              double timeLength,
-              double strike,
+              DtUsed underlying,
+              DtUsed volatility,
+              DtUsed dividendYield,
+              DtUsed riskFreeRate,
+              DtUsed timeLength,
+              DtUsed strike,
               DtUsedInt optionType,
-              double requiredTolerance,
+              DtUsed requiredTolerance,
               DtUsedInt requiredSamples,
               DtUsedInt timeSteps,
               DtUsedInt maxSamples)
 {
 #else  
   /**
-   *   Main testbench and user-application for Uppercase on host. Client
+   *   Main testbench and user-application for mceuropeanengine on host. Client
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char *argv[])
@@ -122,7 +122,7 @@ int main(int argc, char *argv[])
 	    UDPSocket udpsock(servPort); // NOTE: It is very important to set port here in order to call 
 	                                 // bind() in the UDPSocket constructor
 	    #else // TB_SIM_CFP_VITIS
-	    UDPSocket udpsock; // NOTE: In HOST TB the port is already binded by uppercase_host_fwd_tb.cpp
+	    UDPSocket udpsock; // NOTE: In HOST TB the port is already binded by mceuropeanengine_host_fwd_tb.cpp
 	    #endif // TB_SIM_CFP_VITIS
 	    //udpsock_p = &udpsock;
       #else // tcp
@@ -192,9 +192,9 @@ int main(int argc, char *argv[])
 	cout << "INFO: Packet size (custom MTU) : " << PACK_SIZE << endl;
 	    
 	//------------------------------------------------------
-        //-- STEP-4 : RUN UPPERCASE FROM cF (HW)
+        //-- STEP-4 : RUN mceuropeanengine FROM cF (HW)
         //------------------------------------------------------
-        clock_t start_cycle_uppercase_hw = clock();
+        clock_t start_cycle_mceuropeanengine_hw = clock();
 	    
 	//------------------------------------------------------
         //-- STEP-5.1 : TX Loop
@@ -247,19 +247,16 @@ int main(int argc, char *argv[])
         }
 
         cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
- 
-	//#ifdef PY_WRAP
-	//DtUsed *out = &outarg[0];
-	//#else
+ 	#ifndef PY_WRAP
 	DtUsed *out = (DtUsed*)malloc(instruct.loop_nm*sizeof(DtUsed));
-	//#endif
+	#else
+	DtUsed *out = outarg;
+	#endif
 
 	for (unsigned int i = 0, j = 0; i < instruct.loop_nm; i++, j+=sizeof(DtUsed)) {
 	    memcpy(&out[i], &longbuf[j], sizeof(DtUsed)); 
 	}
-	#ifdef PY_WRAP
-	memcpy(outarg, out, instruct.loop_nm*sizeof(DtUsed));
-	#endif
+
 	cout << "INFO: Received option price vector: " << endl;
 	for (unsigned int i = 0; i < instruct.loop_nm; i++) {
 	  cout << i<< " : " << out[i] << endl;
@@ -271,16 +268,19 @@ int main(int argc, char *argv[])
                     total_pack_rx / duration_rx / 1024 * 8) << endl;
         last_cycle_rx = next_cycle_rx;
 	   
-	clock_t end_cycle_uppercase_hw = next_cycle_rx;
+	clock_t end_cycle_mceuropeanengine_hw = next_cycle_rx;
 	    
-	double duration_uppercase_hw = (end_cycle_uppercase_hw - start_cycle_uppercase_hw) / 
+	double duration_mceuropeanengine_hw = (end_cycle_mceuropeanengine_hw - start_cycle_mceuropeanengine_hw) / 
 	                                (double) CLOCKS_PER_SEC;
-	cout << "INFO: HW exec. time:" << duration_uppercase_hw << " seconds" << endl;
-        cout << "INFO: Effective SPS HW:" << (1 / duration_uppercase_hw) << " \tkbps:" << 
-                (PACK_SIZE * (total_pack_rx + total_pack_rx) / duration_uppercase_hw / 1024 * 8) << endl;
+	cout << "INFO: HW exec. time:" << duration_mceuropeanengine_hw << " seconds" << endl;
+        cout << "INFO: Effective SPS HW:" << (1 / duration_mceuropeanengine_hw) << " \tkbps:" << 
+                (PACK_SIZE * (total_pack_rx + total_pack_rx) / duration_mceuropeanengine_hw / 1024 * 8) << endl;
 	    
         double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
-        cout << "INFO: Effective SPS E2E:" << (1 / duration_main) << endl;
+	#ifndef PY_WRAP
+	free(out);
+	#endif
+	cout << "INFO: Effective SPS E2E:" << (1 / duration_main) << endl;
         cout << "\\___________________________________________________________________/" << endl
 	     << endl;
   

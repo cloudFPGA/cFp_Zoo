@@ -33,3 +33,6 @@ add_custom_target(swignumpi ALL
 set_property(SOURCE ./trieres.i PROPERTY CPLUSPLUS ON)
 swig_add_module(trieres python ./trieres.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/mceuropeanengine_host.cpp)
 swig_link_libraries (trieres ${PYTHON_LIBRARIES})
+
+add_executable( mceuropeanengine_host_fwd_tb ../cplusplus/src/mceuropeanengine_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+target_link_libraries( mceuropeanengine_host_fwd_tb ${LIBXML2_LIBRARIES} )

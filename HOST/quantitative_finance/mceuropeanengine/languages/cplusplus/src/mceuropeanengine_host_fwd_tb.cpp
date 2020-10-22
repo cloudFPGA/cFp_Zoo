@@ -46,8 +46,12 @@ fileRead(const char *fname, DtUsed *buff, size_t len) {
     //keep storing values from the text file so long as data exists:
     while (ifile >> buff[i]) {
 	cout << "DEBUG fileRead: " << i << " : " <<  buff[i] << endl;
-	i++; 
+	i++;
+	if (i == len) {
+	  break;
+	}
     }
+    // We ensure the reading of len values, not less or more
     assert (i == len);
     return i;
 }
@@ -271,7 +275,7 @@ int main(int argc, char * argv[]) {
 	
 	
 	// Reallocate longbuf for Tx size
-	free(longbuf);
+	delete longbuf;
 	longbuf = new char[PACK_SIZE * total_pack_tx];
 	memset(longbuf, 0, PACK_SIZE * total_pack_tx * sizeof(char));
 	DtUsed * out = new DtUsed[instruct.loop_nm];
@@ -316,8 +320,8 @@ int main(int argc, char * argv[]) {
         cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
                (total_pack_rx + total_pack_tx)/ duration_tx / 1024 * 8) << endl;
         last_cycle_tx = next_cycle_tx; 
-        free(longbuf);
-	free(out);
+        delete longbuf;
+	delete out;
         cout << "\\___________________________________________________________________/" << endl;
         
 	#if NET_TYPE == tcp
