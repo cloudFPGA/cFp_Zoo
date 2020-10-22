@@ -43,17 +43,11 @@ void storeWordToStruct(
   NetworkWord word,
   varin *instruct,
   unsigned int *processed_word_rx,
-  unsigned int *processed_bytes_rx,
   unsigned int *struct_loaded)
 {   
   //#pragma HLS INLINE
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
-  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
-  unsigned int bytes_with_keep = 0;
-  //v = word.tdata;
   for (unsigned int i=0; i<loop_cnt; i++) {
-    //#pragma HLS PIPELINE
-    //#pragma HLS UNROLL factor=loop_cnt
     printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
     if ((word.tkeep >> i) == 0) {
       printf("WARNING: value with tkeep=0 at i=%u\n", i);
@@ -120,21 +114,14 @@ void storeWordToStruct(
 	case 12:
 	  instruct->maxSamples = intToFloat.i;
 	  printf("DEBUG instruct->maxSamples = %u\n", (unsigned int)instruct->maxSamples);
+	  *struct_loaded = 1;
+	  printf("DEBUG in storeWordToStruct: WARNING - you've loaded the struct. Will put *struct_loaded = 1.\n");
 	  break;
 	default:
 	  break;
       }
-    bytes_with_keep += bytes_per_loop;
   }
 
-  if (*processed_bytes_rx < INSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
-    (*processed_bytes_rx) += bytes_with_keep;
-  }
-  else {
-    printf("DEBUG in storeWordToStruct: WARNING - you've reached the max depth of struct. Will put *processed_bytes_rx = 0.\n");
-    *processed_bytes_rx = 0;
-    *struct_loaded = 1;
-  }
 }
 
 
@@ -159,7 +146,6 @@ void pRXPath(
 	varin                                            *instruct,
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
-	unsigned int                                     *processed_bytes_rx,
 	unsigned int                                     *struct_loaded
 	    )
 {
@@ -172,8 +158,8 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
-      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-	     *processed_word_rx, *processed_bytes_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n",
+	     *processed_word_rx);
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();
@@ -184,13 +170,13 @@ void pRXPath(
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-	     *processed_word_rx, *processed_bytes_rx);
+      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u\n",
+	     *processed_word_rx);
       if ( !siSHL_This_Data.empty() )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	storeWordToStruct(netWord, instruct, processed_word_rx, processed_bytes_rx, struct_loaded);
+	storeWordToStruct(netWord, instruct, processed_word_rx, struct_loaded);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -219,7 +205,6 @@ void pProcPath(
 	      varin                                  *instruct,
 	      DtUsed                                 *out,
 	      unsigned int                           *processed_word_rx,
-	      unsigned int                           *processed_bytes_rx,
 	      unsigned int                           *processed_word_proc,
 	      unsigned int                           *struct_loaded
 	      )
@@ -241,7 +226,6 @@ void pProcPath(
       {
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
-	*processed_bytes_rx = 0;
 	*struct_loaded = 0;
 	*processed_word_proc= 0;
 	finished = 0;
@@ -456,10 +440,9 @@ void mceuropeanengine(
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
-  static unsigned int processed_word_rx;
-  static unsigned int processed_bytes_rx;
-  static unsigned int processed_word_tx;
-  static unsigned int processed_word_proc;
+  static unsigned int processed_word_rx = 0;
+  static unsigned int processed_word_tx = 0;
+  static unsigned int processed_word_proc = 0;
   static unsigned int struct_loaded = 0;
   static varin instruct;
   static DtUsed out[OUTDEP];
@@ -505,7 +488,6 @@ void mceuropeanengine(
 			   &instruct,
 			   meta_tmp,
 			   &processed_word_rx,
-			   &processed_bytes_rx,
 			   &struct_loaded);
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
@@ -513,7 +495,6 @@ void mceuropeanengine(
 		           &instruct,
 			   out,
 		           &processed_word_rx,
-			   &processed_bytes_rx,
 			   &processed_word_proc,
 		           &struct_loaded); 
 
@@ -536,7 +517,6 @@ void mceuropeanengine(
 	&instruct,
         meta_tmp, 
         &processed_word_rx,
-	&processed_bytes_rx,
 	&struct_loaded);
   
   
@@ -544,7 +524,6 @@ void mceuropeanengine(
 	    &instruct,
 	    out,
 	    &processed_word_rx,
-	    &processed_bytes_rx,
 	    &processed_word_proc,
 	    &struct_loaded);  
  
