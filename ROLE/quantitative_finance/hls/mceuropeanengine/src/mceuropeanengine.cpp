@@ -222,13 +222,13 @@ void pProcPath(
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
+      *processed_word_proc = 0;
+      finished = 0;
       if ( (*struct_loaded) == 1 )
       {
         MCEuropeanEngineFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
 	*struct_loaded = 0;
-	*processed_word_proc= 0;
-	finished = 0;
       }
       break;
 
@@ -257,6 +257,7 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_WAIT\n");
       {
 	if (finished) {
+	  finished = 0;
 	  MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
 	}
       }
@@ -279,7 +280,6 @@ void pProcPath(
 	  newWord = NetworkWord((ap_uint<64>)intToFloat.i, keep, last); 
 	  sRxpToTxp_Data.write(newWord);
 	}
-      //}
       break;
   } // end switch
 }

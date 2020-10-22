@@ -53,6 +53,7 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
 #pragma HLS INTERFACE s_axilite port = optionType bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 */
+#pragma HLS inline off
 #pragma HLS data_pack variable = out
 #ifndef __SYNTHESIS__
 #ifdef XF_DEBUG

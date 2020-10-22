@@ -46,20 +46,10 @@ void print_cFpVitis(void)
 	cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
 	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-	cout <<  "                                                          " << endl;
+	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
                                                                                                     
 
-
-static void htond (double &x)
-{
-  int *Double_Overlay; 
-  int Holding_Buffer; 
-  Double_Overlay = (int *) &x; 
-  Holding_Buffer = Double_Overlay [0]; 
-  Double_Overlay [0] = htonl (Double_Overlay [1]); 
-  Double_Overlay [1] = htonl (Holding_Buffer); 
-}
 
 #ifdef PY_WRAP
 void mceuropeanengine(int loop_nm, double *outarg, char *s_servAddress, char *s_servPort, 
