@@ -24,6 +24,7 @@
 #include <array>
 #include <sys/stat.h>
 #include <fstream>
+#include <limits>
 #include "../../../../../PracticalSockets/src/PracticalSockets.h"
 #include "../include/config.h"
 
@@ -43,8 +44,18 @@ fileRead(const char *fname, DtUsed *buff, size_t len) {
     }
 
     unsigned int i = 0;
+    string text;
     //keep storing values from the text file so long as data exists:
-    while (ifile >> buff[i]) {
+    while (ifile >> text) {
+	if((text == "Inf") || (text == "-Inf"))  {
+	  buff[i] = (DtUsed)std::numeric_limits<double>::infinity();
+	}
+	else if((text == "nan") || (text == "-nan"))  {
+	  buff[i] = (DtUsed)std::numeric_limits<double>::quiet_NaN();
+	}
+	else {
+	  buff[i] = (DtUsed)atof(text.c_str());
+	}
 	cout << "DEBUG fileRead: " << i << " : " <<  buff[i] << endl;
 	i++;
 	if (i == len) {
@@ -280,7 +291,6 @@ int main(int argc, char * argv[]) {
 	memset(longbuf, 0, PACK_SIZE * total_pack_tx * sizeof(char));
 	DtUsed * out = new DtUsed[instruct.loop_nm];
 	memset(out, 0, instruct.loop_nm * sizeof(DtUsed));
-
 	unsigned int rc = fileRead(ouf_file.c_str(), out, instruct.loop_nm);
 	if (rc < 0) {
 	    cerr << "ERROR: Cannot read file " << ouf_file << " . Aborting..."<< endl;

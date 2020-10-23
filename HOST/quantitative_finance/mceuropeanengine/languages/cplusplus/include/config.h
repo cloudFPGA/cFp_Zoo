@@ -1,17 +1,17 @@
 /*****************************************************************************
  * @file       config.h
- * @brief      The configuration of a Uppercase Example application (UDP or TCP)
+ * @brief      The configuration of a MCEuropeanEngine application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
- * @date       June 2020
+ * @date       September 2020
  *----------------------------------------------------------------------------
  *
  * @details    This file contains definitios used both in HLS and host code of 
- *             cFp Vitis Uppercase application example.
+ *             cFp Vitis MCEuropeanEngine application.
  *
  *----------------------------------------------------------------------------
  * 
- * @ingroup Uppercase
- * @addtogroup Uppercase
+ * @ingroup MCEuropeanEngine
+ * @addtogroup MCEuropeanEngine
  * \{
  *****************************************************************************/
 
@@ -49,8 +49,8 @@
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
-#define TOT_TRANSFERS_IN (CEIL(INSIZE, PACK_SIZE));
-#define TOT_TRANSFERS_OUT (CEIL(OUTSIZE, PACK_SIZE));
+#define TOT_TRANSFERS_IN (CEIL(INSIZE, PACK_SIZE))
+#define TOT_TRANSFERS_OUT (CEIL(OUTSIZE, PACK_SIZE))
 #define TOT_TRANSFERS TOT_TRANSFERS_IN + TOT_TRANSFERS_OUT
 
 #if DtUsed == double

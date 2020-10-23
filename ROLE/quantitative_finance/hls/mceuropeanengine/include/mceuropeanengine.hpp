@@ -39,7 +39,17 @@
 using namespace hls;
 
 
+/* Instead of the actual MCE IP, use sipmle logic that assigns values on out. For fast HLS cim/cosim
+ * uncomment this, else keep it commented.
+ */
+#define FAKE_MCEuropeanEngine
 
+#define DEFAULT_TX_PORT 2718
+#define DEFAULT_RX_PORT 2718
+
+//#define USE_HLSLIB_DATAFLOW
+
+//#define USE_HLSLIB_STREAM
 
 #if DtUsed == double
 #define INPUT_PTR_WIDTH 64
@@ -69,15 +79,6 @@ using namespace hls;
 
 #define PacketFsmType uint8_t
 
-/* Instead of the actual MCE IP, use sipmle logic that assigns values on out. For fast HLS cim/cosim
- * uncomment this, else keep it commented.
- */
-#define FAKE_MCEuropeanEngine
-
-#define DEFAULT_TX_PORT 2718
-#define DEFAULT_RX_PORT 2718
-
-//#define USE_HLSLIB_DATAFLOW
 
 void mceuropeanengine(
 

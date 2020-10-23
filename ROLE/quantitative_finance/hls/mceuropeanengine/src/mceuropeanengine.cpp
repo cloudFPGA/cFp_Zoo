@@ -20,7 +20,7 @@
 #include "../../../../../HOST/quantitative_finance/mceuropeanengine/languages/cplusplus/include/config.h"
 #include "../include/mceuropeanengine.hpp"
 
-#ifdef USE_HLSLIB_DATAFLOW
+#if defined USE_HLSLIB_DATAFLOW || defined USE_HLSLIB_STREAM
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
 #include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
 #endif

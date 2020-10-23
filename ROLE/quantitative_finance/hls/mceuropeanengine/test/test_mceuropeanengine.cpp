@@ -2,7 +2,7 @@
  * @file       test_mceuropeanengine.cpp
  * @brief      Testbench for MCEuropeanEngine
  *
- * @date April 2020
+ * @date September 2020
  * @authors    FAB, WEI, NGL, DID
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
