@@ -139,10 +139,15 @@ int main(int argc, char** argv) {
 	    printf("WARNING tb Invalid instruct->loop_nm = %u. Will assign %u\n", (unsigned int)instruct.loop_nm, OUTDEP);
 	    instruct.loop_nm = OUTDEP;
     }
-	  
+
     unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
+    
+    // input size is known at compile/synthesis time
     unsigned int tot_trasnfers_in  = TOT_TRANSFERS_IN;
-    unsigned int tot_trasnfers_out = TOT_TRANSFERS_OUT;
+    
+    // output size is not known at compile/synthesis time, since it is related to loop_nm
+    unsigned int outsize = instruct.loop_nm * sizeof(DtUsed);
+    unsigned int tot_trasnfers_out = CEIL(outsize, PACK_SIZE);
     
     DtUsed *out = (DtUsed*)malloc(instruct.loop_nm * sizeof(DtUsed));
     if (!out) {

@@ -39,14 +39,7 @@
 using namespace hls;
 
 
-/********************************************
- * SHELL/MMIO/EchoCtrl - Config Register
- ********************************************/
-enum EchoCtrl {
-	ECHO_PATH_THRU	= 0,
-	ECHO_STORE_FWD	= 1,
-	ECHO_OFF	= 2
-};
+
 
 #if DtUsed == double
 #define INPUT_PTR_WIDTH 64

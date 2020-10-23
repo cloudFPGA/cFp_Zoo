@@ -44,7 +44,7 @@
 #define MCM_NM 7
 
 /** The number of execution loops, thus the depth of the output values' vector.                   */
-#define OUTDEP 5
+#define OUTDEP 1024
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 
@@ -65,6 +65,7 @@ typedef long unsigned int DtUsedInt;
 
 //---------------------------------  USER DEFINED STRUCTS ------------------------------------------
 
+/** The struct holding the input parameters of MCEuropeanEngine                                   */
 struct varin {
   DtUsedInt loop_nm;
   DtUsedInt seed;
@@ -81,6 +82,7 @@ struct varin {
   DtUsedInt maxSamples;
 };
 
+/** A union to convert between DtUsed and DtUsedInt                                               */
 union intToFloatUnion{
     DtUsed f;
     DtUsedInt i;

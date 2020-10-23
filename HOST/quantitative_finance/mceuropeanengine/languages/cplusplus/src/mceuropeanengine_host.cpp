@@ -227,6 +227,7 @@ int main(int argc, char *argv[])
 	unsigned int receiving_now = PACK_SIZE;
         cout << "INFO: Expecting length of packs:" << total_pack_rx << endl;
         char * longbuf = new char[PACK_SIZE * total_pack_rx];
+	memset(longbuf, 0, PACK_SIZE * total_pack_rx);
         for (unsigned int i = 0; i < instruct.loop_nm*sizeof(DtUsed); ) {
 	    //cout << "DEBUG: " << i << endl;
             if ( i == total_pack_rx - 1 ) {
@@ -237,13 +238,14 @@ int main(int argc, char *argv[])
 	    #else
 		recvMsgSize = tcpsock.recv(buffer, BUF_LEN);
 	    #endif
+            memcpy( & longbuf[i], buffer, recvMsgSize);
+	    i += recvMsgSize;
 	    if (recvMsgSize != receiving_now) {
 		cerr << "WARNING: Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
-			receiving_now << endl;
+			receiving_now + " . Breaking Rx..."<< endl;
+			break;
             }
-            memcpy( & longbuf[i], buffer, recvMsgSize);
 	    //cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
-	    i += recvMsgSize;
         }
 
         cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;

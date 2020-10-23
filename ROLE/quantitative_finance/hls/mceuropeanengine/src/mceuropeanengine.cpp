@@ -202,6 +202,8 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
+	      stream<NetworkMetaStream>              &sRxtoTx_Meta,
+	      NetworkMetaStream                      meta_tmp,
 	      varin                                  *instruct,
 	      DtUsed                                 *out,
 	      unsigned int                           *processed_word_rx,
@@ -264,8 +266,12 @@ void pProcPath(
       break;
       
     case MCEUROPEANENGINE_RETURN_RESULTS:
-      printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS\n");
-	if ( !sRxpToTxp_Data.full() ) {
+      printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS, *processed_word_proc=%u\n", *processed_word_proc);
+	if ( !sRxpToTxp_Data.full() && !sRxtoTx_Meta.full()) {
+	  if ((((*processed_word_proc)+1)*sizeof(DtUsed)) % PACK_SIZE == 0) {
+	    printf("DEBUG in pProcPath: New packet will be needed. Writting to sRxtoTx_Meta.\n");
+	    sRxtoTx_Meta.write(meta_tmp);
+	  }
 	  bool last;
 	  if ( (*processed_word_proc) == instruct->loop_nm-1 )  {
 	    last = 1;
@@ -381,12 +387,13 @@ void pTXPath(
 	{
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
-	else if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
+	else if (((*processed_word_tx)*sizeof(DtUsed)) % PACK_SIZE == 0) 
 	// This is our own termination based on the custom MTU we have set in PACK_SIZE.
 	// TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
 	//       in order to have a functional bitstream for any MTU size
 	{
 	    netWordTx.tlast = 1;
+	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
         soTHIS_Shl_Data.write(netWordTx);
       }
@@ -433,7 +440,7 @@ void mceuropeanengine(
 
 
   //-- LOCAL VARIABLES ------------------------------------------------------
-  NetworkMetaStream  meta_tmp = NetworkMetaStream();
+  static NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
   static unsigned int processed_word_rx = 0;
@@ -488,6 +495,8 @@ void mceuropeanengine(
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
+			   sRxtoTx_Meta,
+			   meta_tmp,
 		           &instruct,
 			   out,
 		           &processed_word_rx,
@@ -517,6 +526,8 @@ void mceuropeanengine(
   
   
   pProcPath(sRxpToTxp_Data,
+	    sRxtoTx_Meta,
+	    meta_tmp,
 	    &instruct,
 	    out,
 	    &processed_word_rx,
