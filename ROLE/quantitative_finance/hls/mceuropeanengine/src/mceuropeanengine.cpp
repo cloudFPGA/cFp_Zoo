@@ -313,8 +313,8 @@ void pTXPath(
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
-    static NetworkMeta  meta_in = NetworkMeta();
-    static NetworkMetaStream meta_out_stream = NetworkMetaStream();
+    NetworkMeta meta_in = NetworkMeta();
+    NetworkMetaStream meta_out_stream = NetworkMetaStream();
    
   switch(dequeueFSM)
   {
@@ -357,23 +357,21 @@ void pTXPath(
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
 	
+	soNrc_meta.write(meta_out_stream);
+	
 	(*processed_word_tx)++;
 	
         if(netWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
         }
-        else {
-	  // Just make sure that one output packet will be sent if it is only one 64-bit packet
-	  soNrc_meta.write(meta_out_stream);
-	}
       }
       break;
 
     case PROCESSING_PACKET: 
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
 	     dequeueFSM, *processed_word_tx);
-      if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full() && !soNrc_meta.full())
+      if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         netWordTx = sRxpToTxp_Data.read();
 	(*processed_word_tx)++;
@@ -381,7 +379,6 @@ void pTXPath(
 	// This is a normal termination of the axi stream from vitis functions
 	if(netWordTx.tlast == 1)
 	{
-	  soNrc_meta.write(meta_out_stream);
 	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
 	}
 	else if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
@@ -390,7 +387,6 @@ void pTXPath(
 	//       in order to have a functional bitstream for any MTU size
 	{
 	    netWordTx.tlast = 1;
-	    soNrc_meta.write(meta_out_stream);
 	}
         soTHIS_Shl_Data.write(netWordTx);
       }
