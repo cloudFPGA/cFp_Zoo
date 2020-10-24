@@ -225,7 +225,7 @@ void pProcPath(
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
       *processed_word_proc = 0;
-      finished = 0;
+      finished = false;
       if ( (*struct_loaded) == 1 )
       {
         MCEuropeanEngineFSM = PROCESSING_PACKET;
@@ -238,7 +238,7 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       //if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
-	finished = kernel_mc(instruct->loop_nm,
+	kernel_mc(instruct->loop_nm,
                            instruct->seed,
                            instruct->underlying,
                            instruct->volatility,
@@ -251,7 +251,8 @@ void pProcPath(
                            instruct->requiredTolerance,
                            instruct->requiredSamples,
                            instruct->timeSteps,
-                           instruct->maxSamples);
+                           instruct->maxSamples,
+			   &finished);
 	MCEuropeanEngineFSM = PROCESSING_WAIT;
       }
       break;
@@ -259,7 +260,7 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_WAIT\n");
       {
 	if (finished) {
-	  finished = 0;
+	  finished = false;
 	  MCEuropeanEngineFSM = MCEUROPEANENGINE_RETURN_RESULTS;
 	}
       }

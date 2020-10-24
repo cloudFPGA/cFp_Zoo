@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 // top header file
+#include <limits>
 #include "../../common/include/common.hpp"
 #include "../include/kernel_mceuropeanengine.hpp"
 
 #include "xf_fintech/mc_engine.hpp"
 #include "xf_fintech/rng.hpp"
 
-extern "C" bool kernel_mc(DtUsedInt loop_nm,
+extern "C" void kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
                           DtUsed underlying,
                           DtUsed volatility,
@@ -33,7 +34,8 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
                           DtUsed requiredTolerance,
                           DtUsedInt requiredSamples,
                           DtUsedInt timeSteps,
-                          DtUsedInt maxSamples) {
+                          DtUsedInt maxSamples,
+			  bool *finished) {
 /*
 #pragma HLS INTERFACE m_axi port = out bundle = gmem latency = 125
 
@@ -53,7 +55,7 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
 #pragma HLS INTERFACE s_axilite port = optionType bundle = control
 #pragma HLS INTERFACE s_axilite port = return bundle = control
 */
-#pragma HLS inline off
+//#pragma HLS inline off
 #pragma HLS data_pack variable = out
 #ifndef __SYNTHESIS__
 #ifdef XF_DEBUG
@@ -72,8 +74,16 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
     std::cout << "maxSamples=" << maxSamples << std::endl;
 #endif
 #endif
-    bool finished = 0;
-#ifdef FAKE_MCEuropeanEngine
+	*finished = false;
+	
+	/* Since the kernel is returning an output array and not a stream, so that we can identify
+	 * when this will be full, we assign a NaN value on the last element of the array. This
+	 * will be our flag for the termination of the kernel, since this region is in dataflow.
+	 * WARNING: If by chance, the kernel will return NaN, the external FSM will be blocked!
+	 */
+	out[loop_nm-1] = (DtUsed)std::numeric_limits<double>::quiet_NaN();
+
+	#ifdef FAKE_MCEuropeanEngine
 	DtUsed offset = underlying + volatility + dividendYield + riskFreeRate + timeLength + strike +
 	                (DtUsed)optionType + (DtUsed)seed + requiredTolerance + (DtUsed)requiredSamples + 
 	                (DtUsed)timeSteps + (DtUsed)maxSamples;
@@ -81,16 +91,17 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
 	  out[i] = (DtUsed)i + offset;
 	}
 #else
-    ap_uint<32> seeds[MCM_NM];
-    for (int i = 0; i < MCM_NM; ++i) {
-        seeds[i] = seed + i * 1000;
-    }
-    for (int i = 0; i < loop_nm; ++i) {
-        xf::fintech::MCEuropeanEngine<DtUsed, MCM_NM>(underlying, volatility, dividendYield, riskFreeRate, timeLength,
+	ap_uint<32> seeds[MCM_NM];
+	for (int i = 0; i < MCM_NM; ++i) {
+	    seeds[i] = seed + i * 1000;
+	}
+	for (int i = 0; i < loop_nm; ++i) {
+	    xf::fintech::MCEuropeanEngine<DtUsed, MCM_NM>(underlying, volatility, dividendYield, riskFreeRate, timeLength,
                                                       strike, optionType, seeds, &out[i], requiredTolerance,
                                                       requiredSamples, timeSteps, maxSamples);
     }
 #endif
-finished = 1;
-return finished;
+	if (out[loop_nm-1] != (DtUsed)std::numeric_limits<double>::quiet_NaN()) {
+	    *finished = true;
+	}
 }

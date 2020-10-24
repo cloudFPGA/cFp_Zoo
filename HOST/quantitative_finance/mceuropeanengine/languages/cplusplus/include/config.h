@@ -32,7 +32,7 @@
 #define BUF_LEN 65540              
 
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS
+  #define TB_SIM_CFP_VITIS
   
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp
@@ -41,7 +41,7 @@
 #define DtUsed double
 
 /** The number of MCEuropean Engines running in parallel with differnet seed.                     */
-#define MCM_NM 7
+#define MCM_NM 6
 
 /** The number of execution loops, thus the depth of the output values' vector.                   */
 #define OUTDEP 1024

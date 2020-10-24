@@ -16,7 +16,7 @@
 #ifndef KERNEL_MCEUROPEANENGINHE_H
 #define KERNEL_MCEUROPEANENGINHE_H
 
-extern "C" bool kernel_mc(DtUsedInt loop_nm,
+extern "C" void kernel_mc(DtUsedInt loop_nm,
                           DtUsedInt seed,
                           DtUsed    underlying,
                           DtUsed    volatility,
@@ -29,5 +29,6 @@ extern "C" bool kernel_mc(DtUsedInt loop_nm,
                           DtUsed    requiredTolerance,
                           DtUsedInt requiredSamples,
                           DtUsedInt timeSteps,
-                          DtUsedInt maxSamples);
+                          DtUsedInt maxSamples,
+			  bool *finished);
 #endif
