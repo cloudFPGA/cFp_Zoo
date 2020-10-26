@@ -39,7 +39,7 @@ fileRead(const char *fname, DtUsed *buff, size_t len) {
 
     //check to see that the file was opened correctly:
     if (!ifile.is_open()) {
-        std::cerr << "There was a problem opening the input file!\n";
+        std::cerr << "ERROR: There was a problem opening the input file " + string(fname)+ " \n";
         return -EIO;
     }
 

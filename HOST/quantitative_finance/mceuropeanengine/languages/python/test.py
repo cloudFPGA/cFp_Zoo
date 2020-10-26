@@ -7,7 +7,7 @@ sys.path.append(trieres_lib)
 
 import _trieres
 
-loop_nm = 130;    
+loop_nm = 1024;    
 seed = 4332;
 underlying = 36;
 volatility = 0.20;

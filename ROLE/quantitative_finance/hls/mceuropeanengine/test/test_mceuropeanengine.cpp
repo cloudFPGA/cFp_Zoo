@@ -140,7 +140,8 @@ int main(int argc, char** argv) {
 	    instruct.loop_nm = OUTDEP;
     }
 
-    unsigned int sim_time = MIN_RX_LOOPS + MIN_TX_LOOPS + 10;
+    // At least MIN_RX_LOOPS for loading data and 2*MIN_TX_LOOPS for processing data and Tx them
+    unsigned int sim_time = MIN_RX_LOOPS + 2*MIN_TX_LOOPS + 10;
     
     // input size is known at compile/synthesis time
     unsigned int tot_trasnfers_in  = TOT_TRANSFERS_IN;
@@ -163,6 +164,7 @@ int main(int argc, char** argv) {
       nrErr++;
     }
 
+  for (unsigned int tb_loop = 0; tb_loop < 1; tb_loop++) { 
     //------------------------------------------------------
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAM
     //------------------------------------------------------
@@ -273,7 +275,9 @@ int main(int argc, char** argv) {
     }
 
     nrErr += rc1;
-
+ 
+  } // end for tb_loop
+  
     printf("#####################################################\n");
     if (nrErr) 
     {
