@@ -142,7 +142,6 @@ void storeWordToStruct(
 void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
-	Stream<NetworkMetaStream, TOT_TRANSFERS>                        &sRxtoTx_Meta,
 	varin                                            *instruct,
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
@@ -160,12 +159,10 @@ void pRXPath(
     case WAIT_FOR_META: 
       printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u\n",
 	     *processed_word_rx);
-      if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
+      if ( !siNrc_meta.empty())
       {
         meta_tmp = siNrc_meta.read();
         meta_tmp.tlast = 1; //just to be sure...
-	//printf("DEBUG in pRXPath: New packet arrived. Writting to sRxtoTx_Meta.\n");
-        //sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
       break;
@@ -203,7 +200,7 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
-	      Stream<NetworkMetaStream, TOT_TRANSFERS>              &sRxtoTx_Meta,
+	      stream<NetworkMetaStream>              &sRxtoTx_Meta,
 	      NetworkMetaStream                      meta_tmp,
 	      varin                                  *instruct,
 	      DtUsed                                 *out,
@@ -310,7 +307,7 @@ void pTXPath(
         stream<NetworkWord>         &soTHIS_Shl_Data,
         stream<NetworkMetaStream>   &soNrc_meta,
 	stream<NetworkWord>         &sRxpToTxp_Data,
-	Stream<NetworkMetaStream, TOT_TRANSFERS>   &sRxtoTx_Meta,
+	stream<NetworkMetaStream>   &sRxtoTx_Meta,
         unsigned int                *processed_word_tx, 
         ap_uint<32>                 *pi_rank,
         ap_uint<32>                 *pi_size
@@ -444,7 +441,7 @@ void mceuropeanengine(
   //-- LOCAL VARIABLES ------------------------------------------------------
   static NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
-  static Stream<NetworkMetaStream, TOT_TRANSFERS> sRxtoTx_Meta("sRxtoTx_Meta");
+  static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
   static unsigned int processed_word_rx = 0;
   static unsigned int processed_word_tx = 0;
   static unsigned int processed_word_proc = 0;
@@ -457,7 +454,7 @@ void mceuropeanengine(
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
-//#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
+#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=MCEuropeanEngineFSM
@@ -489,7 +486,6 @@ void mceuropeanengine(
   HLSLIB_DATAFLOW_FUNCTION(pRXPath, 
 			   siSHL_This_Data,
 			   siNrc_meta,
-			   sRxtoTx_Meta,
 			   &instruct,
 			   meta_tmp,
 			   &processed_word_rx,
@@ -520,7 +516,6 @@ void mceuropeanengine(
  pRXPath(
 	siSHL_This_Data,
         siNrc_meta,
-	sRxtoTx_Meta,
 	&instruct,
         meta_tmp, 
         &processed_word_rx,

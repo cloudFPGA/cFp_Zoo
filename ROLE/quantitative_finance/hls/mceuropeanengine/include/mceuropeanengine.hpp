@@ -49,7 +49,7 @@ using namespace hls;
 
 //#define USE_HLSLIB_DATAFLOW
 
-#define USE_HLSLIB_STREAM
+//#define USE_HLSLIB_STREAM
 
 #if DtUsed == double
 #define INPUT_PTR_WIDTH 64
