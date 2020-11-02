@@ -215,9 +215,9 @@ void pProcPath(
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
     intToFloatUnion intToFloat;
-    static bool finished = 0;
+    static bool finished = false;
     #pragma HLS reset variable=finished
-
+    
   switch(MCEuropeanEngineFSM)
   {
     case WAIT_FOR_META: 
@@ -267,7 +267,7 @@ void pProcPath(
     case MCEUROPEANENGINE_RETURN_RESULTS:
       printf("DEBUG in pProcPath: MCEUROPEANENGINE_RETURN_RESULTS, *processed_word_proc=%u\n", *processed_word_proc);
 	if ( !sRxpToTxp_Data.full() && !sRxtoTx_Meta.full()) {
-	  if (((((*processed_word_proc)+1)*sizeof(DtUsed)) % PACK_SIZE == 0) || ( (*processed_word_proc) == instruct->loop_nm-1 )){
+	  if (((((*processed_word_proc)+PACK_SIZE)*sizeof(DtUsed)) % PACK_SIZE == 0)){
 	    printf("DEBUG in pProcPath: New packet will be needed. Writting to sRxtoTx_Meta.\n");
 	    sRxtoTx_Meta.write(meta_tmp);
 	  }
@@ -455,6 +455,7 @@ void mceuropeanengine(
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
 #pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
+//#pragma HLS stream variable=sRxpToTxp_Data depth=2048
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=MCEuropeanEngineFSM
