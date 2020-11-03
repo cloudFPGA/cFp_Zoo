@@ -3,6 +3,7 @@ import pathlib
 import os
 import shutil
 from re import search
+import sys
 
 
 
@@ -83,6 +84,30 @@ kernels = ["Harris", "MCEuropeanEngine"]
 print("Available kernels:")
 print('\n'.join(kernels)) 
 
+
+
+# Count the arguments
+arguments = len(sys.argv) - 1
+
+print(sys.argv[0])
+print(sys.argv[1])
+print(sys.argv[2])
+print(sys.argv[3])
+ 
+if arguments != 3:
+  print("Error: Invalid number of arguments. Expected 3 but provided " + str(arguments) + ". Aborting...")
+  exit(-1)
+
+for x in kernels:
+  if (x == sys.argv[3]):
+    kernel_id = 0
+    print(x)
+    break
+
+#  print("Error: Invalid kernel " + sys.argv[3] + ". Aborting...")
+#  exit(-1)
+
+exit(-1)
 kernel_id_str = input("Select a kernel using index 0-"+str(len(kernels)-1)+":")   # Python 3
 kernel_id = int(kernel_id_str)
 if ((kernel_id < 0 ) or kernel_id >= len(kernels)):
@@ -107,3 +132,4 @@ md_file = "ROLE/"+role+"/hls/Makefile"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
 replace_markdown_links(full_md_file, new_kernel)
+
