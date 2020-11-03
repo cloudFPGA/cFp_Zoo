@@ -84,13 +84,14 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
 	out[loop_nm-1] = (DtUsed)std::numeric_limits<double>::quiet_NaN();
 
 	#ifdef FAKE_MCEuropeanEngine
-	DtUsed offset = underlying + volatility + dividendYield + riskFreeRate + timeLength + strike +
-	                (DtUsed)optionType + (DtUsed)seed + requiredTolerance + (DtUsed)requiredSamples + 
-	                (DtUsed)timeSteps + (DtUsed)maxSamples;
+	DtUsed offset = (DtUsed)loop_nm + underlying + volatility + dividendYield + riskFreeRate +
+			timeLength + strike + (DtUsed)optionType + (DtUsed)seed + 
+			requiredTolerance + (DtUsed)requiredSamples + (DtUsed)timeSteps + 
+			(DtUsed)maxSamples;
 	for (unsigned int i = 0; i < OUTDEP; i++) {
 	  out[i] = (DtUsed)i + offset;
 	}
-#else
+	#else
 	ap_uint<32> seeds[MCM_NM];
 	for (int i = 0; i < MCM_NM; ++i) {
 	    seeds[i] = seed + i * 1000;
@@ -99,8 +100,8 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
 	    xf::fintech::MCEuropeanEngine<DtUsed, MCM_NM>(underlying, volatility, dividendYield, riskFreeRate, timeLength,
                                                       strike, optionType, seeds, &out[i], requiredTolerance,
                                                       requiredSamples, timeSteps, maxSamples);
-    }
-#endif
+	}
+	#endif
 	if (out[loop_nm-1] != (DtUsed)std::numeric_limits<double>::quiet_NaN()) {
 	    *finished = true;
 	}

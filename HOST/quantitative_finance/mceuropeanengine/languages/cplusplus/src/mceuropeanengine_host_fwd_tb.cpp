@@ -56,7 +56,7 @@ fileRead(const char *fname, DtUsed *buff, size_t len) {
 	else {
 	  buff[i] = (DtUsed)atof(text.c_str());
 	}
-	cout << "DEBUG fileRead: " << i << " : " <<  buff[i] << endl;
+	//cout << "DEBUG fileRead: " << i << " : " <<  buff[i] << endl;
 	i++;
 	if (i == len) {
 	  break;
@@ -168,16 +168,18 @@ int main(int argc, char * argv[]) {
     string clean_cmd, synth_cmd;
     
     try {
+        cout << " ___________________________________________________________________ " << endl;
+        cout << "/                                                                   \\" << endl;
+	cout << "INFO: Proxy tb batch # " << ++num_batch << endl;   
       	#if NET_TYPE == udp
         UDPSocket sock(servPort);
 	#else
-	TCPServerSocket servSock(servPort);     // Server Socket object
-	TCPSocket *servsock = servSock.accept();     // Wait for a client to connect
+	TCPServerSocket servSock(servPort);	// Server Socket object
+	TCPSocket *servsock = servSock.accept();// Wait for a client to connect
 	#endif
-        char buffer[BUF_LEN]; // Buffer for echo string
-        unsigned int recvMsgSize; // Size of received message
-        string sourceAddress; // Address of datagram source
-        unsigned short sourcePort; // Port of datagram source
+        char buffer[BUF_LEN]; 			// Buffer for echo string
+        unsigned int recvMsgSize; 		// Size of received message
+        string sourceAddress = "localhost"; 	// Address of datagram source
 	    
 	#if NET_TYPE == tcp
 	// TCP client handling
@@ -205,16 +207,12 @@ int main(int argc, char * argv[]) {
 	int receiving_now_rx = sizeof(instruct);
 	#endif
 	int total_pack_rx = 1 + (sizeof(instruct) - 1) / PACK_SIZE;
-	//int bytes_in_last_pack_rx;
-        cout << " ___________________________________________________________________ " << endl;
-        cout << "/                                                                   \\" << endl;
-	cout << "INFO: Proxy tb batch # " << ++num_batch << endl;   
         char * longbuf = new char[PACK_SIZE * total_pack_rx];
 	    
 	// RX Loop
         for (unsigned int i = 0; i < sizeof(instruct); ) {
 	    #if NET_TYPE == udp
-            recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
+            recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, servPort);
 	    #else
 	    recvMsgSize = servsock->recv(buffer, receiving_now_rx);
 	    #endif
@@ -224,7 +222,7 @@ int main(int argc, char * argv[]) {
 	    i += recvMsgSize;
         }
 	memcpy(&instruct, & longbuf[0], sizeof(instruct));
-        cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
+        cout << "INFO: Received packet from " << sourceAddress << ":" << servPort << endl;
 	
 	printf("DEBUG instruct.loop_nm = %u\n", (unsigned int)instruct.loop_nm);
 	printf("DEBUG instruct.seed = %u\n", (unsigned int)instruct.seed);
@@ -319,7 +317,7 @@ int main(int argc, char * argv[]) {
 		sending_now = bytes_in_last_pack_tx;
 	    }
 	    #if NET_TYPE == udp
-	    sock.sendTo( & longbuf[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
+	    sock.sendTo( & longbuf[i * PACK_SIZE], sending_now, sourceAddress, servPort);
 	    #else
 	    servsock->send( & longbuf[i * PACK_SIZE], sending_now);
 	    #endif

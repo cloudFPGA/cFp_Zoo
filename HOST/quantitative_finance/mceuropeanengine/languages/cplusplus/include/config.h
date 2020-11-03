@@ -41,7 +41,7 @@
 #define DtUsed double
 
 /** The number of MCEuropean Engines running in parallel with differnet seed.                     */
-#define MCM_NM 7
+#define MCM_NM 6
 
 /** The number of execution loops, thus the depth of the output values' vector.                   */
 #define OUTDEP 1024
