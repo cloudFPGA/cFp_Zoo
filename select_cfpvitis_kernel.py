@@ -109,10 +109,8 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
                 
 
 kernels = ["Harris", "MCEuropeanEngine"]
-print("Available kernels:")
-print('\n'.join(kernels)) 
-
-
+#print("Available kernels:")
+#print('\n'.join(kernels)) 
 
 # Count the arguments
 arguments = len(sys.argv) - 1

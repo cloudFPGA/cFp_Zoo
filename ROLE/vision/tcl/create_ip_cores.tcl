@@ -353,8 +353,8 @@ my_puts ""
 # [HOWTO] #    [0]   : TUSER Width (bits)
 # [HOWTO] #    [No]  : Enable ACLKEN
 # [HOWTO] #------------------------------------------------------------------------------
-# [HOWTO] set ipModName "AxisRegisterSlice_64"
-# [HOWTO] set ipName    "axis_register_slice"
+set ipModName "HarrisApplication"
+set ipName "harris"
 # [HOWTO] set ipVendor  "xilinx.com"
 # [HOWTO] set ipLibrary "ip"
 # [HOWTO] set ipVersion "1.1"
@@ -381,10 +381,10 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : UDP Harris Application Flash
+# IBM-HSL-IP : Harris Application Flash
 #------------------------------------------------------------------------------
 set ipModName "HarrisApplication"
-set ipName    "harris"
+set ipName "harris"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
@@ -396,10 +396,10 @@ if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : MemTest Flash
+# IBM-HSL-IP : Harris Application Flash
 #------------------------------------------------------------------------------
-set ipModName "MemTestFlash"
-set ipName    "mem_test_flash_main"
+set ipModName "HarrisApplication"
+set ipName "harris"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
