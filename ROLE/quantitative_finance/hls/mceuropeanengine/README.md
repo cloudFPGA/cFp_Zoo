@@ -24,3 +24,24 @@ The `MCEuropeanEngine IP` is wrapped in an appropriate cFp_Vitis ROLE. Together 
 More info for the `MCEuropeanEngine IP`: https://xilinx.github.io/Vitis_Libraries/quantitative_finance/2020.1/rst_L2/namespace_xf_fintech.html#cid-xf-fintech-mceuropeanengine .
 
 
+#### Device Utilization
+
+| MCE    | CLBs     | CLBs (%) | BRAMs | BRAMs (%) | DSPs  | DSPs (%) | IOs | IOss (%) |
+|:------:|---------:|---------:|------:|----------:|------:|---------:|----:|---------:|
+| 7      | 41105    | 99.14    | 311.5 | 28.24     | 1271  | 46.05    | 520 | 54.23    |
+
+
+#### Usefull commands
+
+```
+pip3 install snakeviz
+python3 -m cProfile -o test.profile ../test.py
+snakeviz test.profile
+
+pip install QuantLib
+pip2 install gprof2dot
+pip3 install gprof2dot
+python2 /home/ubuntu/.local/lib/python2.7/site-packages/gprof2dot.py -f pstats test_quantlib.profile | dot -Tpng -o output_quantlib.png && eog output_quantlib.png
+python -m cProfile -o test_quantlib.profile ../test_quantlib.py
+snakeviz test_quantlib.profile
+```
