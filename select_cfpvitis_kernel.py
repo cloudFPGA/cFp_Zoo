@@ -7,12 +7,12 @@ import sys
 
 
 
-def replace_markdown_links(full_md_file, new_kernel):
+def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
     f1 = open(full_md_file, 'r')
     f2 = open(full_md_file+"_new", 'w')
 
     replaced = 0
-    uaf_start_detected = 0
+    uaf_start_detected = taf_start_detected = 0
     for s in f1:
         new_s = s2 = s
         if search("vhdl", full_md_file):
@@ -35,14 +35,32 @@ def replace_markdown_links(full_md_file, new_kernel):
             search_str = "  TAF: "
             if search(search_str, s):
                 s2 = "  TAF: "+new_kernel+"Application\n"
+                taf_start_detected = 1
                 replaced = replaced + 1 
                 
             # Checking if we have to comment out UAF
             if (uaf_start_detected):
-              if (1):
-                s2 = "-- auto exluding UAF           " + s2
-                if search(" );", s):
-                  uaf_start_detected = 0;
+              excluding_pattern = "-- auto excluding UAF           "
+              if (search(excluding_pattern, s2)):
+                if (udp):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+              else:
+                if (not udp):
+                  s2 = excluding_pattern + s2
+              if (search(" \);", s)):
+                uaf_start_detected = 0;
+ 
+            # Checking if we have to comment out TAF
+            if (taf_start_detected):
+              excluding_pattern = "-- auto excluding TAF           "
+              if (search(excluding_pattern, s2)):
+                if (tcp):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+              else:
+                if (not tcp):
+                  s2 = excluding_pattern + s2
+              if (search(" \);", s)):
+                taf_start_detected = 0;
                 
                 
             new_s = s.replace(str(s), str(s2))
@@ -120,9 +138,13 @@ if (kernel_id == -1):
 else:
    print("INFO: Kernel " + sys.argv[3] + " found at index " + str(kernel_id) + ". Continuing...")
 
-exit(-1)
-kernel_id_str = input("Select a kernel using index 0-"+str(len(kernels)-1)+":")   # Python 3
-kernel_id = int(kernel_id_str)
+# select tcp/udp role
+udp = tcp = 0
+if search('udp', sys.argv[1]):
+  udp = 1
+if  search('tcp', sys.argv[1]):
+  tcp = 1
+
 if ((kernel_id < 0 ) or kernel_id >= len(kernels)):
     print("ERROR: Invalid kernel id. Aborting...")
     exit(-1)
@@ -134,15 +156,15 @@ role = os.getenv('roleName1')
 md_file = "ROLE/"+role+"/hdl/Role.vhdl"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel)
+replace_markdown_links(full_md_file, new_kernel, udp, tcp)
 
 md_file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel)
+replace_markdown_links(full_md_file, new_kernel, udp, tcp)
 
 md_file = "ROLE/"+role+"/hls/Makefile"
 full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
 print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel)
+replace_markdown_links(full_md_file, new_kernel, udp, tcp)
 
