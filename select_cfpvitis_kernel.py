@@ -12,6 +12,7 @@ def replace_markdown_links(full_md_file, new_kernel):
     f2 = open(full_md_file+"_new", 'w')
 
     replaced = 0
+    uaf_start_detected = 0
     for s in f1:
         new_s = s2 = s
         if search("vhdl", full_md_file):
@@ -28,12 +29,21 @@ def replace_markdown_links(full_md_file, new_kernel):
             search_str = "  UAF: "
             if search(search_str, s):
                 s2 = "  UAF: "+new_kernel+"Application\n"
+                uaf_start_detected = 1
                 replaced = replaced + 1          
 
             search_str = "  TAF: "
             if search(search_str, s):
                 s2 = "  TAF: "+new_kernel+"Application\n"
                 replaced = replaced + 1 
+                
+            # Checking if we have to comment out UAF
+            if (uaf_start_detected):
+              if (1):
+                s2 = "-- auto exluding UAF           " + s2
+                if search(" );", s):
+                  uaf_start_detected = 0;
+                
                 
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)                     
@@ -95,17 +105,20 @@ print(sys.argv[2])
 print(sys.argv[3])
  
 if arguments != 3:
-  print("Error: Invalid number of arguments. Expected 3 but provided " + str(arguments) + ". Aborting...")
+  print("ERROR: Invalid number of arguments. Expected 3 but provided " + str(arguments) + ". Aborting...")
   exit(-1)
 
-for x in kernels:
-  if (x == sys.argv[3]):
-    kernel_id = 0
-    print(x)
+kernel_id = -1
+for i in range(len(kernels)):
+  if (kernels[i] == sys.argv[3]):
+    kernel_id = i
     break
 
-#  print("Error: Invalid kernel " + sys.argv[3] + ". Aborting...")
-#  exit(-1)
+if (kernel_id == -1):
+   print("ERROR: Kernel " + sys.argv[3] + " not found. Aborting...")
+   exit(-1)
+else:
+   print("INFO: Kernel " + sys.argv[3] + " found at index " + str(kernel_id) + ". Continuing...")
 
 exit(-1)
 kernel_id_str = input("Select a kernel using index 0-"+str(len(kernels)-1)+":")   # Python 3

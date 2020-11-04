@@ -38,7 +38,7 @@ confirm=$(dialog --yesno --output-fd 1 "DO you want to continue?" 0 0 )
 response=$?
 case $response in
 ${DIALOG_OK-0}) echo "option1:'$option1', option2:'$option2', option3:'$option3'." &&\
-python3 ./select_cfpvitis_kernel.py $option1 $option2 $option3 ;;
+python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 ;;
 ${DIALOG_CANCEL-1}) echo "Aborting without selecting the kernel.";;
 ${DIALOG_ESC-255}) echo "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) echo "Dialog error";;
