@@ -63,9 +63,36 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 - [x] 2020
   - [x] 2020.1
 
+
+
+### Vitis libraries support
+
+The following Vitis accelerated libraries are supported by cFp_Vitis:
+
+- [ ] BLAS
+- [ ] Data Compression
+- [ ] Database
+- [ ] DSP
+- [x] Quantitative Finance
+  - [x] [MC European Engine](./ROLE/quantitative_finance/hls/mceuropeanengine)
+- [ ] Security
+- [ ] Solver
+- [x] Vision
+  - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
+  - [x] [Harris](./ROLE/vision/hls/harris/)
+  
   
 
-##### Usefull commands
+### Quick cFp_Vitis configuration
+![Step 1](./doc/config1.png)
+![Step 1](./doc/config2.png)
+![Step 1](./doc/config3.png)
+![Step 1](./doc/config4.png)
+![Step 1](./doc/config5.png)
+![Step 1](./doc/config6.png)
+
+
+#### Usefull commands
 
 - Connect to ZYC2 network through openvpn:
 
@@ -86,18 +113,3 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 
 
   
-### Vitis libraries support
-
-The following Vitis accelerated libraries are supported by cFp_Vitis:
-
-- [ ] BLAS
-- [ ] Data Compression
-- [ ] Database
-- [ ] DSP
-- [x] Quantitative Finance
-  - [x] [MC European Engine](./ROLE/quantitative_finance/hls/mceuropeanengine)
-- [ ] Security
-- [ ] Solver
-- [x] Vision
-  - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
-  - [x] [Harris](./ROLE/vision/hls/harris/)
