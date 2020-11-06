@@ -111,7 +111,7 @@ esac
 
 ####################################################################################################
 # Confirmation
-confirm=$(dialog --yesno --output-fd 1 "DO you want to continue?" 0 0 )
+confirm=$(dialog --yesno --output-fd 1 "Do you want to continue?" 0 0 )
 # Get exit status
 # 0 means user hit [yes] button.
 # 1 means user hit [no] button.
