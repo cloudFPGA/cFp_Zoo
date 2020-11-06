@@ -20,10 +20,10 @@
 #include <cstdlib>                      // For atoi()
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
-#include "../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
+#include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
-#include "../../../../ROLE/vision/hls/harris/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
+#include "../../../../../../ROLE/vision/hls/harris/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
 
 using namespace std;
 using namespace cv;
@@ -107,6 +107,25 @@ int main(int argc, char * argv[]) {
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     unsigned int num_frame = 0;
+    string input_str;
+    # ifdef INPUT_FROM_CAMERA
+    int input_num;
+    if (argc == 3) {
+        input_num = 0;
+    }
+    else if (argc == 4) {
+	input_num = atoi(argv[3]);
+    }   
+    input_str = "./cam"+to_string(input_num);
+    #else
+    if (argc == 3) {
+        input_str = "../../../../../../ROLE/vision/hls/harris/test/8x8.png";
+    }
+    else if (argc == 4) {
+        input_str = argv[3];
+    }
+    #endif
+    
     float Th;
     if (FILTER_WIDTH == 3) {
         Th = 30532960.00;
@@ -118,7 +137,7 @@ int main(int argc, char * argv[]) {
     string out_img_file, out_points_file;
     string out_video_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
-    out_video_file.assign(argv[3]);
+    out_video_file.assign(input_str);
     out_video_file += "_fpga_img_out.avi";
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
    
@@ -145,12 +164,20 @@ int main(int argc, char * argv[]) {
         //------------------------------------------------------------------------------------
         Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
-		
-        VideoCapture cap(argv[3]); // Grab the camera
+
+	# ifdef INPUT_FROM_CAMERA
+        VideoCapture cap(input_num); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera" << endl;
             exit(1);
         }
+	#else
+	VideoCapture cap(input_str); // Grab the image
+        if (!cap.isOpened()) {
+            cerr << "OpenCV Failed to open file " + input_str << endl;
+            exit(1);
+        }
+        #endif
 	//frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 
         while (1) {
@@ -321,9 +348,9 @@ int main(int argc, char * argv[]) {
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
 	    if (num_frame == 1) {
-	      out_img_file.assign(argv[3]);
+	      out_img_file.assign(input_str);
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
-	      out_points_file.assign(argv[3]);
+	      out_points_file.assign(input_str);
 	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
 	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
 	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 

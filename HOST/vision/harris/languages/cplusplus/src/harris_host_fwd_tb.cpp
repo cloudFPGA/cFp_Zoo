@@ -15,7 +15,7 @@
 
 #include <cstdlib>           // For atoi()
 #include <iostream>          // For cout and cerr
-#include "../../../PracticalSockets/src/PracticalSockets.h"
+#include "../../../../../PracticalSockets/src/PracticalSockets.h"
 #include "../include/config.h"
 #include "opencv2/opencv.hpp"
 
@@ -108,25 +108,25 @@ int main(int argc, char * argv[]) {
             imshow("tb_recv", frame);
 	    
 	    // We save the image received from network in order to process it with the harris HLS TB
-	    imwrite("../../../../ROLE/vision/hls/harris/test/input_from_udp_to_fpga.png", frame);
+	    imwrite("../../../../../../ROLE/vision/hls/harris/test/input_from_udp_to_fpga.png", frame);
 	    
 	    // Select simulation mode, default fcsim
 	    string synth_cmd = " ";
 	    string exec_cmd = "make fcsim -j 4";
-	    string ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
+	    string ouf_file = "../../../../../../ROLE/vision/hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
 	    if (argc == 3) {
 	      if (atoi(argv[2]) == 2) {
 		exec_cmd = "make csim";
-		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/csim/build/hls_out.jpg";
+		ouf_file = "../../../../../../ROLE/vision/hls/harris/harris_prj/solution1/csim/build/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 3) {
 		synth_cmd = "make csynth && ";
 		exec_cmd = "make cosim";
-		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/sim/wrapc_pc/hls_out.jpg";
+		ouf_file = "../../../../../../ROLE/vision/hls/harris/harris_prj/solution1/sim/wrapc_pc/hls_out.jpg";
 	      }
 	      else if (atoi(argv[2]) == 4) {
 		exec_cmd = "make kcachegrind";
-		ouf_file = "../../../../ROLE/vision/hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
+		ouf_file = "../../../../../../ROLE/vision/hls/harris/harris_prj/solution1/fcsim/build/hls_out.jpg";
 	      }
 	    }
 	    // Calling the actual TB over its typical makefile procedure, but passing the save file
@@ -136,9 +136,9 @@ int main(int argc, char * argv[]) {
 	    if (num_frame == 1) {
 	      clean_cmd = "make clean && ";
 	    }
-	    string str_command = "cd ../../../../ROLE/vision/hls/harris/ && " + clean_cmd + synth_cmd + "\
+	    string str_command = "cd ../../../../../../ROLE/vision/hls/harris/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
-				  cd ../../../../HOST/vision/harris/build/ "; 
+				  cd ../../../../HOST/vision/harris/languages/cplusplus/build/ "; 
 	    const char *command = str_command.c_str(); 
   	    cout << "Calling TB with command:" << command << endl; 
 	    system(command); 

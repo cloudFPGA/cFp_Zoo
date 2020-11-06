@@ -12,8 +12,8 @@ endforeach()
 
 set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11")
 
-add_executable( harris_host_fwd_tb src/harris_host_fwd_tb.cpp ../../PracticalSockets/src/PracticalSockets.cpp )
+add_executable( harris_host_fwd_tb src/harris_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
 target_link_libraries( harris_host_fwd_tb ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
-add_executable( harris_host src/harris_host.cpp ../../PracticalSockets/src/PracticalSockets.cpp )
+add_executable( harris_host src/harris_host.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
 target_link_libraries( harris_host ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
