@@ -118,9 +118,9 @@ confirm=$(dialog --yesno --output-fd 1 "DO you want to continue?" 0 0 )
 # 255 means user hit [Esc] key.
 response=$?
 case $response in
-${DIALOG_OK-0}) echo "option1:'$option1', option2:'$option2', option3:'$option3'." &&\
-bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
-python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 ;;
+${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
+python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 &&\
+echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3'.\n\n";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;

@@ -1,3 +1,6 @@
+# @brief  A script for editing the files needed to select the Vitis kernel to be implemented
+# @author DID
+# @date Nov. 2020
 
 import pathlib
 import os
@@ -7,15 +10,15 @@ import sys
 
 
 
-def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
-    f1 = open(full_md_file, 'r')
-    f2 = open(full_md_file+"_new", 'w')
+def edit_file(full_file, new_kernel, udp, tcp):
+    f1 = open(full_file, 'r')
+    f2 = open(full_file+"_new", 'w')
 
     replaced = 0
     uaf_start_detected = taf_start_detected = 0
     for s in f1:
         new_s = s2 = s
-        if search("vhdl", full_md_file):
+        if search("vhdl", full_file):
             search_str = "  component "
             if search(search_str, s):
                 s2 = "  component "+new_kernel+"Application is\n"
@@ -44,9 +47,11 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
               if (search(excluding_pattern, s2)):
                 if (udp):
                   s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
               else:
                 if (not udp):
                   s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
               if (search(" \);", s)):
                 uaf_start_detected = 0;
  
@@ -56,9 +61,11 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
               if (search(excluding_pattern, s2)):
                 if (tcp):
                   s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
               else:
                 if (not tcp):
                   s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
               if (search(" \);", s)):
                 taf_start_detected = 0;
                 
@@ -66,7 +73,7 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)                     
   
-        if search("tcl", full_md_file):
+        if search("tcl", full_file):
             search_str = "# IBM-HSL-IP : "
             if search(search_str, s):
                 s2 = "# IBM-HSL-IP : "+new_kernel+" Application Flash\n"
@@ -85,7 +92,7 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)                     
   
-        if search("Makefile", full_md_file):
+        if search("Makefile", full_file):
             search_str = ".PHONY: all clean mem_test_flash "
             if search(search_str, s):
                 s2 = ".PHONY: all clean mem_test_flash "+new_kernel.lower()+"\n"
@@ -99,14 +106,38 @@ def replace_markdown_links(full_md_file, new_kernel, udp, tcp):
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)    
                 
-    print("INFO: Replaced links of " + full_md_file + " : "+ str(replaced))
+        if search("config.h", full_file):
+            search_str = "#define NET_TYPE "
+            if search(search_str, s):
+                if (udp and tcp):
+                    s2 = search_str + "udp //tcp\n"
+                elif (udp):
+                    s2 = search_str + "udp\n"    
+                elif (tcp):
+                    s2 = search_str + "tcp\n"    
+                replaced = replaced + 1 
+                
+            new_s = s.replace(str(s), str(s2))
+            f2.write(new_s) 
+
+
+
+
+
+
+    print("INFO: Edits of file " + full_file + " : "+ str(replaced))
     print("#################")
     f1.close()
     f2.close()
     if (replaced != 0):
-        shutil.copyfile(full_md_file, full_md_file+"_backup")
-        shutil.move(full_md_file+"_new", full_md_file)
+        shutil.copyfile(full_file, full_file+"_backup")
+        shutil.move(full_file+"_new", full_file)
                 
+
+###################################################################################################
+### Main script
+###################################################################################################
+
 
 kernels = ["Harris", "MCEuropeanEngine"]
 #print("Available kernels:")
@@ -151,18 +182,22 @@ new_kernel = kernels[kernel_id]
 
 role = os.getenv('roleName1')
 
-md_file = "ROLE/"+role+"/hdl/Role.vhdl"
-full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
-print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel, udp, tcp)
+file = "ROLE/"+role+"/hdl/Role.vhdl"
+full_file = str(pathlib.Path().absolute()) + '/' + str(file)
+print("#################\n"+full_file+"\n----------------")
+edit_file(full_file, new_kernel, udp, tcp)
 
-md_file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
-full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
-print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel, udp, tcp)
+file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
+full_file = str(pathlib.Path().absolute()) + '/' + str(file)
+print("#################\n"+full_file+"\n----------------")
+edit_file(full_file, new_kernel, udp, tcp)
 
-md_file = "ROLE/"+role+"/hls/Makefile"
-full_md_file = str(pathlib.Path().absolute()) + '/' + str(md_file)
-print("#################\n"+full_md_file+"\n----------------")
-replace_markdown_links(full_md_file, new_kernel, udp, tcp)
+file = "ROLE/"+role+"/hls/Makefile"
+full_file = str(pathlib.Path().absolute()) + '/' + str(file)
+print("#################\n"+full_file+"\n----------------")
+edit_file(full_file, new_kernel, udp, tcp)
 
+file = "HOST/"+role+"/"+new_kernel.lower()+"/languages/cplusplus/include/config.h"
+full_file = str(pathlib.Path().absolute()) + '/' + str(file)
+print("#################\n"+full_file+"\n----------------")
+edit_file(full_file, new_kernel, udp, tcp)
