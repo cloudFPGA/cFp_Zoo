@@ -52,13 +52,14 @@ src = ./src/${ipName}.cpp \
 			./test/test_${ipName}.cpp
 
 obj = $(src:.cpp=.o)
+
 CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attributes \
-					 -D__SDSVHLS__ -std=c++0x \
+					 -D__SDSVHLS__ -std=c++0x -std=c++11 \
 					 `pkg-config --libs opencv` `xml2-config --cflags --libs` \
-					 -I$(VITISBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
+					 -I$(VIVADOBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
 					 
-LDFLAGS = -lpthread					 
+LDFLAGS = -lpthread
 
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)

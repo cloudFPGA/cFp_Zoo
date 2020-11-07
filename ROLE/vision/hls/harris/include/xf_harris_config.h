@@ -84,7 +84,7 @@
 // #define USE_HLSLIB_STREAM
 
 // Enable it to fake the call of actual Harris kernel and instead consume input data and write back 
-// the last element from the input to every output value. This option is used dor debugging.
+// the last element from the input to every output value. This option is used for debugging.
 // #define FAKE_Harris
 
 

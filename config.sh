@@ -21,6 +21,7 @@ option1=$(dialog --checklist --output-fd 1 "Select:" 0 0 2 \
   udp "UDP ROLE" on)
 response=$?
 case $response in
+${DIALOG_OK-0})      echo "Selected net $option1";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;
@@ -44,6 +45,7 @@ option2=$(dialog --radiolist --output-fd 1 "Select domain" 0 0 0 \
   vision                "Vitis Vision Library" off)
 response=$?
 case $response in
+${DIALOG_OK-0})      echo "Selected domain $option2";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;
@@ -103,6 +105,34 @@ elif [ $option2 = 'vision' ]; then
 fi
 response=$?
 case $response in
+${DIALOG_OK-0})      echo "Selected kernel $option3";;
+${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
+${DIALOG_ESC-255})   die "[ESC] key pressed.";;
+${DIALOG_ERROR-255}) die "Dialog error";;
+*) echo "Unknown error $retval"
+esac
+
+
+
+####################################################################################################
+# Select MTU
+#option4=$(dialog --title "MTU" --backtitle "2718" --output-fd 1 --inputbox "Enter port " 8 60)
+option4=$(dialog --output-fd 1 --title "Select MTU" --rangebox "Please set the MTU (choose a value multiple of 8)" 0 60 8 1500 1024)
+response=$?
+case $response in
+${DIALOG_OK-0})      echo "Selected MTU $option4";;
+${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
+${DIALOG_ESC-255})   die "[ESC] key pressed.";;
+${DIALOG_ERROR-255}) die "Dialog error";;
+*) echo "Unknown error $retval"
+esac
+
+####################################################################################################
+# Select Port
+option5=$(dialog --output-fd 1 --title "Select port" --rangebox "Please set the port (both TCP and UDP)" 0 60 2700 2800 2718)
+response=$?
+case $response in
+${DIALOG_OK-0})      echo "Selected port $option4";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;
@@ -119,8 +149,8 @@ confirm=$(dialog --yesno --output-fd 1 "Do you want to continue?" 0 0 )
 response=$?
 case $response in
 ${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
-python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 &&\
-echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3'.\n\n";;
+python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4  $option5 &&\
+echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5'.\n\n";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;

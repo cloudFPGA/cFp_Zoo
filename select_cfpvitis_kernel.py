@@ -10,7 +10,7 @@ import sys
 
 
 
-def edit_file(full_file, new_kernel, udp, tcp):
+def edit_file(full_file, new_kernel, udp, tcp, mtu, port):
     f1 = open(full_file, 'r')
     f2 = open(full_file+"_new", 'w')
 
@@ -69,7 +69,6 @@ def edit_file(full_file, new_kernel, udp, tcp):
               if (search(" \);", s)):
                 taf_start_detected = 0;
                 
-                
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s)                     
   
@@ -107,21 +106,34 @@ def edit_file(full_file, new_kernel, udp, tcp):
             f2.write(new_s)    
                 
         if search("config.h", full_file):
-            search_str = "#define NET_TYPE "
-            if search(search_str, s):
+            search_str1 = "#define NET_TYPE "
+            search_str2 = "#define PACK_SIZE "
+            if search(search_str1, s):
                 if (udp and tcp):
-                    s2 = search_str + "udp //tcp\n"
+                    s2 = search_str1 + "udp //tcp\n"
                 elif (udp):
-                    s2 = search_str + "udp\n"    
+                    s2 = search_str1 + "udp\n"    
                 elif (tcp):
-                    s2 = search_str + "tcp\n"    
+                    s2 = search_str1 + "tcp\n"    
                 replaced = replaced + 1 
-                
+            elif search(search_str2, s):
+                s2 = search_str2 + mtu + "\n"
+                replaced = replaced + 1 
             new_s = s.replace(str(s), str(s2))
             f2.write(new_s) 
 
 
-
+        if search(".hpp", full_file):
+            search_str1 = "#define DEFAULT_TX_PORT "
+            search_str2 = "#define DEFAULT_RX_PORT "
+            if search(search_str1, s):
+                s2 = search_str1 + port + "\n"    
+                replaced = replaced + 1 
+            elif search(search_str2, s):
+                s2 = search_str2 + port + "\n"
+                replaced = replaced + 1 
+            new_s = s.replace(str(s), str(s2))
+            f2.write(new_s) 
 
 
 
@@ -146,13 +158,8 @@ kernels = ["Harris", "MCEuropeanEngine"]
 # Count the arguments
 arguments = len(sys.argv) - 1
 
-print(sys.argv[0])
-print(sys.argv[1])
-print(sys.argv[2])
-print(sys.argv[3])
- 
-if arguments != 3:
-  print("ERROR: Invalid number of arguments. Expected 3 but provided " + str(arguments) + ". Aborting...")
+if arguments != 5:
+  print("ERROR: Invalid number of arguments. Expected 5 but provided " + str(arguments) + ". Aborting...")
   exit(-1)
 
 kernel_id = -1
@@ -174,6 +181,9 @@ if search('udp', sys.argv[1]):
 if  search('tcp', sys.argv[1]):
   tcp = 1
 
+mtu=sys.argv[4]
+port=sys.argv[5]
+
 if ((kernel_id < 0 ) or kernel_id >= len(kernels)):
     print("ERROR: Invalid kernel id. Aborting...")
     exit(-1)
@@ -185,19 +195,26 @@ role = os.getenv('roleName1')
 file = "ROLE/"+role+"/hdl/Role.vhdl"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port)
 
 file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port)
 
 file = "ROLE/"+role+"/hls/Makefile"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port)
 
 file = "HOST/"+role+"/"+new_kernel.lower()+"/languages/cplusplus/include/config.h"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+
+file = "ROLE/"+role+"/hls/"+new_kernel.lower()+"/include/"+new_kernel.lower()+".hpp"
+full_file = str(pathlib.Path().absolute()) + '/' + str(file)
+print("#################\n"+full_file+"\n----------------")
+edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+
+
