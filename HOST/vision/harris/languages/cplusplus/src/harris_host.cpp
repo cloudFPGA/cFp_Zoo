@@ -168,7 +168,7 @@ int main(int argc, char * argv[]) {
 	# ifdef INPUT_FROM_CAMERA
         VideoCapture cap(input_num); // Grab the camera
         if (!cap.isOpened()) {
-            cerr << "OpenCV Failed to open camera" << endl;
+            cerr << "OpenCV Failed to open camera " + input_num << endl;
             exit(1);
         }
 	#else
