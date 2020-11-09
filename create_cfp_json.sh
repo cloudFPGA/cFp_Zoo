@@ -6,7 +6,7 @@
 # @date Nov. 2020
 
 echo "{" > cFp.json
-echo "    \"version\": \"This cFp was created by cFBuild 0.4\"," >> cFp.json
+echo "    \"version\": \"This cFp was created by cFBuild 0.6\"," >> cFp.json
 echo "    \"cFpMOD\": \"FMKU60\"," >> cFp.json
 echo "    \"cFpSRAtype\": \"Themisto\"," >> cFp.json
 echo "    \"usedRoleDir\": \"$1/\"," >> cFp.json
