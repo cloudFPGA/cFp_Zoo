@@ -84,13 +84,14 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
   
 
 ### Quick cFp_Vitis configuration
-![Step 1](./doc/config1.png)
-![Step 1](./doc/config2.png)
-![Step 1](./doc/config3.png)
-![Step 1](./doc/config4.png)
-![Step 1](./doc/config5.png)
-![Step 1](./doc/config6.png)
-
+![Step 1 - Terminal](./doc/config1.png)
+![Step 2 - Info](./doc/config2.png)
+![Step 3 - Select TCP/UDP](./doc/config3.png)
+![Step 4 - Select Domain](./doc/config4.png)
+![Step 5 - Select Kernel](./doc/config5.png)
+![Step 6 - Select MTU](./doc/config6.png)
+![Step 7 - Select Port](./doc/config7.png)
+![Step 8 - Confirm](./doc/config8.png)
 
 #### Usefull commands
 
