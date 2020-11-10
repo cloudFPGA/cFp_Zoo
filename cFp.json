@@ -2,8 +2,8 @@
     "version": "This cFp was created by cFBuild 0.6",
     "cFpMOD": "FMKU60",
     "cFpSRAtype": "Themisto",
-    "usedRoleDir": "vision/",
+    "usedRoleDir": "custom/",
     "usedRoleDir2": "2/",
-    "roleName1": "vision",
+    "roleName1": "custom",
     "roleName2": "2"
 }

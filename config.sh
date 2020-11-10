@@ -42,7 +42,9 @@ option2=$(dialog --radiolist --output-fd 1 "Select domain" 0 0 0 \
   solver                "Vitis Solver Library" off \
   sparse                "Vitis SPARSE Library" off \
   utils                 "Vitis Utility Library" off \
-  vision                "Vitis Vision Library" off)
+  vision                "Vitis Vision Library" off \
+  custom                "IBMZRL Custom Library" off)
+
 response=$?
 case $response in
 ${DIALOG_OK-0})      echo "Selected domain $option2";;
@@ -102,6 +104,10 @@ elif [ $option2 = 'vision' ]; then
   option3=$(dialog --radiolist --output-fd 1 "Select Vision kernel" 0 0 0 \
   Harris "Harris Corner Detector" off \
   Gammacorrection "Gamma Correction Filter" on)
+elif [ $option2 = 'custom' ]; then
+  option3=$(dialog --radiolist --output-fd 1 "Select Custom kernel" 0 0 0 \
+  Uppercase "Select Uppercase kernel example" on \
+  N/A "N/A" off)
 fi
 response=$?
 case $response in
