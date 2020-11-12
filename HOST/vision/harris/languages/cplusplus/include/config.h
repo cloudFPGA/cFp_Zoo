@@ -45,7 +45,7 @@
   #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-  #define TB_SIM_CFP_VITIS
+//  #define TB_SIM_CFP_VITIS
 
 /*  Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
 //#define INPUT_FROM_CAMERA
@@ -54,7 +54,7 @@
 #define INPUT_TYPE_HOST CV_8UC1
 
 /** The network socket type: tcp or udp                                                           */
-#define NET_TYPE udp //tcp
+#define NET_TYPE udp
 
 //----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
 

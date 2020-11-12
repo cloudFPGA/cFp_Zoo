@@ -83,7 +83,7 @@ void markPointsOnImage(Mat& imgOutput,
 
 
 #ifdef PY_WRAP
-int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char * output_points_str)
+int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
 {
 #else  
   /**
