@@ -82,7 +82,10 @@ void markPointsOnImage(Mat& imgOutput,
 }
 
 
-
+#ifdef PY_WRAP
+int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char * output_points_str)
+{
+#else  
   /**
    *   Main testbench and user-application for Harris on host. Client
    *   @return O on success, 1 on fail 
@@ -92,39 +95,61 @@ int main(int argc, char * argv[]) {
         cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
         exit(1);
     }
-
+#endif
     
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
-    string servAddress = argv[1]; // First arg: server address
-    #if NET_TYPE == udp
-    unsigned short servPort = Socket::resolveService(argv[2], "udp");
-    #else
-    unsigned short servPort = atoi(argv[2]);
+    
+    #ifndef PY_WRAP
+    assert ((argc == 3) || (argc == 4));
+    string s_servAddress = argv[1]; // First arg: server address
+    char *s_servPort = argv[2];
     #endif
+
+    string servAddress = s_servAddress;
+    unsigned short servPort;
+    bool net_type = NET_TYPE;
+    if (net_type == udp) {
+	servPort = Socket::resolveService(s_servPort, "udp");
+    }
+    else if (net_type == tcp) {
+	servPort = atoi(s_servPort);
+    }
+    else {
+	cout << "ERROR: Invalid type of socket type provided: " << net_type  << " Choosed one of (tcp=0 or udp=1)" << endl;
+    }    
     
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     unsigned int num_frame = 0;
-    string input_str;
-    # ifdef INPUT_FROM_CAMERA
+    string input_string;
+#ifdef INPUT_FROM_CAMERA
     int input_num;
+#ifndef PY_WRAP
     if (argc == 3) {
         input_num = 0;
     }
     else if (argc == 4) {
 	input_num = atoi(argv[3]);
-    }   
-    input_str = "./cam"+to_string(input_num);
-    #else
+    }
+#else // PY_WRAP
+    input_num = atoi(input_str);
+#endif // PY_WRAP
+    input_string = "./cam"+to_string(input_num);
+#else // !INPUT_FROM_CAMERA
+#ifndef PY_WRAP
     if (argc == 3) {
-        input_str = "../../../../../../ROLE/vision/hls/harris/test/8x8.png";
+        input_string.assign("../../../../../../ROLE/vision/hls/harris/test/8x8.png");
     }
     else if (argc == 4) {
-        input_str = argv[3];
+        input_string.assign(argv[3]);
     }
-    #endif
+#else // PY_WRAP
+    input_string.assign(input_str);
+#endif // PY_WRAP
+#endif // INPUT_FROM_CAMERA
+    
     
     float Th;
     if (FILTER_WIDTH == 3) {
@@ -137,8 +162,12 @@ int main(int argc, char * argv[]) {
     string out_img_file, out_points_file;
     string out_video_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
-    out_video_file.assign(input_str);
+    //#ifdef PY_WRAP
+    //out_video_file.assign(output_str);
+    //#else // !PY_WRAP
+    out_video_file.assign(input_string);
     out_video_file += "_fpga_img_out.avi";
+    //#endif // PY_WRAP
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
    
     print_cFpVitis();
@@ -165,16 +194,16 @@ int main(int argc, char * argv[]) {
         Mat frame, send, ocv_out_img;
         vector < uchar > encoded;
 
-	# ifdef INPUT_FROM_CAMERA
+	#ifdef INPUT_FROM_CAMERA
         VideoCapture cap(input_num); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera " + input_num << endl;
             exit(1);
         }
 	#else
-	VideoCapture cap(input_str); // Grab the image
+	VideoCapture cap(input_string); // Grab the image
         if (!cap.isOpened()) {
-            cerr << "OpenCV Failed to open file " + input_str << endl;
+            cerr << "OpenCV Failed to open file " + input_string << endl;
             exit(1);
         }
         #endif
@@ -348,10 +377,18 @@ int main(int argc, char * argv[]) {
 	    //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
 	    if (num_frame == 1) {
-	      out_img_file.assign(input_str);
+	      out_img_file.assign(input_string);
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
-	      out_points_file.assign(input_str);
+	      out_points_file.assign(input_string);
 	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
+#ifdef PY_WRAP
+	      if (!strcpy(output_img_str, &out_img_file[0])) {
+		  cerr << "ERROR: Cannot write to output image string." << endl;
+	      }
+	      if (!strcpy(output_points_str, &out_points_file[0])) {
+		  cerr << "ERROR: Cannot write to output points string." << endl;
+	      }
+#endif // PY_WRAP
 	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
 	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
 	      // We save the image received from network after being processed by Harris HW or HOST TB

@@ -70,3 +70,4 @@ dcps/
 *.mp4
 mce_from_net.conf
 bitstreams
+.ipynb_checkpoints
