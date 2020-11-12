@@ -16,8 +16,7 @@ DIALOG="dialog --output-fd 1 "
 #if [ -x /usr/bin/gdialog ] ;then DIALOG="gdialog --output-fd 1 " ; fi
 #if [ -x /usr/bin/xdialog ] ;then DIALOG=xdialog ; fi
 
-$DIALOG --title "Hello cF Developer" --msgbox 'Through this utility you can quickly 
-configure a cFp_Vitis project by selecting a domain and a kernel of this domain.' 10 30 
+$DIALOG --title "Hello cF Developer" --msgbox 'Through this utility you can quickly configure a cFp_Vitis project by selecting a domain and a kernel of this domain.' 20 60 
 
 
 
@@ -28,7 +27,7 @@ if [ -f "$CONF_FILE" ]; then
     echo "$CONF_FILE exists."
     i=0
 
-    confirm=$($DIALOG --yesno  "Detected $CONF_FILE. Do you want to load the configuration (select Yes) or create a new one (select No) ?" 0 0 )
+    confirm=$($DIALOG --yesno  "Detected $CONF_FILE. Do you want to:\n - load the configuration (select Yes) or\n - create a new one (select No) ?" 20 60 )
     # Get exit status
     # 0 means user hit [yes] button.
     # 1 means user hit [no] button.
@@ -229,8 +228,8 @@ response=$?
 case $response in
 ${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
 python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4  $option5 &&\
-echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5'.\n\n" &&\
-echo -e "$option1\n$option2\n$option3\n$option4\n$option5" > $CONF_FILE;;
+echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5'." &&\
+echo -e "$option1\n$option2\n$option3\n$option4\n$option5" > $CONF_FILE && echo -e "Configuration saved in $CONF_FILE\n\n";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;

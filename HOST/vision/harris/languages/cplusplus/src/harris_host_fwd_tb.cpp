@@ -48,7 +48,6 @@ int main(int argc, char * argv[]) {
         char buffer[BUF_LEN]; // Buffer for echo string
         int recvMsgSize; // Size of received message
         string sourceAddress; // Address of datagram source
-        unsigned short sourcePort; // Port of datagram source
 	    
 	#if NET_TYPE == tcp
 	// TCP client handling
@@ -87,7 +86,7 @@ int main(int argc, char * argv[]) {
                     receiving_now = bytes_in_last_pack;
                 }
 		#if NET_TYPE == udp
-                recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, sourcePort);
+                recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, servPort);
 		#else
 		recvMsgSize = servsock->recv(buffer, receiving_now);
 		#endif
@@ -98,7 +97,7 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
             }
 
-            cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
+            cout << "INFO: Received packet from " << sourceAddress << ":" << servPort << endl;
  
             cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
@@ -178,7 +177,7 @@ int main(int argc, char * argv[]) {
                     sending_now = bytes_in_last_pack;
 		}
 		#if NET_TYPE == udp
-		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
+		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, servPort);
 		#else
 		//sock.send( & frame.data[i * PACK_SIZE], sending_now);
 		servsock->send( & frame.data[i * PACK_SIZE], sending_now);

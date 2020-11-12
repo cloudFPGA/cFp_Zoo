@@ -278,7 +278,7 @@ int main(int argc, char * argv[]) {
 		recvMsgSize = sock.recv(buffer, BUF_LEN);
 		#endif
 		if (recvMsgSize != receiving_now) {
-                    cerr << "WARNING: Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
+                    cerr << "WARNING: at i=" << i << " received unexpected size pack:" << recvMsgSize << ". Expected: " << 
                             receiving_now << endl;
                     //continue;
                 }
