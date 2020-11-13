@@ -91,9 +91,9 @@ void markPointsOnImage(Mat& imgOutput,
 
 #ifdef PY_WRAP
 #if PY_WRAP == PY_WRAP_HARRIS_FILENAME
-int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
+void harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
 #elif PY_WRAP == PY_WRAP_HARRIS_NUMPI
-int harris(int total_size, uint8_t *input_img, char *s_servAddress, char *s_servPort)
+void harris(int total_size, unsigned char *input_img, int total_size2, unsigned char *output_img, char *s_servAddress, char *s_servPort)
 #endif // PY_WRAP value
 {
 #else // !PY_WRAP
@@ -131,7 +131,7 @@ int main(int argc, char * argv[]) {
 	cout << "ERROR: Invalid type of socket type provided: " << net_type  << " Choosed one of (tcp=0 or udp=1)" << endl;
     }    
     
-    char buffer[BUF_LEN]; // Buffer for echo string
+    unsigned char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     string input_string;
 #ifdef INPUT_FROM_CAMERA
@@ -277,7 +277,7 @@ int main(int argc, char * argv[]) {
 	    
 	    unsigned int send_total = (unsigned int)total_size;
 	    unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
-	    uint8_t * sendarr = input_img;
+	    unsigned char * sendarr = input_img;
 	    
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
@@ -319,7 +319,7 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------
 
 	    // Anchor a pointer on cvMat raw data
-            uint8_t * sendarr = send.isContinuous()? send.data: send.clone().data;
+            unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
  
             clock_t start_cycle_harris_hw = clock();
 
@@ -358,7 +358,7 @@ int main(int argc, char * argv[]) {
 #endif
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
-            char * longbuf = new char[PACK_SIZE * total_pack];
+            unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             for (unsigned int i = 0; i < send_total; ) {
 	        //cout << "DEBUG: " << i << endl;
                 //if ( i == total_pack - 1 ) {
@@ -491,6 +491,9 @@ int main(int argc, char * argv[]) {
         // Closes all the windows
 	destroyAllWindows();
 
+#else
+	//output_img = longbuf;
+	memcpy( output_img, longbuf, total_size);
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	
 	// Destructor closes the socket
@@ -498,8 +501,10 @@ int main(int argc, char * argv[]) {
         cerr << e.what() << endl;
         exit(1);
     }
-
+    
+#ifndef PY_WRAP
     return 0;
+#endif
 }
 
 
