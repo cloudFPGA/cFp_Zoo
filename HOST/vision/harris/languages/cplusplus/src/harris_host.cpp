@@ -83,9 +83,13 @@ void markPointsOnImage(Mat& imgOutput,
 
 
 #ifdef PY_WRAP
+#if PY_WRAP == PY_WRAP_HARRIS_FILENAME
 int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
+#elif PY_WRAP == PY_WRAP_HARRIS_NUMPI
+int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
+#endif // PY_WRAP value
 {
-#else  
+#else // !PY_WRAP
   /**
    *   Main testbench and user-application for Harris on host. Client
    *   @return O on success, 1 on fail 
@@ -95,7 +99,7 @@ int main(int argc, char * argv[]) {
         cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
         exit(1);
     }
-#endif
+#endif // PY_WRAP
     
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
@@ -126,27 +130,33 @@ int main(int argc, char * argv[]) {
     string input_string;
 #ifdef INPUT_FROM_CAMERA
     int input_num;
-#ifndef PY_WRAP
+#ifdef PY_WRAP
+#if PY_WRAP == PY_WRAP_HARRIS_FILENAME
+    input_num = atoi(input_str);
+    input_string = "./cam"+to_string(input_num);
+#endif // PY_WRAP == PY_WRAP_HARRIS_FILENAME
+#else // !PY_WRAP
     if (argc == 3) {
         input_num = 0;
     }
     else if (argc == 4) {
 	input_num = atoi(argv[3]);
     }
-#else // PY_WRAP
-    input_num = atoi(input_str);
-#endif // PY_WRAP
     input_string = "./cam"+to_string(input_num);
+#endif // PY_WRAP    
 #else // !INPUT_FROM_CAMERA
-#ifndef PY_WRAP
+#ifdef PY_WRAP
+#if PY_WRAP == PY_WRAP_HARRIS_FILENAME
+    input_string.assign(input_str);
+#endif // PY_WRAP == PY_WRAP_HARRIS_FILENAME    
+#else // !PY_WRAP
     if (argc == 3) {
+        // Give a default image
         input_string.assign("../../../../../../ROLE/vision/hls/harris/test/8x8.png");
     }
     else if (argc == 4) {
         input_string.assign(argv[3]);
     }
-#else // PY_WRAP
-    input_string.assign(input_str);
 #endif // PY_WRAP
 #endif // INPUT_FROM_CAMERA
     
@@ -259,14 +269,22 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Effective FPS SW:" << (1 / duration_harris_sw) << " \tkbps:" << 
                     (PACK_SIZE * total_pack / duration_harris_sw / 1024 * 8) << endl;
 	    
-	    
 	    //------------------------------------------------------
             //-- STEP-5 : RUN HARRIS DETECTOR FROM cF (HW)
             //------------------------------------------------------
+	    
+	    //------------------------------------------------------
+            //-- STEP-5.1 : Preparation
+            //------------------------------------------------------
+    
+	    // Anchor a pointer on cvMat raw data
+            uchar * sendarr = send.isContinuous()? send.data: send.clone().data;
+	    unsigned int sendtotal = send.total();
+    
             clock_t start_cycle_harris_hw = clock();
 	    
 	    //------------------------------------------------------
-            //-- STEP-5.1 : TX Loop
+            //-- STEP-5.2 : TX Loop
             //------------------------------------------------------
             clock_t last_cycle_tx = clock();
 	    unsigned int sending_now = PACK_SIZE;
@@ -275,9 +293,9 @@ int main(int argc, char * argv[]) {
                     sending_now = bytes_in_last_pack;
                 }
 		#if NET_TYPE == udp
-		sock.sendTo( & send.data[i * PACK_SIZE], sending_now, servAddress, servPort);
+		sock.sendTo( & sendarr[i * PACK_SIZE], sending_now, servAddress, servPort);
 		#else
-		sock.send( & send.data[i * PACK_SIZE], sending_now);
+		sock.send( & sendarr[i * PACK_SIZE], sending_now);
 		#endif
 		delay(1000);  
 	    }
@@ -290,13 +308,13 @@ int main(int argc, char * argv[]) {
 	    
 	    
 	    //------------------------------------------------------
-            //-- STEP-5.2 : RX Loop
+            //-- STEP-5.3 : RX Loop
             //------------------------------------------------------    
 	    clock_t last_cycle_rx = clock();
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
-            for (unsigned int i = 0; i < send.total(); ) {
+            for (unsigned int i = 0; i < sendtotal; ) {
 	        //cout << "DEBUG: " << i << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;

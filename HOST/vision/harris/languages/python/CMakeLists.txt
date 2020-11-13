@@ -21,7 +21,7 @@ foreach(dir ${dirs})
   message(STATUS "Included dir='${dir}'")
 endforeach()
 
-set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP")
+set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP=PY_WRAP_HARRIS_NUMPI")
 
 #this sets the output directory of anything SWIG generates
 set (CMAKE_SWIG_OUTDIR  ./swig_trieres_output)

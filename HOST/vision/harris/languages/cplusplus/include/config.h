@@ -45,7 +45,7 @@
 //  #define SHOW_WINDOWS  
   
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS
+  #define TB_SIM_CFP_VITIS
 
 /*  Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
 //#define INPUT_FROM_CAMERA
@@ -56,7 +56,7 @@
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp
 
-//----------------------------  AUTOMATICALLY DEFINED OPTIONS  -------------------------------------
+//-------------------  AUTOMATICALLY DEFINED OR AUXILILIARY OPTIONS  -------------------------------
 
 #define FRAME_TOTAL FRAME_HEIGHT * FRAME_WIDTH //* 3
 
@@ -65,5 +65,8 @@
 
 #define tcp 0
 #define udp 1
+
+#define PY_WRAP_HARRIS_NUMPI 0
+#define PY_WRAP_HARRIS_FILENAME 1
 
 /*! \} */

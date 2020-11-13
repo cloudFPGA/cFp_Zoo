@@ -87,7 +87,7 @@ void storeWordToAxiStream(
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
     //#pragma HLS UNROLL factor=loop_cnt
-    printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
+    //printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
     if ((word.tkeep >> i) == 0) {
       printf("WARNING: value with tkeep=0 at i=%u\n", i);
       continue; 
