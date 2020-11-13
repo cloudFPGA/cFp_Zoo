@@ -21,7 +21,6 @@ foreach(dir ${dirs})
   message(STATUS "Included dir='${dir}'")
 endforeach()
 
-set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP=PY_WRAP_HARRIS_NUMPI")
 
 #this sets the output directory of anything SWIG generates
 set (CMAKE_SWIG_OUTDIR  ./swig_trieres_output)
@@ -30,9 +29,15 @@ add_custom_target(swignumpi ALL
   COMMAND  "../etc/checknumpi.sh"
 )
 
-set_property(SOURCE ./trieres.i PROPERTY CPLUSPLUS ON)
-swig_add_module(trieres python ./trieres.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/harris_host.cpp)
-swig_link_libraries (trieres ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP=PY_WRAP_HARRIS_FILENAME")
+set_property(SOURCE ./trieres_harris_filename.i PROPERTY CPLUSPLUS ON)
+swig_add_module(trieres_harris_filename python ./trieres_harris_filename.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/harris_host.cpp)
+swig_link_libraries (trieres_harris_filename ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
+
+#set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP=PY_WRAP_HARRIS_NUMPI")
+#set_property(SOURCE ./trieres_harris_numpi.i PROPERTY CPLUSPLUS ON)
+#swig_add_module(trieres_harris_numpi python ./trieres_harris_numpi.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/harris_host.cpp)
+#swig_link_libraries (trieres_harris_numpi ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
 add_executable( harris_host_fwd_tb ../cplusplus/src/harris_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
 target_link_libraries( harris_host_fwd_tb  ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )

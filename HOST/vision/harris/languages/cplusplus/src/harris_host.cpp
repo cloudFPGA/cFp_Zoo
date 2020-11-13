@@ -20,13 +20,17 @@
 #include <cstdlib>                      // For atoi()
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
+#include <string.h>                     // For memcpy()
 #include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
 #include "../include/config.h"
+
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 #include "opencv2/opencv.hpp"
 #include "../../../../../../ROLE/vision/hls/harris/include/xf_ocv_ref.hpp"  // For SW reference Harris from OpenCV
+using namespace cv;
+#endif
 
 using namespace std;
-using namespace cv;
 
 
 void delay(unsigned int mseconds)
@@ -49,6 +53,8 @@ void print_cFpVitis(void)
 	cout <<  "                                                          " << endl;
 }
 
+
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
 /*****************************************************************************
  * @brief Mark the points found by Harris into the image.
@@ -81,12 +87,13 @@ void markPointsOnImage(Mat& imgOutput,
    }
 }
 
+#endif
 
 #ifdef PY_WRAP
 #if PY_WRAP == PY_WRAP_HARRIS_FILENAME
 int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
 #elif PY_WRAP == PY_WRAP_HARRIS_NUMPI
-int harris(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
+int harris(int total_size, uint8_t *input_img, char *s_servAddress, char *s_servPort)
 #endif // PY_WRAP value
 {
 #else // !PY_WRAP
@@ -126,7 +133,6 @@ int main(int argc, char * argv[]) {
     
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
-    unsigned int num_frame = 0;
     string input_string;
 #ifdef INPUT_FROM_CAMERA
     int input_num;
@@ -160,7 +166,10 @@ int main(int argc, char * argv[]) {
 #endif // PY_WRAP
 #endif // INPUT_FROM_CAMERA
     
-    
+   
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+
+   
     float Th;
     if (FILTER_WIDTH == 3) {
         Th = 30532960.00;
@@ -179,7 +188,10 @@ int main(int argc, char * argv[]) {
     out_video_file += "_fpga_img_out.avi";
     //#endif // PY_WRAP
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
-   
+
+#endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME) 
+
+
     print_cFpVitis();
     
     try {
@@ -197,7 +209,11 @@ int main(int argc, char * argv[]) {
 	#else // tcp
 	TCPSocket sock(servAddress, servPort);
         #endif // udp/tcp
-        
+ 
+
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+
+
         //------------------------------------------------------------------------------------
         //-- STEP-3 : Initialize a Greyscale OpenCV Mat either from image or from video/camera
         //------------------------------------------------------------------------------------
@@ -205,19 +221,25 @@ int main(int argc, char * argv[]) {
         vector < uchar > encoded;
 
 	#ifdef INPUT_FROM_CAMERA
+	
         VideoCapture cap(input_num); // Grab the camera
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open camera " + input_num << endl;
             exit(1);
         }
-	#else
+        
+	#else // INPUT_FROM_CAMERA
+	
 	VideoCapture cap(input_string); // Grab the image
         if (!cap.isOpened()) {
             cerr << "OpenCV Failed to open file " + input_string << endl;
             exit(1);
         }
-        #endif
+        
+        #endif // INPUT_FROM_CAMERA
+        
 	//frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
+	unsigned int num_frame = 0;
 
         while (1) {
             clock_t start_cycle_main = clock();
@@ -236,25 +258,44 @@ int main(int argc, char * argv[]) {
 	    assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
 	    // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
 	    assert(PACK_SIZE % 8 == 0);
+	    
 #ifdef SHOW_WINDOWS
+	    
 	    namedWindow("host_send", CV_WINDOW_NORMAL);
             imshow("host_send", send);
-#endif
+	    
+#endif // SHOW_WINDOWS
+	    
 	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
 	    // will return such a continuous Mat, but we should check it.
 	    assert(send.isContinuous());
 	    
-            unsigned int total_pack  = 1 + (send.total() * send.channels() - 1) / PACK_SIZE;
+	    unsigned int send_total = send.total();
+	    unsigned int send_channels = send.channels();
+	    
+#else // PY_WRAP == PY_WRAP_HARRIS_NUMPI
+	    
+	    unsigned int send_total = (unsigned int)total_size;
+	    unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
+	    uint8_t * sendarr = input_img;
+	    
+#endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+
+   
+	    
+            unsigned int total_pack  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
-            unsigned int bytes_in_last_pack = send.total() * send.channels() - (total_pack - 1) * PACK_SIZE;
+            unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
 	    cout << "INFO: Network socket : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-            cout << "INFO: Total bytes to send/receive   = " << send.total() * send.channels() << endl;
+            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	    cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
 	    cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
+	    
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)    
 	    
             //--------------------------------------------------------
             //-- STEP-4 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY (SW)
@@ -276,12 +317,14 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-5.1 : Preparation
             //------------------------------------------------------
-    
+
 	    // Anchor a pointer on cvMat raw data
-            uchar * sendarr = send.isContinuous()? send.data: send.clone().data;
-	    unsigned int sendtotal = send.total();
-    
+            uint8_t * sendarr = send.isContinuous()? send.data: send.clone().data;
+ 
             clock_t start_cycle_harris_hw = clock();
+
+#endif // !PY_WRAP_HARRIS_NUMPI
+    
 	    
 	    //------------------------------------------------------
             //-- STEP-5.2 : TX Loop
@@ -310,11 +353,13 @@ int main(int argc, char * argv[]) {
 	    //------------------------------------------------------
             //-- STEP-5.3 : RX Loop
             //------------------------------------------------------    
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	    clock_t last_cycle_rx = clock();
+#endif
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << endl;
             char * longbuf = new char[PACK_SIZE * total_pack];
-            for (unsigned int i = 0; i < sendtotal; ) {
+            for (unsigned int i = 0; i < send_total; ) {
 	        //cout << "DEBUG: " << i << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;
@@ -335,7 +380,9 @@ int main(int argc, char * argv[]) {
             }
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
- 
+
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+	    
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "receive failure!" << endl;
@@ -399,14 +446,15 @@ int main(int argc, char * argv[]) {
 	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
 	      out_points_file.assign(input_string);
 	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
-#ifdef PY_WRAP
+#if defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+
 	      if (!strcpy(output_img_str, &out_img_file[0])) {
 		  cerr << "ERROR: Cannot write to output image string." << endl;
 	      }
 	      if (!strcpy(output_points_str, &out_points_file[0])) {
 		  cerr << "ERROR: Cannot write to output points string." << endl;
 	      }
-#endif // PY_WRAP
+#endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
 	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
 	      // We save the image received from network after being processed by Harris HW or HOST TB
@@ -428,7 +476,7 @@ int main(int argc, char * argv[]) {
 	      }
 	      video.write(tovideo);
 	    }
-#endif	    
+#endif // WRITE_OUTPUT_FILE
 	    waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
@@ -442,7 +490,9 @@ int main(int argc, char * argv[]) {
 
         // Closes all the windows
 	destroyAllWindows();
-	  
+
+#endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
+	
 	// Destructor closes the socket
     } catch (SocketException & e) {
         cerr << e.what() << endl;
