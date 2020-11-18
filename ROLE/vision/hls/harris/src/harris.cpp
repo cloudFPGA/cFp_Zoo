@@ -222,17 +222,21 @@ void pProcPath(
     uint16_t Thresh = 442;
     float K = 0.04;
     uint16_t k = K * (1 << 16); // Convert to Q0.16 format
-  
-  
+    static bool accel_called;
+    static unsigned int processed_word_proc;
+    
   switch(HarrisFSM)
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
       if ( (*image_loaded) == 1 )
+      //if ( !img_in_axi_stream.empty() )
       {
         HarrisFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
 	*processed_bytes_rx = 0;
+	accel_called = false;
+	processed_word_proc = 0;
       }
       break;
 
@@ -240,15 +244,18 @@ void pProcPath(
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
       if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
+	if (accel_called == false) {
 	#ifdef FAKE_Harris
-	fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	    fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
 	#else
-	cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+	    cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
 	#endif
-	if ( !img_out_axi_stream.empty() )  
-	{
-	  HarrisFSM = HARRIS_RETURN_RESULTS;
-	} 
+	    accel_called = true;
+	    HarrisFSM = HARRIS_RETURN_RESULTS;
+	}
+	//if ( !img_out_axi_stream.empty() )  
+	//{
+	//} 
       }
       break;
       
@@ -258,10 +265,12 @@ void pProcPath(
       {
 	
 	Data_t_out temp = img_out_axi_stream.read();
-	if ( img_out_axi_stream.empty() ) 
+	if ( img_out_axi_stream.empty() )
+	//if (processed_word_proc++ == MIN_TX_LOOPS-1)
 	{
 	  temp.last = 1;
 	  HarrisFSM = WAIT_FOR_META;
+	  accel_called = false;
 	}
 	else
 	{

@@ -108,7 +108,8 @@ void cornerHarrisAccelStream(
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     int rows, int cols, int threshold, int k) {
     // clang-format on
-
+    #pragma  HLS INLINE off
+    
     const int pROWS = HEIGHT;
     const int pCOLS = WIDTH;
     const int pNPC1 = NPIX;
@@ -149,29 +150,38 @@ void cornerHarrisAccelStream(
  *****************************************************************************/
 //extern "C" {
 void fakeCornerHarrisAccelStream(
+    #ifdef USE_HLSLIB_STREAM
+    hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        &img_in_axi_stream,
+    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       &img_out_axi_stream,  
+    #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops) {
   
+  #pragma  HLS INLINE off
+  
   ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> tmp_in;
   ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> tmp_out;
-  for (unsigned int i=0; i<min_rx_loops; i++) { 
+  for (unsigned int i=0, j=0, k=0; k < 5 * (min_rx_loops + min_tx_loops); k++) { 
     cout << "Consuming input...i=" << i << endl;
-    if ((img_in_axi_stream.empty()) || (i == min_rx_loops-1)) {
-      cout << "Empty" << endl;
-      break;
+    if (!img_in_axi_stream.empty() && (i < min_rx_loops)) {
+      tmp_in = img_in_axi_stream.read();
+      i++;
     }
-    tmp_in = img_in_axi_stream.read();  
-  }
-  tmp_out.data = tmp_in.data; // known silent dirty casting here when INPUT_PTR_WIDTH != OUTPUT_PTR_WIDTH
-  for (unsigned int i=0; i<min_tx_loops; i++) { 
-    cout << "Filling output...i=" << i << endl;
-    if ((img_out_axi_stream.full()) || (i == min_tx_loops-1)) {
+  
+    tmp_out.data = tmp_in.data; // known silent dirty casting here when INPUT_PTR_WIDTH != OUTPUT_PTR_WIDTH
+    cout << "Filling output...j=" << j << endl;
+    if (!(img_out_axi_stream.full()) && (j < min_tx_loops)) {
+      img_out_axi_stream.write(tmp_out);
+      j++;
+    }
+    //if ((img_out_axi_stream.full()) || (i == min_tx_loops)) {
+    if (j == min_tx_loops) {  
       cout << "Full" << endl;
-      break;
+      //break;
     }
-    img_out_axi_stream.write(tmp_out);  
   }
 }
 

@@ -37,6 +37,12 @@
 #include "xf_config_params.h"
 #include "../../../../../HOST/vision/harris/languages/cplusplus/include/config.h"
 
+#ifdef USE_HLSLIB_STREAM
+#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+using hlslib::Stream;
+#endif
+using hls::stream;
+
 // # for gammacorrection
 #include "imgproc/xf_gammacorrection.hpp"
 #if NO
@@ -85,7 +91,7 @@
 
 // Enable it to fake the call of actual Harris kernel and instead consume input data and write back 
 // the last element from the input to every output value. This option is used for debugging.
- #define FAKE_Harris
+// #define FAKE_Harris
 
 
 
@@ -105,8 +111,13 @@ void cornerHarrisAccelStream(
     int rows, int cols, int threshold, int k);
 
 void fakeCornerHarrisAccelStream(
+    #ifdef USE_HLSLIB_STREAM
+    hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        & img_in_axi_stream,
+    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       & img_out_axi_stream,  
+    #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops);
 
