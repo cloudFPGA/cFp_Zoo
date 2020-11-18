@@ -60,8 +60,15 @@ enum EchoCtrl {
 #define DEFAULT_RX_PORT 2718
 
 
-#define MEMDW 64          // 512 or 128 or 64 // Bus width in bits for Host memory
-#define BPERDW (MEMDW/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64, if MEMDW=64 => BPERDW = 16
+/* General memory Data Width is set as a parameter*/
+/* 52-bit host AXI data width*/
+#define MEMDW_512 512              // 512 Bus width in bits for cF DDR memory
+#define BPERDW_512 (MEMDW_512/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64
+#define WPERDW_512 (64/BPERDW_512) // Number of words per DW if MEMDW=512 => WPERDW =  1 ?????
+#define ADDR_RIGHT_SHIFT_512 6
+typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
+typedef membus_512_t membus_t;
+
 
 #define MAX_NB_OF_ELMT_READ  16
 typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your needs
@@ -82,6 +89,15 @@ void harris(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
+    
+    //#ifdef ENABLE_DDR    
+                                            ,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp0 Interface
+    //------------------------------------------------------
+    membus_t   *lcl_mem0,
+    membus_t   *lcl_mem1
+    //#endif
 );
 
 

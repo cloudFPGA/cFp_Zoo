@@ -187,4 +187,49 @@ void fakeCornerHarrisAccelStream(
 
 #endif // FAKE_Harris
 
+
+
+/*****************************************************************************
+ * @brief   Top-level accelerated function of the Harris Application with 
+ * array I/F
+ * @ingroup HarrisHLS
+ *
+ * @return Nothing.
+ *****************************************************************************/
+//extern "C" {
+void cornerHarrisAccelMem(membus_t* img_inp,
+                          membus_t* img_out,
+                          int rows, int cols, int threshold, int k) {
+    // clang-format on
+    #pragma  HLS INLINE off
+    
+    const int pROWS = HEIGHT;
+    const int pCOLS = WIDTH;
+    const int pNPC1 = NPIX;
+
+    xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPIX> in_mat(rows, cols);
+    // clang-format off
+    #pragma HLS stream variable=in_mat.data depth=2
+    // clang-format on
+
+    xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
+    // clang-format off
+    #pragma HLS stream variable=out_mat.data depth=2
+    // clang-format on
+
+    // clang-format off
+    #pragma HLS DATAFLOW
+    // clang-format on
+
+
+    xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, in_mat);
+    xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
+      in_mat, out_mat, threshold, k);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(out_mat, img_out);
+    
+    
+}
+
+
+
 /*! \} */

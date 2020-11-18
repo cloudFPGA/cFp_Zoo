@@ -118,6 +118,46 @@ void storeWordToAxiStream(
 }
 
 
+/*****************************************************************************
+ * @brief   Store a word from ethernet to DDR memory (axi master)
+ * @return Nothing.
+ *****************************************************************************/
+void storeWordToMem(
+  NetworkWord  word,
+  membus_t     *lcl_mem0,
+  unsigned int *processed_word_rx,
+  unsigned int *processed_bytes_rx,
+  unsigned int *image_loaded)
+{   
+  #pragma HLS INLINE
+  Data_t_in v;
+  const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
+  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
+  unsigned int bytes_with_keep = 0;
+  for (unsigned int i=0; i<loop_cnt; i++) {
+    //#pragma HLS PIPELINE
+    //#pragma HLS UNROLL factor=loop_cnt
+    //printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
+    if ((word.tkeep >> i) == 0) {
+      printf("WARNING: value with tkeep=0 at i=%u\n", i);
+      continue; 
+    }
+    v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
+    //lcl_mem0[i] = (membus_t)v.data; // FIXME: we should pack more data in 512b from 64b net
+    bytes_with_keep += bytes_per_loop;
+  }
+lcl_mem0[*processed_word_rx] = (membus_t)v.data;
+  if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
+    (*processed_bytes_rx) += bytes_with_keep;
+  }
+  else {
+    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+    *processed_bytes_rx = 0;
+    *image_loaded = 1;
+  }
+}
+
+
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -136,11 +176,15 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
+        #ifdef ENABLE_DDR 
+	membus_t                                         *lcl_mem0,
+	#else // !ENABLE_DDR
 	#ifdef USE_HLSLIB_STREAM
 	Stream<Data_t_in, MIN_RX_LOOPS>                  &img_in_axi_stream,
-	#else
+	#else // !USE_HLSLIB_STREAM
 	stream<Data_t_in>                                &img_in_axi_stream,
-	#endif
+	#endif // USE_HLSLIB_STREAM
+	#endif // ENABLE_DDR
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
 	unsigned int                                     *processed_bytes_rx,
@@ -171,13 +215,22 @@ void pRXPath(
     case PROCESSING_PACKET:
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
 	     *processed_word_rx, *processed_bytes_rx);
-      if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full() )
+      if ( !siSHL_This_Data.empty() 
+        #ifndef ENABLE_DDR 
+	&& !img_in_axi_stream.full()
+        #endif
+      )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
+	#ifdef ENABLE_DDR 
+	storeWordToMem(netWord, lcl_mem0, processed_word_rx, processed_bytes_rx, 
+			     image_loaded);
+	#else
 	storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
 			     image_loaded);
-        if(netWord.tlast == 1)
+	#endif
+	if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
         }
@@ -202,13 +255,20 @@ void pRXPath(
  ******************************************************************************/
 void pProcPath(
 	      stream<NetworkWord>                    &sRxpToTxp_Data,
+	      #ifdef ENABLE_DDR 
+	      membus_t                               *lcl_mem0,
+	      membus_t                               *lcl_mem1,
+	      #else // !ENABLE_DDR
 	      #ifdef USE_HLSLIB_STREAM
 	      Stream<Data_t_in, MIN_RX_LOOPS>        &img_in_axi_stream,
-              Stream<Data_t_out, MIN_TX_LOOPS>       &img_out_axi_stream,
-	      #else
+	      Stream<Data_t_out, MIN_TX_LOOPS>       &img_out_axi_stream,
+	      #else // !USE_HLSLIB_STREAM
 	      stream<Data_t_in>                      &img_in_axi_stream,
               stream<Data_t_out>                     &img_out_axi_stream,
-	      #endif
+	      #endif // USE_HLSLIB_STREAM
+	      #endif // ENABLE_DDR	       
+	       
+	       
 	      unsigned int                           *processed_word_rx,
 	      unsigned int                           *processed_bytes_rx, 
 	      unsigned int                           *image_loaded
@@ -230,11 +290,10 @@ void pProcPath(
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
       if ( (*image_loaded) == 1 )
-      //if ( !img_in_axi_stream.empty() )
       {
         HarrisFSM = PROCESSING_PACKET;
 	*processed_word_rx = 0;
-	*processed_bytes_rx = 0;
+//	*processed_bytes_rx = 0;
 	accel_called = false;
 	processed_word_proc = 0;
       }
@@ -242,23 +301,33 @@ void pProcPath(
 
     case PROCESSING_PACKET:
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
+      #ifndef ENABLE_DDR 
       if ( !img_in_axi_stream.empty() && !img_out_axi_stream.full() )
       {
+      #endif
 	if (accel_called == false) {
 	#ifdef FAKE_Harris
 	    fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
 	#else
+	    #ifdef ENABLE_DDR 
+	    cornerHarrisAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT, Thresh, k);
+	    #else
 	    cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
+	    #endif
 	#endif
 	    accel_called = true;
 	    HarrisFSM = HARRIS_RETURN_RESULTS;
 	}
-	//if ( !img_out_axi_stream.empty() )  
-	//{
-	//} 
+      #ifndef ENABLE_DDR
       }
+      #endif
       break;
       
+    #ifdef ENABLE_DDR 
+    case HARRIS_RETURN_RESULTS:
+      
+      break;
+    #else
     case HARRIS_RETURN_RESULTS:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
@@ -282,7 +351,7 @@ void pProcPath(
 	sRxpToTxp_Data.write(newWord);
       }
       break;
-      
+    #endif  
   } // end switch
  
 }
@@ -410,8 +479,8 @@ void pTXPath(
  *****************************************************************************/
 void harris(
 
-    ap_uint<32>             *pi_rank,
-    ap_uint<32>             *pi_size,
+    ap_uint<32>                 *pi_rank,
+    ap_uint<32>                 *pi_size,
     //------------------------------------------------------
     //-- SHELL / This / Udp/TCP Interfaces
     //------------------------------------------------------
@@ -420,6 +489,16 @@ void harris(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
+    
+    
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp0 Interface
+    //------------------------------------------------------
+    #ifdef ENABLE_DDR
+                                ,
+    membus_t                    *lcl_mem0,
+    membus_t                    *lcl_mem1
+    #endif
     )
 {
 
@@ -438,7 +517,18 @@ void harris(
 #pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
-
+// LCL_MEM0 interfaces
+#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0
+//#pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
+//  max_read_burst_length=64  max_write_burst_length=64 
+//#pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
+// LCL_MEM1 interfaces
+#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1
+//#pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
+//  max_read_burst_length=64  max_write_burst_length=64 
+//#pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
+  
+  
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
@@ -496,19 +586,30 @@ void harris(
 			   siSHL_This_Data,
 			   siNrc_meta,
 			   sRxtoTx_Meta,
+#ifdef ENABLE_DDR
+			   lcl_mem0,
+#else
 			   img_in_axi_stream,
+#endif
 			   meta_tmp,
 			   &processed_word_rx,
 			   &processed_bytes_rx,
-			   &image_loaded);
+			   &image_loaded
+			  );
   
   HLSLIB_DATAFLOW_FUNCTION(pProcPath,
 			   sRxpToTxp_Data,
-		           img_in_axi_stream,
-		           img_out_axi_stream,
+#ifdef ENABLE_DDR
+			   lcl_mem0,
+			   lcl_mem1,
+#else
+			   img_in_axi_stream,
+			   img_out_axi_stream,
+#endif
 		           &processed_word_rx,
 			   &processed_bytes_rx,
-		           &image_loaded); 
+		           &image_loaded
+			  ); 
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
@@ -526,16 +627,25 @@ void harris(
 	siSHL_This_Data,
         siNrc_meta,
 	sRxtoTx_Meta,
+#ifdef ENABLE_DDR
+	lcl_mem0,
+#else
 	img_in_axi_stream,
-        meta_tmp,	 
+#endif
+	meta_tmp,	 
         &processed_word_rx,
 	&processed_bytes_rx,
 	&image_loaded);
   
   
   pProcPath(sRxpToTxp_Data,
+#ifdef ENABLE_DDR
+	    lcl_mem0,
+	    lcl_mem1,
+#else
 	    img_in_axi_stream,
 	    img_out_axi_stream,
+#endif
 	    &processed_word_rx,
 	    &processed_bytes_rx,
 	    &image_loaded);  
