@@ -40,7 +40,7 @@ PacketFsmType HarrisFSM  = WAIT_FOR_META;
 
 
 /*****************************************************************************
- * @brief   Store a word from ethernet to local memory
+ * @brief   Store a net word to local memory
  * @return Nothing.
  *****************************************************************************/
 void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS], 
@@ -64,7 +64,7 @@ void storeWordToArray(uint64_t input, ap_uint<INPUT_PTR_WIDTH> img[IMG_PACKETS],
 
 
 /*****************************************************************************
- * @brief   Store a word from ethernet to a local AXI stream
+ * @brief   Store a net word to a local AXI stream
  * @return Nothing.
  *****************************************************************************/
 void storeWordToAxiStream(
@@ -119,7 +119,7 @@ void storeWordToAxiStream(
 
 
 /*****************************************************************************
- * @brief   Store a word from ethernet to DDR memory (axi master)
+ * @brief   Store a net word to DDR memory (axi master)
  * @return Nothing.
  *****************************************************************************/
 void storeWordToMem(
@@ -129,11 +129,22 @@ void storeWordToMem(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  #pragma HLS INLINE
+  //#pragma HLS INLINE
   Data_t_in v;
+  v.data = 0;
+  v.keep = 0;
+  v.last = 0;
+  
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
   unsigned int bytes_with_keep = 0;
+  static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
+  #pragma HLS stream variable=img_in_axi_stream depth=2
+  xf::cv::Mat<IN_TYPE, 1, BPERMDW_512, NPIX> in_mat(1, BPERMDW_512);
+  #pragma HLS stream variable=in_mat.data depth=2
+  // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
+  static unsigned int * ddr_addr_in = processed_word_rx;
+  
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
     //#pragma HLS UNROLL factor=loop_cnt
@@ -143,10 +154,13 @@ void storeWordToMem(
       continue; 
     }
     v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
-    //lcl_mem0[i] = (membus_t)v.data; // FIXME: we should pack more data in 512b from 64b net
+    v.keep = word.tkeep;
+    v.last = word.tlast;
+    img_in_axi_stream.write(v);
     bytes_with_keep += bytes_per_loop;
   }
-lcl_mem0[*processed_word_rx] = (membus_t)v.data;
+  
+
   if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
     (*processed_bytes_rx) += bytes_with_keep;
   }
@@ -155,6 +169,18 @@ lcl_mem0[*processed_word_rx] = (membus_t)v.data;
     *processed_bytes_rx = 0;
     *image_loaded = 1;
   }
+  
+  
+  // Both when we have a new word for DDR or the net stream ended (*processed_bytes_rx = 0)
+  if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
+    printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
+	    KWPERMDW_512, BPERMDW_512);
+    xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, 1, BPERMDW_512, NPIX>(
+	    img_in_axi_stream, in_mat);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(in_mat, lcl_mem0+((*ddr_addr_in)++));
+  }
+  
+  
 }
 
 
@@ -284,6 +310,13 @@ void pProcPath(
     uint16_t k = K * (1 << 16); // Convert to Q0.16 format
     static bool accel_called;
     static unsigned int processed_word_proc;
+    #ifdef ENABLE_DDR 
+    xf::cv::Mat<OUT_TYPE, 1, BPERMDW_512, NPIX> out_mat(1, BPERMDW_512);
+    #pragma HLS stream variable=out_mat.data depth=2
+    static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
+    #pragma HLS stream variable=img_out_axi_stream depth=2
+    static unsigned int ddr_addr_out;
+    #endif
     
   switch(HarrisFSM)
   {
@@ -296,6 +329,7 @@ void pProcPath(
 //	*processed_bytes_rx = 0;
 	accel_called = false;
 	processed_word_proc = 0;
+	ddr_addr_out = 0;
       }
       break;
 
@@ -306,15 +340,15 @@ void pProcPath(
       {
       #endif
 	if (accel_called == false) {
-	#ifdef FAKE_Harris
-	    fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
-	#else
 	    #ifdef ENABLE_DDR 
 	    cornerHarrisAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT, Thresh, k);
-	    #else
+	    #else // ! ENABLE_DDR
+	    #ifdef FAKE_Harris
+	    fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	    #else // !FAKE_Harris
 	    cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
-	    #endif
-	#endif
+	    #endif // FAKE_Harris
+	    #endif // ENABLE_DDR
 	    accel_called = true;
 	    HarrisFSM = HARRIS_RETURN_RESULTS;
 	}
@@ -325,8 +359,49 @@ void pProcPath(
       
     #ifdef ENABLE_DDR 
     case HARRIS_RETURN_RESULTS:
-      
+      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");      
+      if (accel_called == true) {
+	
+	  printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
+	       KWPERMDW_512, BPERMDW_512);
+	  
+	  xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(lcl_mem0+(ddr_addr_out++), out_mat);
+	  
+	  xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, 1, BPERMDW_512, NPIX>(
+				out_mat, img_out_axi_stream);
+	
+	  
+	  HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
+	//}
+      }  
       break;
+    case HARRIS_RETURN_RESULTS_FWD:
+      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
+      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+      {
+	
+	Data_t_out temp = img_out_axi_stream.read();
+	if ( img_out_axi_stream.empty() ) {
+	  HarrisFSM = HARRIS_RETURN_RESULTS;
+	}
+	
+	if (processed_word_proc++ == MIN_TX_LOOPS-1)
+	{
+	  temp.last = 1;
+	  HarrisFSM = WAIT_FOR_META;
+	  accel_called = false;
+	}
+	else
+	{
+	  temp.last = 0;
+	}
+	//TODO: find why Vitis kernel does not set keep and last by itself
+	temp.keep = 255;
+	newWord = NetworkWord(temp.data, temp.keep, temp.last); 
+	sRxpToTxp_Data.write(newWord);
+      }
+      break;
+
     #else
     case HARRIS_RETURN_RESULTS:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
@@ -519,15 +594,16 @@ void harris(
 
 // LCL_MEM0 interfaces
 #pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0
-//#pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
-//  max_read_burst_length=64  max_write_burst_length=64 
-//#pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
+/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
+  max_read_burst_length=64  max_write_burst_length=64 
+  #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
+*/
 // LCL_MEM1 interfaces
 #pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1
-//#pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
-//  max_read_burst_length=64  max_write_burst_length=64 
-//#pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
-  
+/* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
+   max_read_burst_length=64  max_write_burst_length=64 
+   #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
+*/
   
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
@@ -559,9 +635,11 @@ void harris(
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=image_loaded
+
+#ifndef ENABLE_DDR
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
-  
+#endif
 
 #ifdef USE_HLSLIB_DATAFLOW
   /*! @copybrief harris()

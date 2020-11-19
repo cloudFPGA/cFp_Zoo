@@ -139,12 +139,15 @@ int main(int argc, char** argv) {
     in_img = cv::imread(argv[1], 0); // reading in the color image
 
     if (!in_img.data) {
-        printf("Failed to load the image ... %s\n!", argv[1]);
+        printf("ERROR: Failed to load the image ... %s\n!", argv[1]);
         return -1;
     }
     else {
-      printf("Succesfully loaded image ... %s\n!", argv[1]);
-      assert(in_img.total() == FRAME_WIDTH * FRAME_HEIGHT);
+      printf("INFO: Succesfully loaded image ... %s\n", argv[1]);
+      if (in_img.total() != FRAME_WIDTH * FRAME_HEIGHT) {
+	 printf("WARNING: Resizing input image %s from [%u x %u] to  [%u x %u] !\n", argv[1], in_img.rows, in_img.cols, FRAME_WIDTH, FRAME_HEIGHT);
+	 cv::resize(in_img, in_img, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, cv::INTER_LINEAR);
+      }
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
     }

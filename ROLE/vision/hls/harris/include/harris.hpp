@@ -48,10 +48,11 @@ enum EchoCtrl {
 
 
 
-#define WAIT_FOR_META 0
-#define WAIT_FOR_STREAM_PAIR 1
-#define PROCESSING_PACKET 2
-#define HARRIS_RETURN_RESULTS 3
+#define WAIT_FOR_META             0
+#define WAIT_FOR_STREAM_PAIR      1
+#define PROCESSING_PACKET         2
+#define HARRIS_RETURN_RESULTS     3
+#define HARRIS_RETURN_RESULTS_FWD 4
 
 #define PacketFsmType uint8_t
 
@@ -62,9 +63,9 @@ enum EchoCtrl {
 
 /* General memory Data Width is set as a parameter*/
 /* 52-bit host AXI data width*/
-#define MEMDW_512 512              // 512 Bus width in bits for cF DDR memory
-#define BPERDW_512 (MEMDW_512/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64
-#define WPERDW_512 (64/BPERDW_512) // Number of words per DW if MEMDW=512 => WPERDW =  1 ?????
+#define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
+#define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
+#define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 #define ADDR_RIGHT_SHIFT_512 6
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
