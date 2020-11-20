@@ -152,8 +152,10 @@ int main(int argc, char** argv) {
       assert(PACK_SIZE % 8 == 0);
     }
 
-    
+    #ifdef ENABLE_DDR
     memset(lcl_mem0,  0x0, sizeof(lcl_mem0));
+    memset(lcl_mem1,  0x0, sizeof(lcl_mem1));
+    #endif
     
     uint16_t Thresh; // Threshold for HLS
     float Th;

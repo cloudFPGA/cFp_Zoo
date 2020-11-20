@@ -329,7 +329,9 @@ void pProcPath(
 //	*processed_bytes_rx = 0;
 	accel_called = false;
 	processed_word_proc = 0;
+	#ifdef ENABLE_DDR
 	ddr_addr_out = 0;
+	#endif
       }
       break;
 
@@ -365,7 +367,7 @@ void pProcPath(
 	  printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	       KWPERMDW_512, BPERMDW_512);
 	  
-	  xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(lcl_mem0+(ddr_addr_out++), out_mat);
+	  xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(lcl_mem1+(ddr_addr_out++), out_mat);
 	  
 	  xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, 1, BPERMDW_512, NPIX>(
 				out_mat, img_out_axi_stream);
@@ -593,13 +595,14 @@ void harris(
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
 // LCL_MEM0 interfaces
-#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0
-/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
+#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0 \
   max_read_burst_length=64  max_write_burst_length=64 
+/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
   #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
 */
 // LCL_MEM1 interfaces
-#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1
+#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1 \
+  max_read_burst_length=64  max_write_burst_length=64 
 /* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
    max_read_burst_length=64  max_write_burst_length=64 
    #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    

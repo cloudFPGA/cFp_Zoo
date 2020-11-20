@@ -212,9 +212,7 @@ void cornerHarrisAccelMem(membus_t* img_inp,
     #pragma HLS stream variable=in_mat.data depth=2
     // clang-format on
 
-    #ifdef FAKE_Harris
-    //xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX> out_mat = in_mat;
-    #else
+    #ifndef FAKE_Harris
     xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX> out_mat(rows, cols);
     // clang-format off
     #pragma HLS stream variable=out_mat.data depth=2
@@ -239,7 +237,7 @@ void cornerHarrisAccelMem(membus_t* img_inp,
       in_mat, out_mat, threshold, k);
     
     // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, img_out);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(out_mat, img_out);
     
     #endif
     
