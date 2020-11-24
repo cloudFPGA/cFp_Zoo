@@ -130,16 +130,17 @@ void storeWordToMem(
   unsigned int *image_loaded)
 {   
   //#pragma HLS INLINE
+  
   Data_t_in v;
   v.data = 0;
   v.keep = 0;
   v.last = 0;
-  
+  static unsigned int writes = 0;
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
   unsigned int bytes_with_keep = 0;
   static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
-  #pragma HLS stream variable=img_in_axi_stream depth=2
+  #pragma HLS stream variable=img_in_axi_stream depth=65
   xf::cv::Mat<IN_TYPE, 1, BPERMDW_512, NPIX> in_mat(1, BPERMDW_512);
   #pragma HLS stream variable=in_mat.data depth=2
   // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
@@ -157,12 +158,14 @@ void storeWordToMem(
     v.keep = word.tkeep;
     v.last = word.tlast;
     img_in_axi_stream.write(v);
+    printf("DEBUGGGGGGGG: writes:%u\n", writes++);
     bytes_with_keep += bytes_per_loop;
   }
   
 
   if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
     (*processed_bytes_rx) += bytes_with_keep;
+    // *image_loaded = 0;
   }
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
@@ -175,11 +178,21 @@ void storeWordToMem(
   if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
     printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	    KWPERMDW_512, BPERMDW_512);
-    xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, 1, BPERMDW_512, NPIX>(
-	    img_in_axi_stream, in_mat);
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(in_mat, lcl_mem0+((*ddr_addr_in)++));
+    membus_t tmp = 0;
+    for (unsigned int i=0; i<8*loop_cnt; i++) {
+      v = img_in_axi_stream.read();
+      tmp(i*8,i*8+7) = v.data;
+    }
+    lcl_mem0[(*ddr_addr_in)++] = tmp;
+    //xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, 1, BPERMDW_512, NPIX>(
+//	    img_in_axi_stream, in_mat);
+    //xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(in_mat, lcl_mem0+((*ddr_addr_in)++));
   }
   
+  
+  if ((*image_loaded) == 1) {
+    (*ddr_addr_in) = 0;
+  }
   
 }
 
@@ -314,7 +327,7 @@ void pProcPath(
     xf::cv::Mat<OUT_TYPE, 1, BPERMDW_512, NPIX> out_mat(1, BPERMDW_512);
     #pragma HLS stream variable=out_mat.data depth=2
     static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
-    #pragma HLS stream variable=img_out_axi_stream depth=2
+    #pragma HLS stream variable=img_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
     #endif
     
@@ -325,7 +338,7 @@ void pProcPath(
       if ( (*image_loaded) == 1 )
       {
         HarrisFSM = PROCESSING_PACKET;
-	*processed_word_rx = 0;
+//	*processed_word_rx = 0;
 //	*processed_bytes_rx = 0;
 	accel_called = false;
 	processed_word_proc = 0;
@@ -594,6 +607,8 @@ void harris(
 #pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
+  
+#ifdef ENABLE_DDR
 // LCL_MEM0 interfaces
 #pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0 \
   max_read_burst_length=64  max_write_burst_length=64 
@@ -607,7 +622,8 @@ void harris(
    max_read_burst_length=64  max_write_burst_length=64 
    #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
 */
-  
+#endif
+
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
