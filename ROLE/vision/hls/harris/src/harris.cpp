@@ -129,7 +129,7 @@ void storeWordToMem(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  //#pragma HLS INLINE
+  #pragma HLS INLINE
   
   Data_t_in v;
   v.data = 0;
@@ -141,10 +141,9 @@ void storeWordToMem(
   unsigned int bytes_with_keep = 0;
   static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
   #pragma HLS stream variable=img_in_axi_stream depth=65
-  xf::cv::Mat<IN_TYPE, 1, BPERMDW_512, NPIX> in_mat(1, BPERMDW_512);
-  #pragma HLS stream variable=in_mat.data depth=2
   // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
   static unsigned int * ddr_addr_in = processed_word_rx;
+  membus_t tmp = 0;
   
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
@@ -178,10 +177,9 @@ void storeWordToMem(
   if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
     printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	    KWPERMDW_512, BPERMDW_512);
-    membus_t tmp = 0;
-    for (unsigned int i=0; i<8*loop_cnt; i++) {
+    for (unsigned int i=0; i<BPERMDW_512; i++) {
       v = img_in_axi_stream.read();
-      tmp(i*8,i*8+7) = v.data;
+      tmp(i*INPUT_PTR_WIDTH, (i+1)*INPUT_PTR_WIDTH-1) = v.data;
     }
     lcl_mem0[(*ddr_addr_in)++] = tmp;
     //xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, 1, BPERMDW_512, NPIX>(
@@ -190,7 +188,7 @@ void storeWordToMem(
   }
   
   
-  if ((*image_loaded) == 1) {
+  if ((*processed_bytes_rx) == 0) {
     (*ddr_addr_in) = 0;
   }
   
@@ -323,9 +321,8 @@ void pProcPath(
     uint16_t k = K * (1 << 16); // Convert to Q0.16 format
     static bool accel_called;
     static unsigned int processed_word_proc;
+    Data_t_out temp;
     #ifdef ENABLE_DDR 
-    xf::cv::Mat<OUT_TYPE, 1, BPERMDW_512, NPIX> out_mat(1, BPERMDW_512);
-    #pragma HLS stream variable=out_mat.data depth=2
     static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
     #pragma HLS stream variable=img_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
@@ -380,11 +377,28 @@ void pProcPath(
 	  printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	       KWPERMDW_512, BPERMDW_512);
 	  
-	  xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(lcl_mem1+(ddr_addr_out++), out_mat);
+	  membus_t tmp = lcl_mem1[ddr_addr_out++];
 	  
-	  xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, 1, BPERMDW_512, NPIX>(
-				out_mat, img_out_axi_stream);
-	
+	  temp.keep = 0;
+	  temp.last = 0;
+	  for (unsigned int i=0; i<(MEMDW_512/OUTPUT_PTR_WIDTH); i++) {
+	    temp.data = tmp(i*OUTPUT_PTR_WIDTH, (i+1)*OUTPUT_PTR_WIDTH-1);
+/*	    #if OUTPUT_PTR_WIDTH == 64
+	    ap_uint<OUTPUT_PTR_WIDTH> raw64;
+	    raw64(0 ,7) =  tmp(i*OUTPUT_PTR_WIDTH+56, i*OUTPUT_PTR_WIDTH+63);
+	    raw64(8 ,15) = tmp(i*OUTPUT_PTR_WIDTH+48, i*OUTPUT_PTR_WIDTH+55);
+	    raw64(16,23) = tmp(i*OUTPUT_PTR_WIDTH+40, i*OUTPUT_PTR_WIDTH+47);
+	    raw64(24,31) = tmp(i*OUTPUT_PTR_WIDTH+32, i*OUTPUT_PTR_WIDTH+39);
+	    raw64(32,39) = tmp(i*OUTPUT_PTR_WIDTH+24, i*OUTPUT_PTR_WIDTH+31);
+	    raw64(40,47) = tmp(i*OUTPUT_PTR_WIDTH+16, i*OUTPUT_PTR_WIDTH+23);
+	    raw64(48,55) = tmp(i*OUTPUT_PTR_WIDTH+8 , i*OUTPUT_PTR_WIDTH+15);
+	    raw64(56,63) = tmp(i*OUTPUT_PTR_WIDTH   , i*OUTPUT_PTR_WIDTH+7);
+	    temp.data = raw64;
+	    #endif
+*/	    
+	    
+	    img_out_axi_stream.write(temp);
+	  }
 	  
 	  HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
 	//}
@@ -395,7 +409,7 @@ void pProcPath(
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	Data_t_out temp = img_out_axi_stream.read();
+	temp = img_out_axi_stream.read();
 	if ( img_out_axi_stream.empty() ) {
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	}
@@ -423,7 +437,7 @@ void pProcPath(
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	Data_t_out temp = img_out_axi_stream.read();
+	temp = img_out_axi_stream.read();
 	if ( img_out_axi_stream.empty() )
 	//if (processed_word_proc++ == MIN_TX_LOOPS-1)
 	{

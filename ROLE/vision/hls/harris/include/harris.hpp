@@ -66,7 +66,6 @@ enum EchoCtrl {
 #define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
 #define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
 #define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
-#define ADDR_RIGHT_SHIFT_512 6
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 
