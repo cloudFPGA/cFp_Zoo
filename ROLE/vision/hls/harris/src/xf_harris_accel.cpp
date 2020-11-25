@@ -230,7 +230,6 @@ void cornerHarrisAccelMem(membus_t* img_inp,
     
     // Feed ddr memory from a cv matrix
     xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(in_mat, img_out);
-    
     #else
     
     xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(

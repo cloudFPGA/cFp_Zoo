@@ -111,7 +111,7 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 # ------------------------------------------------------------------------------
 if { $hlsSim } {
-  csim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -compiler gcc -clean -argv "${SimFile}"
+  csim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"
 } else {
 
   if { $hlsSyn } {
@@ -119,7 +119,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -compiler gcc -trace_level all -argv "${SimFile}"
+    cosim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -trace_level all -argv "${SimFile}"
   } else {
 
   # ------------------------------------------------------------------------------

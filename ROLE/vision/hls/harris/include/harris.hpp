@@ -60,6 +60,8 @@ enum EchoCtrl {
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
+#define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
+#define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
 /* General memory Data Width is set as a parameter*/
 /* 52-bit host AXI data width*/

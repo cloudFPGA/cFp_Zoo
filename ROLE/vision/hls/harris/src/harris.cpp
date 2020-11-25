@@ -30,9 +30,6 @@ using hlslib::Stream;
 #endif
 using hls::stream;
 
-#define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
-#define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
-
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType HarrisFSM  = WAIT_FOR_META;
@@ -129,7 +126,7 @@ void storeWordToMem(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  #pragma HLS INLINE
+  //#pragma HLS INLINE
   
   Data_t_in v;
   v.data = 0;
@@ -157,7 +154,6 @@ void storeWordToMem(
     v.keep = word.tkeep;
     v.last = word.tlast;
     img_in_axi_stream.write(v);
-    printf("DEBUGGGGGGGG: writes:%u\n", writes++);
     bytes_with_keep += bytes_per_loop;
   }
   
@@ -179,12 +175,10 @@ void storeWordToMem(
 	    KWPERMDW_512, BPERMDW_512);
     for (unsigned int i=0; i<BPERMDW_512; i++) {
       v = img_in_axi_stream.read();
-      tmp(i*INPUT_PTR_WIDTH, (i+1)*INPUT_PTR_WIDTH-1) = v.data;
+      tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
     }
+    // Write to DDR
     lcl_mem0[(*ddr_addr_in)++] = tmp;
-    //xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, 1, BPERMDW_512, NPIX>(
-//	    img_in_axi_stream, in_mat);
-    //xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, 1, BPERMDW_512, NPIX>(in_mat, lcl_mem0+((*ddr_addr_in)++));
   }
   
   
@@ -382,21 +376,19 @@ void pProcPath(
 	  temp.keep = 0;
 	  temp.last = 0;
 	  for (unsigned int i=0; i<(MEMDW_512/OUTPUT_PTR_WIDTH); i++) {
-	    temp.data = tmp(i*OUTPUT_PTR_WIDTH, (i+1)*OUTPUT_PTR_WIDTH-1);
-/*	    #if OUTPUT_PTR_WIDTH == 64
+	    #if OUTPUT_PTR_WIDTH == 64
 	    ap_uint<OUTPUT_PTR_WIDTH> raw64;
-	    raw64(0 ,7) =  tmp(i*OUTPUT_PTR_WIDTH+56, i*OUTPUT_PTR_WIDTH+63);
-	    raw64(8 ,15) = tmp(i*OUTPUT_PTR_WIDTH+48, i*OUTPUT_PTR_WIDTH+55);
-	    raw64(16,23) = tmp(i*OUTPUT_PTR_WIDTH+40, i*OUTPUT_PTR_WIDTH+47);
-	    raw64(24,31) = tmp(i*OUTPUT_PTR_WIDTH+32, i*OUTPUT_PTR_WIDTH+39);
-	    raw64(32,39) = tmp(i*OUTPUT_PTR_WIDTH+24, i*OUTPUT_PTR_WIDTH+31);
-	    raw64(40,47) = tmp(i*OUTPUT_PTR_WIDTH+16, i*OUTPUT_PTR_WIDTH+23);
-	    raw64(48,55) = tmp(i*OUTPUT_PTR_WIDTH+8 , i*OUTPUT_PTR_WIDTH+15);
-	    raw64(56,63) = tmp(i*OUTPUT_PTR_WIDTH   , i*OUTPUT_PTR_WIDTH+7);
+	    //raw64 = tmp(i*OUTPUT_PTR_WIDTH, (i+1)*OUTPUT_PTR_WIDTH-1);
+	    raw64(56,63) = tmp(i*OUTPUT_PTR_WIDTH+56, i*OUTPUT_PTR_WIDTH+63);
+	    raw64(48,55) = tmp(i*OUTPUT_PTR_WIDTH+48, i*OUTPUT_PTR_WIDTH+55);
+	    raw64(40,47) = tmp(i*OUTPUT_PTR_WIDTH+40, i*OUTPUT_PTR_WIDTH+47);
+	    raw64(32,39) = tmp(i*OUTPUT_PTR_WIDTH+32, i*OUTPUT_PTR_WIDTH+39);
+	    raw64(24,31) = tmp(i*OUTPUT_PTR_WIDTH+24, i*OUTPUT_PTR_WIDTH+31);
+	    raw64(16,23) = tmp(i*OUTPUT_PTR_WIDTH+16, i*OUTPUT_PTR_WIDTH+23);
+	    raw64(8 ,15) = tmp(i*OUTPUT_PTR_WIDTH+8 , i*OUTPUT_PTR_WIDTH+15);
+	    raw64(0 ,7 ) = tmp(i*OUTPUT_PTR_WIDTH   , i*OUTPUT_PTR_WIDTH+7);
 	    temp.data = raw64;
-	    #endif
-*/	    
-	    
+	    #endif 
 	    img_out_axi_stream.write(temp);
 	  }
 	  
@@ -625,13 +617,13 @@ void harris(
 #ifdef ENABLE_DDR
 // LCL_MEM0 interfaces
 #pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0 \
-  max_read_burst_length=64  max_write_burst_length=64 
+  max_read_burst_length=64  max_write_burst_length=64 offset=slave
 /* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
   #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
 */
 // LCL_MEM1 interfaces
 #pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1 \
-  max_read_burst_length=64  max_write_burst_length=64 
+  max_read_burst_length=64  max_write_burst_length=64 offset=slave
 /* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
    max_read_burst_length=64  max_write_burst_length=64 
    #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
