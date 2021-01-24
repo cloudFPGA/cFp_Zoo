@@ -24,6 +24,30 @@ The `MCEuropeanEngine IP` is wrapped in an appropriate cFp_Vitis ROLE. Together 
 More info for the `MCEuropeanEngine IP`: https://xilinx.github.io/Vitis_Libraries/quantitative_finance/2020.1/rst_L2/namespace_xf_fintech.html#cid-xf-fintech-mceuropeanengine .
 
 
+#### Quick start
+
+* `source <cFp_Vitis_directory>/env/setenv.sh`
+
+* `cd $cFpRootDir/ROLE/quantitative_finance/hls/mceuropeanengine`
+
+#### Run C++ simulation 
+
+Since the source code of Vitis libraries is in C++, we have created a C++ testbench in order to simulate the corresponding kernel and verify its functionality.
+
+##### Simulation with Vivado/Vitis HLS tool
+
+* `make csim`
+
+##### Simulation with native gcc
+
+* `make fcsim -j 4`
+
+#### Run HLS with Vivado/Vitis HLS tool
+
+* `make csynth`
+
+
+
 #### Device Utilization
 
 | MCE    | CLBs     | CLBs (%) | BRAMs | BRAMs (%) | DSPs  | DSPs (%) | IOs | IOss (%) |
