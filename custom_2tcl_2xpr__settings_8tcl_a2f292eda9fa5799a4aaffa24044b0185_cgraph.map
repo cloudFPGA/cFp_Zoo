@@ -1,0 +1,15 @@
+<map id="my_puts" name="my_puts">
+<area shape="rect" id="node2" href="$hlslib_2xilinx__test_2CMakeLists_8txt.html#a07b5f13961242fe20b0ffc22df66e9d8" title="set" alt="" coords="132,107,175,133"/>
+<area shape="rect" id="node3" href="$MultiStageAdd_8h.html#a73e3e092563b5f12f4d5d53c618a03ce" title="MultiStageAdd" alt="" coords="230,56,346,83"/>
+<area shape="rect" id="node13" href="$AccumulateFloat_8h.html#a5b8837845379052ebf4d48584cf1744d" title="AccumulateFloat" alt="" coords="223,107,353,133"/>
+<area shape="rect" id="node14" href="$AccumulateInt_8h.html#a4ac4729a09a099e33ac10de2fb4c7e38" title="AccumulateInt" alt="" coords="230,157,346,184"/>
+<area shape="rect" id="node4" href="$MultiStageAdd_8cpp.html#a31277a1005339482f04fdd7b5875fc8e" title="MemoryToStream" alt="" coords="401,5,537,32"/>
+<area shape="rect" id="node8" href="$MultiStageAdd_8cpp.html#aea13fb83b0ddc20404fae597d7a3d71a" title="AddStage" alt="" coords="427,56,511,83"/>
+<area shape="rect" id="node12" href="$MultiStageAdd_8cpp.html#a6ab41798e3284c32636c8db5e7ffe542" title="StreamToMemory" alt="" coords="401,107,537,133"/>
+<area shape="rect" id="node5" href="$classhlslib_1_1Stream.html#a3d89138fad99850788050c2a7b055636" title="hlslib::Stream::Push" alt="" coords="585,31,736,57"/>
+<area shape="rect" id="node6" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="784,31,939,57"/>
+<area shape="rect" id="node7" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="987,31,1197,57"/>
+<area shape="rect" id="node9" href="$classhlslib_1_1Stream.html#a7cf32d9e6826da8fc126bb1b34f051e1" title="hlslib::Stream::Pop" alt="" coords="589,93,733,120"/>
+<area shape="rect" id="node10" href="$namespacehlslib.html#af91425eed8d0fb122fab03dd3b69b87b" title="Attempt to read from a stream, blocking until a value can be read. Useful for inter&#45;process communica..." alt="" coords="785,93,938,120"/>
+<area shape="rect" id="node11" href="$classhlslib_1_1Stream.html#ab9c2ddc0f39da4d6953bcc1fcd477ab6" title="hlslib::Stream::ReadBlocking" alt="" coords="988,93,1196,120"/>
+</map>

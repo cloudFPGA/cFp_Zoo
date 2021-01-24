@@ -1,0 +1,5 @@
+<map id="hlslib::Stream::WriteOptimistic" name="hlslib::Stream::WriteOptimistic">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a7ee91b8e43c01072b5282a6a0c1f635c" title="Attempt to write to a stream, throwing an exception if the stream is full. Useful for internal buffer..." alt="" coords="275,5,441,32"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a0fc035d1152352e30acbc0aa4b9d1de9" title="hlslib::max" alt="" coords="311,56,405,83"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a01aee47a9a62bb7f0fc777a72711560f" title="hlslib::Stream::WriteOptimistic" alt="" coords="489,5,711,32"/>
+</map>

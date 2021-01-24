@@ -1,0 +1,6 @@
+<map id="Catch::Matchers::StdString::EqualsMatcher" name="Catch::Matchers::StdString::EqualsMatcher">
+<area shape="rect" id="node2" href="$structCatch_1_1Matchers_1_1StdString_1_1StringMatcherBase.html" title="Catch::Matchers::StdString\l::StringMatcherBase" alt="" coords="521,39,715,80"/>
+<area shape="rect" id="node3" href="$structCatch_1_1Matchers_1_1Impl_1_1MatcherBase.html" title="Catch::Matchers::Impl\l::MatcherBase\&lt; std::string \&gt;" alt="" coords="264,39,473,80"/>
+<area shape="rect" id="node4" href="$classCatch_1_1Matchers_1_1Impl_1_1MatcherUntypedBase.html" title="Catch::Matchers::Impl\l::MatcherUntypedBase" alt="" coords="26,5,195,47"/>
+<area shape="rect" id="node5" href="$structCatch_1_1Matchers_1_1Impl_1_1MatcherMethod.html" title="Catch::Matchers::Impl\l::MatcherMethod\&lt; ObjectT \&gt;" alt="" coords="5,71,216,112"/>
+</map>

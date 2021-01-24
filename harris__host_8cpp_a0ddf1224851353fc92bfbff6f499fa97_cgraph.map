@@ -1,0 +1,23 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classSocket.html#a982c63b25c5b756321a74074a275adbc" title="Socket::resolveService" alt="" coords="108,5,279,32"/>
+<area shape="rect" id="node3" href="$harris__host_8cpp.html#a8929116aa0d88da7b63d8bd8f232e6dc" title="print_cFpVitis" alt="" coords="138,56,249,83"/>
+<area shape="rect" id="node4" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a51e78292d5f0884fd708eb6a0abab07c" title="ocv_ref" alt="" coords="158,107,229,133"/>
+<area shape="rect" id="node9" href="$classCommunicatingSocket.html#aca4e86085c064641e86ae24ea29bbb94" title="CommunicatingSocket\l::send" alt="" coords="109,158,278,199"/>
+<area shape="rect" id="node10" href="$harris__host_8cpp.html#a9e7cc9f16fb9cb7de4698c16cd748f15" title="delay" alt="" coords="164,224,223,251"/>
+<area shape="rect" id="node11" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="109,275,278,317"/>
+<area shape="rect" id="node12" href="$harris__host_8cpp.html#aac1445f0dd25f8594229f856bb996ead" title="markPointsOnImage" alt="" coords="116,341,271,368"/>
+<area shape="rect" id="node22" href="$classSocketException.html#a534b0625abe62cad2bae94758aa6eb42" title="SocketException::what" alt="" coords="108,392,279,419"/>
+<area shape="rect" id="node5" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a822ec8fca3f87a6e55a9e5f4795d5c0c" title="OCVMaxSuppression1" alt="" coords="327,81,491,108"/>
+<area shape="rect" id="node7" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a4be9749f424865cefe7a2ba10c8d8450" title="OCVMaxSuppression2" alt="" coords="327,132,491,159"/>
+<area shape="rect" id="node6" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a5f1e7f9c115d3f6aa0fa47cfdb4783b2" title="OCVFindMaximum1" alt="" coords="539,81,688,108"/>
+<area shape="rect" id="node8" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a3c33190c70546d42870e2be3f91ff7c4" title="OCVFindMaximum2" alt="" coords="539,132,688,159"/>
+<area shape="rect" id="node13" href="$harris_8hpp.html#ac3e0abb1e7912bb3959ae294de3c7d8c" title="harris" alt="" coords="379,341,438,368"/>
+<area shape="rect" id="node14" href="$harris_8cpp.html#aa44921e464c5237d0d0183d42ebdb879" title="pRXPath" alt="" coords="575,265,651,292"/>
+<area shape="rect" id="node17" href="$harris_8cpp.html#a51fcb31fb13ebef23c99ce50db2d4917" title="pProcPath" alt="" coords="570,341,657,368"/>
+<area shape="rect" id="node21" href="$harris_8cpp.html#a36dbd8dd4fba2a1cbb6e8e36ccc1a33b" title="pTXPath" alt="" coords="576,392,651,419"/>
+<area shape="rect" id="node15" href="$harris_8cpp.html#a2dcf92ce0aade7a808daa20fb305d2a6" title="storeWordToMem" alt="" coords="776,215,911,241"/>
+<area shape="rect" id="node16" href="$harris_8cpp.html#a1a7fd975ab14a622671db563170d9cec" title="storeWordToAxiStream" alt="" coords="758,265,929,292"/>
+<area shape="rect" id="node18" href="$harris_2include_2xf__harris__config_8h.html#a18169291e42ed3c9fa1f0a2c3c399fd1" title="cornerHarrisAccelMem" alt="" coords="759,316,928,343"/>
+<area shape="rect" id="node19" href="$harris_2include_2xf__harris__config_8h.html#ac20a6b7de4cc39e7961572f67044c648" title="fakeCornerHarrisAccelStream" alt="" coords="736,367,951,393"/>
+<area shape="rect" id="node20" href="$harris_2include_2xf__harris__config_8h.html#a6e38817dea3945aa9c8a21907c003794" title="cornerHarrisAccelStream" alt="" coords="751,417,935,444"/>
+</map>

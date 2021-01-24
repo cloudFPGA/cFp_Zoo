@@ -1,0 +1,9 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$TCPEchoServer_8cpp.html#a3cbb197e2ae30ea53dab013e530fcf30" title="HandleTCPClient" alt="" coords="134,110,265,137"/>
+<area shape="rect" id="node7" href="$classTCPServerSocket.html#a1d161137e1b069de7a7bfc14d3f8212c" title="TCPServerSocket::accept" alt="" coords="108,161,291,187"/>
+<area shape="rect" id="node8" href="$classSocketException.html#a534b0625abe62cad2bae94758aa6eb42" title="SocketException::what" alt="" coords="114,211,285,238"/>
+<area shape="rect" id="node3" href="$classCommunicatingSocket.html#a13f9eca30ef56836cf23c163c848c09e" title="CommunicatingSocket\l::getForeignAddress" alt="" coords="339,5,508,47"/>
+<area shape="rect" id="node4" href="$classCommunicatingSocket.html#a184fbb4775184b87ebd886a5587eb1a3" title="CommunicatingSocket\l::getForeignPort" alt="" coords="339,71,508,112"/>
+<area shape="rect" id="node5" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="339,136,508,177"/>
+<area shape="rect" id="node6" href="$classCommunicatingSocket.html#aca4e86085c064641e86ae24ea29bbb94" title="CommunicatingSocket\l::send" alt="" coords="339,201,508,243"/>
+</map>

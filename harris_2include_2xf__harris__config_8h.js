@@ -1,0 +1,26 @@
+var harris_2include_2xf__harris__config_8h =
+[
+    [ "BITS_PER_10GBITETHRNET_AXI_PACKET", "harris_2include_2xf__harris__config_8h.html#a75682b28ba0a25cd9fdac81df5cfeb10", null ],
+    [ "BYTES_PER_10GBITETHRNET_AXI_PACKET", "harris_2include_2xf__harris__config_8h.html#ac62de83786868df80a21e9d985dc0a56", null ],
+    [ "CH_TYPE", "harris_2include_2xf__harris__config_8h.html#a9f759634cabff86a2c612cce281919f4", null ],
+    [ "ENABLE_DDR", "harris_2include_2xf__harris__config_8h.html#a8113234775912859275e925d28061b44", null ],
+    [ "FAKE_Harris", "harris_2include_2xf__harris__config_8h.html#aa70ddaf551f58f46805d8c969194c9fe", null ],
+    [ "HEIGHT", "harris_2include_2xf__harris__config_8h.html#aed89bd71aee8be823e8a20ec4e093c1e", null ],
+    [ "IMG_PACKETS", "harris_2include_2xf__harris__config_8h.html#ac938343e4c0f149892c3c81340cd4d4b", null ],
+    [ "IMGSIZE", "harris_2include_2xf__harris__config_8h.html#a55f4e74d196a11fa80bd72356c4d6261", null ],
+    [ "IN_TYPE", "harris_2include_2xf__harris__config_8h.html#ad8a0cd35a488e5fd0fece5bc0fd9905f", null ],
+    [ "INPUT_PTR_WIDTH", "harris_2include_2xf__harris__config_8h.html#a9f7bbb4e5ab865a903eb6b315d2430be", null ],
+    [ "MIN_RX_LOOPS", "harris_2include_2xf__harris__config_8h.html#a7c637eec2fef5aa3921ac06cde9d10d4", null ],
+    [ "MIN_TX_LOOPS", "harris_2include_2xf__harris__config_8h.html#a1bcc07c7cff1472241ededdcb834a74b", null ],
+    [ "NPC1", "harris_2include_2xf__harris__config_8h.html#a078a57c0ba05e899ec2198a8dade0f85", null ],
+    [ "NPIX", "harris_2include_2xf__harris__config_8h.html#aea6537a69c2bf4ebd4bf84ad9434b40c", null ],
+    [ "OUT_TYPE", "harris_2include_2xf__harris__config_8h.html#a6c7bb2a006fa841a962b9f1aaba3eb74", null ],
+    [ "OUTPUT_PTR_WIDTH", "harris_2include_2xf__harris__config_8h.html#aa3bb5292550fefdaf62a5a17dec305c1", null ],
+    [ "WIDTH", "harris_2include_2xf__harris__config_8h.html#a241aeeb764887ae5e3de58b98f04b16d", null ],
+    [ "cornerHarrisAccelArray", "harris_2include_2xf__harris__config_8h.html#a265ecb6acdc195dbbc56c3306adffce4", null ],
+    [ "cornerHarrisAccelMem", "harris_2include_2xf__harris__config_8h.html#a18169291e42ed3c9fa1f0a2c3c399fd1", null ],
+    [ "cornerHarrisAccelStream", "harris_2include_2xf__harris__config_8h.html#a6e38817dea3945aa9c8a21907c003794", null ],
+    [ "fakeCornerHarrisAccelStream", "harris_2include_2xf__harris__config_8h.html#ac20a6b7de4cc39e7961572f67044c648", null ],
+    [ "gammacorrection_accel", "harris_2include_2xf__harris__config_8h.html#a4c3cf5597a98b1d16ce418e93a2a7c59", null ],
+    [ "harris_accel", "harris_2include_2xf__harris__config_8h.html#ac6b0946a43ca8271bf9dda1277023f4c", null ]
+];

@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classSocket.html" title="Socket" alt="" coords="5,56,72,83"/>
+<area shape="rect" id="node2" href="$classCommunicatingSocket.html" title="CommunicatingSocket" alt="" coords="120,31,289,57"/>
+<area shape="rect" id="node5" href="$classTCPServerSocket.html" title="TCPServerSocket" alt="" coords="139,81,271,108"/>
+<area shape="rect" id="node3" href="$classTCPSocket.html" title="TCPSocket" alt="" coords="339,5,430,32"/>
+<area shape="rect" id="node4" href="$classUDPSocket.html" title="UDPSocket" alt="" coords="337,56,432,83"/>
+</map>

@@ -1,0 +1,10 @@
+var searchData=
+[
+  ['bits_5fper_5f10gbitethrnet_5faxi_5fpacket',['BITS_PER_10GBITETHRNET_AXI_PACKET',['../mceuropeanengine_8hpp.html#a75682b28ba0a25cd9fdac81df5cfeb10',1,'BITS_PER_10GBITETHRNET_AXI_PACKET():&#160;mceuropeanengine.hpp'],['../harris_2include_2xf__harris__config_8h.html#a75682b28ba0a25cd9fdac81df5cfeb10',1,'BITS_PER_10GBITETHRNET_AXI_PACKET():&#160;xf_harris_config.h']]],
+  ['block_5fwidth',['BLOCK_WIDTH',['../gammacorrection_2include_2xf__config__params_8h.html#aff434668c1f3fab69e5937ecae459c3f',1,'BLOCK_WIDTH():&#160;xf_config_params.h'],['../harris_2include_2xf__config__params_8h.html#aff434668c1f3fab69e5937ecae459c3f',1,'BLOCK_WIDTH():&#160;xf_config_params.h']]],
+  ['bperdw',['BPERDW',['../uppercase_8hpp.html#ac906099d912f3a491ea18388ab3c6c33',1,'BPERDW():&#160;uppercase.hpp'],['../gammacorrection_8hpp.html#ac906099d912f3a491ea18388ab3c6c33',1,'BPERDW():&#160;gammacorrection.hpp']]],
+  ['bpermdw_5f512',['BPERMDW_512',['../harris_8hpp.html#a7f3cac84d706309cfdb12711044a3a68',1,'harris.hpp']]],
+  ['buf_5flen',['BUF_LEN',['../custom_2uppercase_2languages_2cplusplus_2include_2config_8h.html#a8b5839f71a3b6e7d64b2d5e9967e3dd1',1,'BUF_LEN():&#160;config.h'],['../quantitative__finance_2mceuropeanengine_2languages_2cplusplus_2include_2config_8h.html#a8b5839f71a3b6e7d64b2d5e9967e3dd1',1,'BUF_LEN():&#160;config.h'],['../vision_2gammacorrection_2include_2config_8h.html#a8b5839f71a3b6e7d64b2d5e9967e3dd1',1,'BUF_LEN():&#160;config.h'],['../vision_2harris_2languages_2cplusplus_2include_2config_8h.html#a8b5839f71a3b6e7d64b2d5e9967e3dd1',1,'BUF_LEN():&#160;config.h']]],
+  ['byte_5fper_5fmem_5fword',['BYTE_PER_MEM_WORD',['../mem__test__flash_8hpp.html#a5271694a7cc76abd5bab694a628ae759',1,'mem_test_flash.hpp']]],
+  ['bytes_5fper_5f10gbitethrnet_5faxi_5fpacket',['BYTES_PER_10GBITETHRNET_AXI_PACKET',['../mceuropeanengine_8hpp.html#ac62de83786868df80a21e9d985dc0a56',1,'BYTES_PER_10GBITETHRNET_AXI_PACKET():&#160;mceuropeanengine.hpp'],['../harris_2include_2xf__harris__config_8h.html#ac62de83786868df80a21e9d985dc0a56',1,'BYTES_PER_10GBITETHRNET_AXI_PACKET():&#160;xf_harris_config.h']]]
+];

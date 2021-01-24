@@ -1,0 +1,35 @@
+<map id="hlslib::ReadBlocking" name="hlslib::ReadBlocking">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a194a74b7be61ca8a1f0de8c5574b3a9e" title="hlslib::AccumulateIterate" alt="" coords="215,5,401,32"/>
+<area shape="rect" id="node3" href="$namespacehlslib.html#adb066cd420c4ddfde59580908a7fdefe" title="hlslib::AccumulateFeedback" alt="" coords="207,56,409,83"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a30e42c1d74f89f59abd6897ba5875a7d" title="hlslib::AccumulateReduce" alt="" coords="213,107,403,133"/>
+<area shape="rect" id="node5" href="$namespacehlslib.html#ae6a18bae737f7a8831db90858ff653b5" title="Trivial implementation for single cycle latency. " alt="" coords="215,157,401,184"/>
+<area shape="rect" id="node6" href="$classhlslib_1_1Stream.html#a733d413b87e5bf901a053a69606926c9" title="hlslib::Stream::read" alt="" coords="233,208,383,235"/>
+<area shape="rect" id="node7" href="$classhlslib_1_1Stream.html#a7cf32d9e6826da8fc126bb1b34f051e1" title="hlslib::Stream::Pop" alt="" coords="236,259,380,285"/>
+<area shape="rect" id="node31" href="$AccumulateCommon_8h.html#a9c48cac13d0dd87990c1fbec981691a2" title="Write" alt="" coords="280,309,336,336"/>
+<area shape="rect" id="node32" href="$Reduce_8cpp.html#a752f4bc6418f8275e01af146c893fc57" title="FloatSum" alt="" coords="267,360,349,387"/>
+<area shape="rect" id="node34" href="$Reduce_8cpp.html#a594cc1f8f59196b16de3180509303449" title="BoolAll" alt="" coords="274,411,342,437"/>
+<area shape="rect" id="node8" href="$Flatten_8cpp.html#a3f0afab7269691dfb9533b4e213b93a0" title="RunConstFlatten" alt="" coords="461,56,589,83"/>
+<area shape="rect" id="node10" href="$Flatten_8cpp.html#a125f39f1395f51c12c4d345c1ab20af6" title="RunFlatten" alt="" coords="480,157,571,184"/>
+<area shape="rect" id="node11" href="$MultiStageAdd_8cpp.html#aea13fb83b0ddc20404fae597d7a3d71a" title="AddStage" alt="" coords="483,309,567,336"/>
+<area shape="rect" id="node26" href="$MultiStageAdd_8cpp.html#a6ab41798e3284c32636c8db5e7ffe542" title="StreamToMemory" alt="" coords="457,360,593,387"/>
+<area shape="rect" id="node27" href="$ShiftRegister_8cpp.html#a274d7aa637216a48242b37842e2ff4e1" title="Compute" alt="" coords="485,259,566,285"/>
+<area shape="rect" id="node29" href="$ShiftRegister_8cpp.html#ac433b88abde2af38ea08db2872c89409" title="Write" alt="" coords="497,208,553,235"/>
+<area shape="rect" id="node30" href="$StreamAPI_8cpp.html#a1330a00577fd4c8b03752ebb488290d7" title="StreamAPI" alt="" coords="480,107,571,133"/>
+<area shape="rect" id="node9" href="$Flatten_8cpp.html#a0facec29617b29226c660a8bd2b5d83b" title="Flatten" alt="" coords="666,145,733,172"/>
+<area shape="rect" id="node12" href="$MultiStageAdd_8cpp.html#af10edeac013f638f2f62d658410378c0" title="MultiStageAdd" alt="" coords="641,335,757,361"/>
+<area shape="rect" id="node13" href="$hlslib_2xilinx__test_2CMakeLists_8txt.html#a07b5f13961242fe20b0ffc22df66e9d8" title="set" alt="" coords="831,309,874,336"/>
+<area shape="rect" id="node25" href="$TestStream_8cpp.html#af86b2f1bea39943e644c1e984dbcd414" title="TEST_CASE" alt="" coords="805,360,900,387"/>
+<area shape="rect" id="node14" href="$vision_2tcl_2create__ip__cores_8tcl.html#ad545ac0218984b802594ee22aab852fd" title="my_clean_ip_dir" alt="" coords="1240,31,1368,57"/>
+<area shape="rect" id="node15" href="$vision_2tcl_2create__ip__cores_8tcl.html#a50d6a3a29e8fa4259b6f7a415310dfce" title="my_customize_ip" alt="" coords="1416,81,1552,108"/>
+<area shape="rect" id="node16" href="$vision_2tcl_2xpr__settings_8tcl.html#a2f292eda9fa5799a4aaffa24044b0185" title="my_puts" alt="" coords="948,309,1027,336"/>
+<area shape="rect" id="node18" href="$extra__procs_8tcl.html#a52b95285f0507e13e392d0969e3e7a34" title="secureSynth" alt="" coords="1253,563,1355,589"/>
+<area shape="rect" id="node19" href="$extra__procs_8tcl.html#a7499a0cdae5c0d93d483fb27fcbe181b" title="secureImpl" alt="" coords="1437,537,1531,564"/>
+<area shape="rect" id="node20" href="$extra__procs_8tcl.html#a94dd91689d54e61717a8a41af91df45c" title="guidedSynth" alt="" coords="1253,259,1355,285"/>
+<area shape="rect" id="node21" href="$extra__procs_8tcl.html#ad2c271d69034d51da4303a4e9690dca8" title="guidedImpl" alt="" coords="1437,385,1531,412"/>
+<area shape="rect" id="node17" href="$vision_2tcl_2xpr__settings_8tcl.html#a812df5448747f39f8f666c48475441eb" title="my_err_puts" alt="" coords="1082,411,1185,437"/>
+<area shape="rect" id="node22" href="$vision_2tcl_2xpr__settings_8tcl.html#ab584e964eef250590c5ce9b37865a869" title="my_warn_puts" alt="" coords="1075,157,1192,184"/>
+<area shape="rect" id="node23" href="$vision_2tcl_2xpr__settings_8tcl.html#aeb3843338e0fa3d1300db8677745decc" title="my_info_puts" alt="" coords="1078,208,1189,235"/>
+<area shape="rect" id="node24" href="$vision_2tcl_2xpr__settings_8tcl.html#aee5b40ca43a80e76d1597098a9dbc0dd" title="my_dbg_trace" alt="" coords="1076,56,1191,83"/>
+<area shape="rect" id="node28" href="$ShiftRegister_8cpp.html#a82c9b3b15d95d93024ffeacfe99170a1" title="ShiftRegister" alt="" coords="647,221,752,248"/>
+<area shape="rect" id="node33" href="$Reduce_8cpp.html#a45a47277827be55b82f88c7536cf742d" title="Reduce" alt="" coords="491,411,560,437"/>
+</map>

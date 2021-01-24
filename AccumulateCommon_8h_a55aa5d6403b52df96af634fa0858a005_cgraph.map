@@ -1,0 +1,4 @@
+<map id="Read" name="Read">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="108,5,263,32"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="311,5,521,32"/>
+</map>

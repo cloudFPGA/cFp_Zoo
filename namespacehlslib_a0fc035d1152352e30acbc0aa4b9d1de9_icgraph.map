@@ -1,0 +1,9 @@
+<map id="hlslib::max" name="hlslib::max">
+<area shape="rect" id="node2" href="$structhlslib_1_1op_1_1Min.html#a59b8c86cbd4528ba8e391dafe915ac3b" title="hlslib::op::Min::identity" alt="" coords="173,5,344,32"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#af795d5909bac344f269ffe7e1437b991" title="hlslib::Stream::WriteBlocking" alt="" coords="153,56,364,83"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1Stream.html#aee9359d7dc676e6f188f4a1492ff1491" title="hlslib::Stream::write" alt="" coords="182,107,335,133"/>
+<area shape="rect" id="node5" href="$classhlslib_1_1Stream.html#a052d23d4481c0a3022ad5538eb6f974e" title="hlslib::Stream::WriteOptimistic" alt="" coords="148,157,369,184"/>
+<area shape="rect" id="node6" href="$classhlslib_1_1Stream.html#a9d5348b6dc83ff0225e8ee5db58e899a" title="hlslib::Stream::WriteNon\lBlocking" alt="" coords="169,209,349,250"/>
+<area shape="rect" id="node7" href="$classhlslib_1_1Stream.html#a861e136d21df94cffbbdf9fc0076394b" title="hlslib::Stream::IsFull" alt="" coords="182,275,335,301"/>
+<area shape="rect" id="node8" href="$classCatch_1_1Detail_1_1Approx.html#a48c9cbc28a05dc9dc8c3973b9eae2268" title="Catch::Detail::Approx\l::operator()" alt="" coords="179,326,339,367"/>
+</map>

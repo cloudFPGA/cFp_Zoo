@@ -1,0 +1,5 @@
+<map id="Harris" name="Harris">
+<area shape="rect" id="node1" href="$group__VitisVision.html" title="This is the accelerated functions of Vitis Vision sub&#45;library from Vitis Open Source Library..." alt="" coords="5,31,119,57"/>
+<area shape="rect" id="node2" href="$group__HarrisHLS.html" title="This is a subgroup of Harris accelerated function with only synthesizable (Vivado HLS) functions/clas..." alt="" coords="276,5,415,32"/>
+<area shape="rect" id="node3" href="$group__HarrisTB.html" title="This is a subgroup of Harris accelerated function with only testbench&#45;related functions/classes/. " alt="" coords="280,56,411,83"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="StreamAPI" name="StreamAPI">
+<area shape="rect" id="node2" href="$classhlslib_1_1Stream.html#a8ba03fb62cbb20884c38fedf37ebbf97" title="hlslib::Stream::IsEmpty" alt="" coords="144,5,317,32"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#ac870da01cc413ce797ddda682b4fb4da" title="hlslib::Stream::IsFull" alt="" coords="154,56,307,83"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1Stream.html#a3d89138fad99850788050c2a7b055636" title="hlslib::Stream::Push" alt="" coords="155,107,306,133"/>
+<area shape="rect" id="node7" href="$classhlslib_1_1Stream.html#a7cf32d9e6826da8fc126bb1b34f051e1" title="hlslib::Stream::Pop" alt="" coords="159,157,303,184"/>
+<area shape="rect" id="node5" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="365,107,520,133"/>
+<area shape="rect" id="node6" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="568,107,779,133"/>
+<area shape="rect" id="node8" href="$namespacehlslib.html#af91425eed8d0fb122fab03dd3b69b87b" title="Attempt to read from a stream, blocking until a value can be read. Useful for inter&#45;process communica..." alt="" coords="366,157,519,184"/>
+<area shape="rect" id="node9" href="$classhlslib_1_1Stream.html#ab9c2ddc0f39da4d6953bcc1fcd477ab6" title="hlslib::Stream::ReadBlocking" alt="" coords="569,157,777,184"/>
+</map>

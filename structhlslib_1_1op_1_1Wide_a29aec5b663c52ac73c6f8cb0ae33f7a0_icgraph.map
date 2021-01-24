@@ -1,0 +1,6 @@
+<map id="hlslib::op::Wide::identity" name="hlslib::op::Wide::identity">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a194a74b7be61ca8a1f0de8c5574b3a9e" title="hlslib::AccumulateIterate" alt="" coords="235,5,421,32"/>
+<area shape="rect" id="node3" href="$namespacehlslib.html#a30e42c1d74f89f59abd6897ba5875a7d" title="hlslib::AccumulateReduce" alt="" coords="233,56,423,83"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#ae6a18bae737f7a8831db90858ff653b5" title="Trivial implementation for single cycle latency. " alt="" coords="235,107,421,133"/>
+<area shape="rect" id="node5" href="$AccumulateCommon_8h.html#af8836dbbab45bc473ec35ed16f2c76ed" title="NaiveAccumulate" alt="" coords="259,157,397,184"/>
+</map>

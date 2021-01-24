@@ -1,0 +1,10 @@
+var searchData=
+[
+  ['w',['W',['../Jacobi2D_8h.html#a649b8f01fd6c0f47ff3cbddaeba63bfb',1,'Jacobi2D.h']]],
+  ['wait_5ffor_5fmeta',['WAIT_FOR_META',['../uppercase_8hpp.html#ae40bd19fcd887977320dcd8d776df2ad',1,'WAIT_FOR_META():&#160;uppercase.hpp'],['../mceuropeanengine_8hpp.html#ae40bd19fcd887977320dcd8d776df2ad',1,'WAIT_FOR_META():&#160;mceuropeanengine.hpp'],['../gammacorrection_8hpp.html#ae40bd19fcd887977320dcd8d776df2ad',1,'WAIT_FOR_META():&#160;gammacorrection.hpp'],['../harris_8hpp.html#ae40bd19fcd887977320dcd8d776df2ad',1,'WAIT_FOR_META():&#160;harris.hpp']]],
+  ['wait_5ffor_5fstream_5fpair',['WAIT_FOR_STREAM_PAIR',['../uppercase_8hpp.html#a8c97298e51dd076779e217a7eb27b6ed',1,'WAIT_FOR_STREAM_PAIR():&#160;uppercase.hpp'],['../mceuropeanengine_8hpp.html#a8c97298e51dd076779e217a7eb27b6ed',1,'WAIT_FOR_STREAM_PAIR():&#160;mceuropeanengine.hpp'],['../gammacorrection_8hpp.html#a8c97298e51dd076779e217a7eb27b6ed',1,'WAIT_FOR_STREAM_PAIR():&#160;gammacorrection.hpp'],['../harris_8hpp.html#a8c97298e51dd076779e217a7eb27b6ed',1,'WAIT_FOR_STREAM_PAIR():&#160;harris.hpp']]],
+  ['warn',['WARN',['../catch_8hpp.html#a108d6c5c51dd46e82a62b262394f0242',1,'catch.hpp']]],
+  ['when',['WHEN',['../catch_8hpp.html#ab09e9b8186233f676ce6a23aebe89d6e',1,'catch.hpp']]],
+  ['width',['WIDTH',['../gammacorrection_2include_2xf__gammacorrection__config_8h.html#a241aeeb764887ae5e3de58b98f04b16d',1,'WIDTH():&#160;xf_gammacorrection_config.h'],['../gammacorrection_2include_2xf__harris__config_8h.html#a241aeeb764887ae5e3de58b98f04b16d',1,'WIDTH():&#160;xf_harris_config.h'],['../harris_2include_2xf__gammacorrection__config_8h.html#a241aeeb764887ae5e3de58b98f04b16d',1,'WIDTH():&#160;xf_gammacorrection_config.h'],['../harris_2include_2xf__harris__config_8h.html#a241aeeb764887ae5e3de58b98f04b16d',1,'WIDTH():&#160;xf_harris_config.h']]],
+  ['write_5foutput_5ffile',['WRITE_OUTPUT_FILE',['../vision_2gammacorrection_2include_2config_8h.html#abe2a6929a5467ab11467362396f4f66e',1,'WRITE_OUTPUT_FILE():&#160;config.h'],['../vision_2harris_2languages_2cplusplus_2include_2config_8h.html#abe2a6929a5467ab11467362396f4f66e',1,'WRITE_OUTPUT_FILE():&#160;config.h']]]
+];

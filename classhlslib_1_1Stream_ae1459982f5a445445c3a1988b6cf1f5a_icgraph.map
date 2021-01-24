@@ -1,0 +1,4 @@
+<map id="hlslib::Stream::ReadOptimistic" name="hlslib::Stream::ReadOptimistic">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a43c969e5cd10d57121a0f6cf7cd7d033" title="Attempt to read from a stream, throwing an exception if no value is available. Useful for internal bu..." alt="" coords="272,5,436,32"/>
+<area shape="rect" id="node3" href="$namespacehlslib.html#a194a74b7be61ca8a1f0de8c5574b3a9e" title="hlslib::AccumulateIterate" alt="" coords="484,5,669,32"/>
+</map>

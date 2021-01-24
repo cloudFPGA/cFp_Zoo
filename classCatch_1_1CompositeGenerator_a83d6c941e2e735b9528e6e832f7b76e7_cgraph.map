@@ -1,0 +1,6 @@
+<map id="Catch::CompositeGenerator::operator T" name="Catch::CompositeGenerator::operator T">
+<area shape="rect" id="node2" href="$namespaceCatch.html#ad517cca9b21deb79101e90e5508dd161" title="Catch::getCurrentContext" alt="" coords="271,5,457,32"/>
+<area shape="rect" id="node3" href="$structCatch_1_1IContext.html#a43e07088db43299ba129fbe6d3106e95" title="Catch::IContext::getGenerator\lIndex" alt="" coords="256,57,472,98"/>
+<area shape="rect" id="node4" href="$structCatch_1_1IGenerator.html#ad69e937cb66dba3ed9429c42abf4fce3" title="Catch::IGenerator::\lgetValue" alt="" coords="292,122,436,163"/>
+<area shape="rect" id="node5" href="$structCatch_1_1IGenerator.html#a2e317253b03e838b6065ce69719a198e" title="Catch::IGenerator::size" alt="" coords="279,188,449,215"/>
+</map>

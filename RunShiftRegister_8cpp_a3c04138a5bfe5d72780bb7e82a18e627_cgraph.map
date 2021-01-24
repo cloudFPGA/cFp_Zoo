@@ -1,0 +1,8 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classhlslib_1_1ocl_1_1Context.html#aad7f6ed84b246fa42c3f936fa05d0d51" title="hlslib::ocl::Context\l::MakeBuffer" alt="" coords="110,5,253,47"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1ocl_1_1Context.html#afd5b26f1c831c9da556c2a228b5b5b87" title="Create an OpenCL program from the given binary, from which kernels can be instantiated and executed..." alt="" coords="110,71,253,112"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1ocl_1_1Program.html#aab1e3c9ee1b1a47371ed80f9d49b29ae" title="Create a kernel with the specified name contained in this loaded OpenCL program, binding the argument..." alt="" coords="108,136,255,177"/>
+<area shape="rect" id="node5" href="$classhlslib_1_1ocl_1_1Kernel.html#a3d1206b226cee1981891da2f3374d3e0" title="Execute the kernel as an OpenCL task, wait for it to finish, then return the time elapsed as reported..." alt="" coords="115,201,248,243"/>
+<area shape="rect" id="node6" href="$RunShiftRegister_8cpp.html#aec9550efef0301d76d2d1ff6b3080b37" title="Reference" alt="" coords="138,267,225,294"/>
+<area shape="rect" id="node7" href="$namespacehlslib.html#a85cf4d22b3dec30cec767ca566efebc2" title="hlslib::abs" alt="" coords="137,318,225,345"/>
+</map>

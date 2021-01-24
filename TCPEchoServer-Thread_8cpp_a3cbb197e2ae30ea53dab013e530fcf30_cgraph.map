@@ -1,0 +1,6 @@
+<map id="HandleTCPClient" name="HandleTCPClient">
+<area shape="rect" id="node2" href="$classCommunicatingSocket.html#a13f9eca30ef56836cf23c163c848c09e" title="CommunicatingSocket\l::getForeignAddress" alt="" coords="184,5,353,47"/>
+<area shape="rect" id="node3" href="$classCommunicatingSocket.html#a184fbb4775184b87ebd886a5587eb1a3" title="CommunicatingSocket\l::getForeignPort" alt="" coords="184,71,353,112"/>
+<area shape="rect" id="node4" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="184,136,353,177"/>
+<area shape="rect" id="node5" href="$classCommunicatingSocket.html#aca4e86085c064641e86ae24ea29bbb94" title="CommunicatingSocket\l::send" alt="" coords="184,201,353,243"/>
+</map>

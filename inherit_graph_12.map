@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$structCatch_1_1DecomposedExpression.html" title="Catch::DecomposedExpression" alt="" coords="5,101,228,127"/>
+<area shape="rect" id="node2" href="$classCatch_1_1BinaryExpression.html" title="Catch::BinaryExpression\l\&lt; LhsT, Op, RhsT \&gt;" alt="" coords="285,5,465,47"/>
+<area shape="rect" id="node3" href="$classCatch_1_1ExpressionLhs.html" title="Catch::ExpressionLhs\&lt; T \&gt;" alt="" coords="276,71,475,98"/>
+<area shape="rect" id="node4" href="$classCatch_1_1MatchExpression.html" title="Catch::MatchExpression\l\&lt; ArgT, MatcherT \&gt;" alt="" coords="287,123,464,164"/>
+<area shape="rect" id="node5" href="$classCatch_1_1ResultBuilder.html" title="Catch::ResultBuilder" alt="" coords="299,189,452,215"/>
+</map>

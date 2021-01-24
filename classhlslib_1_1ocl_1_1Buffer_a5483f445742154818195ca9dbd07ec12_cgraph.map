@@ -1,0 +1,4 @@
+<map id="hlslib::ocl::Buffer::CopyToDevice" name="hlslib::ocl::Buffer::CopyToDevice">
+<area shape="rect" id="node2" href="$classhlslib_1_1ocl_1_1Buffer.html#a523b40e0bf211092a692cd7b019692c4" title="hlslib::ocl::Buffer\l::nElements" alt="" coords="184,5,315,47"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1ocl_1_1Buffer.html#a5a15ac18e3a991fea981b480b762431d" title="hlslib::ocl::Buffer\l::devicePtr" alt="" coords="184,71,315,112"/>
+</map>

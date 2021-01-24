@@ -1,0 +1,11 @@
+<map id="hlslib/xilinx_test/host/RunAccumulate.cpp" name="hlslib/xilinx_test/host/RunAccumulate.cpp">
+<area shape="rect" id="node2" href="$AccumulateCommon_8h.html" title="AccumulateCommon.h" alt="" coords="1227,95,1398,121"/>
+<area shape="rect" id="node16" href="$SDAccel_8h.html" title="hlslib/xilinx/SDAccel.h" alt="" coords="1799,95,1965,121"/>
+<area shape="rect" id="node29" href="$catch_8hpp.html" title="catch.hpp" alt="" coords="535,169,621,196"/>
+<area shape="rect" id="node36" href="$AccumulateFloat_8h.html" title="AccumulateFloat.h" alt="" coords="949,95,1092,121"/>
+<area shape="rect" id="node3" href="$DataPack_8h.html" title="hlslib/xilinx/DataPack.h" alt="" coords="933,169,1108,196"/>
+<area shape="rect" id="node7" href="$Stream_8h.html" title="hlslib/xilinx/Stream.h" alt="" coords="1293,169,1453,196"/>
+<area shape="rect" id="node18" href="$common_2OpenCL_8h.html" title="../common/OpenCL.h" alt="" coords="1803,169,1961,196"/>
+<area shape="rect" id="node37" href="$Operators_8h.html" title="hlslib/xilinx/Operators.h" alt="" coords="645,169,823,196"/>
+<area shape="rect" id="node38" href="$Resource_8h.html" title="hlslib/xilinx/Resource.h" alt="" coords="640,244,812,271"/>
+</map>

@@ -1,0 +1,14 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classSocket.html#a982c63b25c5b756321a74074a275adbc" title="Socket::resolveService" alt="" coords="108,5,279,32"/>
+<area shape="rect" id="node3" href="$gammacorrection__host_8cpp.html#a8929116aa0d88da7b63d8bd8f232e6dc" title="print_cFpVitis" alt="" coords="138,56,249,83"/>
+<area shape="rect" id="node4" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a51e78292d5f0884fd708eb6a0abab07c" title="ocv_ref" alt="" coords="158,107,229,133"/>
+<area shape="rect" id="node9" href="$classUDPSocket.html#a41a3595e226f273953cbd38618af5d5b" title="UDPSocket::sendTo" alt="" coords="120,157,267,184"/>
+<area shape="rect" id="node10" href="$gammacorrection__host_8cpp.html#a9e7cc9f16fb9cb7de4698c16cd748f15" title="delay" alt="" coords="164,208,223,235"/>
+<area shape="rect" id="node11" href="$classUDPSocket.html#abcd5c064e2496bd8b1888fd4e1b68949" title="UDPSocket::recvFrom" alt="" coords="112,259,275,285"/>
+<area shape="rect" id="node12" href="$gammacorrection__host_8cpp.html#aac1445f0dd25f8594229f856bb996ead" title="markPointsOnImage" alt="" coords="116,309,271,336"/>
+<area shape="rect" id="node13" href="$classSocketException.html#a534b0625abe62cad2bae94758aa6eb42" title="SocketException::what" alt="" coords="108,360,279,387"/>
+<area shape="rect" id="node5" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a822ec8fca3f87a6e55a9e5f4795d5c0c" title="OCVMaxSuppression1" alt="" coords="327,81,491,108"/>
+<area shape="rect" id="node7" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a4be9749f424865cefe7a2ba10c8d8450" title="OCVMaxSuppression2" alt="" coords="327,132,491,159"/>
+<area shape="rect" id="node6" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a5f1e7f9c115d3f6aa0fa47cfdb4783b2" title="OCVFindMaximum1" alt="" coords="539,81,688,108"/>
+<area shape="rect" id="node8" href="$gammacorrection_2include_2xf__ocv__ref_8hpp.html#a3c33190c70546d42870e2be3f91ff7c4" title="OCVFindMaximum2" alt="" coords="539,132,688,159"/>
+</map>

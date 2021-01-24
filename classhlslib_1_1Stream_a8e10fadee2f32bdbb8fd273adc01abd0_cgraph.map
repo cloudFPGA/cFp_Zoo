@@ -1,0 +1,4 @@
+<map id="hlslib::Stream::empty" name="hlslib::Stream::empty">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a9bf1fc18d73b85bb7120bfbbb9de2675" title="Check if the stream is empty. Using this in kernel code essentially implements non&#45;blocking behavior..." alt="" coords="216,5,335,32"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a8ba03fb62cbb20884c38fedf37ebbf97" title="hlslib::Stream::IsEmpty" alt="" coords="383,5,556,32"/>
+</map>

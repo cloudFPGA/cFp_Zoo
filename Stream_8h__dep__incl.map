@@ -1,0 +1,18 @@
+<map id="hlslib/include/hlslib/xilinx/Stream.h" name="hlslib/include/hlslib/xilinx/Stream.h">
+<area shape="rect" id="node2" href="$Accumulate_8h.html" title="hlslib/include/hlslib\l/xilinx/Accumulate.h" alt="" coords="258,95,413,136"/>
+<area shape="rect" id="node5" href="$AccumulateCommon_8h.html" title="hlslib/xilinx_test\l/include/AccumulateCommon.h" alt="" coords="448,95,673,136"/>
+<area shape="rect" id="node9" href="$TestAccumulate_8cpp.html" title="hlslib/xilinx_test\l/test/TestAccumulate.cpp" alt="" coords="679,184,864,225"/>
+<area shape="rect" id="node10" href="$MultiStageAdd_8h.html" title="hlslib/xilinx_test\l/include/MultiStageAdd.h" alt="" coords="896,95,1079,136"/>
+<area shape="rect" id="node13" href="$TestStream_8cpp.html" title="hlslib/xilinx_test\l/test/TestStream.cpp" alt="" coords="1338,184,1493,225"/>
+<area shape="rect" id="node14" href="$Flatten_8cpp.html" title="hlslib/xilinx_test\l/kernels/Flatten.cpp" alt="" coords="1155,95,1305,136"/>
+<area shape="rect" id="node15" href="$Reduce_8cpp.html" title="hlslib/xilinx_test\l/kernels/Reduce.cpp" alt="" coords="1330,95,1482,136"/>
+<area shape="rect" id="node16" href="$ShiftRegister_8cpp.html" title="hlslib/xilinx_test\l/kernels/ShiftRegister.cpp" alt="" coords="1506,95,1693,136"/>
+<area shape="rect" id="node17" href="$StreamAPI_8cpp.html" title="hlslib/xilinx_test\l/kernels/StreamAPI.cpp" alt="" coords="1717,95,1890,136"/>
+<area shape="rect" id="node3" href="$AccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/kernels/AccumulateFloat.cpp" alt="" coords="228,184,443,225"/>
+<area shape="rect" id="node4" href="$AccumulateInt_8cpp.html" title="hlslib/xilinx_test\l/kernels/AccumulateInt.cpp" alt="" coords="5,184,204,225"/>
+<area shape="rect" id="node6" href="$RunAccumulate_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulate.cpp" alt="" coords="467,184,654,225"/>
+<area shape="rect" id="node7" href="$RunAccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateFloat.cpp" alt="" coords="334,273,553,315"/>
+<area shape="rect" id="node8" href="$RunAccumulateInt_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateInt.cpp" alt="" coords="577,273,779,315"/>
+<area shape="rect" id="node11" href="$RunMultiStageAdd_8cpp.html" title="hlslib/xilinx_test\l/host/RunMultiStageAdd.cpp" alt="" coords="1111,184,1314,225"/>
+<area shape="rect" id="node12" href="$MultiStageAdd_8cpp.html" title="hlslib/xilinx_test\l/kernels/MultiStageAdd.cpp" alt="" coords="888,184,1087,225"/>
+</map>

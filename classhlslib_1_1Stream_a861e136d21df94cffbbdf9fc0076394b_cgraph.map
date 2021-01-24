@@ -1,0 +1,5 @@
+<map id="hlslib::Stream::IsFull" name="hlslib::Stream::IsFull">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a4290ee1a233baedd9f239f186a76594c" title="Check if the stream is full. Using this in kernel code essentially implements non&#45;blocking behavior..." alt="" coords="207,5,305,32"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a0fc035d1152352e30acbc0aa4b9d1de9" title="hlslib::max" alt="" coords="209,56,303,83"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#ac870da01cc413ce797ddda682b4fb4da" title="hlslib::Stream::IsFull" alt="" coords="353,5,507,32"/>
+</map>

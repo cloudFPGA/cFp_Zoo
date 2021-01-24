@@ -1,0 +1,6 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classSocket.html#a982c63b25c5b756321a74074a275adbc" title="Socket::resolveService" alt="" coords="108,5,279,32"/>
+<area shape="rect" id="node3" href="$classUDPSocket.html#a41a3595e226f273953cbd38618af5d5b" title="UDPSocket::sendTo" alt="" coords="120,56,267,83"/>
+<area shape="rect" id="node4" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="109,107,278,149"/>
+<area shape="rect" id="node5" href="$classSocketException.html#a534b0625abe62cad2bae94758aa6eb42" title="SocketException::what" alt="" coords="108,173,279,200"/>
+</map>

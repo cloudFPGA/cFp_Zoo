@@ -1,0 +1,4 @@
+var searchData=
+[
+  ['valid',['VALID',['../custom_2hls_2common_2include_2common_8hpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;common.hpp'],['../test__uppercase_8cpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;test_uppercase.cpp'],['../quantitative__finance_2hls_2common_2include_2common_8hpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;common.hpp'],['../test__mceuropeanengine_8cpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;test_mceuropeanengine.cpp'],['../vision_2hls_2common_2include_2common_8hpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;common.hpp'],['../test__gammacorrection_8cpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;test_gammacorrection.cpp'],['../test__harris_8cpp.html#ad47ac60ff0cfac53148a07bc32fc7585',1,'VALID():&#160;test_harris.cpp']]]
+];

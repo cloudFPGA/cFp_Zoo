@@ -1,0 +1,5 @@
+<map id="MemoryToStream" name="MemoryToStream">
+<area shape="rect" id="node2" href="$classhlslib_1_1Stream.html#a3d89138fad99850788050c2a7b055636" title="hlslib::Stream::Push" alt="" coords="189,5,340,32"/>
+<area shape="rect" id="node3" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="388,5,543,32"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="591,5,801,32"/>
+</map>

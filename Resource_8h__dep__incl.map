@@ -1,0 +1,13 @@
+<map id="hlslib/include/hlslib/xilinx/Resource.h" name="hlslib/include/hlslib/xilinx/Resource.h">
+<area shape="rect" id="node2" href="$Operators_8h.html" title="hlslib/include/hlslib\l/xilinx/Operators.h" alt="" coords="615,95,761,136"/>
+<area shape="rect" id="node3" href="$Accumulate_8h.html" title="hlslib/include/hlslib\l/xilinx/Accumulate.h" alt="" coords="417,184,572,225"/>
+<area shape="rect" id="node6" href="$AccumulateFloat_8h.html" title="hlslib/xilinx_test\l/include/AccumulateFloat.h" alt="" coords="195,184,394,225"/>
+<area shape="rect" id="node10" href="$AccumulateInt_8h.html" title="hlslib/xilinx_test\l/include/AccumulateInt.h" alt="" coords="597,184,779,225"/>
+<area shape="rect" id="node11" href="$Reduce_8cpp.html" title="hlslib/xilinx_test\l/kernels/Reduce.cpp" alt="" coords="804,184,956,225"/>
+<area shape="rect" id="node12" href="$TestReduce_8cpp.html" title="hlslib/xilinx_test\l/test/TestReduce.cpp" alt="" coords="980,184,1135,225"/>
+<area shape="rect" id="node4" href="$AccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/kernels/AccumulateFloat.cpp" alt="" coords="350,273,565,315"/>
+<area shape="rect" id="node5" href="$AccumulateInt_8cpp.html" title="hlslib/xilinx_test\l/kernels/AccumulateInt.cpp" alt="" coords="589,273,787,315"/>
+<area shape="rect" id="node7" href="$RunAccumulate_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulate.cpp" alt="" coords="139,273,325,315"/>
+<area shape="rect" id="node8" href="$RunAccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateFloat.cpp" alt="" coords="5,363,224,404"/>
+<area shape="rect" id="node9" href="$RunAccumulateInt_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateInt.cpp" alt="" coords="248,363,451,404"/>
+</map>

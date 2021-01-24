@@ -1,0 +1,5 @@
+<map id="hlslib::Stream::WriteNonBlocking" name="hlslib::Stream::WriteNonBlocking">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a0c16911a1e7d223674920955505d53be" title="Attempts to write to a stream, returning whether a value was written or not. Useful when a different ..." alt="" coords="233,13,415,39"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a0fc035d1152352e30acbc0aa4b9d1de9" title="hlslib::max" alt="" coords="277,63,371,90"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a7c47e7eacbec2f578c5403db47cedb9d" title="hlslib::Stream::WriteNon\lBlocking" alt="" coords="463,5,643,47"/>
+</map>

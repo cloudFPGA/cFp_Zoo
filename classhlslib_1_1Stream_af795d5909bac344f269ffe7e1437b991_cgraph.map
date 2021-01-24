@@ -1,0 +1,5 @@
+<map id="hlslib::Stream::WriteBlocking" name="hlslib::Stream::WriteBlocking">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="264,5,419,32"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a0fc035d1152352e30acbc0aa4b9d1de9" title="hlslib::max" alt="" coords="294,56,389,83"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="467,5,677,32"/>
+</map>

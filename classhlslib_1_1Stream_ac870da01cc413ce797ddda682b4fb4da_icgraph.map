@@ -1,0 +1,7 @@
+<map id="hlslib::Stream::IsFull" name="hlslib::Stream::IsFull">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a4290ee1a233baedd9f239f186a76594c" title="Check if the stream is full. Using this in kernel code essentially implements non&#45;blocking behavior..." alt="" coords="257,31,355,57"/>
+<area shape="rect" id="node5" href="$namespacehlslib.html#a73adebfeb0a668d43d0c6a7faa015f34" title="If running simulation, returns whether the stream is full. If running in hardware, this always returns false. This is useful when simulating blocking behavior of non loop&#45;based codes where the entire function is invoked every cycle. " alt="" coords="207,81,405,108"/>
+<area shape="rect" id="node6" href="$StreamAPI_8cpp.html#a1330a00577fd4c8b03752ebb488290d7" title="StreamAPI" alt="" coords="261,132,351,159"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a2d528a599abb585d0c3329ff4d387c8d" title="hlslib::Stream::full" alt="" coords="459,5,601,32"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1Stream.html#a861e136d21df94cffbbdf9fc0076394b" title="hlslib::Stream::IsFull" alt="" coords="453,56,607,83"/>
+</map>

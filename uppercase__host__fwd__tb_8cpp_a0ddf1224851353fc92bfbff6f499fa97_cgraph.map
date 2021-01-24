@@ -1,0 +1,8 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classTCPServerSocket.html#a1d161137e1b069de7a7bfc14d3f8212c" title="TCPServerSocket::accept" alt="" coords="108,5,291,32"/>
+<area shape="rect" id="node3" href="$classCommunicatingSocket.html#a13f9eca30ef56836cf23c163c848c09e" title="CommunicatingSocket\l::getForeignAddress" alt="" coords="115,57,284,98"/>
+<area shape="rect" id="node4" href="$classCommunicatingSocket.html#a184fbb4775184b87ebd886a5587eb1a3" title="CommunicatingSocket\l::getForeignPort" alt="" coords="115,122,284,163"/>
+<area shape="rect" id="node5" href="$classUDPSocket.html#abcd5c064e2496bd8b1888fd4e1b68949" title="UDPSocket::recvFrom" alt="" coords="118,188,281,215"/>
+<area shape="rect" id="node6" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="115,239,284,281"/>
+<area shape="rect" id="node7" href="$uppercase__host__fwd__tb_8cpp.html#ad7d7861fdcc6bc3da92d6e28c3649a85" title="findCharNullPos" alt="" coords="137,305,262,332"/>
+</map>

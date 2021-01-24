@@ -1,0 +1,4 @@
+<map id="hlslib::ocl::detail::deallocate_aligned_memory" name="hlslib::ocl::detail::deallocate_aligned_memory">
+<area shape="rect" id="node2" href="$classhlslib_1_1ocl_1_1AlignedAllocator.html#aef8c411e5519cd32f82908d2a274bc47" title="hlslib::ocl::AlignedAllocator\l::deallocate" alt="" coords="232,5,431,47"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1ocl_1_1AlignedAllocator_3_01const_01T_00_01alignment_01_4.html#a28d6f78be299b1a6cc88a539c9d8084d" title="hlslib::ocl::AlignedAllocator\l\&lt; const T, alignment \&gt;::deallocate" alt="" coords="207,71,456,112"/>
+</map>

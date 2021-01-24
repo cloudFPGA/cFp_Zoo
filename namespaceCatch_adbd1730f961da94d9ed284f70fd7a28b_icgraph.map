@@ -1,0 +1,12 @@
+<map id="Catch::toString" name="Catch::toString">
+<area shape="rect" id="node2" href="$namespaceCatch.html#a2899237fef39daaae9a22e7846c0a9bf" title="Catch::toString" alt="" coords="437,11,555,38"/>
+<area shape="rect" id="node3" href="$namespaceCatch_1_1Detail.html#a6650a1dff325bf29962ff15ae73fd972" title="Catch::Detail::rangeToString" alt="" coords="172,62,375,88"/>
+<area shape="rect" id="node5" href="$classCatch_1_1ExpressionLhs.html#a76d2db4b25bd7e1cf9e7a458cb4dfd8a" title="Catch::ExpressionLhs\l::reconstructExpression" alt="" coords="186,113,361,154"/>
+<area shape="rect" id="node6" href="$classCatch_1_1BinaryExpression.html#a58cae92b1180c87b6d9a83abd1e2deaa" title="Catch::BinaryExpression\l::reconstructExpression" alt="" coords="183,178,363,220"/>
+<area shape="rect" id="node7" href="$classCatch_1_1MatchExpression.html#a5f093d5c0a1f48271e42d0700c34c236" title="Catch::MatchExpression\l::reconstructExpression" alt="" coords="185,244,362,285"/>
+<area shape="rect" id="node8" href="$classCatch_1_1Detail_1_1Approx.html#a972fd9ac60607483263f1b0f0f9955e6" title="Catch::Detail::Approx\l::toString" alt="" coords="193,309,353,350"/>
+<area shape="rect" id="node9" href="$structCatch_1_1Matchers_1_1Vector_1_1ContainsElementMatcher.html#ad86c494d7550656f8a50644626329b92" title="Catch::Matchers::Vector\l::ContainsElementMatcher\l::describe" alt="" coords="177,375,370,431"/>
+<area shape="rect" id="node10" href="$structCatch_1_1Matchers_1_1Vector_1_1ContainsMatcher.html#a7eb8ea818071cf23c41193ab5563e4df" title="Catch::Matchers::Vector\l::ContainsMatcher::describe" alt="" coords="172,456,375,497"/>
+<area shape="rect" id="node11" href="$structCatch_1_1Matchers_1_1Vector_1_1EqualsMatcher.html#a934a74d6a2eb110abd1654afb28dc5ef" title="Catch::Matchers::Vector\l::EqualsMatcher::describe" alt="" coords="179,521,367,562"/>
+<area shape="rect" id="node4" href="$structCatch_1_1StringMaker_3_01R_01C_1_1_5_01_4.html#af69c15e0b406e945777137fe4a333731" title="Catch::StringMaker\l\&lt; R C::* \&gt;::convert" alt="" coords="423,62,569,104"/>
+</map>

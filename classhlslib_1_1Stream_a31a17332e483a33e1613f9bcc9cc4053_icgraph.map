@@ -1,0 +1,3 @@
+<map id="hlslib::Stream::ReadNonBlocking" name="hlslib::Stream::ReadNonBlocking">
+<area shape="rect" id="node2" href="$namespacehlslib.html#a653119ba62b53e0ff1d4b02c9469b357" title="Attempts to read from a stream, returning whether a value was read or not. Useful when a different ac..." alt="" coords="288,5,467,32"/>
+</map>

@@ -1,0 +1,12 @@
+<map id="ShiftRegister" name="ShiftRegister">
+<area shape="rect" id="node2" href="$ShiftRegister_8cpp.html#a9c92ba8f29e7ca62191d201eb58117b7" title="Read" alt="" coords="172,9,227,36"/>
+<area shape="rect" id="node6" href="$ShiftRegister_8cpp.html#a274d7aa637216a48242b37842e2ff4e1" title="Compute" alt="" coords="159,64,240,91"/>
+<area shape="rect" id="node11" href="$ShiftRegister_8cpp.html#ac433b88abde2af38ea08db2872c89409" title="Write" alt="" coords="171,119,227,145"/>
+<area shape="rect" id="node3" href="$classhlslib_1_1Stream.html#a3d89138fad99850788050c2a7b055636" title="hlslib::Stream::Push" alt="" coords="288,5,439,32"/>
+<area shape="rect" id="node4" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="487,5,641,32"/>
+<area shape="rect" id="node5" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="689,5,900,32"/>
+<area shape="rect" id="node7" href="$classhlslib_1_1ShiftRegister.html#aa65b0355650d8d8d119b04c40d569865" title="hlslib::ShiftRegister\l::Shift" alt="" coords="289,57,437,98"/>
+<area shape="rect" id="node8" href="$classhlslib_1_1Stream.html#a7cf32d9e6826da8fc126bb1b34f051e1" title="hlslib::Stream::Pop" alt="" coords="291,123,435,149"/>
+<area shape="rect" id="node9" href="$namespacehlslib.html#af91425eed8d0fb122fab03dd3b69b87b" title="Attempt to read from a stream, blocking until a value can be read. Useful for inter&#45;process communica..." alt="" coords="487,123,641,149"/>
+<area shape="rect" id="node10" href="$classhlslib_1_1Stream.html#ab9c2ddc0f39da4d6953bcc1fcd477ab6" title="hlslib::Stream::ReadBlocking" alt="" coords="691,123,899,149"/>
+</map>

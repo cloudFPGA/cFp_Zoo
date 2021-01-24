@@ -1,0 +1,6 @@
+<map id="hlslib/xilinx_test/include/AccumulateFloat.h" name="hlslib/xilinx_test/include/AccumulateFloat.h">
+<area shape="rect" id="node2" href="$RunAccumulate_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulate.cpp" alt="" coords="139,95,325,136"/>
+<area shape="rect" id="node5" href="$AccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/kernels/AccumulateFloat.cpp" alt="" coords="350,95,565,136"/>
+<area shape="rect" id="node3" href="$RunAccumulateFloat_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateFloat.cpp" alt="" coords="5,184,224,225"/>
+<area shape="rect" id="node4" href="$RunAccumulateInt_8cpp.html" title="hlslib/xilinx_test\l/host/RunAccumulateInt.cpp" alt="" coords="248,184,451,225"/>
+</map>

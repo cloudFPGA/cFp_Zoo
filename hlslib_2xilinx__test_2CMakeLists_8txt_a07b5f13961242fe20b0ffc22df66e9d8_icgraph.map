@@ -1,0 +1,13 @@
+<map id="set" name="set">
+<area shape="rect" id="node2" href="$vision_2tcl_2create__ip__cores_8tcl.html#ad545ac0218984b802594ee22aab852fd" title="my_clean_ip_dir" alt="" coords="388,24,516,51"/>
+<area shape="rect" id="node3" href="$vision_2tcl_2create__ip__cores_8tcl.html#a50d6a3a29e8fa4259b6f7a415310dfce" title="my_customize_ip" alt="" coords="564,75,700,101"/>
+<area shape="rect" id="node4" href="$vision_2tcl_2xpr__settings_8tcl.html#a2f292eda9fa5799a4aaffa24044b0185" title="my_puts" alt="" coords="96,303,175,329"/>
+<area shape="rect" id="node6" href="$extra__procs_8tcl.html#a52b95285f0507e13e392d0969e3e7a34" title="secureSynth" alt="" coords="401,556,503,583"/>
+<area shape="rect" id="node7" href="$extra__procs_8tcl.html#a7499a0cdae5c0d93d483fb27fcbe181b" title="secureImpl" alt="" coords="585,531,679,557"/>
+<area shape="rect" id="node8" href="$extra__procs_8tcl.html#a94dd91689d54e61717a8a41af91df45c" title="guidedSynth" alt="" coords="401,252,503,279"/>
+<area shape="rect" id="node9" href="$extra__procs_8tcl.html#ad2c271d69034d51da4303a4e9690dca8" title="guidedImpl" alt="" coords="585,379,679,405"/>
+<area shape="rect" id="node5" href="$vision_2tcl_2xpr__settings_8tcl.html#a812df5448747f39f8f666c48475441eb" title="my_err_puts" alt="" coords="230,404,333,431"/>
+<area shape="rect" id="node10" href="$vision_2tcl_2xpr__settings_8tcl.html#ab584e964eef250590c5ce9b37865a869" title="my_warn_puts" alt="" coords="223,151,340,177"/>
+<area shape="rect" id="node11" href="$vision_2tcl_2xpr__settings_8tcl.html#aeb3843338e0fa3d1300db8677745decc" title="my_info_puts" alt="" coords="226,201,337,228"/>
+<area shape="rect" id="node12" href="$vision_2tcl_2xpr__settings_8tcl.html#aee5b40ca43a80e76d1597098a9dbc0dd" title="my_dbg_trace" alt="" coords="224,49,339,76"/>
+</map>

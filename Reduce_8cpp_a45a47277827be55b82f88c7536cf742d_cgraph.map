@@ -1,0 +1,8 @@
+<map id="Reduce" name="Reduce">
+<area shape="rect" id="node2" href="$Reduce_8cpp.html#a752f4bc6418f8275e01af146c893fc57" title="FloatSum" alt="" coords="123,5,205,32"/>
+<area shape="rect" id="node7" href="$Reduce_8cpp.html#a594cc1f8f59196b16de3180509303449" title="BoolAll" alt="" coords="130,56,198,83"/>
+<area shape="rect" id="node3" href="$namespacehlslib.html#af91425eed8d0fb122fab03dd3b69b87b" title="Attempt to read from a stream, blocking until a value can be read. Useful for inter&#45;process communica..." alt="" coords="254,5,407,32"/>
+<area shape="rect" id="node5" href="$namespacehlslib.html#a52ffce6cca5d0719e984cd0003e34f0f" title="Attempt to write to a stream, blocking until a value can be written. Useful for inter&#45;process communi..." alt="" coords="253,56,408,83"/>
+<area shape="rect" id="node4" href="$classhlslib_1_1Stream.html#ab9c2ddc0f39da4d6953bcc1fcd477ab6" title="hlslib::Stream::ReadBlocking" alt="" coords="457,5,665,32"/>
+<area shape="rect" id="node6" href="$classhlslib_1_1Stream.html#a7241a0455ce7dfda854e2629d62c7fb7" title="hlslib::Stream::WriteBlocking" alt="" coords="456,56,667,83"/>
+</map>

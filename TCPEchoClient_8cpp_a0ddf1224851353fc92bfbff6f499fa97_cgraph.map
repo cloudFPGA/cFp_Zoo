@@ -1,0 +1,5 @@
+<map id="main" name="main">
+<area shape="rect" id="node2" href="$classCommunicatingSocket.html#aca4e86085c064641e86ae24ea29bbb94" title="CommunicatingSocket\l::send" alt="" coords="109,5,278,47"/>
+<area shape="rect" id="node3" href="$classCommunicatingSocket.html#a7cf1fd470c0060171b68df9f68c7bd01" title="CommunicatingSocket\l::recv" alt="" coords="109,71,278,112"/>
+<area shape="rect" id="node4" href="$classSocketException.html#a534b0625abe62cad2bae94758aa6eb42" title="SocketException::what" alt="" coords="108,137,279,163"/>
+</map>
