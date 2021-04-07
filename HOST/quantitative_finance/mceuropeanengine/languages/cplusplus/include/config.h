@@ -32,7 +32,7 @@
 #define BUF_LEN 65540              
 
 /*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS
+#define TB_SIM_CFP_VITIS
   
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp

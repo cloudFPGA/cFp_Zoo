@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     while (!nrErr) {
 	
-        // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions 
+        // Keep enough simulation time for sequentially executing the FSMs of the main 3 functions
         // (Rx-Tx)
         if (simCnt < sim_time) 
         {

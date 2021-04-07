@@ -1,13 +1,12 @@
 import sys
 import os
 import numpy as np
-import QuantLib as ql
 trieres_lib=os.environ['cFpRootDir'] + "HOST/quantitative_finance/mceuropeanengine/languages/python/build"
 sys.path.append(trieres_lib)
 
 import _trieres
 
-loop_nm = 1024;    
+loop_nm = 2;
 seed = 4332;
 underlying = 36;
 volatility = 0.20;

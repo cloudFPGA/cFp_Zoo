@@ -2,8 +2,8 @@
     "version": "This cFp was created by cFBuild 0.6",
     "cFpMOD": "FMKU60",
     "cFpSRAtype": "Themisto",
-    "usedRoleDir": "vision/",
+    "usedRoleDir": "quantitative_finance/",
     "usedRoleDir2": "2/",
-    "roleName1": "vision",
+    "roleName1": "quantitative_finance",
     "roleName2": "2"
 }

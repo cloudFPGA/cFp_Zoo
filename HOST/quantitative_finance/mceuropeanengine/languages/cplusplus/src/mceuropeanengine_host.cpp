@@ -94,13 +94,19 @@ int main(int argc, char *argv[])
     unsigned short servPort;
     bool net_type = NET_TYPE;
     if (net_type == udp) {
-	servPort = Socket::resolveService(s_servPort, "udp");
+	    servPort = Socket::resolveService(s_servPort, "udp");
     }
     else if (net_type == tcp) {
-	servPort = atoi(s_servPort);
+	    servPort = atoi(s_servPort);
     }
     else {
-	cout << "ERROR: Invalid type of socket type provided: " << net_type  << " Choosed one of (tcp=0 or udp=1)" << endl;
+	    cout << "ERROR: Invalid type of socket type provided: " << net_type  << " Choosed one of (tcp=0 or udp=1)" << endl;
+    }
+
+    if ((servPort <= 0) || (servPort <= 1024) || (servPort >= 65536)) {
+        cerr << "ERROR: Invalid port number " << servPort <<
+        ". Please select a value at range [1025-65535]. Aborting..." << endl;
+        exit(1);
     }
     
     char buffer[BUF_LEN]; // Buffer for echo string
