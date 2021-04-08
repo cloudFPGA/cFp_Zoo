@@ -1,17 +1,21 @@
 cmake_minimum_required(VERSION 2.8)
 
-project( cFpMCEuropeanEngine )
+pset(PYTHON_VERSION_MAJOR=3)
+set(PYTHON_VERSION_MINOR=8)
 
 find_package(LibXml2 REQUIRED)
 find_package(SWIG REQUIRED)
-set(PYTHON_INCLUDE_PATH /usr/include/python3.6m)
+find_package(PythonInterp REQUIRED)
+find_package(PythonLibs "${PYTHON_VERSION_MAJOR}.${PYTHON_VERSION_MINOR}" REQUIRED )
+
+#set(PYTHON_INCLUDE_PATH /usr/local/include/python3.8)
 #set(PYTHON_LIBRARIES /usr/lib/x86_64-linux-gnu/libpython3.6m.so)
-set(PYTHON_LIBRARIES /usr/lib64/libpython3.6m.so)
-set(PYTHON_EXECUTABLE /usr/bin/python3.6m)
-set(PYTHON_INCLUDE_DIR  /usr/include/python3.6m)
+set(PYTHON_LIBRARIES /usr/lib64/libpython3.8.so)
+#set(PYTHON_EXECUTABLE /usr/local/bin/python3.8)
+#set(PYTHON_INCLUDE_DIR  /usr/local/lib/python3.8)
 #set(Python_ADDITIONAL_VERSIONS 3.5)
-find_package(PythonInterp 3 REQUIRED)
-find_package(PythonLibs 3 REQUIRED)
+#find_package(PythonInterp 3 REQUIRED)
+#find_package(PythonLibs 3 REQUIRED)
 set (CMAKE_MODULE_PATH "$ENV{cFpRootDir}/HOST/quantitative_finance/mceuropeanengine/languages/python/")
 find_package(NumPy REQUIRED)
 

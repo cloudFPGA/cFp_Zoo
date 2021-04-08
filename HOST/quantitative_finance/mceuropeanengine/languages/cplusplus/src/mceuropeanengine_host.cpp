@@ -173,19 +173,19 @@ int main(int argc, char *argv[])
 	assert(instruct.loop_nm > 0);
 	assert(instruct.loop_nm <= OUTDEP);
     
-        clock_t start_cycle_main = clock();
-        cout << " ___________________________________________________________________ " << endl;
-        cout << "/                                                                   \\" << endl;
+    clock_t start_cycle_main = clock();
+    cout << " ___________________________________________________________________ " << endl;
+    cout << "/                                                                   \\" << endl;
 	cout << "INFO: Batch # " << ++num_frame << endl;
 	    
 	// Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
 	assert(PACK_SIZE % 8 == 0);
    
-        unsigned int total_pack_tx  = 1 + (sizeof(instruct) - 1) / PACK_SIZE;
+    unsigned int total_pack_tx  = 1 + (sizeof(instruct) - 1) / PACK_SIZE;
 	unsigned int total_pack_rx  = 1 + (instruct.loop_nm*sizeof(DtUsed) - 1) / PACK_SIZE;
-        unsigned int total_bytes = total_pack_tx * PACK_SIZE;
-        unsigned int bytes_in_last_pack_tx = sizeof(instruct) - (total_pack_tx - 1) * PACK_SIZE;
-        unsigned int bytes_in_last_pack_rx = instruct.loop_nm*sizeof(DtUsed) - (total_pack_rx - 1) * PACK_SIZE;
+    unsigned int total_bytes = total_pack_tx * PACK_SIZE;
+    unsigned int bytes_in_last_pack_tx = sizeof(instruct) - (total_pack_tx - 1) * PACK_SIZE;
+    unsigned int bytes_in_last_pack_rx = instruct.loop_nm*sizeof(DtUsed) - (total_pack_rx - 1) * PACK_SIZE;
 
 	cout << "INFO: Network socket           : " << ((net_type == tcp) ? "TCP" : "UDP") << endl;
 	cout << "INFO: Total packets to send    : " << total_pack_tx << endl;
