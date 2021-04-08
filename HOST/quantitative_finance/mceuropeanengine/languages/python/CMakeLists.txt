@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 
-pset(PYTHON_VERSION_MAJOR=3)
+set(PYTHON_VERSION_MAJOR=3)
 set(PYTHON_VERSION_MINOR=8)
 
 find_package(LibXml2 REQUIRED)
