@@ -120,7 +120,7 @@ int main(int argc, char** argv) {
     const char *fname = argv[1]; //"../../../../etc/mce.conf";
     if (readFileConfigToStruct(fname, &instruct) != INSIZE) {
         printf("WARNING: Invalid read size of configration file %s. Will use default...\n", fname);
-	instruct.loop_nm = OUTDEP;    
+	instruct.loop_nm = OUTDEP;
 	instruct.seed = 4332 ; // 441242, 42, 13342;
 	instruct.underlying = 36;
 	instruct.volatility = 0.20;
