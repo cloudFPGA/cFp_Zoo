@@ -11,6 +11,8 @@ find_package(SWIG REQUIRED)
 #set(PYTHON_INCLUDE_DIR  /usr/include/python3.5m)
 #set(Python_ADDITIONAL_VERSIONS 3.5)
 #find_package(PythonInterp 3 REQUIRED)
+set(PYTHON_LIBRARIES /usr/lib64/libpython3.8.so)
+set (CMAKE_MODULE_PATH "$ENV{cFpRootDir}/HOST/custom/uppercase/languages/python/")
 find_package(PythonLibs 3 REQUIRED)
 
 include_directories(${LIBXML2_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
