@@ -94,9 +94,6 @@ using hls::stream;
 // the last element from the input to every output value. This option is used for debugging.
 // #define FAKE_Harris
 
-// Define this option to load data from network to DDR memory before calling the kernel.
-#define ENABLE_DDR
-
 // Function prototypes
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst,
@@ -115,7 +112,7 @@ void cornerHarrisAccelStream(
 void fakeCornerHarrisAccelStream(
     #ifdef USE_HLSLIB_STREAM
     hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        & img_in_axi_stream,
-    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       & img_out_axi_stream,  
+    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       & img_out_axi_stream,
     #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,

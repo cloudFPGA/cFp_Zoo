@@ -75,7 +75,7 @@ void storeWordToAxiStream(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  //#pragma HLS INLINE
+  #pragma HLS INLINE
   Data_t_in v;
   const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
@@ -126,7 +126,7 @@ void storeWordToMem(
   unsigned int *processed_bytes_rx,
   unsigned int *image_loaded)
 {   
-  //#pragma HLS INLINE
+  #pragma HLS INLINE
   
   Data_t_in v;
   v.data = 0;
@@ -178,7 +178,8 @@ void storeWordToMem(
       tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
     }
     // Write to DDR
-    lcl_mem0[(*ddr_addr_in)++] = tmp;
+    //lcl_mem0[(*ddr_addr_in)++] = tmp;
+    //memcpy((membus_t  *) (lcl_mem0 + (*ddr_addr_in)++), &tmp, sizeof(membus_t));
   }
   
   
@@ -317,8 +318,8 @@ void pProcPath(
     static unsigned int processed_word_proc;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
-    static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
-    #pragma HLS stream variable=img_out_axi_stream depth=9
+    static stream<Data_t_out> Iimg_out_axi_stream ("Iimg_out_axi_stream");
+    #pragma HLS stream variable=Iimg_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
     #endif
     
@@ -389,7 +390,7 @@ void pProcPath(
 	    raw64(0 ,7 ) = tmp(i*OUTPUT_PTR_WIDTH   , i*OUTPUT_PTR_WIDTH+7);
 	    temp.data = raw64;
 	    #endif 
-	    img_out_axi_stream.write(temp);
+	    Iimg_out_axi_stream.write(temp);
 	  }
 	  
 	  HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
@@ -398,11 +399,11 @@ void pProcPath(
       break;
     case HARRIS_RETURN_RESULTS_FWD:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
-      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+      if ( !Iimg_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	temp = img_out_axi_stream.read();
-	if ( img_out_axi_stream.empty() ) {
+	temp = Iimg_out_axi_stream.read();
+	if ( Iimg_out_axi_stream.empty() ) {
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	}
 	
@@ -426,11 +427,11 @@ void pProcPath(
     #else
     case HARRIS_RETURN_RESULTS:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
-      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+      if ( !Iimg_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	temp = img_out_axi_stream.read();
-	if ( img_out_axi_stream.empty() )
+	temp = Iimg_out_axi_stream.read();
+	if ( Iimg_out_axi_stream.empty() )
 	//if (processed_word_proc++ == MIN_TX_LOOPS-1)
 	{
 	  temp.last = 1;
@@ -616,18 +617,24 @@ void harris(
   
 #ifdef ENABLE_DDR
 // LCL_MEM0 interfaces
-#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem0 bundle=moMEM_p0 \
-  max_read_burst_length=64  max_write_burst_length=64 offset=slave
+#pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem0 bundle=moMEM_Mp1\
+  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  num_read_outstanding=16 num_write_outstanding=16 latency=52
+
 /* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
   #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
 */
 // LCL_MEM1 interfaces
-#pragma HLS INTERFACE m_axi depth=512 port=lcl_mem1 bundle=moMEM_p1 \
-  max_read_burst_length=64  max_write_burst_length=64 offset=slave
+#pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem1 bundle=moMEM_Mp1 \
+  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  num_read_outstanding=16 num_write_outstanding=16 latency=52
+
 /* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
    max_read_burst_length=64  max_write_burst_length=64 
    #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
 */
+
+
 #endif
 
   //-- LOCAL VARIABLES ------------------------------------------------------
@@ -641,19 +648,20 @@ void harris(
   const int img_in_axi_stream_depth = MIN_RX_LOOPS;
   const int img_out_axi_stream_depth = MIN_TX_LOOPS;
   const int tot_transfers = TOT_TRANSFERS;
+#ifdef ENABLE_DDR
 #ifdef USE_HLSLIB_DATAFLOW
   static hlslib::Stream<Data_t_in,  MIN_RX_LOOPS> img_in_axi_stream ("img_in_axi_stream");
   static hlslib::Stream<Data_t_out, MIN_TX_LOOPS> img_out_axi_stream ("img_out_axi_stream");
 #else
   static stream<Data_t_in>  img_in_axi_stream ("img_in_axi_stream" );
-  static stream<Data_t_out> img_out_axi_stream("img_out_axi_stream"); 
+  static stream<Data_t_out> img_out_axi_stream("img_out_axi_stream");
+#endif
 #endif
   *po_rx_ports = 0x1; //currently work only with default ports...
 
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS DATAFLOW 
-#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers 
+#pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=HarrisFSM
@@ -665,6 +673,9 @@ void harris(
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
 #endif
+
+#pragma HLS DATAFLOW
+
 
 #ifdef USE_HLSLIB_DATAFLOW
   /*! @copybrief harris()
@@ -724,7 +735,7 @@ void harris(
 			   pi_size);
 
   HLSLIB_DATAFLOW_FINALIZE();
-  
+
 #else // !USE_HLSLIB_DATAFLOW
  pRXPath(
 	siSHL_This_Data,
@@ -739,8 +750,8 @@ void harris(
         &processed_word_rx,
 	&processed_bytes_rx,
 	&image_loaded);
-  
-  
+
+
   pProcPath(sRxpToTxp_Data,
 #ifdef ENABLE_DDR
 	    lcl_mem0,
@@ -752,7 +763,7 @@ void harris(
 	    &processed_word_rx,
 	    &processed_bytes_rx,
 	    &image_loaded);  
- 
+
   pTXPath(
         soTHIS_Shl_Data,
         soNrc_meta,

@@ -152,25 +152,28 @@ void cornerHarrisAccelStream(
 void fakeCornerHarrisAccelStream(
     #ifdef USE_HLSLIB_STREAM
     hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        &img_in_axi_stream,
-    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       &img_out_axi_stream,  
+    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       &img_out_axi_stream,
     #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops) {
-  
+
   #pragma  HLS INLINE off
-  
+  //#pragma HLS INTERFACE axis port=img_in_axi_stream
+  //#pragma HLS INTERFACE axis port=img_out_axi_stream
+  //#pragma HLS interface ap_ctrl_none port=return  // Special pragma for free-running kernel
+
   ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> tmp_in;
   ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> tmp_out;
-  for (unsigned int i=0, j=0, k=0; k < 5 * (min_rx_loops + min_tx_loops); k++) { 
+  for (unsigned int i=0, j=0, k=0; k < 5 * (min_rx_loops + min_tx_loops); k++) {
     cout << "Consuming input...i=" << i << endl;
     if (!img_in_axi_stream.empty() && (i < min_rx_loops)) {
       tmp_in = img_in_axi_stream.read();
       i++;
     }
-  
+
     tmp_out.data = tmp_in.data; // known silent dirty casting here when INPUT_PTR_WIDTH != OUTPUT_PTR_WIDTH
     cout << "Filling output...j=" << j << endl;
     if (!(img_out_axi_stream.full()) && (j < min_tx_loops)) {
@@ -178,7 +181,7 @@ void fakeCornerHarrisAccelStream(
       j++;
     }
     //if ((img_out_axi_stream.full()) || (i == min_tx_loops)) {
-    if (j == min_tx_loops) {  
+    if (j == min_tx_loops) {
       cout << "Full" << endl;
       //break;
     }
