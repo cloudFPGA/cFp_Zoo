@@ -318,8 +318,8 @@ void pProcPath(
     static unsigned int processed_word_proc;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
-    static stream<Data_t_out> Iimg_out_axi_stream ("Iimg_out_axi_stream");
-    #pragma HLS stream variable=Iimg_out_axi_stream depth=9
+    static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
+    #pragma HLS stream variable=img_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
     #endif
     
@@ -390,7 +390,7 @@ void pProcPath(
 	    raw64(0 ,7 ) = tmp(i*OUTPUT_PTR_WIDTH   , i*OUTPUT_PTR_WIDTH+7);
 	    temp.data = raw64;
 	    #endif 
-	    Iimg_out_axi_stream.write(temp);
+	    img_out_axi_stream.write(temp);
 	  }
 	  
 	  HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
@@ -399,11 +399,11 @@ void pProcPath(
       break;
     case HARRIS_RETURN_RESULTS_FWD:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
-      if ( !Iimg_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	temp = Iimg_out_axi_stream.read();
-	if ( Iimg_out_axi_stream.empty() ) {
+	temp = img_out_axi_stream.read();
+	if ( img_out_axi_stream.empty() ) {
 	  HarrisFSM = HARRIS_RETURN_RESULTS;
 	}
 	
@@ -427,11 +427,11 @@ void pProcPath(
     #else
     case HARRIS_RETURN_RESULTS:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
-      if ( !Iimg_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
       {
 	
-	temp = Iimg_out_axi_stream.read();
-	if ( Iimg_out_axi_stream.empty() )
+	temp = img_out_axi_stream.read();
+	if ( img_out_axi_stream.empty() )
 	//if (processed_word_proc++ == MIN_TX_LOOPS-1)
 	{
 	  temp.last = 1;
@@ -648,7 +648,7 @@ void harris(
   const int img_in_axi_stream_depth = MIN_RX_LOOPS;
   const int img_out_axi_stream_depth = MIN_TX_LOOPS;
   const int tot_transfers = TOT_TRANSFERS;
-#ifdef ENABLE_DDR
+#ifndef ENABLE_DDR
 #ifdef USE_HLSLIB_DATAFLOW
   static hlslib::Stream<Data_t_in,  MIN_RX_LOOPS> img_in_axi_stream ("img_in_axi_stream");
   static hlslib::Stream<Data_t_out, MIN_TX_LOOPS> img_out_axi_stream ("img_out_axi_stream");
