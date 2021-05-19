@@ -65,7 +65,7 @@ set cmd "pkg-config --cflags-only-I opencv"
 #For Tcl versions less than 8.5, this will work
 #puts [ eval exec $cmd ] 
 set OPENCV_INCLUDE [ exec {*}$cmd ] 
-set cmd "pkg-config --libs-only-L opencv"
+set cmd "pkg-config --libs-only-l opencv"
 set OPENCV_LIB [ exec {*}$cmd ] 
 
 # ------------------------------------------------------------------------------
@@ -107,13 +107,14 @@ open_solution ${solutionName}
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default
 
+# Enable an 64-bit address interface for axi master. We need it for the FPGA DRAM I/F
 config_interface -m_axi_addr64
 
 # ------------------------------------------------------------------------------
 # Run C Simulation and Synthesis
 # ------------------------------------------------------------------------------
 if { $hlsSim } {
-  csim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"
+  csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"
 } else {
 
   if { $hlsSyn } {
@@ -121,7 +122,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -ldflags "${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -trace_level all -argv "${SimFile}"
+    cosim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -trace_level all -argv "${SimFile}"
   } else {
 
   # ------------------------------------------------------------------------------

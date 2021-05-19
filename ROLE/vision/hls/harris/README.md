@@ -111,3 +111,18 @@ make monolithic # with Vivado HLS >= 2019.1
 ```
 
 More info for the Harris IP: https://xilinx.github.io/Vitis_Libraries/vision/api-reference.html#harris-corner-detection
+
+
+##### Troubleshooting
+
+* ```
+  Vivado libstdc++.so.6: version CXXABI_1.3.11 not found (required by /lib64/libtbb.so.2)`
+  ```
+  Fix: `cp /usr/lib64/libstdc++.so.6 /tools/Xilinx/Vivado/2020.1/lib/lnx64.o/Default/libstdc++.so.6`
+
+*
+  ```
+  /lib64/libtbb.so.2: undefined reference to `__cxa_init_primary_exception@CXXABI_1.3.11'
+  /lib64/libtbb.so.2: undefined reference to `std::__exception_ptr::exception_ptr::exception_ptr(void*)@CXXABI_1.3.11'
+  ```
+  Fix: `csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
