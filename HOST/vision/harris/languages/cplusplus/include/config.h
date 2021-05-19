@@ -24,10 +24,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 256
+#define FRAME_HEIGHT 32
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  256
+#define FRAME_WIDTH  32
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -36,7 +36,7 @@
 #define PACK_SIZE 1024
 
 /** Larger than maximum UDP packet size                                                           */
-#define BUF_LEN 65540              
+#define BUF_LEN 65540
 
 /** If defined, output images will be written                                                     */
 #define WRITE_OUTPUT_FILE  

@@ -36,8 +36,11 @@ int main(int argc, char * argv[]) {
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_frame = 0;
     string clean_cmd;
-	    
+
+#ifdef SHOW_WINDOWS
     namedWindow("tb_recv", WINDOW_AUTOSIZE);
+#endif // SHOW_WINDOWS
+
     try {
       	#if NET_TYPE == udp
         UDPSocket sock(servPort);
@@ -104,8 +107,10 @@ int main(int argc, char * argv[]) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
             }
+#ifdef SHOW_WINDOWS
             imshow("tb_recv", frame);
-	    
+#endif // SHOW_WINDOWS
+
 	    // We save the image received from network in order to process it with the harris HLS TB
 	    imwrite("../../../../../../ROLE/vision/hls/harris/test/input_from_udp_to_fpga.png", frame);
 	    

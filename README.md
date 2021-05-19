@@ -36,7 +36,7 @@ rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 #### CentOS/EL7
 ```
 sudo yum groupinstall 'Development Tools'
-sudo yum install cmake opencv-devel dialog python-numpy
+sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel
 ```
 
 ### Vivado/Vitis tool support
@@ -111,6 +111,16 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
 
   sometimes it accelerates the build process of `make monolithic` if:
   execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
-
-
   
+- Update subrepositories (e.g. for Vitis_Libraries)
+
+  On the pc that you want to change the subrepo to a new version
+  ```
+  cd Vitis_Libraries
+  git checkout origin master` (or any other version)
+  git commit -am "Updated Vitis_Libraries to master"
+  ```
+  On the pc you want to sync with the new subrepo
+  ```
+  git submodule update --init -- Vitis_Libraries/
+  ```
