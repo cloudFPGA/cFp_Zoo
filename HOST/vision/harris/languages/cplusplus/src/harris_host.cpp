@@ -187,10 +187,13 @@ int main(int argc, char * argv[]) {
     out_video_file.assign(input_string);
     out_video_file += "_fpga_img_out.avi";
     //#endif // PY_WRAP
-    VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
+#if CV_MAJOR_VERSION < 4
+    VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
+#else
+    VideoWriter video(out_video_file,cv::VideoWriter::fourcc('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
+#endif
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME) 
-
 
     print_cFpVitis();
     
@@ -249,7 +252,11 @@ int main(int argc, char * argv[]) {
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
 	    cout << "INFO: Frame # " << ++num_frame << endl;
+#if CV_MAJOR_VERSION < 4
 	    cv::cvtColor(frame,frame,CV_BGR2GRAY);
+#else
+        cv::cvtColor(frame,frame,cv::COLOR_BGR2GRAY);
+#endif
 	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
