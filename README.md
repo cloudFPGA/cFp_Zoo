@@ -36,7 +36,7 @@ rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 #### CentOS/EL7
 ```
 sudo yum groupinstall 'Development Tools'
-sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel
+sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wireshark wireshark-gnome xauth
 ```
 
 ### Vivado/Vitis tool support
@@ -106,7 +106,32 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
 - On Wireshark filter line:
 
   `udp.port==2718` or `tcp.port==2718`
+
+  `ip.addr == 10.12.200.0/24`
   
+- Set maximum net buffer:
+
+  - `sudo sysctl -w net.core.rmem_max=2147483647`
+  - On the host code (cpp)
+    ```
+    //increase buffer size
+    int recvBufSize = 0x1000000;
+    int err = setsockopt(sock, SOL_SOCKET, SO_RCVBUF, &recvBufSize, sizeof(recvBufSize));
+    if(err != 0)
+    {
+      std::cerr <<" error socket buffer: " << err << std::endl;
+      exit(EXIT_FAILURE);
+    }
+    int real_buffer_size = 0;
+    socklen_t len2 = sizeof(real_buffer_size);
+    err = getsockopt(sock, SOL_SOCKET, SO_RCVBUF, &real_buffer_size, &len2);
+    printf("got %d as buffer size (requested %d)\n",real_buffer_size/2, recvBufSize);
+    if(real_buffer_size/2 != recvBufSize)
+    {
+      std::cerr << "set SO_RCVBUF failed! got only: " << real_buffer_size/2 << "; trying to continue..." << std::endl;
+    }
+  ```
+
 - Quick bitgen:
 
   sometimes it accelerates the build process of `make monolithic` if:
@@ -123,4 +148,8 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
   On the pc you want to sync with the new subrepo
   ```
   git submodule update --init -- Vitis_Libraries/
+  ```
+- Add user to wireshark group in order to capture packets without advanced privileges. (needs logout)
+  ```
+  sudo usermod -aG wireshark $USER
   ```

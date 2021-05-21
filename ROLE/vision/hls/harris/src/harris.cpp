@@ -519,6 +519,10 @@ void pTXPath(
         meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
         //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
+
+        // Forcing the SHELL to wait for tlast
+        meta_out_stream.tdata.len = 0;
+
         //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
         //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
         //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
