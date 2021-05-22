@@ -70,7 +70,7 @@ if [ -f "$CONF_FILE" ]; then
       esac
       let "i++"
      done < $CONF_FILE
-     $DIALOG --title "Hello cF Developer" --msgbox "Succesfully configured cFp_Vitis from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\n" 20 50
+     $DIALOG --title "Hello cF Developer" --msgbox "Successfully configured cFp_Vitis from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\n" 20 50
     fi # load_conf = 1
 else
     echo "Configuration file $CONF_FILE does not exist."
