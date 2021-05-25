@@ -72,7 +72,7 @@ enum EchoCtrl {
 #define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
-
+#define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
 
 #define MAX_NB_OF_ELMT_READ  16
 typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your needs

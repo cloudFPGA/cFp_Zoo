@@ -625,7 +625,9 @@ void harris(
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
-/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=512 \
+const unsigned int ddr_mem_depth = TOTMEMDW_512;
+
+/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=ddr_mem_depth \
   #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
 */
 // LCL_MEM1 interfaces
@@ -633,7 +635,7 @@ void harris(
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
-/* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=512 \
+/* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=ddr_mem_depth \
    max_read_burst_length=64  max_write_burst_length=64 
    #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
 */

@@ -73,7 +73,7 @@ ap_uint<32>                 cluster_size;
 //-- SHELL / Role / Mem / Mp0 Interface
 //------------------------------------------------------
 #ifdef ENABLE_DDR
-#define MEMORY_LINES_512  1024 /* 64 KiB */
+#define MEMORY_LINES_512  TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];    
 membus_t   lcl_mem1[MEMORY_LINES_512];    
 #endif
