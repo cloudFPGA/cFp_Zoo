@@ -74,8 +74,8 @@ ap_uint<32>                 cluster_size;
 //------------------------------------------------------
 #ifdef ENABLE_DDR
 #define MEMORY_LINES_512  TOTMEMDW_512 /* 64 KiB */
-membus_t   lcl_mem0[MEMORY_LINES_512];    
-membus_t   lcl_mem1[MEMORY_LINES_512];    
+membus_t   lcl_mem0[MEMORY_LINES_512];
+membus_t   lcl_mem1[MEMORY_LINES_512];
 #endif
 
 //------------------------------------------------------
@@ -188,10 +188,10 @@ int main(int argc, char** argv) {
     imgInput.copyTo(in_img.data);
     //	imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
 	
-    ap_uint<INPUT_PTR_WIDTH> imgInputArray[in_img.rows * in_img.cols];
-    ap_uint<OUTPUT_PTR_WIDTH> imgOutputArrayTb[in_img.rows * in_img.cols];
-    ap_uint<OUTPUT_PTR_WIDTH> imgOutputArray[in_img.rows * in_img.cols];
-  
+    ap_uint<INPUT_PTR_WIDTH>  *imgInputArray    = (ap_uint<INPUT_PTR_WIDTH>*)  malloc(in_img.rows * in_img.cols * sizeof(ap_uint<INPUT_PTR_WIDTH>));
+    ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArrayTb = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
+    ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArray   = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
+
     xf::cv::xfMat2Array<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
 	
     if (!dumpImgToFile(imgInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
@@ -398,6 +398,12 @@ int main(int argc, char** argv) {
     //nrErr += 
     writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
 
+    // Clear memory
+    free(imgOutputArrayTb);
+    free(imgOutputArray);
+    free(imgInputArray);
+    
+    
     return(nrErr);
 }
 
