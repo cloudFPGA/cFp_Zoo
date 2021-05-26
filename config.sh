@@ -62,7 +62,9 @@ if [ -f "$CONF_FILE" ]; then
         4)
             option5=$line
             ;;
-         
+        5)
+            option6=$line
+            ;;         
         *)
             echo $"Wrong number of lines parsed in the configuration file}"
             exit 1
@@ -70,7 +72,7 @@ if [ -f "$CONF_FILE" ]; then
       esac
       let "i++"
      done < $CONF_FILE
-     $DIALOG --title "Hello cF Developer" --msgbox "Successfully configured cFp_Vitis from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\n" 20 50
+     $DIALOG --title "Hello cF Developer" --msgbox "Successfully configured cFp_Vitis from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\nDDR    : $option6 \n" 20 50
     fi # load_conf = 1
 else
     echo "Configuration file $CONF_FILE does not exist."
@@ -102,12 +104,12 @@ option2=$($DIALOG --radiolist "Select domain" 0 0 0 \
   data_compression      "Vitis Data Compression Library" off \
   dsp                   "Vitis DSP Library" off \
   graph                 "Vitis Graph Library" off \
-  quantitative_finance  "Vitis Quantitative Finance Library" on \
+  quantitative_finance  "Vitis Quantitative Finance Library" off \
   security              "Vitis Security Library" off \
   solver                "Vitis Solver Library" off \
   sparse                "Vitis SPARSE Library" off \
   utils                 "Vitis Utility Library" off \
-  vision                "Vitis Vision Library" off \
+  vision                "Vitis Vision Library" on \
   custom                "IBMZRL Custom Library" off)
 
 response=$?
@@ -167,8 +169,8 @@ elif [ $option2 = 'utils' ]; then
   N/A "N/A" off)
 elif [ $option2 = 'vision' ]; then
   option3=$($DIALOG --radiolist "Select Vision kernel" 0 0 0 \
-  Harris "Harris Corner Detector" off \
-  Gammacorrection "Gamma Correction Filter" on)
+  Harris "Harris Corner Detector" on \
+  Gammacorrection "Gamma Correction Filter" off)
 elif [ $option2 = 'custom' ]; then
   option3=$($DIALOG --radiolist "Select Custom kernel" 0 0 0 \
   Uppercase "Select Uppercase kernel example" on \
@@ -214,6 +216,20 @@ ${DIALOG_ERROR-255}) die "Dialog error";;
 esac
 
 
+####################################################################################################
+# Select DDR
+option6=$($DIALOG --radiolist "Select DDR ROLE I/F" 0 0 0 \
+  ddr_enabled           "Enable DDR" off \
+  ddr_disabled          "Disable DDR" on )
+response=$?
+case $response in
+${DIALOG_OK-0})      echo "Selected DDR $option6";;
+${DIALOG_CANCEL-1})  die "Aborting without selecting DDR";;
+${DIALOG_ESC-255})   die "[ESC] key pressed.";;
+${DIALOG_ERROR-255}) die "Dialog error";;
+*) echo "Unknown error $retval"
+esac
+
 fi # load_conf = 0
 
 
@@ -227,9 +243,9 @@ confirm=$($DIALOG --yesno "Do you want to continue?" 0 0 )
 response=$?
 case $response in
 ${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
-python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4  $option5 &&\
-echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5'." &&\
-echo -e "$option1\n$option2\n$option3\n$option4\n$option5" > $CONF_FILE && echo -e "Configuration saved in $CONF_FILE\n\n";;
+python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4 $option5 $option6 &&\
+echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5', option6:'$option6'." &&\
+echo -e "$option1\n$option2\n$option3\n$option4\n$option5\n$option6" > $CONF_FILE && echo -e "Configuration saved in $CONF_FILE\n\n";;
 ${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;

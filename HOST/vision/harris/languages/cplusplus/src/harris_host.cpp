@@ -382,7 +382,7 @@ int main(int argc, char * argv[]) {
                     //continue;
                 }
                 memcpy( & longbuf[i], buffer, recvMsgSize);
-		//cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
+		//cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
 		i += recvMsgSize;
             }
 
