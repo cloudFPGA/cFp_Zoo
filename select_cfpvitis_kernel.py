@@ -35,7 +35,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 replaced = replaced + 1
  
             #######################################################################################
-            # Replacing role interface for DDR Mp1
+            # Replacing role interface for DDR Mp1 in Role.vdl
             
             # Check component start
             search_str = "SHELL / Mem / Mp1 Interface / Start Component"
@@ -143,8 +143,6 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                   replaced = replaced + 1 
               if (ddr_Mp2_dummy_end_detected):
                 ddr_Mp2_dummy_start_detected = ddr_Mp2_dummy_end_detected = 0;        
-
-                
             #######################################################################################
 
             search_str = "  UAF: "
@@ -251,8 +249,16 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 s2 = search_str2 + port + "\n"
                 replaced = replaced + 1 
             new_s = s.replace(str(s), str(s2))
-            f2.write(new_s) 
-
+            
+            search_str3 = "#define ENABLE_DDR"
+            if search(search_str3, s):
+                if (ddr):
+                    s2 = search_str3 + "\n"
+                else:
+                    s2 = "// " + search_str3 + "\n"
+                replaced = replaced + 1 
+            new_s = new_s.replace(str(s), str(s2))
+            f2.write(new_s)
 
 
     print("INFO: Edits of file " + full_file + " : "+ str(replaced))
