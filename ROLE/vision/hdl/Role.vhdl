@@ -647,7 +647,7 @@ begin
              m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
              m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
              m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
-             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+             m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID, --(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
              m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
              m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
              m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
