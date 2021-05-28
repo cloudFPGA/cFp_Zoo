@@ -311,7 +311,7 @@ architecture Flash of Role_Themisto is
            soNrc_meta_TLAST          : out std_logic_vector (0 downto 0);
 
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
-           poROL_NRC_Rx_ports_V_ap_vld : out std_logic 
+           poROL_NRC_Rx_ports_V_ap_vld : out std_logic;
            
            
            
@@ -377,7 +377,7 @@ architecture Flash of Role_Themisto is
     soMemWriteP0_TKEEP          : out std_logic_vector( 63 downto 0);
     soMemWriteP0_TLAST          : out std_logic;
     soMemWriteP0_TVALID         : out std_logic;
-    soMemWriteP0_TREADY         : in  std_logic;
+    soMemWriteP0_TREADY         : in  std_logic
 
 
 
@@ -541,7 +541,7 @@ begin
              soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP,
              soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
 
-             poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports
+             poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports,
            --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
 
              --------------------------------------------------------
@@ -620,7 +620,7 @@ begin
              soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
              soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
              soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
-             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,
+             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast
 
 
  
