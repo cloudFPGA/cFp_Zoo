@@ -174,6 +174,14 @@ int main(int argc, char** argv) {
     #ifdef ENABLE_DDR
     memset(lcl_mem0,  0x0, sizeof(lcl_mem0));
     memset(lcl_mem1,  0x0, sizeof(lcl_mem1));
+    
+    DmCmd           dmCmd_MemCmdP0;
+    DmSts           dmSts_MemWrStsP0;
+    DmSts           dmSts_MemRdStsP0;
+    Axis<MEMDW_512> memP0;
+    ap_uint<64>     currentMemPattern = 0;
+  
+    unsigned int ddr_addr_in = 0x0;
     #endif
     
     uint16_t Thresh; // Threshold for HLS
@@ -280,6 +288,43 @@ int main(int argc, char** argv) {
               assert(s_udp_rx_ports == 0x1);
             }
 
+            
+#ifdef ENABLE_DDR
+
+            if (!sROL_Shl_Mem_WrCmdP0.empty()) {
+                //-- Read a memory write command from SHELL/Mem/Mp0
+                sROL_Shl_Mem_WrCmdP0.read(dmCmd_MemCmdP0);
+                assert(dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE); 
+                assert(dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7);
+            }
+            
+            if (!sROL_Shl_Mem_WriteP0.empty()) {
+                sROL_Shl_Mem_WriteP0.read(memP0);
+
+                assert(memP0.tkeep == 0xffffffffffffffff);
+                
+                /* Read from AXI stream DDR interface and write to the memory mapped interface of 
+                 * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI 
+                 * Datamover, being instantiated in VHDL.
+                 * */
+                lcl_mem0[ddr_addr_in++] = memP0.tdata;
+                
+                // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status 
+                dmSts_MemWrStsP0.tag = 7;
+                dmSts_MemWrStsP0.okay = 1;
+                dmSts_MemWrStsP0.interr = 0;
+                dmSts_MemWrStsP0.slverr = 0;
+                dmSts_MemWrStsP0.decerr = 0;
+                if (!sSHL_Rol_Mem_WrStsP0.full()) {
+                    sSHL_Rol_Mem_WrStsP0.write(dmSts_MemWrStsP0);
+                }
+            }
+
+            
+
+#endif
+            
+            
             //if( !soUdp_meta.empty())
             //{
             //  NetworkMetaStream tmp_meta = soUdp_meta.read();
