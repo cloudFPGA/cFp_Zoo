@@ -695,9 +695,9 @@ void harris(
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
     //---- Read Path (MM2S) ------------
-    stream<DmCmd>               &soMemRdCmdP0,
-    stream<DmSts>               &siMemRdStsP0,
-    stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    // stream<DmCmd>               &soMemRdCmdP0,
+    // stream<DmSts>               &siMemRdStsP0,
+    // stream<Axis<MEMDW_512 > >   &siMemReadP0,
     //---- Write Path (S2MM) -----------
     stream<DmCmd>               &soMemWrCmdP0,
     stream<DmSts>               &siMemWrStsP0,
@@ -730,9 +730,9 @@ void harris(
 #ifdef ENABLE_DDR
 
 // Bundling: SHELL / Role / Mem / Mp0 / Read Interface
-#pragma HLS INTERFACE axis register both port=soMemRdCmdP0
-#pragma HLS INTERFACE axis register both port=siMemRdStsP0
-#pragma HLS INTERFACE axis register both port=siMemReadP0
+// #pragma HLS INTERFACE axis register both port=soMemRdCmdP0
+// #pragma HLS INTERFACE axis register both port=siMemRdStsP0
+// #pragma HLS INTERFACE axis register both port=siMemReadP0
 
 #pragma HLS DATA_PACK variable=soMemRdCmdP0 instance=soMemRdCmdP0
 #pragma HLS DATA_PACK variable=siMemRdStsP0 instance=siMemRdStsP0

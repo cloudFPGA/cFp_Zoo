@@ -350,20 +350,20 @@ architecture Flash of Role_Themisto is
 --           moMEM_Mp0_RVALID                : in    std_ulogic;
 --           moMEM_Mp0_RREADY                : out   std_ulogic;
       
-    ---- Axi4-Stream Read Command -----
-    soMemRdCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
-    soMemRdCmdP0_TVALID         : out std_logic;
-    soMemRdCmdP0_TREADY         : in  std_logic;
-    ---- Axi4-Stream Read Status ------
-    siMemRdStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
-    siMemRdStsP0_TVALID         : in  std_logic;
-    siMemRdStsP0_TREADY         : out std_logic;
-    ---- Axi4-Stream Data Output Channel
-    siMemReadP0_TDATA           : in  std_logic_vector(511 downto 0);
-    siMemReadP0_TKEEP           : in  std_logic_vector( 63 downto 0);
-    siMemReadP0_TLAST           : in  std_logic_vector(  0 downto 0);
-    siMemReadP0_TVALID          : in  std_logic;
-    siMemReadP0_TREADY          : out std_logic;
+--    ---- Axi4-Stream Read Command -----
+--    soMemRdCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
+--    soMemRdCmdP0_TVALID         : out std_logic;
+--    soMemRdCmdP0_TREADY         : in  std_logic;
+--    ---- Axi4-Stream Read Status ------
+--    siMemRdStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
+--    siMemRdStsP0_TVALID         : in  std_logic;
+--    siMemRdStsP0_TREADY         : out std_logic;
+--    ---- Axi4-Stream Data Output Channel
+--    siMemReadP0_TDATA           : in  std_logic_vector(511 downto 0);
+--    siMemReadP0_TKEEP           : in  std_logic_vector( 63 downto 0);
+--    siMemReadP0_TLAST           : in  std_logic_vector(  0 downto 0);
+--    siMemReadP0_TVALID          : in  std_logic;
+--    siMemReadP0_TREADY          : out std_logic;
     ---- Axi4-Stream Write Command ----
     soMemWrCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
     soMemWrCmdP0_TVALID         : out std_logic;
@@ -593,20 +593,20 @@ begin
 --             m_axi_card_mem0_wuser        => open, -- m_axi_card_mem0_wuser,
 --             m_axi_card_mem0_wvalid       => moMEM_Mp0_WVALID,
 
-             ---- Stream Read Command ---------
-             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
-             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
-             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
-             ---- Stream Read Status ----------
-             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
-             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
-             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
-             ---- Stream Read Data ------------
-             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
-             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
-             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
-             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
-             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
+--             ---- Stream Read Command ---------
+--             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
+--             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
+--             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
+--             ---- Stream Read Status ----------
+--             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
+--             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
+--             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
+--             ---- Stream Read Data ------------
+--             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
+--             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
+--             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
+--             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
+--             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
              ---- Stream Write Command --------
              soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
              soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
@@ -825,13 +825,13 @@ begin
   soMEM_Mp0_RdCmd_tvalid  <= '0';
   siMEM_Mp0_RdSts_tready  <= '0';
   siMEM_Mp0_Read_tready   <= '0';
-  soMEM_Mp0_WrCmd_tdata   <= (others => '0');
-  soMEM_Mp0_WrCmd_tvalid  <= '0';
-  siMEM_Mp0_WrSts_tready  <= '0';
-  soMEM_Mp0_Write_tdata   <= (others => '0');
-  soMEM_Mp0_Write_tkeep   <= (others => '0');
-  soMEM_Mp0_Write_tlast   <= '0';
-  soMEM_Mp0_Write_tvalid  <= '0';
+--  soMEM_Mp0_WrCmd_tdata   <= (others => '0');
+--  soMEM_Mp0_WrCmd_tvalid  <= '0';
+--  siMEM_Mp0_WrSts_tready  <= '0';
+--  soMEM_Mp0_Write_tdata   <= (others => '0');
+--  soMEM_Mp0_Write_tkeep   <= (others => '0');
+--  soMEM_Mp0_Write_tlast   <= '0';
+--  soMEM_Mp0_Write_tvalid  <= '0';
   --################################################################################
   --  1st Memory Port dummy connections End
   --################################################################################    
