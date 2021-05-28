@@ -154,9 +154,9 @@ void harris(
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
     //---- Read Path (MM2S) ------------
-    stream<DmCmd>               &soMemRdCmdP0,
-    stream<DmSts>               &siMemRdStsP0,
-    stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    // stream<DmCmd>               &soMemRdCmdP0,
+    // stream<DmSts>               &siMemRdStsP0,
+    // stream<Axis<MEMDW_512 > >   &siMemReadP0,
     //---- Write Path (S2MM) -----------
     stream<DmCmd>               &soMemWrCmdP0,
     stream<DmSts>               &siMemWrStsP0,
