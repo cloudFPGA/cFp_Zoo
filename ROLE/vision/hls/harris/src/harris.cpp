@@ -35,7 +35,6 @@ PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType HarrisFSM  = WAIT_FOR_META;
 
 
-
 /*****************************************************************************
  * @brief   Store a net word to local memory
  * @return Nothing.
@@ -114,17 +113,24 @@ void storeWordToAxiStream(
   }
 }
 
+ap_uint<32> patternWriteNum = 0;
+ap_uint<32> timeoutCnt = 0;
 
 /*****************************************************************************
  * @brief   Store a net word to DDR memory (axi master)
  * @return Nothing.
  *****************************************************************************/
 void storeWordToMem(
-  NetworkWord  word,
-  membus_t     *lcl_mem0,
-  unsigned int *processed_word_rx,
-  unsigned int *processed_bytes_rx,
-  unsigned int *image_loaded)
+  NetworkWord               word,
+  //---- P0 Write Path (S2MM) -----------
+  stream<DmCmd>             &soMemWrCmdP0,
+  stream<DmSts>             &siMemWrStsP0,
+  stream<Axis<MEMDW_512> >  &soMemWriteP0,
+  //---- P1 Memory mapped ---------------
+  membus_t                  *lcl_mem0,
+  unsigned int              *processed_word_rx,
+  unsigned int              *processed_bytes_rx,
+  unsigned int              *image_loaded)
 {   
   #pragma HLS INLINE
   
@@ -141,6 +147,19 @@ void storeWordToMem(
   // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
   static unsigned int * ddr_addr_in = processed_word_rx;
   membus_t tmp = 0;
+  
+  fsmStateDDRdef fsmStateDDR = FSM_DDR_IDLE;
+  
+  Axis<MEMDW_512>   memP0;
+  DmSts             memRdStsP0;
+  DmSts             memWrStsP0;
+  
+  bool write_chunk_to_ddr_pending = true;
+  
+  //initalize 
+  memP0.tdata = 0;
+  memP0.tlast = 0;
+  memP0.tkeep = 0;
   
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
@@ -173,15 +192,72 @@ void storeWordToMem(
   if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
     printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	    KWPERMDW_512, BPERMDW_512);
-    for (unsigned int i=0; i<BPERMDW_512; i++) {
-      v = img_in_axi_stream.read();
-      tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
+    fsmStateDDR = FSM_WR_PAT_CMD;
+
+    while (write_chunk_to_ddr_pending == true) {
+        
+        switch(fsmStateDDR) {
+            
+            case FSM_WR_PAT_CMD:
+                printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_CMD\n");
+                if (!soMemWrCmdP0.full()) {
+                    //-- Post a memory write command to SHELL/Mem/Mp0
+                    soMemWrCmdP0.write(DmCmd((*ddr_addr_in)++, CHECK_CHUNK_SIZE));
+                    patternWriteNum = 0;
+                    // -- Assemble a 512-bit memory word with input values from stream
+                    for (unsigned int i=0; i<BPERMDW_512; i++) {
+                        v = img_in_axi_stream.read();
+                        tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
+                    }                    
+                    fsmStateDDR = FSM_WR_PAT_DATA;
+                }
+            break;
+    
+            case FSM_WR_PAT_DATA:
+                printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_DATA\n");                
+                if (!soMemWriteP0.full()) {
+                    //-- Write a memory word to DRAM
+                    memP0.tdata = tmp; // (ap_uint<512>) (currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern);
+                    ap_uint<8> keepVal = 0xFF;
+                    memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
+
+                    if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
+                        memP0.tlast = 1;
+                        fsmStateDDR = FSM_WR_PAT_STS;
+                        timeoutCnt = 0;
+                    }
+                    else {
+                        memP0.tlast = 0;
+                    }
+                    soMemWriteP0.write(memP0);
+                    patternWriteNum++;
+                }
+            break;    
+            
+            case FSM_WR_PAT_STS:
+                printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_STS\n");                
+                if (!siMemWrStsP0.empty()) {
+                    //-- Get the memory write status for Mem/Mp0
+                    siMemWrStsP0.read(memWrStsP0);
+                    // TODO: handle errors on memWrStsP0
+                }
+                else { 
+                    fsmStateDDR = FSM_WR_PAT_CMD;
+                    write_chunk_to_ddr_pending = false; // exit from loop
+                }
+            break;            
+        }
     }
+    
+    
+    //for (unsigned int i=0; i<BPERMDW_512; i++) {
+    //  v = img_in_axi_stream.read();
+    //  tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
+    //}
     // Write to DDR
     //lcl_mem0[(*ddr_addr_in)++] = tmp;
     //memcpy((membus_t  *) (lcl_mem0 + (*ddr_addr_in)++), &tmp, sizeof(membus_t));
   }
-  
   
   if ((*processed_bytes_rx) == 0) {
     (*ddr_addr_in) = 0;
@@ -205,23 +281,28 @@ void storeWordToMem(
  * @return Nothing.
  ******************************************************************************/
 void pRXPath(
-	stream<NetworkWord>                              &siSHL_This_Data,
-        stream<NetworkMetaStream>                        &siNrc_meta,
-	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-        #ifdef ENABLE_DDR 
-	membus_t                                         *lcl_mem0,
-	#else // !ENABLE_DDR
-	#ifdef USE_HLSLIB_STREAM
-	Stream<Data_t_in, MIN_RX_LOOPS>                  &img_in_axi_stream,
-	#else // !USE_HLSLIB_STREAM
-	stream<Data_t_in>                                &img_in_axi_stream,
-	#endif // USE_HLSLIB_STREAM
-	#endif // ENABLE_DDR
-	NetworkMetaStream                                meta_tmp,
-	unsigned int                                     *processed_word_rx,
-	unsigned int                                     *processed_bytes_rx,
-	unsigned int                                     *image_loaded
-	    )
+    stream<NetworkWord>                 &siSHL_This_Data,
+    stream<NetworkMetaStream>           &siNrc_meta,
+    stream<NetworkMetaStream>           &sRxtoTx_Meta,
+    #ifdef ENABLE_DDR
+    //---- P0 Write Path (S2MM) -----------
+    stream<DmCmd>                       &soMemWrCmdP0,
+    stream<DmSts>                       &siMemWrStsP0,
+    stream<Axis<MEMDW_512> >            &soMemWriteP0,
+    //---- P1 Memory mapped ---------------
+    membus_t                            *lcl_mem0,
+    #else // !ENABLE_DDR
+    #ifdef USE_HLSLIB_STREAM
+    Stream<Data_t_in, MIN_RX_LOOPS>     &img_in_axi_stream,
+    #else // !USE_HLSLIB_STREAM
+    stream<Data_t_in>                   &img_in_axi_stream,
+    #endif // USE_HLSLIB_STREAM
+    #endif // ENABLE_DDR
+    NetworkMetaStream                   meta_tmp,
+    unsigned int                        *processed_word_rx,
+    unsigned int                        *processed_bytes_rx,
+    unsigned int                        *image_loaded
+    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
@@ -256,8 +337,14 @@ void pRXPath(
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
 	#ifdef ENABLE_DDR 
-	storeWordToMem(netWord, lcl_mem0, processed_word_rx, processed_bytes_rx, 
-			     image_loaded);
+	storeWordToMem(netWord,
+                   soMemWrCmdP0,
+                   siMemWrStsP0,
+                   soMemWriteP0,
+                   lcl_mem0, 
+                   processed_word_rx, 
+                   processed_bytes_rx, 
+                   image_loaded);
 	#else
 	storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
 			     image_loaded);
@@ -286,25 +373,26 @@ void pRXPath(
  * @return Nothing.
  ******************************************************************************/
 void pProcPath(
-	      stream<NetworkWord>                    &sRxpToTxp_Data,
-	      #ifdef ENABLE_DDR 
-	      membus_t                               *lcl_mem0,
-	      membus_t                               *lcl_mem1,
-	      #else // !ENABLE_DDR
-	      #ifdef USE_HLSLIB_STREAM
-	      Stream<Data_t_in, MIN_RX_LOOPS>        &img_in_axi_stream,
-	      Stream<Data_t_out, MIN_TX_LOOPS>       &img_out_axi_stream,
-	      #else // !USE_HLSLIB_STREAM
-	      stream<Data_t_in>                      &img_in_axi_stream,
-              stream<Data_t_out>                     &img_out_axi_stream,
-	      #endif // USE_HLSLIB_STREAM
-	      #endif // ENABLE_DDR	       
-	       
-	       
-	      unsigned int                           *processed_word_rx,
-	      unsigned int                           *processed_bytes_rx, 
-	      unsigned int                           *image_loaded
-	      )
+        stream<NetworkWord>                     &sRxpToTxp_Data,
+        #ifdef ENABLE_DDR
+        //---- P1 Memory mapped ---------------
+        membus_t                                *lcl_mem0,        
+        membus_t                                *lcl_mem1,
+        #else // !ENABLE_DDR
+        #ifdef USE_HLSLIB_STREAM
+        Stream<Data_t_in, MIN_RX_LOOPS>         &img_in_axi_stream,
+        Stream<Data_t_out, MIN_TX_LOOPS>        &img_out_axi_stream,
+        #else // !USE_HLSLIB_STREAM
+        stream<Data_t_in>                       &img_in_axi_stream,
+        stream<Data_t_out>                      &img_out_axi_stream,
+        #endif // USE_HLSLIB_STREAM
+        #endif // ENABLE_DDR	       
+        
+        
+        unsigned int                            *processed_word_rx,
+        unsigned int                            *processed_bytes_rx, 
+        unsigned int                            *image_loaded
+        )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
@@ -470,12 +558,12 @@ void pProcPath(
 void pTXPath(
         stream<NetworkWord>         &soTHIS_Shl_Data,
         stream<NetworkMetaStream>   &soNrc_meta,
-	stream<NetworkWord>         &sRxpToTxp_Data,
-	stream<NetworkMetaStream>   &sRxtoTx_Meta,
+        stream<NetworkWord>         &sRxpToTxp_Data,
+        stream<NetworkMetaStream>   &sRxtoTx_Meta,
         unsigned int                *processed_word_tx, 
         ap_uint<32>                 *pi_rank,
         ap_uint<32>                 *pi_size
-	    )
+        )   
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
@@ -488,7 +576,7 @@ void pTXPath(
   {
     case WAIT_FOR_STREAM_PAIR:
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
-	     dequeueFSM, *processed_word_tx);
+        dequeueFSM, *processed_word_tx);
       //-- Forward incoming chunk to SHELL
       *processed_word_tx = 0;
       
@@ -504,11 +592,11 @@ void pTXPath(
       {
         netWordTx = sRxpToTxp_Data.read();
 
-	// in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
-	if (PACK_SIZE == 8) 
-	{
-	    netWordTx.tlast = 1;
-	}
+    // in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
+    if (PACK_SIZE == 8) 
+    {
+        netWordTx.tlast = 1;
+    }
         soTHIS_Shl_Data.write(netWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;
@@ -583,7 +671,7 @@ void harris(
     ap_uint<32>                 *pi_rank,
     ap_uint<32>                 *pi_size,
     //------------------------------------------------------
-    //-- SHELL / This / Udp/TCP Interfaces
+    //-- SHELL / This / UDP/TCP Interfaces
     //------------------------------------------------------
     stream<NetworkWord>         &siSHL_This_Data,
     stream<NetworkWord>         &soTHIS_Shl_Data,
@@ -591,22 +679,32 @@ void harris(
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
     
-    
+    #ifdef ENABLE_DDR
+                                ,
     //------------------------------------------------------
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
-    #ifdef ENABLE_DDR
-                                ,
+    //---- Read Path (MM2S) ------------
+    stream<DmCmd>               &soMemRdCmdP0,
+    stream<DmSts>               &siMemRdStsP0,
+    stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    //---- Write Path (S2MM) -----------
+    stream<DmCmd>               &soMemWrCmdP0,
+    stream<DmSts>               &siMemWrStsP0,
+    stream<Axis<MEMDW_512> >    &soMemWriteP0,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------    
     membus_t                    *lcl_mem0,
     membus_t                    *lcl_mem1
     #endif
     )
 {
 
-  //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
- //#pragma HLS INTERFACE ap_ctrl_none port=return
+//-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
+//#pragma HLS INTERFACE ap_ctrl_none port=return
 
-  //#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
+//#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
 
 #pragma HLS INTERFACE axis register both port=siSHL_This_Data
 #pragma HLS INTERFACE axis register both port=soTHIS_Shl_Data
@@ -620,26 +718,34 @@ void harris(
 
   
 #ifdef ENABLE_DDR
-// LCL_MEM0 interfaces
+
+// Bundling: SHELL / Role / Mem / Mp0 / Read Interface
+#pragma HLS INTERFACE axis register both port=soMemRdCmdP0
+#pragma HLS INTERFACE axis register both port=siMemRdStsP0
+#pragma HLS INTERFACE axis register both port=siMemReadP0
+
+#pragma HLS DATA_PACK variable=soMemRdCmdP0 instance=soMemRdCmdP0
+#pragma HLS DATA_PACK variable=siMemRdStsP0 instance=siMemRdStsP0
+
+// Bundling: SHELL / Role / Mem / Mp0 / Write Interface
+#pragma HLS INTERFACE axis register both port=soMemWrCmdP0
+#pragma HLS INTERFACE axis register both port=siMemWrStsP0
+#pragma HLS INTERFACE axis register both port=soMemWriteP0
+
+#pragma HLS DATA_PACK variable=soMemWrCmdP0 instance=soMemWrCmdP0
+#pragma HLS DATA_PACK variable=siMemWrStsP0 instance=siMemWrStsP0    
+    
+// Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem0 bundle=moMEM_Mp1\
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
 const unsigned int ddr_mem_depth = TOTMEMDW_512;
 
-/* #pragma HLS INTERFACE m_axi port=lcl_mem0 bundle=card_mem0 offset=slave depth=ddr_mem_depth \
-  #pragma HLS INTERFACE s_axilite port=lcl_mem0 bundle=ctrl_reg offset=0x050  
-*/
-// LCL_MEM1 interfaces
+// Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem1 bundle=moMEM_Mp1 \
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
-
-/* #pragma HLS INTERFACE m_axi port=lcl_mem1 bundle=card_mem1 offset=slave depth=ddr_mem_depth \
-   max_read_burst_length=64  max_write_burst_length=64 
-   #pragma HLS INTERFACE s_axilite port=lcl_mem1 bundle=ctrl_reg offset=0x050    
-*/
-
 
 #endif
 
@@ -685,7 +791,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 
 #ifdef USE_HLSLIB_DATAFLOW
   /*! @copybrief harris()
-   *  Harris is eanbled with hlslib support
+   *  Harris is enabled with hlslib support
    */
   /*! @copydoc harris()
    * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
@@ -744,37 +850,42 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 
 #else // !USE_HLSLIB_DATAFLOW
  pRXPath(
-	siSHL_This_Data,
-        siNrc_meta,
-	sRxtoTx_Meta,
+    siSHL_This_Data,
+    siNrc_meta,
+    sRxtoTx_Meta,
 #ifdef ENABLE_DDR
-	lcl_mem0,
+    //---- P0 Write Path (S2MM) -----------
+    soMemWrCmdP0,
+    siMemWrStsP0,
+    soMemWriteP0,
+    // ---- P1 Memory mapped --------------
+    lcl_mem0,
 #else
-	img_in_axi_stream,
+    img_in_axi_stream,
 #endif
-	meta_tmp,	 
-        &processed_word_rx,
-	&processed_bytes_rx,
-	&image_loaded);
+    meta_tmp,
+    &processed_word_rx,
+    &processed_bytes_rx,
+    &image_loaded);
 
 
   pProcPath(sRxpToTxp_Data,
 #ifdef ENABLE_DDR
-	    lcl_mem0,
-	    lcl_mem1,
+        lcl_mem0,
+        lcl_mem1,
 #else
-	    img_in_axi_stream,
-	    img_out_axi_stream,
+        img_in_axi_stream,
+        img_out_axi_stream,
 #endif
-	    &processed_word_rx,
-	    &processed_bytes_rx,
-	    &image_loaded);  
+        &processed_word_rx,
+        &processed_bytes_rx,
+        &image_loaded);  
 
   pTXPath(
         soTHIS_Shl_Data,
         soNrc_meta,
-	sRxpToTxp_Data,
-	sRxtoTx_Meta,
+        sRxpToTxp_Data,
+        sRxtoTx_Meta,
         &processed_word_tx,
         pi_rank,
         pi_size);

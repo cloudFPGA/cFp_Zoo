@@ -65,6 +65,16 @@ enum EchoCtrl {
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
+
+#define MAX_NB_OF_ELMT_READ  16
+typedef uint8_t  mat_elmt_t;    // change to float or double depending on your needs
+
+#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_ELMT_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
+#define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
+
+
+//------------------------------------ Declarations for DDR ----------------------------------------
+
 /* General memory Data Width is set as a parameter*/
 /* 52-bit host AXI data width*/
 #define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
@@ -74,12 +84,56 @@ typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
 
-#define MAX_NB_OF_ELMT_READ  16
-typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your needs
+#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
+#define BYTE_PER_MEM_WORD BPERMDW_512 // 64
+#define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
 
-#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_ELMT_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
-#define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
+enum fsmStateDDRenum {
+    FSM_DDR_IDLE	= 0,
+    FSM_WR_PAT_CMD	= 1,
+    FSM_WR_PAT_DATA	= 2,
+    FSM_WR_PAT_STS  = 3
+};
+typedef enum fsmStateDDRenum fsmStateDDRdef;
 
+/*
+ * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
+ */
+template<int D>
+struct Axis {
+  ap_uint<D>       tdata;
+  ap_uint<(D+7)/8> tkeep;
+  ap_uint<1>       tlast;
+  Axis() {}
+  Axis(ap_uint<D> single_data) : tdata((ap_uint<D>)single_data), tkeep(1), tlast(1) {}
+};
+
+// AXI DataMover - Format of the command word (c.f PG022)
+struct DmCmd
+{
+  ap_uint<23>   btt;
+  ap_uint<1>    type;
+  ap_uint<6>    dsa;
+  ap_uint<1>    eof;
+  ap_uint<1>    drr;
+  ap_uint<40>   saddr;
+  ap_uint<4>    tag;
+  ap_uint<4>    rsvd;
+  DmCmd() {}
+  DmCmd(ap_uint<40> addr, ap_uint<16> len) :
+    btt(len), type(1), dsa(0), eof(1), drr(0), saddr(addr), tag(0x7), rsvd(0) {}
+};
+
+// AXI DataMover - Format of the status word (c.f PG022)
+struct DmSts
+{
+  ap_uint<4>    tag;
+  ap_uint<1>    interr;
+  ap_uint<1>    decerr;
+  ap_uint<1>    slverr;
+  ap_uint<1>    okay;
+  DmSts() {}
+};
 
 void harris(
 
@@ -99,7 +153,17 @@ void harris(
     //------------------------------------------------------
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
-
+    //---- Read Path (MM2S) ------------
+    stream<DmCmd>               &soMemRdCmdP0,
+    stream<DmSts>               &siMemRdStsP0,
+    stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    //---- Write Path (S2MM) -----------
+    stream<DmCmd>               &soMemWrCmdP0,
+    stream<DmSts>               &siMemWrStsP0,
+    stream<Axis<MEMDW_512> >    &soMemWriteP0,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------             
     membus_t   *lcl_mem0,
     membus_t   *lcl_mem1
     #endif

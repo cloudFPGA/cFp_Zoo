@@ -69,10 +69,23 @@ stream<NetworkMetaStream>   soUdp_meta          ("soUdp_meta");
 ap_uint<32>                 node_rank;
 ap_uint<32>                 cluster_size;
 
+#ifdef ENABLE_DDR
+
 //------------------------------------------------------
 //-- SHELL / Role / Mem / Mp0 Interface
 //------------------------------------------------------
-#ifdef ENABLE_DDR
+//---- Read Path (MM2S) ------------
+stream<DmCmd>               sROL_Shl_Mem_RdCmdP0("sROL_Shl_Mem_RdCmdP0");
+stream<DmSts>               sSHL_Rol_Mem_RdStsP0("sSHL_Rol_Mem_RdStsP0");
+stream<Axis<MEMDW_512> >    sSHL_Rol_Mem_ReadP0 ("sSHL_Rol_Mem_ReadP0");
+//---- Write Path (S2MM) -----------
+stream<DmCmd>               sROL_Shl_Mem_WrCmdP0("sROL_Shl_Mem_WrCmdP0");
+stream<DmSts>               sSHL_Rol_Mem_WrStsP0("sSHL_Rol_Mem_WrStsP0");
+stream<Axis<MEMDW_512> >    sROL_Shl_Mem_WriteP0("sROL_Shl_Mem_WriteP0");
+
+//------------------------------------------------------
+//-- SHELL / Role / Mem / Mp1 Interface
+//------------------------------------------------------
 #define MEMORY_LINES_512  TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
 membus_t   lcl_mem1[MEMORY_LINES_512];
@@ -90,14 +103,20 @@ int         simCnt;
  ******************************************************************************/
 void stepDut() {
     harris(
-      &node_rank, &cluster_size,
-      sSHL_Uaf_Data, sUAF_Shl_Data,
-      siUdp_meta, soUdp_meta,
-      &s_udp_rx_ports
-      #ifdef ENABLE_DDR
-                     ,
-      lcl_mem0,
-      lcl_mem1
+        &node_rank, &cluster_size,
+        sSHL_Uaf_Data, sUAF_Shl_Data,
+        siUdp_meta, soUdp_meta,
+        &s_udp_rx_ports
+        #ifdef ENABLE_DDR
+                        ,
+        sROL_Shl_Mem_RdCmdP0,
+        sSHL_Rol_Mem_RdStsP0,
+        sSHL_Rol_Mem_ReadP0,
+        sROL_Shl_Mem_WrCmdP0,
+        sSHL_Rol_Mem_WrStsP0,
+        sROL_Shl_Mem_WriteP0,
+        lcl_mem0,
+        lcl_mem1
       #endif
 	  );
     simCnt++;
