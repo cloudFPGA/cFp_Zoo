@@ -96,6 +96,10 @@ enum fsmStateDDRenum {
 };
 typedef enum fsmStateDDRenum fsmStateDDRdef;
 
+// The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
+#define CYCLES_UNTIL_TIMEOUT 0x1000
+
+
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
  */
@@ -154,9 +158,9 @@ void harris(
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
     //---- Read Path (MM2S) ------------
-    // stream<DmCmd>               &soMemRdCmdP0,
-    // stream<DmSts>               &siMemRdStsP0,
-    // stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    stream<DmCmd>               &soMemRdCmdP0,
+    stream<DmSts>               &siMemRdStsP0,
+    stream<Axis<MEMDW_512 > >   &siMemReadP0,
     //---- Write Path (S2MM) -----------
     stream<DmCmd>               &soMemWrCmdP0,
     stream<DmSts>               &siMemWrStsP0,

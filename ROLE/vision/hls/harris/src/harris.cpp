@@ -115,6 +115,7 @@ void storeWordToAxiStream(
 
 // Global variable to act as a counter of words being written to DDR
 ap_uint<32> patternWriteNum = 0; // FIXME: move it to internal variable instead of global.
+ap_uint<32> timeoutCnt = 0;
 
 /*****************************************************************************
  * @brief   Store a net word to DDR memory (axi master)
@@ -160,6 +161,8 @@ void storeWordToMem(
   memP0.tdata = 0;
   memP0.tlast = 0;
   memP0.tkeep = 0;
+  
+  timeoutCnt = 0;
   
   for (unsigned int i=0; i<loop_cnt; i++) {
     //#pragma HLS PIPELINE
@@ -236,13 +239,21 @@ void storeWordToMem(
             case FSM_WR_PAT_STS:
                 printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_STS\n");                
                 if (!siMemWrStsP0.empty()) {
+                    printf(" 1 \n");
                     //-- Get the memory write status for Mem/Mp0
                     siMemWrStsP0.read(memWrStsP0);
                     // TODO: handle errors on memWrStsP0
-                }
-                else { 
                     fsmStateDDR = FSM_WR_PAT_CMD;
                     write_chunk_to_ddr_pending = false; // exit from loop
+                }
+                else {
+                    printf(" 2 \n");
+                    timeoutCnt++;
+                    if (timeoutCnt >= CYCLES_UNTIL_TIMEOUT) {
+                        printf(" 3 \n");
+                        fsmStateDDR = FSM_WR_PAT_CMD;
+                        write_chunk_to_ddr_pending = false; // exit from loop but with an error
+                    }
                 }
             break;            
         }
@@ -684,9 +695,9 @@ void harris(
     //-- SHELL / Role / Mem / Mp0 Interface
     //------------------------------------------------------
     //---- Read Path (MM2S) ------------
-    // stream<DmCmd>               &soMemRdCmdP0,
-    // stream<DmSts>               &siMemRdStsP0,
-    // stream<Axis<MEMDW_512 > >   &siMemReadP0,
+    stream<DmCmd>               &soMemRdCmdP0,
+    stream<DmSts>               &siMemRdStsP0,
+    stream<Axis<MEMDW_512 > >   &siMemReadP0,
     //---- Write Path (S2MM) -----------
     stream<DmCmd>               &soMemWrCmdP0,
     stream<DmSts>               &siMemWrStsP0,
@@ -719,9 +730,9 @@ void harris(
 #ifdef ENABLE_DDR
 
 // Bundling: SHELL / Role / Mem / Mp0 / Read Interface
-// #pragma HLS INTERFACE axis register both port=soMemRdCmdP0
-// #pragma HLS INTERFACE axis register both port=siMemRdStsP0
-// #pragma HLS INTERFACE axis register both port=siMemReadP0
+#pragma HLS INTERFACE axis register both port=soMemRdCmdP0
+#pragma HLS INTERFACE axis register both port=siMemRdStsP0
+#pragma HLS INTERFACE axis register both port=siMemReadP0
 
 #pragma HLS DATA_PACK variable=soMemRdCmdP0 instance=soMemRdCmdP0
 #pragma HLS DATA_PACK variable=siMemRdStsP0 instance=siMemRdStsP0

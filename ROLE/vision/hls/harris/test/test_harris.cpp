@@ -109,9 +109,9 @@ void stepDut() {
         &s_udp_rx_ports
         #ifdef ENABLE_DDR
                         ,
-        // sROL_Shl_Mem_RdCmdP0,
-        // sSHL_Rol_Mem_RdStsP0,
-        // sSHL_Rol_Mem_ReadP0,
+        sROL_Shl_Mem_RdCmdP0,
+        sSHL_Rol_Mem_RdStsP0,
+        sSHL_Rol_Mem_ReadP0,
         sROL_Shl_Mem_WrCmdP0,
         sSHL_Rol_Mem_WrStsP0,
         sROL_Shl_Mem_WriteP0,
@@ -292,6 +292,7 @@ int main(int argc, char** argv) {
 #ifdef ENABLE_DDR
 
             if (!sROL_Shl_Mem_WrCmdP0.empty()) {
+                printf("DEBUG: Read a memory write command from SHELL/Mem/Mp0 \n");
                 //-- Read a memory write command from SHELL/Mem/Mp0
                 sROL_Shl_Mem_WrCmdP0.read(dmCmd_MemCmdP0);
                 assert(dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE); 
@@ -300,6 +301,7 @@ int main(int argc, char** argv) {
             
             if (!sROL_Shl_Mem_WriteP0.empty()) {
                 sROL_Shl_Mem_WriteP0.read(memP0);
+                printf("DEBUG: Write a memory line from SHELL/Mem/Mp0 \n");
 
                 assert(memP0.tkeep == 0xffffffffffffffff);
                 
@@ -316,13 +318,14 @@ int main(int argc, char** argv) {
                 dmSts_MemWrStsP0.slverr = 0;
                 dmSts_MemWrStsP0.decerr = 0;
                 if (!sSHL_Rol_Mem_WrStsP0.full()) {
+                    printf("DEBUG: Write a memory status command to SHELL/Mem/Mp0 \n");
                     sSHL_Rol_Mem_WrStsP0.write(dmSts_MemWrStsP0);
                 }
             }
 
             
 
-#endif
+#endif // ENABLE_DDR
             
             
             //if( !soUdp_meta.empty())
