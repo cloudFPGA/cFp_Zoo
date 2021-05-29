@@ -734,8 +734,8 @@ void harris(
 // #pragma HLS INTERFACE axis register both port=siMemRdStsP0
 // #pragma HLS INTERFACE axis register both port=siMemReadP0
 
-#pragma HLS DATA_PACK variable=soMemRdCmdP0 instance=soMemRdCmdP0
-#pragma HLS DATA_PACK variable=siMemRdStsP0 instance=siMemRdStsP0
+// #pragma HLS DATA_PACK variable=soMemRdCmdP0 instance=soMemRdCmdP0
+// #pragma HLS DATA_PACK variable=siMemRdStsP0 instance=siMemRdStsP0
 
 // Bundling: SHELL / Role / Mem / Mp0 / Write Interface
 #pragma HLS INTERFACE axis register both port=soMemWrCmdP0
