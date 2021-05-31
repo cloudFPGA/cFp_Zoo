@@ -33,7 +33,7 @@ using hls::stream;
 PacketFsmType  enqueueFSM  = WAIT_FOR_META;
 PacketFsmType  dequeueFSM  = WAIT_FOR_STREAM_PAIR;
 PacketFsmType  HarrisFSM   = WAIT_FOR_META;
-fsmStateDDRdef fsmStateDDR = FSM_DDR_IDLE;
+fsmStateDDRdef fsmStateDDR = FSM_WR_PAT_CMD;
 
 
 /*****************************************************************************
@@ -117,6 +117,7 @@ void storeWordToAxiStream(
 // Global variable to act as a counter of words being written to DDR
 ap_uint<32> patternWriteNum = 0; // FIXME: move it to internal variable instead of global.
 ap_uint<32> timeoutCnt = 0;
+bool write_chunk_to_ddr_pending = true;
 
 /*****************************************************************************
  * @brief   Store a net word to DDR memory (axi master)
@@ -154,7 +155,6 @@ void storeWordToMem(
   DmSts             memRdStsP0;
   DmSts             memWrStsP0;
   
-  bool write_chunk_to_ddr_pending = true;
   
   //initalize 
   memP0.tdata = 0;
@@ -194,7 +194,7 @@ void storeWordToMem(
   if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
     printf("DEBUG: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	    KWPERMDW_512, BPERMDW_512);
-    fsmStateDDR = FSM_WR_PAT_CMD;
+    //fsmStateDDR = FSM_WR_PAT_CMD;
 
     while (write_chunk_to_ddr_pending == true) {
         
@@ -224,10 +224,11 @@ void storeWordToMem(
                     memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
 
                     if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
+                        printf("DEBUG: (patternWriteNum == TRANSFERS_PER_CHUNK -1) \n");
                         memP0.tlast = 1;
-                        //fsmStateDDR = FSM_WR_PAT_STS;
-                         write_chunk_to_ddr_pending = false; // exit from loop
-                        fsmStateDDR = FSM_WR_PAT_CMD;
+                        fsmStateDDR = FSM_WR_PAT_STS;
+                        // write_chunk_to_ddr_pending = false; // exit from loop
+                        // fsmStateDDR = FSM_WR_PAT_CMD;
                     }
                     else {
                         memP0.tlast = 0;
@@ -337,13 +338,13 @@ void pRXPath(
       break;
 
     case PROCESSING_PACKET:
-      printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-	     *processed_word_rx, *processed_bytes_rx);
-      if ( !siSHL_This_Data.empty() 
-        #ifndef ENABLE_DDR 
-	&& !img_in_axi_stream.full()
-        #endif
-      )
+        printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
+        *processed_word_rx, *processed_bytes_rx);
+        if ( !siSHL_This_Data.empty() 
+            #ifndef ENABLE_DDR 
+            && !img_in_axi_stream.full()
+            #endif
+            )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
@@ -746,15 +747,15 @@ void harris(
 #pragma HLS DATA_PACK variable=soMemWrCmdP0 instance=soMemWrCmdP0
 #pragma HLS DATA_PACK variable=siMemWrStsP0 instance=siMemWrStsP0    
     
+const unsigned int ddr_mem_depth = TOTMEMDW_512;
+
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
-#pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem0 bundle=moMEM_Mp1\
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
-const unsigned int ddr_mem_depth = TOTMEMDW_512;
-
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
-#pragma HLS INTERFACE m_axi depth=1024 port=lcl_mem1 bundle=moMEM_Mp1 \
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
   max_read_burst_length=256  max_write_burst_length=256 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
@@ -795,6 +796,8 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #ifndef ENABLE_DDR
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
+#else
+#pragma HLS reset variable=fsmStateDDR
 #endif
 
 #pragma HLS DATAFLOW

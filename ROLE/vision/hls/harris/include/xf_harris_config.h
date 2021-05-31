@@ -92,7 +92,7 @@ using hls::stream;
 
 // Enable it to fake the call of actual Harris kernel and instead consume input data and write back 
 // the last element from the input to every output value. This option is used for debugging.
-// #define FAKE_Harris
+#define FAKE_Harris
 
 // Function prototypes
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
