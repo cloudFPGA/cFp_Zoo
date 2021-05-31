@@ -45,7 +45,7 @@
 //  #define SHOW_WINDOWS  
   
 /** For HOST TB uncomment this. For normal host execution keep it commented                       */
-//  #define TB_SIM_CFP_VITIS
+  #define TB_SIM_CFP_VITIS
 
 /** Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
 //  #define INPUT_FROM_CAMERA

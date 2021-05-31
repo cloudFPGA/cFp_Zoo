@@ -33,6 +33,7 @@ using hls::stream;
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType HarrisFSM  = WAIT_FOR_META;
+fsmStateDDRdef fsmStateDDR = FSM_DDR_IDLE;
 
 
 /*****************************************************************************
@@ -149,8 +150,6 @@ void storeWordToMem(
   static unsigned int * ddr_addr_in = processed_word_rx;
   membus_t tmp = 0;
   
-  fsmStateDDRdef fsmStateDDR = FSM_DDR_IDLE;
-  
   Axis<MEMDW_512>   memP0;
   DmSts             memRdStsP0;
   DmSts             memWrStsP0;
@@ -226,7 +225,9 @@ void storeWordToMem(
 
                     if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
                         memP0.tlast = 1;
-                        fsmStateDDR = FSM_WR_PAT_STS;
+                        //fsmStateDDR = FSM_WR_PAT_STS;
+                         write_chunk_to_ddr_pending = false; // exit from loop
+                        fsmStateDDR = FSM_WR_PAT_CMD;
                     }
                     else {
                         memP0.tlast = 0;
