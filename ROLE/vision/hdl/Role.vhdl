@@ -541,7 +541,7 @@ begin
              soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP,
              soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
 
-             poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports,
+             poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports
            --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
 
              --------------------------------------------------------
