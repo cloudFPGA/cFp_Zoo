@@ -30,9 +30,9 @@ using hlslib::Stream;
 #endif
 using hls::stream;
 
-PacketFsmType enqueueFSM = WAIT_FOR_META;
-PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
-PacketFsmType HarrisFSM  = WAIT_FOR_META;
+PacketFsmType  enqueueFSM  = WAIT_FOR_META;
+PacketFsmType  dequeueFSM  = WAIT_FOR_STREAM_PAIR;
+PacketFsmType  HarrisFSM   = WAIT_FOR_META;
 fsmStateDDRdef fsmStateDDR = FSM_DDR_IDLE;
 
 
