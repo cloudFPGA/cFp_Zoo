@@ -35,10 +35,10 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 replaced = replaced + 1
  
             #######################################################################################
-            # Replacing role interface for DDR Mp1 in Role.vdl
+            # Replacing role interface for DDR Mp0-1 in Role.vdl
             
             # Check component start
-            search_str = "SHELL / Mem / Mp1 Interface / Start Component"
+            search_str = "SHELL / Mem / Mp0 Interface / Start Component"
             if search(search_str, s):
                 s2 = s
                 ddr_component_start_detected = 1
@@ -51,7 +51,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 
             # Replace ddr pattern in component declaration
             if (ddr_component_start_detected):
-              excluding_pattern = "-- auto excluding component Mp1           "
+              excluding_pattern = "-- auto excluding component Mp0-Mp1           "
               if (search(excluding_pattern, s2)):
                 if (ddr):
                   s2 = s2.replace(str(excluding_pattern), str(''))
@@ -65,7 +65,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 
             
             # Check DDR in UAF start
-            search_str = "SHELL / Mem / Mp1 Interface / Start in UAF"
+            search_str = "SHELL / Mem / Mp0 Interface / Start in UAF"
             if search(search_str, s):
                 s2 = s
                 ddr_uaf_start_detected = 1
@@ -78,7 +78,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 
             # Replace ddr pattern in component declaration
             if (ddr_uaf_start_detected):
-              excluding_pattern = "-- auto excluding Mp1 in UAF           "
+              excluding_pattern = "-- auto excluding Mp0-Mp1 in UAF           "
               if (search(excluding_pattern, s2)):
                 if (ddr):
                   s2 = s2.replace(str(excluding_pattern), str(''))
@@ -92,7 +92,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 
              
             # Check DDR in TAF start
-            search_str = "SHELL / Mem / Mp1 Interface / Start in TAF"
+            search_str = "SHELL / Mem / Mp0 Interface / Start in TAF"
             if search(search_str, s):
                 s2 = s
                 ddr_taf_start_detected = 1
@@ -105,7 +105,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
                 
             # Replace ddr pattern in component declaration
             if (ddr_taf_start_detected):
-              excluding_pattern = "-- auto excluding Mp1 in TAF           "
+              excluding_pattern = "-- auto excluding Mp0-Mp1 in TAF           "
               if (search(excluding_pattern, s2)):
                 if (ddr):
                   s2 = s2.replace(str(excluding_pattern), str(''))

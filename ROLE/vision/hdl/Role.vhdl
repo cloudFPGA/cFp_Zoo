@@ -311,129 +311,129 @@ architecture Flash of Role_Themisto is
            soNrc_meta_TLAST          : out std_logic_vector (0 downto 0);
 
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
-           poROL_NRC_Rx_ports_V_ap_vld : out std_logic;
+           poROL_NRC_Rx_ports_V_ap_vld : out std_logic
            
            
            
 
            
     --------------------------------------------------------
-    -- SHELL / Mem / Mp0 Interface
-    --------------------------------------------------------
---           moMEM_Mp0_AWID                  : out   std_ulogic_vector(3 downto 0);
---           moMEM_Mp0_AWADDR                : out   std_ulogic_vector(32 downto 0);
---           moMEM_Mp0_AWLEN                 : out   std_ulogic_vector(7 downto 0);
---           moMEM_Mp0_AWSIZE                : out   std_ulogic_vector(2 downto 0);
---           moMEM_Mp0_AWBURST               : out   std_ulogic_vector(1 downto 0);
---           moMEM_Mp0_AWVALID               : out   std_ulogic;
---           moMEM_Mp0_AWREADY               : in    std_ulogic;
---           moMEM_Mp0_WDATA                 : out   std_ulogic_vector(511 downto 0);
---           moMEM_Mp0_WSTRB                 : out   std_ulogic_vector(63 downto 0);
---           moMEM_Mp0_WLAST                 : out   std_ulogic;
---           moMEM_Mp0_WVALID                : out   std_ulogic;
---           moMEM_Mp0_WREADY                : in    std_ulogic;
---           moMEM_Mp0_BID                   : in    std_ulogic_vector(3 downto 0);
---           moMEM_Mp0_BRESP                 : in    std_ulogic_vector(1 downto 0);
---           moMEM_Mp0_BVALID                : in    std_ulogic;
---           moMEM_Mp0_BREADY                : out   std_ulogic;
---           moMEM_Mp0_ARID                  : out   std_ulogic_vector(3 downto 0);
---           moMEM_Mp0_ARADDR                : out   std_ulogic_vector(32 downto 0);
---           moMEM_Mp0_ARLEN                 : out   std_ulogic_vector(7 downto 0);
---           moMEM_Mp0_ARSIZE                : out   std_ulogic_vector(2 downto 0);
---           moMEM_Mp0_ARBURST               : out   std_ulogic_vector(1 downto 0);
---           moMEM_Mp0_ARVALID               : out   std_ulogic;
---           moMEM_Mp0_ARREADY               : in    std_ulogic;
---           moMEM_Mp0_RID                   : in    std_ulogic_vector(3 downto 0);
---           moMEM_Mp0_RDATA                 : in    std_ulogic_vector(511 downto 0);
---           moMEM_Mp0_RRESP                 : in    std_ulogic_vector(1 downto 0);
---           moMEM_Mp0_RLAST                 : in    std_ulogic;
---           moMEM_Mp0_RVALID                : in    std_ulogic;
---           moMEM_Mp0_RREADY                : out   std_ulogic;
-      
---    ---- Axi4-Stream Read Command -----
---    soMemRdCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
---    soMemRdCmdP0_TVALID         : out std_logic;
---    soMemRdCmdP0_TREADY         : in  std_logic;
---    ---- Axi4-Stream Read Status ------
---    siMemRdStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
---    siMemRdStsP0_TVALID         : in  std_logic;
---    siMemRdStsP0_TREADY         : out std_logic;
---    ---- Axi4-Stream Data Output Channel
---    siMemReadP0_TDATA           : in  std_logic_vector(511 downto 0);
---    siMemReadP0_TKEEP           : in  std_logic_vector( 63 downto 0);
---    siMemReadP0_TLAST           : in  std_logic_vector(  0 downto 0);
---    siMemReadP0_TVALID          : in  std_logic;
---    siMemReadP0_TREADY          : out std_logic;
-    ---- Axi4-Stream Write Command ----
-    soMemWrCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
-    soMemWrCmdP0_TVALID         : out std_logic;
-    soMemWrCmdP0_TREADY         : in  std_logic;
-    ---- Axi4-Stream Write Status -----
-    siMemWrStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
-    siMemWrStsP0_TVALID         : in  std_logic;
-    siMemWrStsP0_TREADY         : out std_logic;
-    ---- Axi4-Stream Write Command ----
-    soMemWriteP0_TDATA          : out std_logic_vector(511 downto 0);
-    soMemWriteP0_TKEEP          : out std_logic_vector( 63 downto 0);
-    soMemWriteP0_TLAST          : out std_logic;
-    soMemWriteP0_TVALID         : out std_logic;
-    soMemWriteP0_TREADY         : in  std_logic
-
-
-
-    --------------------------------------------------------
-    -- SHELL / Mem / Mp1 Interface / Start Component
-    --------------------------------------------------------
-    ; -- semicolumn for syntax correctness when Mp1 is instantiated 
-    --m_axi_moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_Mp1_AWADDR                : out   std_ulogic_vector(63 downto 0);
-    m_axi_moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
-    m_axi_moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
-    m_axi_moMEM_Mp1_AWBURST               : out   std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_Mp1_AWLOCK                : out   std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_Mp1_AWREGION              : out   std_ulogic_vector(3 downto 0);
-    --m_axi_moMEM_Mp1_AWUSER                : out   std_ulogic_vector(0 downto 0);
-    m_axi_moMEM_Mp1_AWCACHE               : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_Mp1_AWPROT                : out   std_ulogic_vector(2 downto 0);
-    m_axi_moMEM_Mp1_AWQOS                 : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_Mp1_AWVALID               : out   std_ulogic;
-    m_axi_moMEM_Mp1_AWREADY               : in    std_ulogic;
-    m_axi_moMEM_Mp1_WDATA                 : out   std_ulogic_vector(511 downto 0);
-    m_axi_moMEM_Mp1_WSTRB                 : out   std_ulogic_vector(63 downto 0);
-    m_axi_moMEM_Mp1_WLAST                 : out   std_ulogic;
-    --m_axi_moMEM_Mp1_WID                   : out   std_ulogic_vector(0 downto 0);
-    --m_axi_moMEM_Mp1_WUSER                 : out   std_ulogic_vector(0 downto 0);
-    m_axi_moMEM_Mp1_WVALID                : out   std_ulogic;
-    m_axi_moMEM_Mp1_WREADY                : in    std_ulogic;
-    --m_axi_moMEM_Mp1_BID                   : in    std_ulogic_vector(3 downto 0);
-    --m_axi_moMEM_Mp1_BUSER                 : in    std_ulogic_vector(0 downto 0);
-    m_axi_moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_Mp1_BVALID                : in    std_ulogic;
-    m_axi_moMEM_Mp1_BREADY                : out   std_ulogic;
-    --m_axi_moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_Mp1_ARADDR                : out   std_ulogic_vector(63 downto 0);
-    m_axi_moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
-    m_axi_moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
-    m_axi_moMEM_Mp1_ARBURST               : out   std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_Mp1_ARLOCK                : out   std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_mp1_ARREGION              : out   std_ulogic_vector(3 downto 0);
-    --m_axi_moMEM_mp1_ARUSER                : out   std_ulogic_vector(0 downto 0);
-    m_axi_moMEM_mp1_ARCACHE               : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_mp1_ARPROT                : out   std_ulogic_vector(2 downto 0);
-    m_axi_moMEM_mp1_ARQOS                 : out   std_ulogic_vector(3 downto 0);
-    m_axi_moMEM_Mp1_ARVALID               : out   std_ulogic;
-    m_axi_moMEM_Mp1_ARREADY               : in    std_ulogic;
-    --m_axi_moMEM_Mp1_RID                   : in    std_ulogic_vector(3 downto 0);
-    --m_axi_moMEM_Mp1_RUSER                 : in    std_ulogic_vector(0 downto 0);
-    m_axi_moMEM_Mp1_RDATA                 : in    std_ulogic_vector(511 downto 0);
-    m_axi_moMEM_Mp1_RRESP                 : in    std_ulogic_vector(1 downto 0);
-    m_axi_moMEM_Mp1_RLAST                 : in    std_ulogic;
-    m_axi_moMEM_Mp1_RVALID                : in    std_ulogic;
-    m_axi_moMEM_Mp1_RREADY                : out   std_ulogic;
-    lcl_mem0_v                            : in   std_ulogic_vector(63 downto 0);
-    lcl_mem1_v                            : in   std_ulogic_vector(63 downto 0)
-    --------------------------------------------------------
-    -- SHELL / Mem / Mp1 Interface / End Component
+-- auto excluding component Mp0-Mp1               -- SHELL / Mem / Mp0 Interface / Start Component
+-- auto excluding component Mp0-Mp1               --------------------------------------------------------
+-- auto excluding component Mp0-Mp1               ; -- semicolumn for syntax correctness when Mp1 is instantiated    
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWID                  : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWADDR                : out   std_ulogic_vector(32 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWLEN                 : out   std_ulogic_vector(7 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWSIZE                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWBURST               : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWVALID               : out   std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_AWREADY               : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_WDATA                 : out   std_ulogic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_WSTRB                 : out   std_ulogic_vector(63 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_WLAST                 : out   std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_WVALID                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_WREADY                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_BID                   : in    std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_BRESP                 : in    std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_BVALID                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_BREADY                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARID                  : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARADDR                : out   std_ulogic_vector(32 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARLEN                 : out   std_ulogic_vector(7 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARSIZE                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARBURST               : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARVALID               : out   std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_ARREADY               : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RID                   : in    std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RDATA                 : in    std_ulogic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RRESP                 : in    std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RLAST                 : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RVALID                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1           --           moMEM_Mp0_RREADY                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1                 
+-- auto excluding component Mp0-Mp1           --    ---- Axi4-Stream Read Command -----
+-- auto excluding component Mp0-Mp1           --    soMemRdCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
+-- auto excluding component Mp0-Mp1           --    soMemRdCmdP0_TVALID         : out std_logic;
+-- auto excluding component Mp0-Mp1           --    soMemRdCmdP0_TREADY         : in  std_logic;
+-- auto excluding component Mp0-Mp1           --    ---- Axi4-Stream Read Status ------
+-- auto excluding component Mp0-Mp1           --    siMemRdStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
+-- auto excluding component Mp0-Mp1           --    siMemRdStsP0_TVALID         : in  std_logic;
+-- auto excluding component Mp0-Mp1           --    siMemRdStsP0_TREADY         : out std_logic;
+-- auto excluding component Mp0-Mp1           --    ---- Axi4-Stream Data Output Channel
+-- auto excluding component Mp0-Mp1           --    siMemReadP0_TDATA           : in  std_logic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1           --    siMemReadP0_TKEEP           : in  std_logic_vector( 63 downto 0);
+-- auto excluding component Mp0-Mp1           --    siMemReadP0_TLAST           : in  std_logic_vector(  0 downto 0);
+-- auto excluding component Mp0-Mp1           --    siMemReadP0_TVALID          : in  std_logic;
+-- auto excluding component Mp0-Mp1           --    siMemReadP0_TREADY          : out std_logic;
+-- auto excluding component Mp0-Mp1               ---- Axi4-Stream Write Command ----
+-- auto excluding component Mp0-Mp1               soMemWrCmdP0_TDATA          : out std_logic_vector( 79 downto 0);
+-- auto excluding component Mp0-Mp1               soMemWrCmdP0_TVALID         : out std_logic;
+-- auto excluding component Mp0-Mp1               soMemWrCmdP0_TREADY         : in  std_logic;
+-- auto excluding component Mp0-Mp1               ---- Axi4-Stream Write Status -----
+-- auto excluding component Mp0-Mp1               siMemWrStsP0_TDATA          : in  std_logic_vector(  7 downto 0);
+-- auto excluding component Mp0-Mp1               siMemWrStsP0_TVALID         : in  std_logic;
+-- auto excluding component Mp0-Mp1               siMemWrStsP0_TREADY         : out std_logic;
+-- auto excluding component Mp0-Mp1               ---- Axi4-Stream Write Command ----
+-- auto excluding component Mp0-Mp1               soMemWriteP0_TDATA          : out std_logic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1               soMemWriteP0_TKEEP          : out std_logic_vector( 63 downto 0);
+-- auto excluding component Mp0-Mp1               soMemWriteP0_TLAST          : out std_logic;
+-- auto excluding component Mp0-Mp1               soMemWriteP0_TVALID         : out std_logic;
+-- auto excluding component Mp0-Mp1               soMemWriteP0_TREADY         : in  std_logic;
+-- auto excluding component Mp0-Mp1           
+-- auto excluding component Mp0-Mp1           
+-- auto excluding component Mp0-Mp1           
+-- auto excluding component Mp0-Mp1               --------------------------------------------------------
+-- auto excluding component Mp0-Mp1               -- SHELL / Mem / Mp1 Interface / Start Component
+-- auto excluding component Mp0-Mp1               --------------------------------------------------------
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWADDR                : out   std_ulogic_vector(63 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWBURST               : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWLOCK                : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWREGION              : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_AWUSER                : out   std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWCACHE               : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWPROT                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWQOS                 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWVALID               : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_AWREADY               : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_WDATA                 : out   std_ulogic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_WSTRB                 : out   std_ulogic_vector(63 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_WLAST                 : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_WID                   : out   std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_WUSER                 : out   std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_WVALID                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_WREADY                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_BID                   : in    std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_BUSER                 : in    std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_BVALID                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_BREADY                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARADDR                : out   std_ulogic_vector(63 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARBURST               : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARLOCK                : out   std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_mp1_ARREGION              : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_mp1_ARUSER                : out   std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_mp1_ARCACHE               : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_mp1_ARPROT                : out   std_ulogic_vector(2 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_mp1_ARQOS                 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARVALID               : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_ARREADY               : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_RID                   : in    std_ulogic_vector(3 downto 0);
+-- auto excluding component Mp0-Mp1               --m_axi_moMEM_Mp1_RUSER                 : in    std_ulogic_vector(0 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_RDATA                 : in    std_ulogic_vector(511 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_RRESP                 : in    std_ulogic_vector(1 downto 0);
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_RLAST                 : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_RVALID                : in    std_ulogic;
+-- auto excluding component Mp0-Mp1               m_axi_moMEM_Mp1_RREADY                : out   std_ulogic;
+-- auto excluding component Mp0-Mp1               lcl_mem0_v                            : in   std_ulogic_vector(63 downto 0);
+-- auto excluding component Mp0-Mp1               lcl_mem1_v                            : in   std_ulogic_vector(63 downto 0)
+-- auto excluding component Mp0-Mp1               --------------------------------------------------------
+-- auto excluding component Mp0-Mp1               -- SHELL / Mem / Mp1 Interface / End Component
     --------------------------------------------------------
     
          );
@@ -545,142 +545,141 @@ begin
            --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
 
              --------------------------------------------------------
-             -- SHELL / Mem / Mp0 Interface
-             --------------------------------------------------------           
---             m_axi_card_mem0_araddr       => moMEM_Mp0_ARADDR,
---             m_axi_card_mem0_arburst      => moMEM_Mp0_ARBURST,
---             m_axi_card_mem0_arcache      => open, -- m_axi_card_mem0_arcache,
---             m_axi_card_mem0_arid         => moMEM_Mp0_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_arlen        => moMEM_Mp0_ARLEN,
---             m_axi_card_mem0_arlock       => open, -- m_axi_card_mem0_arlock,
---             m_axi_card_mem0_arprot       => open, -- m_axi_card_mem0_arprot,
---             m_axi_card_mem0_arqos        => open, -- m_axi_card_mem0_arqos,
---             m_axi_card_mem0_arready      => moMEM_Mp0_ARREADY,
---             m_axi_card_mem0_arregion     => open, -- m_axi_card_mem0_arregion,
---             m_axi_card_mem0_arsize       => moMEM_Mp0_ARSIZE,
---             m_axi_card_mem0_aruser       => open, -- m_axi_card_mem0_aruser,
---             m_axi_card_mem0_arvalid      => moMEM_Mp0_ARVALID,
---             m_axi_card_mem0_awaddr       => moMEM_Mp0_AWADDR,
---             m_axi_card_mem0_awburst      => moMEM_Mp0_AWBURST,
---             m_axi_card_mem0_awcache      => open, -- m_axi_card_mem0_awcache,
---             m_axi_card_mem0_awid         => moMEM_Mp0_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_awlen        => moMEM_Mp0_AWLEN,
---             m_axi_card_mem0_awlock       => open, -- m_axi_card_mem0_awlock,
---             m_axi_card_mem0_awprot       => open, -- m_axi_card_mem0_awprot,
---             m_axi_card_mem0_awqos        => open, -- m_axi_card_mem0_awqos,
---             m_axi_card_mem0_awready      => moMEM_Mp0_AWREADY,
---             m_axi_card_mem0_awregion     => open, -- m_axi_card_mem0_awregion,
---             m_axi_card_mem0_awsize       => moMEM_Mp0_AWSIZE,
---             m_axi_card_mem0_awuser       => open, -- m_axi_card_mem0_awuser,
---             m_axi_card_mem0_awvalid      => moMEM_Mp0_AWVALID,
---             m_axi_card_mem0_bid          => moMEM_Mp0_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_bready       => moMEM_Mp0_BREADY,
---             m_axi_card_mem0_bresp        => moMEM_Mp0_BRESP,
---             m_axi_card_mem0_buser        =>open, --  m_axi_card_mem0_buser,
---             m_axi_card_mem0_bvalid       => moMEM_Mp0_BVALID,
---             m_axi_card_mem0_rdata        => moMEM_Mp0_RDATA,
---             m_axi_card_mem0_rid          => moMEM_Mp0_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_rlast        => moMEM_Mp0_RLAST,
---             m_axi_card_mem0_rready       => moMEM_Mp0_RREADY,
---             m_axi_card_mem0_rresp        => moMEM_Mp0_RRESP,
---             m_axi_card_mem0_ruser        => open, -- m_axi_card_mem0_ruser,
---             m_axi_card_mem0_rvalid       => moMEM_Mp0_RVALID,
---             m_axi_card_mem0_wdata        => moMEM_Mp0_WDATA,
---             m_axi_card_mem0_wid          => open,
---             m_axi_card_mem0_wlast        => moMEM_Mp0_WLAST,
---             m_axi_card_mem0_wready       => moMEM_Mp0_WREADY,
---             m_axi_card_mem0_wstrb        => moMEM_Mp0_WSTRB,
---             m_axi_card_mem0_wuser        => open, -- m_axi_card_mem0_wuser,
---             m_axi_card_mem0_wvalid       => moMEM_Mp0_WVALID,
-
---             ---- Stream Read Command ---------
---             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
---             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
---             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
---             ---- Stream Read Status ----------
---             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
---             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
---             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
---             ---- Stream Read Data ------------
---             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
---             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
---             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
---             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
---             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
-             ---- Stream Write Command --------
-             soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
-             soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
-             soMemWrCmdP0_TREADY        => soMem_Mp0_WrCmd_tready,
-             ---- Stream Write Status ---------
-             siMemWrStsP0_TDATA         => siMem_Mp0_WrSts_tdata,
-             siMemWrStsP0_TVALID        => siMem_Mp0_WrSts_tvalid,
-             siMemWrStsP0_TREADY        => siMem_Mp0_WrSts_tready,
-             ---- Stream Write Data ---------
-             soMemWriteP0_TDATA         => soMem_Mp0_Write_tdata,
-             soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
-             soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
-             soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
-             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast
-
-
- 
-             --------------------------------------------------------
-             -- SHELL / Mem / Mp1 Interface / Start in UAF
-             --------------------------------------------------------     
-             , -- comma for syntax correctness when Mp1 is instantiated 
-
-             m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
-             m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
-             m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
-             m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
-             --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
-             m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
-             m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
-             m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
-             m_axi_moMEM_Mp1_ARQOS        => open, -- m_axi_card_mem0_arqos,
-             m_axi_moMEM_Mp1_ARREADY      => moMEM_Mp1_ARREADY,
-             m_axi_moMEM_Mp1_ARREGION     => open, -- m_axi_card_mem0_arregion,
-             m_axi_moMEM_Mp1_ARSIZE       => moMEM_Mp1_ARSIZE,
-             --m_axi_moMEM_Mp1_ARUSER       => open, -- m_axi_card_mem0_aruser,
-             m_axi_moMEM_Mp1_ARVALID      => moMEM_Mp1_ARVALID,
-             m_axi_moMEM_Mp1_AWADDR(32 DOWNTO 0)  => moMEM_Mp1_AWADDR,
-             m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
-             m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
-             m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
-             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
-             m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
-             m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
-             m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
-             m_axi_moMEM_Mp1_AWQOS        => open, -- m_axi_card_mem0_awqos,
-             m_axi_moMEM_Mp1_AWREADY      => moMEM_Mp1_AWREADY,
-             m_axi_moMEM_Mp1_AWREGION     => open, -- m_axi_card_mem0_awregion,
-             m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
-             --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
-             m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
-             --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
-             m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
-             m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
-             --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
-             m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
-             m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
-             --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
-             m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
-             m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
-             m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
-             --m_axi_moMEM_Mp1_RUSER        => open, -- m_axi_card_mem0_ruser,
-             m_axi_moMEM_Mp1_RVALID       => moMEM_Mp1_RVALID,
-             m_axi_moMEM_Mp1_WDATA        => moMEM_Mp1_WDATA,
-             --m_axi_moMEM_Mp1_WID          => open,
-             m_axi_moMEM_Mp1_WLAST        => moMEM_Mp1_WLAST,
-             m_axi_moMEM_Mp1_WREADY       => moMEM_Mp1_WREADY,
-             m_axi_moMEM_Mp1_WSTRB        => moMEM_Mp1_WSTRB,
-             --m_axi_moMEM_Mp1_WUSER        => open, -- m_axi_card_mem0_wuser,
-             m_axi_moMEM_Mp1_WVALID       => moMEM_Mp1_WVALID,
-
-             lcl_mem0_v                     => x"0000000000000000",
-             lcl_mem1_v                     => x"8000000000000000"
-             --------------------------------------------------------
-             -- SHELL / Mem / Mp1 Interface / End in UAF
+-- auto excluding Mp0-Mp1 in UAF                        -- SHELL / Mem / Mp0 Interface / Start in UAF
+-- auto excluding Mp0-Mp1 in UAF                        --------------------------------------------------------
+-- auto excluding Mp0-Mp1 in UAF                        , -- comma for syntax correctness when Mp1 is instantiated             
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_araddr       => moMEM_Mp0_ARADDR,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arburst      => moMEM_Mp0_ARBURST,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arcache      => open, -- m_axi_card_mem0_arcache,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arid         => moMEM_Mp0_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arlen        => moMEM_Mp0_ARLEN,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arlock       => open, -- m_axi_card_mem0_arlock,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arprot       => open, -- m_axi_card_mem0_arprot,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arqos        => open, -- m_axi_card_mem0_arqos,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arready      => moMEM_Mp0_ARREADY,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arregion     => open, -- m_axi_card_mem0_arregion,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arsize       => moMEM_Mp0_ARSIZE,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_aruser       => open, -- m_axi_card_mem0_aruser,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_arvalid      => moMEM_Mp0_ARVALID,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awaddr       => moMEM_Mp0_AWADDR,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awburst      => moMEM_Mp0_AWBURST,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awcache      => open, -- m_axi_card_mem0_awcache,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awid         => moMEM_Mp0_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awlen        => moMEM_Mp0_AWLEN,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awlock       => open, -- m_axi_card_mem0_awlock,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awprot       => open, -- m_axi_card_mem0_awprot,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awqos        => open, -- m_axi_card_mem0_awqos,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awready      => moMEM_Mp0_AWREADY,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awregion     => open, -- m_axi_card_mem0_awregion,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awsize       => moMEM_Mp0_AWSIZE,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awuser       => open, -- m_axi_card_mem0_awuser,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_awvalid      => moMEM_Mp0_AWVALID,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_bid          => moMEM_Mp0_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_bready       => moMEM_Mp0_BREADY,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_bresp        => moMEM_Mp0_BRESP,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_buser        =>open, --  m_axi_card_mem0_buser,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_bvalid       => moMEM_Mp0_BVALID,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rdata        => moMEM_Mp0_RDATA,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rid          => moMEM_Mp0_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rlast        => moMEM_Mp0_RLAST,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rready       => moMEM_Mp0_RREADY,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rresp        => moMEM_Mp0_RRESP,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_ruser        => open, -- m_axi_card_mem0_ruser,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_rvalid       => moMEM_Mp0_RVALID,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wdata        => moMEM_Mp0_WDATA,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wid          => open,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wlast        => moMEM_Mp0_WLAST,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wready       => moMEM_Mp0_WREADY,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wstrb        => moMEM_Mp0_WSTRB,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wuser        => open, -- m_axi_card_mem0_wuser,
+-- auto excluding Mp0-Mp1 in UAF           --             m_axi_card_mem0_wvalid       => moMEM_Mp0_WVALID,
+-- auto excluding Mp0-Mp1 in UAF           
+-- auto excluding Mp0-Mp1 in UAF           --             ---- Stream Read Command ---------
+-- auto excluding Mp0-Mp1 in UAF           --             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
+-- auto excluding Mp0-Mp1 in UAF           --             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
+-- auto excluding Mp0-Mp1 in UAF           --             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
+-- auto excluding Mp0-Mp1 in UAF           --             ---- Stream Read Status ----------
+-- auto excluding Mp0-Mp1 in UAF           --             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
+-- auto excluding Mp0-Mp1 in UAF           --             ---- Stream Read Data ------------
+-- auto excluding Mp0-Mp1 in UAF           --             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
+-- auto excluding Mp0-Mp1 in UAF           --             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
+-- auto excluding Mp0-Mp1 in UAF                        ---- Stream Write Command --------
+-- auto excluding Mp0-Mp1 in UAF                        soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWrCmdP0_TREADY        => soMem_Mp0_WrCmd_tready,
+-- auto excluding Mp0-Mp1 in UAF                        ---- Stream Write Status ---------
+-- auto excluding Mp0-Mp1 in UAF                        siMemWrStsP0_TDATA         => siMem_Mp0_WrSts_tdata,
+-- auto excluding Mp0-Mp1 in UAF                        siMemWrStsP0_TVALID        => siMem_Mp0_WrSts_tvalid,
+-- auto excluding Mp0-Mp1 in UAF                        siMemWrStsP0_TREADY        => siMem_Mp0_WrSts_tready,
+-- auto excluding Mp0-Mp1 in UAF                        ---- Stream Write Data ---------
+-- auto excluding Mp0-Mp1 in UAF                        soMemWriteP0_TDATA         => soMem_Mp0_Write_tdata,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
+-- auto excluding Mp0-Mp1 in UAF                        soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,
+-- auto excluding Mp0-Mp1 in UAF           
+-- auto excluding Mp0-Mp1 in UAF           
+-- auto excluding Mp0-Mp1 in UAF            
+-- auto excluding Mp0-Mp1 in UAF                        --------------------------------------------------------
+-- auto excluding Mp0-Mp1 in UAF                        -- SHELL / Mem / Mp1 Interface / Start in UAF
+-- auto excluding Mp0-Mp1 in UAF                        --------------------------------------------------------     
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARQOS        => open, -- m_axi_card_mem0_arqos,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARREADY      => moMEM_Mp1_ARREADY,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARREGION     => open, -- m_axi_card_mem0_arregion,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARSIZE       => moMEM_Mp1_ARSIZE,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_ARUSER       => open, -- m_axi_card_mem0_aruser,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_ARVALID      => moMEM_Mp1_ARVALID,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWADDR(32 DOWNTO 0)  => moMEM_Mp1_AWADDR,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWQOS        => open, -- m_axi_card_mem0_awqos,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWREADY      => moMEM_Mp1_AWREADY,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWREGION     => open, -- m_axi_card_mem0_awregion,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_RUSER        => open, -- m_axi_card_mem0_ruser,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_RVALID       => moMEM_Mp1_RVALID,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_WDATA        => moMEM_Mp1_WDATA,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_WID          => open,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_WLAST        => moMEM_Mp1_WLAST,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_WREADY       => moMEM_Mp1_WREADY,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_WSTRB        => moMEM_Mp1_WSTRB,
+-- auto excluding Mp0-Mp1 in UAF                        --m_axi_moMEM_Mp1_WUSER        => open, -- m_axi_card_mem0_wuser,
+-- auto excluding Mp0-Mp1 in UAF                        m_axi_moMEM_Mp1_WVALID       => moMEM_Mp1_WVALID,
+-- auto excluding Mp0-Mp1 in UAF           
+-- auto excluding Mp0-Mp1 in UAF                        lcl_mem0_v                     => x"0000000000000000",
+-- auto excluding Mp0-Mp1 in UAF                        lcl_mem1_v                     => x"8000000000000000"
+-- auto excluding Mp0-Mp1 in UAF                        --------------------------------------------------------
+-- auto excluding Mp0-Mp1 in UAF                        -- SHELL / Mem / Mp1 Interface / End in UAF
              --------------------------------------------------------
              
            );
@@ -825,27 +824,27 @@ begin
   soMEM_Mp0_RdCmd_tvalid  <= '0';
   siMEM_Mp0_RdSts_tready  <= '0';
   siMEM_Mp0_Read_tready   <= '0';
---  soMEM_Mp0_WrCmd_tdata   <= (others => '0');
---  soMEM_Mp0_WrCmd_tvalid  <= '0';
---  siMEM_Mp0_WrSts_tready  <= '0';
---  soMEM_Mp0_Write_tdata   <= (others => '0');
---  soMEM_Mp0_Write_tkeep   <= (others => '0');
---  soMEM_Mp0_Write_tlast   <= '0';
---  soMEM_Mp0_Write_tvalid  <= '0';
+  soMEM_Mp0_WrCmd_tdata   <= (others => '0');
+  soMEM_Mp0_WrCmd_tvalid  <= '0';
+  siMEM_Mp0_WrSts_tready  <= '0';
+  soMEM_Mp0_Write_tdata   <= (others => '0');
+  soMEM_Mp0_Write_tkeep   <= (others => '0');
+  soMEM_Mp0_Write_tlast   <= '0';
+  soMEM_Mp0_Write_tvalid  <= '0';
   --################################################################################
   --  1st Memory Port dummy connections End
   --################################################################################    
 
   --################################################################################
--- auto excluding Mp2 open connections             --  2nd Memory Port dummy connections Start
--- auto excluding Mp2 open connections             --################################################################################
--- auto excluding Mp2 open connections             moMEM_Mp1_AWVALID <= '0';
--- auto excluding Mp2 open connections             moMEM_Mp1_WVALID  <= '0';
--- auto excluding Mp2 open connections             moMEM_Mp1_BREADY  <= '0';
--- auto excluding Mp2 open connections             moMEM_Mp1_ARVALID <= '0';
--- auto excluding Mp2 open connections             moMEM_Mp1_RREADY  <= '0';
--- auto excluding Mp2 open connections             --################################################################################
--- auto excluding Mp2 open connections             --  2nd Memory Port dummy connections End
+  --  2nd Memory Port dummy connections Start
+  --################################################################################
+  moMEM_Mp1_AWVALID <= '0';
+  moMEM_Mp1_WVALID  <= '0';
+  moMEM_Mp1_BREADY  <= '0';
+  moMEM_Mp1_ARVALID <= '0';
+  moMEM_Mp1_RREADY  <= '0';
+  --################################################################################
+  --  2nd Memory Port dummy connections End
   --################################################################################
   
 end architecture Flash;
