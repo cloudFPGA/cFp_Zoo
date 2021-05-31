@@ -824,13 +824,13 @@ begin
   soMEM_Mp0_RdCmd_tvalid  <= '0';
   siMEM_Mp0_RdSts_tready  <= '0';
   siMEM_Mp0_Read_tready   <= '0';
-  soMEM_Mp0_WrCmd_tdata   <= (others => '0');
-  soMEM_Mp0_WrCmd_tvalid  <= '0';
-  siMEM_Mp0_WrSts_tready  <= '0';
-  soMEM_Mp0_Write_tdata   <= (others => '0');
-  soMEM_Mp0_Write_tkeep   <= (others => '0');
-  soMEM_Mp0_Write_tlast   <= '0';
-  soMEM_Mp0_Write_tvalid  <= '0';
+  -- soMEM_Mp0_WrCmd_tdata   <= (others => '0');
+  -- soMEM_Mp0_WrCmd_tvalid  <= '0';
+  -- siMEM_Mp0_WrSts_tready  <= '0';
+  -- soMEM_Mp0_Write_tdata   <= (others => '0');
+  -- soMEM_Mp0_Write_tkeep   <= (others => '0');
+  -- soMEM_Mp0_Write_tlast   <= '0';
+  -- soMEM_Mp0_Write_tvalid  <= '0';
   --################################################################################
   --  1st Memory Port dummy connections End
   --################################################################################    
