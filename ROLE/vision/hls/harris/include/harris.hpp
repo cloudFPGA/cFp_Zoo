@@ -100,7 +100,7 @@ typedef membus_512_t membus_t;
 #define fsmStateDDRdef uint8_t
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
-#define CYCLES_UNTIL_TIMEOUT 0x1000
+#define CYCLES_UNTIL_TIMEOUT 0xff // 0x1000
 
 
 /*
