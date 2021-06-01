@@ -184,7 +184,7 @@ void storeWordToMem(
     // *image_loaded = 0;
   }
   else {
-    printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+    printf("DEBUG in storeWordToMem: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
     *processed_bytes_rx = 0;
     *image_loaded = 1;
   }
@@ -273,6 +273,7 @@ void storeWordToMem(
   
   if ((*processed_bytes_rx) == 0) {
     (*ddr_addr_in) = 0;
+    write_chunk_to_ddr_pending = true;
   }
   
 }

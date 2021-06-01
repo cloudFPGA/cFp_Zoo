@@ -46,6 +46,9 @@ using namespace std;
 #define UNVALID     false
 #define DEBUG_TRACE true
 
+// The number of sequential testbench executions
+#define TB_TRIALS   2
+
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
 
@@ -137,15 +140,14 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES
     //------------------------------------------------------
-    int         nrErr = 0;
+    int nrErr;
+    unsigned int tb_trials = 0;
 
     printf("#####################################################\n");
-    printf("## TESTBENCH STARTS HERE                           ##\n");
+    printf("## MAIN TESTBENCH STARTS HERE                      ##\n");
     printf("#####################################################\n");
 
-    simCnt = 0;
-    nrErr  = 0;
-
+    
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR HARRIS
     //------------------------------------------------------
@@ -165,8 +167,8 @@ int main(int argc, char** argv) {
     else {
       printf("INFO: Succesfully loaded image ... %s\n", argv[1]);
       if (in_img.total() != FRAME_WIDTH * FRAME_HEIGHT) {
-	 printf("WARNING: Resizing input image %s from [%u x %u] to  [%u x %u] !\n", argv[1], in_img.rows, in_img.cols, FRAME_WIDTH, FRAME_HEIGHT);
-	 cv::resize(in_img, in_img, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, cv::INTER_LINEAR);
+        printf("WARNING: Resizing input image %s from [%u x %u] to  [%u x %u] !\n", argv[1], in_img.rows, in_img.cols, FRAME_WIDTH, FRAME_HEIGHT);
+        cv::resize(in_img, in_img, cv::Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, cv::INTER_LINEAR);
       }
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
@@ -208,208 +210,209 @@ int main(int argc, char** argv) {
     ocv_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for opencv output image
 
     #if NO
-
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
-
     imgInput.copyTo(in_img.data);
     //	imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
-	
     ap_uint<INPUT_PTR_WIDTH>  *imgInputArray    = (ap_uint<INPUT_PTR_WIDTH>*)  malloc(in_img.rows * in_img.cols * sizeof(ap_uint<INPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArrayTb = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArray   = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
-
     xf::cv::xfMat2Array<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
-	
-    if (!dumpImgToFile(imgInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
-      nrErr++;
-    }
-
     #endif
 
     #if RO
-
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
     static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
-
-    // imgInput.copyTo(img_gray.data);
-    imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8>(argv[1], 0);
-
     #endif
     
-    
-    
-    //------------------------------------------------------
-    //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
-    //------------------------------------------------------
-    ocv_ref(in_img, ocv_out_img, Th);
+    while (tb_trials++ < TB_TRIALS) {
+   
+
+        printf ( "##################################################### \n" );
+        printf ( "## TESTBENCH #%u STARTS HERE                        ##\n", tb_trials );
+        printf ( "##################################################### \n" );
 
 
-    //------------------------------------------------------
-    //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
-    //------------------------------------------------------
-    if (nrErr == 0) {
-        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat", simCnt)) { 
-            printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
+        simCnt = 0;
+        nrErr  = 0;
+
+#if NO
+        if ( !dumpImgToFile ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt ) ) {
+            nrErr++;
+        }
+#endif
+
+#if RO
+        // imgInput.copyTo(img_gray.data);
+        imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> ( argv[1], 0 );
+#endif
+
+
+
+        //------------------------------------------------------
+        //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
+        //------------------------------------------------------
+        ocv_ref ( in_img, ocv_out_img, Th );
+
+
+
+        //------------------------------------------------------
+        //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
+        //------------------------------------------------------
+        if ( nrErr == 0 ) {
+            if ( !setInputDataStream ( sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat", simCnt ) ) {
+                printf ( "### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n" );
+                nrErr++;
+            }
+
+            //there are TOT_TRANSFERS streams from the the App to the Role
+            NetworkMeta tmp_meta = NetworkMeta ( 1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0 );
+            for ( int i=0; i<TOT_TRANSFERS; i++ ) {
+                siUdp_meta.write ( NetworkMetaStream ( tmp_meta ) );
+            }
+            //set correct node_rank and cluster_size
+            node_rank = 1;
+            cluster_size = 2;
+        }
+
+        //------------------------------------------------------
+        //-- STEP-2.2 : SET THE PASS-THROUGH MODE
+        //------------------------------------------------------
+        //piSHL_This_MmioEchoCtrl.write(ECHO_PATH_THRU);
+        //[TODO] piSHL_This_MmioPostPktEn.write(DISABLED);
+        //[TODO] piSHL_This_MmioCaptPktEn.write(DISABLED);
+
+        //------------------------------------------------------
+        //-- STEP-3 : MAIN TRAFFIC LOOP
+        //------------------------------------------------------
+        while ( !nrErr ) {
+
+            // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions
+            // (Rx-Proc-Tx)
+            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10 ) {
+                stepDut();
+
+                if ( simCnt > 2 ) {
+                    assert ( s_udp_rx_ports == 0x1 );
+                }
+
+
+#ifdef ENABLE_DDR
+
+                if ( !sROL_Shl_Mem_WrCmdP0.empty() ) {
+                    printf ( "DEBUG tb: Read a memory write command from SHELL/Mem/Mp0 \n" );
+                    //-- Read a memory write command from SHELL/Mem/Mp0
+                    sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
+                    assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
+                    assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
+                }
+
+                if ( !sROL_Shl_Mem_WriteP0.empty() ) {
+                    sROL_Shl_Mem_WriteP0.read ( memP0 );
+                    printf ( "DEBUG tb: Write a memory line from SHELL/Mem/Mp0 \n" );
+
+                    assert ( memP0.tkeep == 0xffffffffffffffff );
+
+                    /* Read from AXI stream DDR interface and write to the memory mapped interface of
+                     * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI
+                     * Datamover, being instantiated in VHDL.
+                     * */
+                    lcl_mem0[ddr_addr_in++] = memP0.tdata;
+
+                    // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
+                    dmSts_MemWrStsP0.tag = 7;
+                    dmSts_MemWrStsP0.okay = 1;
+                    dmSts_MemWrStsP0.interr = 0;
+                    dmSts_MemWrStsP0.slverr = 0;
+                    dmSts_MemWrStsP0.decerr = 0;
+                    if ( !sSHL_Rol_Mem_WrStsP0.full() ) {
+                        printf ( "DEBUG tb: Write a memory status command to SHELL/Mem/Mp0 \n" );
+                        sSHL_Rol_Mem_WrStsP0.write ( dmSts_MemWrStsP0 );
+                    }
+                }
+
+
+
+#endif // ENABLE_DDR
+
+
+                //if( !soUdp_meta.empty())
+                //{
+                //  NetworkMetaStream tmp_meta = soUdp_meta.read();
+                //  printf("NRC received NRCmeta stream from node_rank %d.\n", (int) tmp_meta.tdata.src_rank);
+                //}
+
+
+            } else {
+                printf ( "## End of simulation at cycle=%3d. \n", simCnt );
+                break;
+            }
+
+        }  // End: while()
+
+        //-------------------------------------------------------
+        //-- STEP-4 : DRAIN AND WRITE OUTPUT FILE STREAMS
+        //-------------------------------------------------------
+        //---- UAF-->SHELL Data ----
+        if ( !getOutputDataStream ( sUAF_Shl_Data, "sUAF_Shl_Data", "ofsUAF_Shl_Data.dat", simCnt ) ) {
+            nrErr++;
+        }
+        //---- UAF-->SHELL META ----
+        if ( !soUdp_meta.empty() ) {
+            int i = 0;
+            while ( !soUdp_meta.empty() ) {
+                i++;
+                NetworkMetaStream tmp_meta = soUdp_meta.read();
+                printf ( "NRC received NRCmeta stream from rank %d to rank %d.\n", ( int ) tmp_meta.tdata.src_rank, ( int ) tmp_meta.tdata.dst_rank );
+                assert ( tmp_meta.tdata.src_rank == node_rank );
+                //ensure forwarding behavior
+                assert ( tmp_meta.tdata.dst_rank == ( ( tmp_meta.tdata.src_rank + 1 ) % cluster_size ) );
+            }
+            //printf("DEBUG: i=%u\tTOT_TRANSFERS=%u\n", i, TOT_TRANSFERS);
+            assert ( i == TOT_TRANSFERS );
+        } else {
+            printf ( "Error No metadata received...\n" );
             nrErr++;
         }
 
-        //there are TOT_TRANSFERS streams from the the App to the Role
-        NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-	for (int i=0; i<TOT_TRANSFERS; i++) {
-	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
-	}        
-	//set correct node_rank and cluster_size
-        node_rank = 1;
-        cluster_size = 2;
-    }
-
-    //------------------------------------------------------
-    //-- STEP-2.2 : SET THE PASS-THROUGH MODE
-    //------------------------------------------------------
-    //piSHL_This_MmioEchoCtrl.write(ECHO_PATH_THRU);
-    //[TODO] piSHL_This_MmioPostPktEn.write(DISABLED);
-    //[TODO] piSHL_This_MmioCaptPktEn.write(DISABLED);
-
-    //------------------------------------------------------
-    //-- STEP-3 : MAIN TRAFFIC LOOP
-    //------------------------------------------------------
-    while (!nrErr) {
-	
-        // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions 
-        // (Rx-Proc-Tx)
-        if (simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10) 
-        {
-            stepDut();
-
-            if(simCnt > 2)
-            {
-              assert(s_udp_rx_ports == 0x1);
-            }
-
-            
-#ifdef ENABLE_DDR
-
-            if (!sROL_Shl_Mem_WrCmdP0.empty()) {
-                printf("DEBUG tb: Read a memory write command from SHELL/Mem/Mp0 \n");
-                //-- Read a memory write command from SHELL/Mem/Mp0
-                sROL_Shl_Mem_WrCmdP0.read(dmCmd_MemCmdP0);
-                assert(dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE); 
-                assert(dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7);
-            }
-            
-            if (!sROL_Shl_Mem_WriteP0.empty()) {
-                sROL_Shl_Mem_WriteP0.read(memP0);
-                printf("DEBUG tb: Write a memory line from SHELL/Mem/Mp0 \n");
-
-                assert(memP0.tkeep == 0xffffffffffffffff);
-                
-                /* Read from AXI stream DDR interface and write to the memory mapped interface of 
-                 * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI 
-                 * Datamover, being instantiated in VHDL.
-                 * */
-                lcl_mem0[ddr_addr_in++] = memP0.tdata;
-                
-                // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status 
-                dmSts_MemWrStsP0.tag = 7;
-                dmSts_MemWrStsP0.okay = 1;
-                dmSts_MemWrStsP0.interr = 0;
-                dmSts_MemWrStsP0.slverr = 0;
-                dmSts_MemWrStsP0.decerr = 0;
-                if (!sSHL_Rol_Mem_WrStsP0.full()) {
-                    printf("DEBUG tb: Write a memory status command to SHELL/Mem/Mp0 \n");
-                    sSHL_Rol_Mem_WrStsP0.write(dmSts_MemWrStsP0);
-                }
-            }
-
-            
-
-#endif // ENABLE_DDR
-            
-            
-            //if( !soUdp_meta.empty())
-            //{
-            //  NetworkMetaStream tmp_meta = soUdp_meta.read();
-            //  printf("NRC received NRCmeta stream from node_rank %d.\n", (int) tmp_meta.tdata.src_rank);
-            //}
+        //-------------------------------------------------------
+        //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
+        //-------------------------------------------------------
+        if ( !setInputFileToArray ( "ofsUAF_Shl_Data.dat", imgOutputArray, simCnt ) ) {
+            printf ( "### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n" );
+            nrErr++;
+        }
+        xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX> ( imgOutputArray, imgOutput );
 
 
+        //------------------------------------------------------
+        //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
+        //------------------------------------------------------
+        int rc1 = system ( "diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
+                                            ../../../../test/verify_UAF_Shl_Data.dat" );
+        if ( rc1 ) {
+            printf ( "## Error : File \'ofsUAF_Shl_Data.dat\' does not match \'verify_UAF_Shl_Data.dat\'.\n" );
         } else {
-            printf("## End of simulation at cycle=%3d. \n", simCnt);
-            break;
+            printf ( "Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n" );
         }
 
-    }  // End: while()
+        nrErr += rc1;
 
-    //-------------------------------------------------------
-    //-- STEP-4 : DRAIN AND WRITE OUTPUT FILE STREAMS
-    //-------------------------------------------------------
-    //---- UAF-->SHELL Data ----
-    if (!getOutputDataStream(sUAF_Shl_Data, "sUAF_Shl_Data", "ofsUAF_Shl_Data.dat", simCnt))
-    {
-        nrErr++;
-    }
-    //---- UAF-->SHELL META ----
-    if( !soUdp_meta.empty())
-    {
-      int i = 0;
-      while( !soUdp_meta.empty())
-      {
-        i++;
-        NetworkMetaStream tmp_meta = soUdp_meta.read();
-        printf("NRC received NRCmeta stream from rank %d to rank %d.\n", (int) tmp_meta.tdata.src_rank, (int) tmp_meta.tdata.dst_rank);
-        assert(tmp_meta.tdata.src_rank == node_rank);
-        //ensure forwarding behavior
-        assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
-      }
-      //printf("DEBUG: i=%u\tTOT_TRANSFERS=%u\n", i, TOT_TRANSFERS);
-      assert(i == TOT_TRANSFERS);
-    }
-    else {
-      printf("Error No metadata received...\n");
-      nrErr++;
-    }
-    
-    //-------------------------------------------------------
-    //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
-    //-------------------------------------------------------    
-    if (!setInputFileToArray("ofsUAF_Shl_Data.dat", imgOutputArray, simCnt)) {
-      printf("### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n");
-      nrErr++;
-    }
-    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArray, imgOutput);
-
-
-    //------------------------------------------------------
-    //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
-    //------------------------------------------------------
-    int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
-                                            ../../../../test/verify_UAF_Shl_Data.dat");
-    if (rc1)
-    {
-        printf("## Error : File \'ofsUAF_Shl_Data.dat\' does not match \'verify_UAF_Shl_Data.dat\'.\n");
-    } else {
-      printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
-    }
-
-    nrErr += rc1;
-
-    printf("#####################################################\n");
-    if (nrErr) 
-    {
-        printf("## ERROR - TESTBENCH FAILED (RC=%d) !!!             ##\n", nrErr);
-    } else {
-        printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
-    }
-    printf("#####################################################\n");
+        printf ( "#####################################################\n" );
+        if ( nrErr ) {
+            printf ( "## ERROR - TESTBENCH #%u FAILED (RC=%d) !!!         ##\n", tb_trials, nrErr );
+        } else {
+            printf ( "## SUCCESSFULL END OF TESTBENCH #%u (RC=0)          ##\n", tb_trials );
+        }
+        printf ( "#####################################################\n" );
 
 
 
 
 
-
+    } // End tb trials while loop
 
 
 
