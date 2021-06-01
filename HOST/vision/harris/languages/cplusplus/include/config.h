@@ -24,10 +24,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 32
+#define FRAME_HEIGHT 8
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  32
+#define FRAME_WIDTH  8
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -44,13 +44,13 @@
 /** If defined, images will be shown in pop-up windows                                            */
 //  #define SHOW_WINDOWS  
   
-/*  For HOST TB uncomment this. For normal host execution keep it commented                       */
-  #define TB_SIM_CFP_VITIS
+/** For HOST TB uncomment this. For normal host execution keep it commented                       */
+//  #define TB_SIM_CFP_VITIS
 
-/*  Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
-//#define INPUT_FROM_CAMERA
+/** Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
+//  #define INPUT_FROM_CAMERA
 
-/*  For The OpenCV type fot th input image. TODO: We have to automatically fix it for every kernel*/
+/** For The OpenCV type fot th input image. TODO: We have to automatically fix it for every kernel*/
 #define INPUT_TYPE_HOST CV_8UC1
 
 /** The network socket type: tcp or udp                                                           */

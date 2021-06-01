@@ -9,4 +9,4 @@
 	url = https://github.com/definelicht/hlslib.git
 [submodule "HOST/PracticalSockets"]
 	path = HOST/PracticalSockets
-	url = https://github.com/Tookmund/PracticalSockets
+	url = git@github.com:diamantopoulos/PracticalSockets.git

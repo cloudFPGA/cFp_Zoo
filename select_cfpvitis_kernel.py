@@ -10,12 +10,17 @@ import sys
 
 
 
-def edit_file(full_file, new_kernel, udp, tcp, mtu, port):
+def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
     f1 = open(full_file, 'r')
     f2 = open(full_file+"_new", 'w')
 
     replaced = 0
     uaf_start_detected = taf_start_detected = 0
+    ddr_component_start_detected = ddr_component_end_detected = 0
+    ddr_uaf_start_detected = ddr_uaf_end_detected = 0
+    ddr_taf_start_detected = ddr_taf_end_detected = 0
+    ddr_Mp2_dummy_start_detected = ddr_Mp2_dummy_end_detected = 0
+    
     for s in f1:
         new_s = s2 = s
         if search("vhdl", full_file):
@@ -28,6 +33,117 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port):
             if search(search_str, s):
                 s2 = "  end component "+new_kernel+"Application;\n"
                 replaced = replaced + 1
+ 
+            #######################################################################################
+            # Replacing role interface for DDR Mp0-1 in Role.vdl
+            
+            # Check component start
+            search_str = "SHELL / Mem / Mp0 Interface / Start Component"
+            if search(search_str, s):
+                s2 = s
+                ddr_component_start_detected = 1
+            
+            # Check component stop
+            search_str = "SHELL / Mem / Mp1 Interface / End Component"
+            if search(search_str, s):
+                s2 = s
+                ddr_component_end_detected = 1
+                
+            # Replace ddr pattern in component declaration
+            if (ddr_component_start_detected):
+              excluding_pattern = "-- auto excluding component Mp0-Mp1           "
+              if (search(excluding_pattern, s2)):
+                if (ddr):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
+              else:
+                if (not ddr):
+                  s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
+              if (ddr_component_end_detected):
+                ddr_component_start_detected = ddr_component_end_detected = 0;
+                
+            
+            # Check DDR in UAF start
+            search_str = "SHELL / Mem / Mp0 Interface / Start in UAF"
+            if search(search_str, s):
+                s2 = s
+                ddr_uaf_start_detected = 1
+            
+            # Check DDR in UAF stop
+            search_str = "SHELL / Mem / Mp1 Interface / End in UAF"
+            if search(search_str, s):
+                s2 = s
+                ddr_uaf_end_detected = 1
+                
+            # Replace ddr pattern in component declaration
+            if (ddr_uaf_start_detected):
+              excluding_pattern = "-- auto excluding Mp0-Mp1 in UAF           "
+              if (search(excluding_pattern, s2)):
+                if (ddr):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
+              else:
+                if (not ddr):
+                  s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
+              if (ddr_uaf_end_detected):
+                ddr_uaf_start_detected = ddr_uaf_end_detected = 0;                
+                
+             
+            # Check DDR in TAF start
+            search_str = "SHELL / Mem / Mp0 Interface / Start in TAF"
+            if search(search_str, s):
+                s2 = s
+                ddr_taf_start_detected = 1
+            
+            # Check DDR in TAF stop
+            search_str = "SHELL / Mem / Mp1 Interface / End in TAF"
+            if search(search_str, s):
+                s2 = s
+                ddr_taf_end_detected = 1
+                
+            # Replace ddr pattern in component declaration
+            if (ddr_taf_start_detected):
+              excluding_pattern = "-- auto excluding Mp0-Mp1 in TAF           "
+              if (search(excluding_pattern, s2)):
+                if (ddr):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
+              else:
+                if (not ddr):
+                  s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
+              if (ddr_taf_end_detected):
+                ddr_taf_start_detected = ddr_taf_end_detected = 0;                
+
+
+            # Check DDR in dummy start
+            search_str = "2nd Memory Port dummy connections Start"
+            if search(search_str, s):
+                s2 = s
+                ddr_Mp2_dummy_start_detected = 1
+            
+            # Check DDR in dummy stop
+            search_str = "2nd Memory Port dummy connections End"
+            if search(search_str, s):
+                s2 = s
+                ddr_Mp2_dummy_end_detected = 1
+                
+            # Replace ddr pattern in component declaration
+            if (ddr_Mp2_dummy_start_detected):
+              excluding_pattern = "-- auto excluding Mp2 open connections           "
+              if (search(excluding_pattern, s2)):
+                if (not ddr):
+                  s2 = s2.replace(str(excluding_pattern), str(''))
+                  replaced = replaced + 1 
+              else:
+                if (ddr):
+                  s2 = excluding_pattern + s2
+                  replaced = replaced + 1 
+              if (ddr_Mp2_dummy_end_detected):
+                ddr_Mp2_dummy_start_detected = ddr_Mp2_dummy_end_detected = 0;        
+            #######################################################################################
 
             search_str = "  UAF: "
             if search(search_str, s):
@@ -133,8 +249,16 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port):
                 s2 = search_str2 + port + "\n"
                 replaced = replaced + 1 
             new_s = s.replace(str(s), str(s2))
-            f2.write(new_s) 
-
+            
+            search_str3 = "#define ENABLE_DDR"
+            if search(search_str3, s):
+                if (ddr):
+                    s2 = search_str3 + "\n"
+                else:
+                    s2 = "// " + search_str3 + "\n"
+                replaced = replaced + 1 
+            new_s = new_s.replace(str(s), str(s2))
+            f2.write(new_s)
 
 
     print("INFO: Edits of file " + full_file + " : "+ str(replaced))
@@ -158,8 +282,8 @@ kernels = ["Harris", "MCEuropeanEngine", "Uppercase"]
 # Count the arguments
 arguments = len(sys.argv) - 1
 
-if arguments != 5:
-  print("ERROR: Invalid number of arguments. Expected 5 but provided " + str(arguments) + ". Aborting...")
+if arguments != 6:
+  print("ERROR: Invalid number of arguments. Expected 6 but provided " + str(arguments) + ". Aborting...")
   exit(-1)
 
 kernel_id = -1
@@ -184,6 +308,15 @@ if  search('tcp', sys.argv[1]):
 mtu=sys.argv[4]
 port=sys.argv[5]
 
+# select ddr in role
+if search('ddr_enabled', sys.argv[6]):
+  ddr = 1
+elif  search('ddr_disabled', sys.argv[6]):
+  ddr = 0
+else:
+  print("ERROR: Invalid DDR option. Aborting...")
+  exit(-1)
+
 if ((kernel_id < 0 ) or kernel_id >= len(kernels)):
     print("ERROR: Invalid kernel id. Aborting...")
     exit(-1)
@@ -195,26 +328,26 @@ role = os.getenv('roleName1')
 file = "ROLE/"+role+"/hdl/Role.vhdl"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr)
 
 file = "ROLE/"+role+"/tcl/create_ip_cores.tcl"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr)
 
 file = "ROLE/"+role+"/hls/Makefile"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr)
 
 file = "HOST/"+role+"/"+new_kernel.lower()+"/languages/cplusplus/include/config.h"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr)
 
 file = "ROLE/"+role+"/hls/"+new_kernel.lower()+"/include/"+new_kernel.lower()+".hpp"
 full_file = str(pathlib.Path().absolute()) + '/' + str(file)
 print("#################\n"+full_file+"\n----------------")
-edit_file(full_file, new_kernel, udp, tcp, mtu, port)
+edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr)
 
 
