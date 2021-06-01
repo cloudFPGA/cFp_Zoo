@@ -273,7 +273,7 @@ void storeWordToMem(
   
   if ((*processed_bytes_rx) == 0) {
     (*ddr_addr_in) = 0;
-    write_chunk_to_ddr_pending = true;
+    //write_chunk_to_ddr_pending = true;
   }
   
 }
@@ -350,6 +350,7 @@ void pRXPath(
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
 	#ifdef ENABLE_DDR 
+    write_chunk_to_ddr_pending = true;
 	storeWordToMem(netWord,
                    soMemWrCmdP0,
                    siMemWrStsP0,
