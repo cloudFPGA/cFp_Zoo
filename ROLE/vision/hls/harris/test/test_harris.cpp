@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   3
+#define TB_TRIALS   1
 
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0

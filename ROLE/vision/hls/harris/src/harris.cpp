@@ -262,7 +262,9 @@ void storeWordToMem(
                     // TODO: handle errors on memWrStsP0
                     fsmStateDDR = FSM_WR_PAT_CMD;
                     write_chunk_to_ddr_pending = false; // exit from loop
-                    *image_loaded = 1;
+                    if ((*processed_bytes_rx) == 0) {
+                        *image_loaded = 1;
+                    }
                 }
                 else {
                     printf(" 2 \n");
