@@ -57,15 +57,15 @@ entity Role_Themisto is
     -- Open Port vector
     poROL_Nrc_Udp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
     -- ROLE <-> NRC Meta Interface
-    soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+    soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
     soROLE_Nrc_Udp_Meta_TVALID  : out   std_ulogic;
     soROLE_Nrc_Udp_Meta_TREADY  : in    std_ulogic;
-    soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+    soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
     soROLE_Nrc_Udp_Meta_TLAST   : out   std_ulogic;
-    siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+    siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
     siNRC_Role_Udp_Meta_TVALID  : in    std_ulogic;
     siNRC_Role_Udp_Meta_TREADY  : out   std_ulogic;
-    siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+    siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
     siNRC_Role_Udp_Meta_TLAST   : in    std_ulogic;
       
     ------------------------------------------------------
@@ -86,15 +86,15 @@ entity Role_Themisto is
     -- Open Port vector
     poROL_Nrc_Tcp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
     -- ROLE <-> NRC Meta Interface
-    soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+    soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
     soROLE_Nrc_Tcp_Meta_TVALID  : out   std_ulogic;
     soROLE_Nrc_Tcp_Meta_TREADY  : in    std_ulogic;
-    soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+    soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
     soROLE_Nrc_Tcp_Meta_TLAST   : out   std_ulogic;
-    siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+    siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
     siNRC_Role_Tcp_Meta_TVALID  : in    std_ulogic;
     siNRC_Role_Tcp_Meta_TREADY  : out   std_ulogic;
-    siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+    siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
     siNRC_Role_Tcp_Meta_TLAST   : in    std_ulogic;
     
     
@@ -254,16 +254,16 @@ architecture Flash of Role_Themisto is
            soTHIS_Shl_Data_tvalid    : out std_logic;
            soTHIS_Shl_Data_tready    : in  std_logic;
       -- NRC Meta and Ports
-           siNrc_meta_TDATA          : in std_logic_vector (79 downto 0);
+           siNrc_meta_TDATA          : in std_logic_vector (63 downto 0);
            siNrc_meta_TVALID         : in std_logic;
            siNrc_meta_TREADY         : out std_logic;
-           siNrc_meta_TKEEP          : in std_logic_vector (9 downto 0);
+           siNrc_meta_TKEEP          : in std_logic_vector (7 downto 0);
            siNrc_meta_TLAST          : in std_logic_vector (0 downto 0);
 
-           soNrc_meta_TDATA          : out std_logic_vector (79 downto 0);
+           soNrc_meta_TDATA          : out std_logic_vector (63 downto 0);
            soNrc_meta_TVALID         : out std_logic;
            soNrc_meta_TREADY         : in std_logic;
-           soNrc_meta_TKEEP          : out std_logic_vector (9 downto 0);
+           soNrc_meta_TKEEP          : out std_logic_vector (7 downto 0);
            soNrc_meta_TLAST          : out std_logic_vector (0 downto 0);
 
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
