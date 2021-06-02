@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   2
+#define TB_TRIALS   3
 
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
@@ -298,7 +298,8 @@ int main(int argc, char** argv) {
                     assert ( s_udp_rx_ports == 0x1 );
                 }
 
-
+if (simCnt < 0)
+    exit(0);
 #ifdef ENABLE_DDR
 
                 if ( !sROL_Shl_Mem_WrCmdP0.empty() ) {
@@ -307,6 +308,8 @@ int main(int argc, char** argv) {
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
                     assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
+                    ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr;
+                    assert (ddr_addr_in <= MEMORY_LINES_512-1);
                 }
 
                 if ( !sROL_Shl_Mem_WriteP0.empty() ) {
@@ -319,8 +322,8 @@ int main(int argc, char** argv) {
                      * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI
                      * Datamover, being instantiated in VHDL.
                      * */
-                    lcl_mem0[ddr_addr_in++] = memP0.tdata;
-
+                    printf ( "DEBUG tb: Writting to address 0x%x : %u\n", ddr_addr_in, memP0.tdata.to_long());
+                    lcl_mem0[ddr_addr_in] = memP0.tdata;
                     // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
                     dmSts_MemWrStsP0.tag = 7;
                     dmSts_MemWrStsP0.okay = 1;
@@ -402,7 +405,7 @@ int main(int argc, char** argv) {
 
         printf ( "#####################################################\n" );
         if ( nrErr ) {
-            printf ( "## ERROR - TESTBENCH #%u FAILED (RC=%d) !!!         ##\n", tb_trials, nrErr );
+            printf ( "## ERROR - TESTBENCH #%u FAILED (RC=%d) !!!        ##\n", tb_trials, nrErr );
         } else {
             printf ( "## SUCCESSFULL END OF TESTBENCH #%u (RC=0)          ##\n", tb_trials );
         }
