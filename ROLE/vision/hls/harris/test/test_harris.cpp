@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   1
+#define TB_TRIALS   2
 
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
@@ -90,7 +90,7 @@ stream<Axis<MEMDW_512> >    sROL_Shl_Mem_WriteP0("sROL_Shl_Mem_WriteP0");
 //------------------------------------------------------
 //-- SHELL / Role / Mem / Mp1 Interface
 //------------------------------------------------------
-#define MEMORY_LINES_512  TOTMEMDW_512 /* 64 KiB */
+#define MEMORY_LINES_512  0xf //TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
 membus_t   lcl_mem1[MEMORY_LINES_512];
 #endif

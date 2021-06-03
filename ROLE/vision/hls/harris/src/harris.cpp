@@ -115,11 +115,8 @@ void storeWordToAxiStream(
   }
 }
 
-// Global variable to act as a counter of words being written to DDR
-ap_uint<32> patternWriteNum = 0; // FIXME: move it to internal variable instead of global.
-ap_uint<32> timeoutCnt = 0;
-bool write_chunk_to_ddr_pending = false;
-bool skip_read = false;
+
+
 
 /*****************************************************************************
  * @brief   Store a net word to DDR memory (axi master)
@@ -136,10 +133,11 @@ void storeWordToMem(
   unsigned int              *processed_word_rx,
   unsigned int              *processed_bytes_rx,
   unsigned int              *image_loaded,
-  bool                      skip_read
+  bool                      *skip_read,
+  bool                      *write_chunk_to_ddr_pending
 )
 {
-    #pragma HLS INLINE
+    //#pragma HLS INLINE
   
     Data_t_in v;
     v.data = 0;
@@ -155,6 +153,10 @@ void storeWordToMem(
     static unsigned int * ddr_addr_in = processed_word_rx;
     static membus_t tmp = 0;
   
+    // FIXME: Initialize to zero
+    static ap_uint<32> patternWriteNum = 0;
+    static ap_uint<32> timeoutCnt = 0;
+    
     Axis<MEMDW_512>   memP0;
     DmSts             memRdStsP0;
     DmSts             memWrStsP0;
@@ -165,11 +167,9 @@ void storeWordToMem(
     memP0.tlast = 0;
     memP0.tkeep = 0;
   
-    timeoutCnt = 0;
+    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s\n", *skip_read?"true":"false", *write_chunk_to_ddr_pending?"true":"false");
   
-    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s\n", skip_read?"true":"false", write_chunk_to_ddr_pending?"true":"false");
-  
-    if (skip_read == false) {
+    if (*skip_read == false) {
   
         printf("DEBUG in storeWordToMem: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
                         word.tdata.to_long(), word.tkeep.to_int(), word.tlast.to_int());  
@@ -202,7 +202,7 @@ void storeWordToMem(
     if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
         printf("DEBUG in storeWordToMem: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	    KWPERMDW_512, BPERMDW_512);
-        write_chunk_to_ddr_pending = true;
+        *write_chunk_to_ddr_pending = true;
     }
 
         
@@ -210,7 +210,7 @@ void storeWordToMem(
            
         case FSM_WR_PAT_CMD:
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_CMD\n");
-            if (write_chunk_to_ddr_pending && !soMemWrCmdP0.full()) {
+            if (*write_chunk_to_ddr_pending && !soMemWrCmdP0.full()) {
                 //-- Post a memory write command to SHELL/Mem/Mp0
                 soMemWrCmdP0.write(DmCmd((*ddr_addr_in)++, CHECK_CHUNK_SIZE));
                 patternWriteNum = 0;
@@ -253,7 +253,7 @@ void storeWordToMem(
                 siMemWrStsP0.read(memWrStsP0);
                 // TODO: handle errors on memWrStsP0
                 fsmStateDDR = FSM_WR_PAT_CMD;
-                write_chunk_to_ddr_pending = false; // exit from loop
+                *write_chunk_to_ddr_pending = false; // exit from loop
                 if ((*processed_bytes_rx) == 0) {
                     *image_loaded = 1;
                 }
@@ -264,7 +264,7 @@ void storeWordToMem(
                 if (timeoutCnt >= CYCLES_UNTIL_TIMEOUT) {
                     printf(" 3 \n");
                     fsmStateDDR = FSM_WR_PAT_CMD;
-                    write_chunk_to_ddr_pending = false; // exit from loop but with an error
+                    *write_chunk_to_ddr_pending = false; // exit from loop but with an error
                 }
             }
         break;            
@@ -329,7 +329,12 @@ void pRXPath(
      #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     static NetworkWord    netWord;
-
+    #ifdef ENABLE_DDR
+    static bool skip_read;
+    static bool write_chunk_to_ddr_pending;
+    #pragma HLS reset variable=skip_read
+    #pragma HLS reset variable=write_chunk_to_ddr_pending
+    #endif
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
@@ -340,7 +345,7 @@ void pRXPath(
             meta_tmp = siNrc_meta.read();
             meta_tmp.tlast = 1; //just to be sure...
             sRxtoTx_Meta.write(meta_tmp);
-            #ifndef ENABLE_DDR 
+            #ifdef ENABLE_DDR // FIXMEL check since it was ifndef!!!
             if ((*processed_bytes_rx) == 0) {
                 write_chunk_to_ddr_pending = false;
             }
@@ -348,7 +353,9 @@ void pRXPath(
             enqueueFSM = PROCESSING_PACKET;
         }
         *image_loaded = 0;
+        #ifdef ENABLE_DDR
         skip_read = false;
+        #endif
       break;
 
     case PROCESSING_PACKET:
@@ -382,7 +389,8 @@ void pRXPath(
                         processed_word_rx, 
                         processed_bytes_rx, 
                         image_loaded,
-                        skip_read
+                        &skip_read,
+                        &write_chunk_to_ddr_pending
                         );
             
             if ((write_chunk_to_ddr_pending == false) && (netWord.tlast == 1))
@@ -532,7 +540,7 @@ void pProcPath(
 	  
 	  HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
 	//}
-      }  
+      }
       break;
     case HARRIS_RETURN_RESULTS_FWD:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
@@ -561,31 +569,31 @@ void pProcPath(
       }
       break;
 
-    #else
+    #else // ! ENABLE_DDR
     case HARRIS_RETURN_RESULTS:
-      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
-      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
-      {
+        printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
+        if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
+        {
 	
-	temp = img_out_axi_stream.read();
-	if ( img_out_axi_stream.empty() )
-	//if (processed_word_proc++ == MIN_TX_LOOPS-1)
-	{
-	  temp.last = 1;
-	  HarrisFSM = WAIT_FOR_META;
-	  accel_called = false;
-	}
-	else
-	{
-	  temp.last = 0;
-	}
-	//TODO: find why Vitis kernel does not set keep and last by itself
-	temp.keep = 255;
-	newWord = NetworkWord(temp.data, temp.keep, temp.last); 
-	sRxpToTxp_Data.write(newWord);
-      }
-      break;
-    #endif  
+            temp = img_out_axi_stream.read();
+            if ( img_out_axi_stream.empty() )
+            //if (processed_word_proc++ == MIN_TX_LOOPS-1)
+            {
+                temp.last = 1;
+                HarrisFSM = WAIT_FOR_META;
+                accel_called = false;
+            }
+            else
+            {
+                temp.last = 0;
+            }
+            //TODO: find why Vitis kernel does not set keep and last by itself
+            temp.keep = 255;
+            newWord = NetworkWord(temp.data, temp.keep, temp.last); 
+            sRxpToTxp_Data.write(newWord);
+        }
+        break;
+    #endif // ENABLE_DDR
   } // end switch
  
 }
