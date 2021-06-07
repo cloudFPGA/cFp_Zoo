@@ -90,7 +90,7 @@ stream<Axis<MEMDW_512> >    sROL_Shl_Mem_WriteP0("sROL_Shl_Mem_WriteP0");
 //------------------------------------------------------
 //-- SHELL / Role / Mem / Mp1 Interface
 //------------------------------------------------------
-#define MEMORY_LINES_512  0xf //TOTMEMDW_512 /* 64 KiB */
+#define MEMORY_LINES_512 TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
 membus_t   lcl_mem1[MEMORY_LINES_512];
 #endif
@@ -309,6 +309,7 @@ if (simCnt < 0)
                     assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
                     ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr;
+                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) \n", ddr_addr_in,  MEMORY_LINES_512-1);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                 }
 

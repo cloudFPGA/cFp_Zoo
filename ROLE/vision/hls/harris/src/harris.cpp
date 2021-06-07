@@ -130,6 +130,7 @@ void storeWordToMem(
   stream<Axis<MEMDW_512> >  &soMemWriteP0,
   //---- P1 Memory mapped ---------------
   membus_t                  *lcl_mem0,
+  //---- Syncronization variables -------
   unsigned int              *processed_word_rx,
   unsigned int              *processed_bytes_rx,
   unsigned int              *image_loaded,
