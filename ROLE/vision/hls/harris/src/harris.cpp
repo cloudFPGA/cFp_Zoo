@@ -16,7 +16,7 @@
  * @addtogroup HarrisHLS
  * \{
  *****************************************************************************/
-
+ 
 #include "../include/harris.hpp"
 #include "../include/xf_harris_config.h"
 
@@ -33,7 +33,7 @@ using hls::stream;
 PacketFsmType  enqueueFSM  = WAIT_FOR_META;
 PacketFsmType  dequeueFSM  = WAIT_FOR_STREAM_PAIR;
 PacketFsmType  HarrisFSM   = WAIT_FOR_META;
-fsmStateDDRdef fsmStateDDR = FSM_WR_PAT_CMD;
+fsmStateDDRdef fsmStateDDR = FSM_IDLE; //FSM_WR_PAT_CMD;
 
 
 /*****************************************************************************
@@ -135,7 +135,8 @@ void storeWordToMem(
   unsigned int              *processed_bytes_rx,
   unsigned int              *image_loaded,
   bool                      *skip_read,
-  bool                      *write_chunk_to_ddr_pending
+  bool                      *write_chunk_to_ddr_pending,
+  bool                      *ready_to_accept_new_data
 )
 {
     //#pragma HLS INLINE
@@ -144,70 +145,100 @@ void storeWordToMem(
     v.data = 0;
     v.keep = 0;
     v.last = 0;
-    static unsigned int writes = 0;
     const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
     const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
-    unsigned int bytes_with_keep = 0;
+    static unsigned int bytes_with_keep;
     static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
     #pragma HLS stream variable=img_in_axi_stream depth=65
     // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
     static unsigned int * ddr_addr_in = processed_word_rx;
-    static membus_t tmp = 0;
+    static membus_t tmp;
   
     // FIXME: Initialize to zero
-    static ap_uint<32> patternWriteNum = 0;
-    static ap_uint<32> timeoutCnt = 0;
+    static ap_uint<32> patternWriteNum;
+    static ap_uint<32> timeoutCnt;
     
     Axis<MEMDW_512>   memP0;
     DmSts             memRdStsP0;
     DmSts             memWrStsP0;
   
   
-    //initalize 
-    memP0.tdata = 0;
-    memP0.tlast = 0;
-    memP0.tkeep = 0;
   
-    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s\n", *skip_read?"true":"false", *write_chunk_to_ddr_pending?"true":"false");
-  
-    if (*skip_read == false) {
-  
-        printf("DEBUG in storeWordToMem: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-                        word.tdata.to_long(), word.tkeep.to_int(), word.tlast.to_int());  
-        for (unsigned int i=0; i<loop_cnt; i++) {
-            //#pragma HLS PIPELINE
-            //#pragma HLS UNROLL factor=loop_cnt
-            //printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
-            if ((word.tkeep >> i) == 0) {
-                printf("WARNING: value with tkeep=0 at i=%u\n", i);
-                continue; 
-            }
-            v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
-            v.keep = word.tkeep;
-            v.last = word.tlast;
-            img_in_axi_stream.write(v);
-            bytes_with_keep += bytes_per_loop;
-        }
-  
-
-        if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
-            (*processed_bytes_rx) += bytes_with_keep;
-        }
-        else {
-            printf("DEBUG in storeWordToMem: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
-            *processed_bytes_rx = 0;
-        }
-    } // skip_read
-  
-    // Both when we have a new word for DDR or the net stream ended (*processed_bytes_rx = 0)
-    if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
-        printf("DEBUG in storeWordToMem: Accumulated %u net words (%u B) to complete a single DDR word\n", 
-	    KWPERMDW_512, BPERMDW_512);
-        *write_chunk_to_ddr_pending = true;
-    }
-
-        
+    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s, ready_to_accept_new_data=%s\n", 
+           *skip_read?"true":"false", *write_chunk_to_ddr_pending?"true":"false", 
+           *ready_to_accept_new_data?"true":"false");
     switch(fsmStateDDR) {
+    
+        case FSM_IDLE:
+            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_IDLE\n");            
+            //initalize 
+            memP0.tdata = 0;
+            memP0.tlast = 0;
+            memP0.tkeep = 0;
+            patternWriteNum = 0;
+            timeoutCnt = 0;
+            tmp = 0;
+            bytes_with_keep = 0;
+            *ready_to_accept_new_data = true;
+            fsmStateDDR = FSM_CHK_SKIP;
+        break;
+        
+        case FSM_CHK_SKIP:
+            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_CHK_SKIP\n");
+            if (*skip_read == false) {
+                printf("DEBUG in storeWordToMem: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+                        word.tdata.to_long(), word.tkeep.to_int(), word.tlast.to_int());  
+                for (unsigned int i=0; i<loop_cnt; i++) {
+                    //#pragma HLS PIPELINE
+                    //#pragma HLS UNROLL factor=loop_cnt
+                    //printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
+                    if ((word.tkeep >> i) == 0) {
+                        printf("WARNING: value with tkeep=0 at i=%u\n", i);
+                        continue; 
+                    }
+                    v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
+                    v.keep = word.tkeep;
+                    v.last = word.tlast;
+                    img_in_axi_stream.write(v);
+                    bytes_with_keep += bytes_per_loop;
+                }
+                *ready_to_accept_new_data = false;
+                fsmStateDDR = FSM_CHK_PROC_BYTES;
+            } 
+            else {
+                fsmStateDDR = FSM_CHK_WRT_CHNK_TO_DDR_PND;
+            }
+        break;
+        
+        case FSM_CHK_PROC_BYTES:
+            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_CHK_PROC_BYTES, processed_bytes_rx=%u\n", *processed_bytes_rx);
+            if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
+                (*processed_bytes_rx) += bytes_with_keep;
+            }
+            else {
+                printf("DEBUG in storeWordToMem: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
+                *processed_bytes_rx = 0;
+            }
+            bytes_with_keep = 0;
+            fsmStateDDR = FSM_CHK_WRT_CHNK_TO_DDR_PND;
+            
+        break;
+        
+        case FSM_CHK_WRT_CHNK_TO_DDR_PND :
+            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_CHK_WRT_CHNK_TO_DDR_PND\n");
+
+            // Both when we have a new word for DDR or the net stream ended (*processed_bytes_rx = 0)
+            if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
+                printf("DEBUG in storeWordToMem: Accumulated %u net words (%u B) to complete a single DDR word\n", 
+                        KWPERMDW_512, BPERMDW_512);
+                *write_chunk_to_ddr_pending = true;
+                fsmStateDDR = FSM_WR_PAT_CMD;
+            }
+            else {
+                *ready_to_accept_new_data = true;
+                fsmStateDDR = FSM_CHK_SKIP;
+            }
+        break;
            
         case FSM_WR_PAT_CMD:
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_CMD\n");
@@ -221,6 +252,10 @@ void storeWordToMem(
                     tmp((i+1)*INPUT_PTR_WIDTH-1, i*INPUT_PTR_WIDTH ) = v.data;
                 }                    
                 fsmStateDDR = FSM_WR_PAT_DATA;
+            }
+            else {
+                *ready_to_accept_new_data = true;
+                fsmStateDDR = FSM_CHK_SKIP;
             }
         break;
     
@@ -253,7 +288,7 @@ void storeWordToMem(
                 //-- Get the memory write status for Mem/Mp0
                 siMemWrStsP0.read(memWrStsP0);
                 // TODO: handle errors on memWrStsP0
-                fsmStateDDR = FSM_WR_PAT_CMD;
+                fsmStateDDR = FSM_IDLE;
                 *write_chunk_to_ddr_pending = false; // exit from loop
                 if ((*processed_bytes_rx) == 0) {
                     *image_loaded = 1;
@@ -264,7 +299,7 @@ void storeWordToMem(
                 timeoutCnt++;
                 if (timeoutCnt >= CYCLES_UNTIL_TIMEOUT) {
                     printf(" 3 \n");
-                    fsmStateDDR = FSM_WR_PAT_CMD;
+                    fsmStateDDR = FSM_IDLE;
                     *write_chunk_to_ddr_pending = false; // exit from loop but with an error
                 }
             }
@@ -333,8 +368,10 @@ void pRXPath(
     #ifdef ENABLE_DDR
     static bool skip_read;
     static bool write_chunk_to_ddr_pending;
+    static bool ready_to_accept_new_data;
     #pragma HLS reset variable=skip_read
     #pragma HLS reset variable=write_chunk_to_ddr_pending
+    #pragma HLS reset variable=ready_to_accept_new_data
     #endif
   switch(enqueueFSM)
   {
@@ -349,6 +386,7 @@ void pRXPath(
             #ifdef ENABLE_DDR // FIXMEL check since it was ifndef!!!
             if ((*processed_bytes_rx) == 0) {
                 write_chunk_to_ddr_pending = false;
+                //ready_to_accept_new_data = true;
             }
             #endif        
             enqueueFSM = PROCESSING_PACKET;
@@ -367,12 +405,13 @@ void pRXPath(
             && !img_in_axi_stream.full()
             #else
             || (write_chunk_to_ddr_pending == true)
+            || (ready_to_accept_new_data == false)
             #endif
             )
         {
             #ifdef ENABLE_DDR 
          
-            if (write_chunk_to_ddr_pending == false) {
+            if ((write_chunk_to_ddr_pending == false) && (ready_to_accept_new_data == true)) {
                 //-- Read incoming data chunk
                 netWord = siSHL_This_Data.read();
                 skip_read = false;
@@ -391,10 +430,11 @@ void pRXPath(
                         processed_bytes_rx, 
                         image_loaded,
                         &skip_read,
-                        &write_chunk_to_ddr_pending
-                        );
+                        &write_chunk_to_ddr_pending,
+                        &ready_to_accept_new_data);
             
-            if ((write_chunk_to_ddr_pending == false) && (netWord.tlast == 1))
+            if ((write_chunk_to_ddr_pending == false) && (ready_to_accept_new_data == true) && 
+                (netWord.tlast == 1))
             {
                 enqueueFSM = WAIT_FOR_META;
             }
@@ -837,6 +877,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #pragma HLS reset variable=HarrisFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
+#pragma HLS reset variable=processed_bytes_rx
 #pragma HLS reset variable=image_loaded
 
 #ifndef ENABLE_DDR

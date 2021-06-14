@@ -36,7 +36,7 @@
 using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
-// #define ENABLE_DDR
+#define ENABLE_DDR
 
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
@@ -94,9 +94,13 @@ typedef membus_512_t membus_t;
 //    FSM_WR_PAT_STS  = 2
 //} fsmStateDDRdef;
 //typedef enum fsmStateDDRenum fsmStateDDRdef;
-#define FSM_WR_PAT_CMD 0
-#define FSM_WR_PAT_DATA 1
-#define FSM_WR_PAT_STS 2
+#define FSM_IDLE                    0
+#define FSM_CHK_SKIP                1
+#define FSM_CHK_PROC_BYTES          2
+#define FSM_CHK_WRT_CHNK_TO_DDR_PND 3
+#define FSM_WR_PAT_CMD              4
+#define FSM_WR_PAT_DATA             5
+#define FSM_WR_PAT_STS              6
 #define fsmStateDDRdef uint8_t
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
