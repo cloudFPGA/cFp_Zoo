@@ -116,14 +116,14 @@ void storeWordToAxiStream(
 }
 
 
-
+    static NetworkWord    netWord;
 
 /*****************************************************************************
  * @brief   Store a net word to DDR memory (axi master)
  * @return Nothing.
  *****************************************************************************/
 void storeWordToMem(
-  NetworkWord               word,
+  //NetworkWord               word,
   //---- P0 Write Path (S2MM) -----------
   stream<DmCmd>             &soMemWrCmdP0,
   stream<DmSts>             &siMemWrStsP0,
@@ -133,14 +133,16 @@ void storeWordToMem(
   //---- Syncronization variables -------
   unsigned int              *processed_word_rx,
   unsigned int              *processed_bytes_rx,
-  unsigned int              *image_loaded,
+  bool              *image_loaded,
+  //stream<bool>              &sImageLoaded,
   bool                      *skip_read,
   bool                      *write_chunk_to_ddr_pending,
-  bool                      *ready_to_accept_new_data
+  bool                      *ready_to_accept_new_data,
+  bool                      *signal_init
 )
 {
-    //#pragma HLS INLINE
-  
+    #pragma HLS INLINE
+
     Data_t_in v;
     v.data = 0;
     v.keep = 0;
@@ -180,25 +182,34 @@ void storeWordToMem(
             tmp = 0;
             bytes_with_keep = 0;
             *ready_to_accept_new_data = true;
-            fsmStateDDR = FSM_CHK_SKIP;
+            if (*signal_init == true) {
+                fsmStateDDR = FSM_CHK_SKIP;
+                *signal_init = false;
+            }
+            //if (sImageLoaded.empty()) {
+            //    sImageLoaded.write(false);
+            //    sImageLoaded.write(false);
+            //    sImageLoaded.write(false);
+            //    sImageLoaded.write(false);
+            //}            
         break;
         
         case FSM_CHK_SKIP:
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_CHK_SKIP\n");
             if (*skip_read == false) {
                 printf("DEBUG in storeWordToMem: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-                        word.tdata.to_long(), word.tkeep.to_int(), word.tlast.to_int());  
+                        netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());  
                 for (unsigned int i=0; i<loop_cnt; i++) {
                     //#pragma HLS PIPELINE
                     //#pragma HLS UNROLL factor=loop_cnt
-                    //printf("DEBUG: Checking: word.tkeep=%u >> %u = %u\n", word.tkeep.to_int(), i, (word.tkeep.to_int() >> i));
-                    if ((word.tkeep >> i) == 0) {
+                    //printf("DEBUG: Checking: netWord.tkeep=%u >> %u = %u\n", netWord.tkeep.to_int(), i, (netWord.tkeep.to_int() >> i));
+                    if ((netWord.tkeep >> i) == 0) {
                         printf("WARNING: value with tkeep=0 at i=%u\n", i);
                         continue; 
                     }
-                    v.data = (ap_uint<INPUT_PTR_WIDTH>)(word.tdata >> i*8);
-                    v.keep = word.tkeep;
-                    v.last = word.tlast;
+                    v.data = (ap_uint<INPUT_PTR_WIDTH>)(netWord.tdata >> i*8);
+                    v.keep = netWord.tkeep;
+                    v.last = netWord.tlast;
                     img_in_axi_stream.write(v);
                     bytes_with_keep += bytes_per_loop;
                 }
@@ -291,7 +302,10 @@ void storeWordToMem(
                 fsmStateDDR = FSM_IDLE;
                 *write_chunk_to_ddr_pending = false; // exit from loop
                 if ((*processed_bytes_rx) == 0) {
-                    *image_loaded = 1;
+                    *image_loaded = true;
+                    //if (sImageLoaded.empty()) {
+                    //    sImageLoaded.write(true);
+                    //}
                 }
             }
             else {
@@ -357,21 +371,30 @@ void pRXPath(
     NetworkMetaStream                   meta_tmp,
     unsigned int                        *processed_word_rx,
     unsigned int                        *processed_bytes_rx,
-    unsigned int                        *image_loaded
+    bool                                *image_loaded,
+    //stream<bool>                        &sImageLoaded
+    bool                                *skip_read,
+    bool                                *write_chunk_to_ddr_pending,
+    bool                                *ready_to_accept_new_data,
+    bool                                *signal_init
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
      #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
-    static NetworkWord    netWord;
+    //static NetworkWord    netWord;
     #ifdef ENABLE_DDR
-    static bool skip_read;
-    static bool write_chunk_to_ddr_pending;
-    static bool ready_to_accept_new_data;
-    #pragma HLS reset variable=skip_read
-    #pragma HLS reset variable=write_chunk_to_ddr_pending
-    #pragma HLS reset variable=ready_to_accept_new_data
+    //static bool skip_read;
+    //static bool write_chunk_to_ddr_pending;
+    //static bool ready_to_accept_new_data;
+    //static bool signal_init;
+    //static bool tmp = false;
+    //#pragma HLS reset variable=skip_read
+    //#pragma HLS reset variable=write_chunk_to_ddr_pending
+    //#pragma HLS reset variable=ready_to_accept_new_data
+    //#pragma HLS reset variable=signal_init
+    //#pragma HLS reset variable=tmp
     #endif
   switch(enqueueFSM)
   {
@@ -385,15 +408,22 @@ void pRXPath(
             sRxtoTx_Meta.write(meta_tmp);
             #ifdef ENABLE_DDR // FIXMEL check since it was ifndef!!!
             if ((*processed_bytes_rx) == 0) {
-                write_chunk_to_ddr_pending = false;
-                //ready_to_accept_new_data = true;
+                *write_chunk_to_ddr_pending = false;
+                *ready_to_accept_new_data = false;
+                *signal_init = true;
+                netWord.tlast = 0;
+                netWord.tkeep = 0x0;
+                netWord.tdata = 0x0;
             }
             #endif        
             enqueueFSM = PROCESSING_PACKET;
         }
-        *image_loaded = 0;
+        *image_loaded = false;
+        //if (sImageLoaded.empty()) {
+        //    sImageLoaded.write(false);
+        //}
         #ifdef ENABLE_DDR
-        skip_read = false;
+        *skip_read = false;
         #endif
       break;
 
@@ -404,24 +434,26 @@ void pRXPath(
             #ifndef ENABLE_DDR 
             && !img_in_axi_stream.full()
             #else
-            || (write_chunk_to_ddr_pending == true)
-            || (ready_to_accept_new_data == false)
+            || (*write_chunk_to_ddr_pending == true)
+            || true
             #endif
             )
         {
             #ifdef ENABLE_DDR 
          
-            if ((write_chunk_to_ddr_pending == false) && (ready_to_accept_new_data == true)) {
+            if (!siSHL_This_Data.empty() && 
+                (*write_chunk_to_ddr_pending == false) &&
+                (*ready_to_accept_new_data == true)) {
                 //-- Read incoming data chunk
                 netWord = siSHL_This_Data.read();
-                skip_read = false;
+                *skip_read = false;
             }
             else {
                 if ((*processed_bytes_rx) % BPERMDW_512 == 0) {
-                    skip_read = true;
+                    *skip_read = true;
                 }
             }
-            storeWordToMem( netWord,
+            /*storeWordToMem( netWord,
                         soMemWrCmdP0,
                         siMemWrStsP0,
                         soMemWriteP0,
@@ -429,11 +461,15 @@ void pRXPath(
                         processed_word_rx, 
                         processed_bytes_rx, 
                         image_loaded,
+                        //sImageLoaded,
                         &skip_read,
                         &write_chunk_to_ddr_pending,
-                        &ready_to_accept_new_data);
+                        &ready_to_accept_new_data,
+                        &signal_init
+                        );
+            */
             
-            if ((write_chunk_to_ddr_pending == false) && (ready_to_accept_new_data == true) && 
+            if ((*write_chunk_to_ddr_pending == false) && (*ready_to_accept_new_data == true) && 
                 (netWord.tlast == 1))
             {
                 enqueueFSM = WAIT_FOR_META;
@@ -489,7 +525,8 @@ void pProcPath(
         
         unsigned int                            *processed_word_rx,
         unsigned int                            *processed_bytes_rx, 
-        unsigned int                            *image_loaded
+        bool                            *image_loaded
+        //stream<bool>                            &sImageLoaded
         )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -513,18 +550,21 @@ void pProcPath(
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
-      if ( (*image_loaded) == 1 )
-      {
-        HarrisFSM = PROCESSING_PACKET;
-//	*processed_word_rx = 0;
-//	*processed_bytes_rx = 0;
-	accel_called = false;
-	processed_word_proc = 0;
-	#ifdef ENABLE_DDR
-	ddr_addr_out = 0;
-	#endif
-      }
-      break;
+      if ( (*image_loaded) == true )
+      //  if (!sImageLoaded.empty())
+        {
+            //if (sImageLoaded.read() == true) {
+                HarrisFSM = PROCESSING_PACKET;
+                //	*processed_word_rx = 0;
+                //	*processed_bytes_rx = 0;
+                accel_called = false;
+                processed_word_proc = 0;
+                #ifdef ENABLE_DDR
+                ddr_addr_out = 0;
+                #endif
+            //}
+        }
+    break;
 
     case PROCESSING_PACKET:
       printf("DEBUG in pProcPath: PROCESSING_PACKET\n");
@@ -854,7 +894,12 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
-  static unsigned int image_loaded;
+  static bool image_loaded;
+  //static stream<bool> sImageLoaded("sImageLoaded");
+  static bool skip_read;
+  static bool write_chunk_to_ddr_pending;
+  static bool ready_to_accept_new_data;
+  static bool signal_init;
   const int img_in_axi_stream_depth = MIN_RX_LOOPS;
   const int img_out_axi_stream_depth = MIN_TX_LOOPS;
   const int tot_transfers = TOT_TRANSFERS;
@@ -879,6 +924,11 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=processed_bytes_rx
 #pragma HLS reset variable=image_loaded
+//#pragma HLS stream variable=sImageLoaded depth=1
+#pragma HLS reset variable=skip_read
+#pragma HLS reset variable=write_chunk_to_ddr_pending
+#pragma HLS reset variable=ready_to_accept_new_data
+#pragma HLS reset variable=signal_init
 
 #ifndef ENABLE_DDR
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
@@ -972,9 +1022,31 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
     meta_tmp,
     &processed_word_rx,
     &processed_bytes_rx,
-    &image_loaded);
+    &image_loaded,
+    //sImageLoaded
+    &skip_read,
+    &write_chunk_to_ddr_pending,
+    &ready_to_accept_new_data,
+    &signal_init    
+    );
 
-
+#ifdef ENABLE_DDR
+    storeWordToMem( 
+                    soMemWrCmdP0,
+                    siMemWrStsP0,
+                    soMemWriteP0,
+                    lcl_mem0, 
+                    &processed_word_rx, 
+                    &processed_bytes_rx, 
+                    &image_loaded,
+                    //sImageLoaded,
+                    &skip_read,
+                    &write_chunk_to_ddr_pending,
+                    &ready_to_accept_new_data,
+                    &signal_init
+                    );
+#endif 
+ 
   pProcPath(sRxpToTxp_Data,
 #ifdef ENABLE_DDR
         lcl_mem0,
@@ -985,7 +1057,9 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #endif
         &processed_word_rx,
         &processed_bytes_rx,
-        &image_loaded);  
+        &image_loaded
+        //sImageLoaded
+        );  
 
   pTXPath(
         soTHIS_Shl_Data,
