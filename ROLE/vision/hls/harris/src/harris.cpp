@@ -71,9 +71,9 @@ void storeWordToAxiStream(
   #else
   stream<Data_t_in>                 &img_in_axi_stream,
   #endif
-  unsigned int *processed_word_rx,
-  unsigned int *processed_bytes_rx,
-  unsigned int *image_loaded)
+  unsigned int  *processed_word_rx,
+  unsigned int  *processed_bytes_rx,
+  bool          *image_loaded)
 {   
   #pragma HLS INLINE
   Data_t_in v;
@@ -103,7 +103,7 @@ void storeWordToAxiStream(
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_word_rx = 0.\n");
     *processed_word_rx = 0;
-    *image_loaded = 1;
+    *image_loaded = true;
   }*/
   if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
     (*processed_bytes_rx) += bytes_with_keep;
@@ -111,7 +111,7 @@ void storeWordToAxiStream(
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
     *processed_bytes_rx = 0;
-    *image_loaded = 1;
+    *image_loaded = true;
   }
 }
 
@@ -133,7 +133,7 @@ void storeWordToMem(
   //---- Syncronization variables -------
   unsigned int              *processed_word_rx,
   unsigned int              *processed_bytes_rx,
-  bool              *image_loaded,
+  bool                      *image_loaded,
   //stream<bool>              &sImageLoaded,
   bool                      *skip_read,
   bool                      *write_chunk_to_ddr_pending,
@@ -182,9 +182,12 @@ void storeWordToMem(
             tmp = 0;
             bytes_with_keep = 0;
             *ready_to_accept_new_data = true;
-            if (*signal_init == true) {
+            if ((*signal_init == true) && (enqueueFSM == PROCESSING_PACKET)) {
                 fsmStateDDR = FSM_CHK_SKIP;
                 *signal_init = false;
+                if ((*processed_bytes_rx) == 0) {
+                    (*ddr_addr_in) = 0;
+                }
             }
             //if (sImageLoaded.empty()) {
             //    sImageLoaded.write(false);
@@ -329,9 +332,9 @@ void storeWordToMem(
     //memcpy((membus_t  *) (lcl_mem0 + (*ddr_addr_in)++), &tmp, sizeof(membus_t));
   //}
   
-  if ((*processed_bytes_rx) == 0) {
-    (*ddr_addr_in) = 0;
-  }
+  //if ((*processed_bytes_rx) == 0) {
+  //  (*ddr_addr_in) = 0;
+  //}
   
 }
 
@@ -434,8 +437,7 @@ void pRXPath(
             #ifndef ENABLE_DDR 
             && !img_in_axi_stream.full()
             #else
-            || (*write_chunk_to_ddr_pending == true)
-            || true
+            //|| (*write_chunk_to_ddr_pending == true)
             #endif
             )
         {
@@ -469,10 +471,13 @@ void pRXPath(
                         );
             */
             
-            if ((*write_chunk_to_ddr_pending == false) && (*ready_to_accept_new_data == true) && 
-                (netWord.tlast == 1))
-            {
-                enqueueFSM = WAIT_FOR_META;
+            if ((*write_chunk_to_ddr_pending == false) && (*ready_to_accept_new_data == true)) {
+                if ((*processed_bytes_rx) != 0) {
+                    *signal_init = true;
+                }
+                if (netWord.tlast == 1) {
+                    enqueueFSM = WAIT_FOR_META;
+                }
             }
             
             #else // ! ENABLE_DDR
@@ -525,7 +530,7 @@ void pProcPath(
         
         unsigned int                            *processed_word_rx,
         unsigned int                            *processed_bytes_rx, 
-        bool                            *image_loaded
+        bool                                    *image_loaded
         //stream<bool>                            &sImageLoaded
         )
 {
