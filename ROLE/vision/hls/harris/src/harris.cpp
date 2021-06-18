@@ -437,6 +437,7 @@ void pRXPath(
             #ifndef ENABLE_DDR 
             && !img_in_axi_stream.full()
             #else
+            || 1
             //|| (*write_chunk_to_ddr_pending == true)
             #endif
             )
