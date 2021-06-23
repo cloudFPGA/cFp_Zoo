@@ -49,6 +49,9 @@ using namespace std;
 // The number of sequential testbench executions
 #define TB_TRIALS   2
 
+// Enable delay in the response channel of DDR AXI controller
+#define ENABLE_DDR_EMULATE_DELAY_IN_TB
+
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
 
@@ -185,6 +188,10 @@ int main(int argc, char** argv) {
     ap_uint<64>     currentMemPattern = 0;
   
     unsigned int ddr_addr_in = 0x0;
+    unsigned int ddr_write_req_iter = 0;
+    unsigned int wait_cycles_to_ack_ddr_status = 0;
+    unsigned int count_cycles_to_ack_ddr_status = 0;
+    bool ddr_write_sts_req = false;
     #endif
     
     uint16_t Thresh; // Threshold for HLS
@@ -291,7 +298,13 @@ int main(int argc, char** argv) {
 
             // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions
             // (Rx-Proc-Tx)
-            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10 ) {
+            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10
+#ifdef ENABLE_DDR
+#ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB 
+                + CYCLES_UNTIL_TIMEOUT*MEMORY_LINES_512
+#endif
+#endif
+               ) {
                 stepDut();
 
                 if ( simCnt > 2 ) {
@@ -309,8 +322,34 @@ if (simCnt < 0)
                     assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
                     ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr;
-                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) \n", ddr_addr_in,  MEMORY_LINES_512-1);
+                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
+                    //ddr_write_req_iter++;
+                    //printf ( "DEBUG tb: (ddr_write_req_iter)%(MEMORY_LINES_512-1)=%u\n", (ddr_write_req_iter)%(MEMORY_LINES_512-1));
+                    if ((++ddr_write_req_iter)%(MEMORY_LINES_512) == 0) {
+                        ddr_write_req_iter = 0;
+                    }
+                    printf ( "DEBUG tb: ddr_write_req_iter=%u\n", ddr_write_req_iter);
+
+#ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB
+                    if (ddr_write_req_iter == 1) {
+                        wait_cycles_to_ack_ddr_status = 8; // emulate a response in 8 cycles
+                    }
+                    else if (ddr_write_req_iter == 2) {
+                        wait_cycles_to_ack_ddr_status = 1; // emulate immediate response
+                    }
+                    else {
+                        wait_cycles_to_ack_ddr_status = CYCLES_UNTIL_TIMEOUT; // on purpose timeout
+                    }
+                    if (!sSHL_Rol_Mem_WrStsP0.empty()) {
+                        printf("WARNING: Emptying sSHL_Rol_Mem_WrStsP0 fifo.\n");
+                        dmSts_MemWrStsP0  = sSHL_Rol_Mem_WrStsP0.read();
+                    }
+#else
+                    wait_cycles_to_ack_ddr_status = 0;
+#endif
+                    count_cycles_to_ack_ddr_status = 0;
+                    ddr_write_sts_req = false;
                 }
 
                 if ( !sROL_Shl_Mem_WriteP0.empty() ) {
@@ -325,15 +364,22 @@ if (simCnt < 0)
                      * */
                     printf ( "DEBUG tb: Writting to address 0x%x : %u\n", ddr_addr_in, memP0.tdata.to_long());
                     lcl_mem0[ddr_addr_in] = memP0.tdata;
-                    // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
-                    dmSts_MemWrStsP0.tag = 7;
-                    dmSts_MemWrStsP0.okay = 1;
-                    dmSts_MemWrStsP0.interr = 0;
-                    dmSts_MemWrStsP0.slverr = 0;
-                    dmSts_MemWrStsP0.decerr = 0;
-                    if ( !sSHL_Rol_Mem_WrStsP0.full() ) {
+                    ddr_write_sts_req = true;
+                }
+                // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
+                if ((ddr_write_sts_req == true) && !sSHL_Rol_Mem_WrStsP0.full() ) {
+                    if (count_cycles_to_ack_ddr_status++ == wait_cycles_to_ack_ddr_status) {
+                        dmSts_MemWrStsP0.tag = 7;
+                        dmSts_MemWrStsP0.okay = 1;
+                        dmSts_MemWrStsP0.interr = 0;
+                        dmSts_MemWrStsP0.slverr = 0;
+                        dmSts_MemWrStsP0.decerr = 0;
                         printf ( "DEBUG tb: Write a memory status command to SHELL/Mem/Mp0 \n" );
-                        sSHL_Rol_Mem_WrStsP0.write ( dmSts_MemWrStsP0 );
+                            sSHL_Rol_Mem_WrStsP0.write ( dmSts_MemWrStsP0 );
+                            ddr_write_sts_req = false;
+                    }
+                    else{
+                        printf ( "DEBUG tb: Waiting to write a memory status command to SHELL/Mem/Mp0 [%u out of %u] cycles\n", count_cycles_to_ack_ddr_status, wait_cycles_to_ack_ddr_status);
                     }
                 }
 
@@ -350,6 +396,12 @@ if (simCnt < 0)
 
 
             } else {
+#ifdef ENABLE_DDR
+                if (!sSHL_Rol_Mem_WrStsP0.empty()) {
+                    printf("WARNING: Emptying sSHL_Rol_Mem_WrStsP0 fifo.\n");
+                    dmSts_MemWrStsP0  = sSHL_Rol_Mem_WrStsP0.read();
+                }
+#endif
                 printf ( "## End of simulation at cycle=%3d. \n", simCnt );
                 break;
             }

@@ -294,7 +294,7 @@ void storeWordToMem(
                 patternWriteNum++;
             }
         break;    
-            
+             
         case FSM_WR_PAT_STS:
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_STS\n");                
             if (!siMemWrStsP0.empty()) {
@@ -318,6 +318,9 @@ void storeWordToMem(
                     printf(" 3 \n");
                     fsmStateDDR = FSM_IDLE;
                     *write_chunk_to_ddr_pending = false; // exit from loop but with an error
+                    if ((*processed_bytes_rx) == 0) {
+                        *image_loaded = true;
+                    }
                 }
             }
         break;            
