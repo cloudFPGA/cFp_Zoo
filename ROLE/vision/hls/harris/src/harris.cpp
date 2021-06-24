@@ -258,7 +258,7 @@ void storeWordToMem(
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_CMD\n");
             if (*write_chunk_to_ddr_pending && !soMemWrCmdP0.full()) {
                 //-- Post a memory write command to SHELL/Mem/Mp0
-                soMemWrCmdP0.write(DmCmd((*ddr_addr_in)++, CHECK_CHUNK_SIZE));
+                soMemWrCmdP0.write(DmCmd(((*ddr_addr_in)++) * BPERMDW_512, CHECK_CHUNK_SIZE));
                 patternWriteNum = 0;
                 // -- Assemble a 512-bit memory word with input values from stream
                 for (unsigned int i=0; i<BPERMDW_512; i++) {

@@ -321,7 +321,7 @@ if (simCnt < 0)
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
                     assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
-                    ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr;
+                    ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512;
                     printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                     //ddr_write_req_iter++;
