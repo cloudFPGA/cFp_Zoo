@@ -55,7 +55,7 @@ enum EchoCtrl {
 #define PROCESSING_PACKET         2
 #define HARRIS_RETURN_RESULTS     3
 #define HARRIS_RETURN_RESULTS_FWD 4
-
+#define WAIT_FOR_TX               5
 #define PacketFsmType uint8_t
 
 
@@ -105,7 +105,7 @@ typedef membus_512_t membus_t;
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100
-
+#define TYPICAL_DDR_LATENCY 16
 
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.

@@ -301,7 +301,7 @@ int main(int argc, char** argv) {
             if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10
 #ifdef ENABLE_DDR
 #ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB 
-                + CYCLES_UNTIL_TIMEOUT*MEMORY_LINES_512
+                + TYPICAL_DDR_LATENCY * MEMORY_LINES_512
 #endif
 #endif
                ) {
@@ -321,7 +321,7 @@ if (simCnt < 0)
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
                     assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
-                    ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512;
+                    ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512; // Convert the byte-aligned address to local mem of stack tb.
                     printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                     //ddr_write_req_iter++;
@@ -332,14 +332,19 @@ if (simCnt < 0)
                     printf ( "DEBUG tb: ddr_write_req_iter=%u\n", ddr_write_req_iter);
 
 #ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB
+                    /*
+                     * 16                   ->  emulate a response in 16 cycles
+                     * 1                    ->  emulate immediate response
+                     * CYCLES_UNTIL_TIMEOUT ->  on purpose timeout
+                     */ 
                     if (ddr_write_req_iter == 1) {
-                        wait_cycles_to_ack_ddr_status = 8; // emulate a response in 8 cycles
+                        wait_cycles_to_ack_ddr_status = TYPICAL_DDR_LATENCY;
                     }
                     else if (ddr_write_req_iter == 2) {
-                        wait_cycles_to_ack_ddr_status = 1; // emulate immediate response
+                        wait_cycles_to_ack_ddr_status = TYPICAL_DDR_LATENCY;
                     }
                     else {
-                        wait_cycles_to_ack_ddr_status = CYCLES_UNTIL_TIMEOUT; // on purpose timeout
+                        wait_cycles_to_ack_ddr_status = TYPICAL_DDR_LATENCY;
                     }
                     if (!sSHL_Rol_Mem_WrStsP0.empty()) {
                         printf("WARNING: Emptying sSHL_Rol_Mem_WrStsP0 fifo.\n");

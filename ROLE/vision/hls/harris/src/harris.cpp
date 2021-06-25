@@ -166,9 +166,10 @@ void storeWordToMem(
   
   
   
-    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s, ready_to_accept_new_data=%s\n", 
+    printf("DEBUG: storeWordToMem, skip_read = %s, write_chunk_to_ddr_pending=%s, ready_to_accept_new_data=%s, *signal_init=%s, *image_loaded=%s\n", 
            *skip_read?"true":"false", *write_chunk_to_ddr_pending?"true":"false", 
-           *ready_to_accept_new_data?"true":"false");
+           *ready_to_accept_new_data?"true":"false", *signal_init?"true":"false", 
+           *image_loaded?"true":"false");
     switch(fsmStateDDR) {
     
         case FSM_IDLE:
@@ -258,7 +259,7 @@ void storeWordToMem(
             printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_CMD\n");
             if (*write_chunk_to_ddr_pending && !soMemWrCmdP0.full()) {
                 //-- Post a memory write command to SHELL/Mem/Mp0
-                soMemWrCmdP0.write(DmCmd(((*ddr_addr_in)++) * BPERMDW_512, CHECK_CHUNK_SIZE));
+                soMemWrCmdP0.write(DmCmd(((*ddr_addr_in)++) * BPERMDW_512, CHECK_CHUNK_SIZE)); // Byte-addresable
                 patternWriteNum = 0;
                 // -- Assemble a 512-bit memory word with input values from stream
                 for (unsigned int i=0; i<BPERMDW_512; i++) {
@@ -376,6 +377,7 @@ void pRXPath(
     #endif // ENABLE_DDR
     NetworkMetaStream                   meta_tmp,
     unsigned int                        *processed_word_rx,
+    unsigned int                        *processed_word_tx,
     unsigned int                        *processed_bytes_rx,
     bool                                *image_loaded,
     //stream<bool>                        &sImageLoaded
@@ -424,7 +426,9 @@ void pRXPath(
             #endif        
             enqueueFSM = PROCESSING_PACKET;
         }
+#ifndef ENABLE_DDR
         *image_loaded = false;
+#endif
         //if (sImageLoaded.empty()) {
         //    sImageLoaded.write(false);
         //}
@@ -480,7 +484,14 @@ void pRXPath(
                     *signal_init = true;
                 }
                 if (netWord.tlast == 1) {
-                    enqueueFSM = WAIT_FOR_META;
+                    if ((*processed_bytes_rx) < (IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET)) {
+                        enqueueFSM = WAIT_FOR_META;
+                    }
+                    else {
+                        enqueueFSM = WAIT_FOR_TX;
+                        *image_loaded = false;
+                        *skip_read = false;                        
+                    }
                 }
             }
             
@@ -498,6 +509,18 @@ void pRXPath(
             #endif // ENABLE_DDR
         }
       break;
+      
+    #ifdef ENABLE_DDR 
+    case WAIT_FOR_TX:
+        printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_TX, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
+                *processed_word_rx, *processed_bytes_rx);
+        if (*processed_word_tx == 32) {
+            enqueueFSM = WAIT_FOR_META;
+        }
+      
+      break;  
+    #endif // ENABLE_DDR
+      
   }
 
  
@@ -570,6 +593,7 @@ void pProcPath(
                 processed_word_proc = 0;
                 #ifdef ENABLE_DDR
                 ddr_addr_out = 0;
+                *image_loaded = false;
                 #endif
             //}
         }
@@ -689,6 +713,7 @@ void pProcPath(
 }
 
 
+unsigned int sRxpToTxp_DataCounter = 0;
 
 /*****************************************************************************
  * @brief Transmit Path - From THIS to SHELL.
@@ -739,11 +764,11 @@ void pTXPath(
       {
         netWordTx = sRxpToTxp_Data.read();
 
-    // in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
-    if (PACK_SIZE == 8) 
-    {
-        netWordTx.tlast = 1;
-    }
+        // in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
+        if (PACK_SIZE == 8) 
+        {
+            netWordTx.tlast = 1;
+        }
         soTHIS_Shl_Data.write(netWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;
@@ -765,11 +790,11 @@ void pTXPath(
         meta_out_stream.tdata.src_port = meta_in.dst_port;
 	
 	
-	//meta_out_stream.tdata.len = meta_in.len; 
+        //meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
-	(*processed_word_tx)++;
-	
+        (*processed_word_tx)++;
+	    printf("DEBUGGGG: Checking netWordTx.tlast...\n");
         if(netWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
@@ -782,23 +807,26 @@ void pTXPath(
 	     dequeueFSM, *processed_word_tx);
       if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
+        printf("DEBUGGGG: Reading sRxpToTxp_Data %u\n", sRxpToTxp_DataCounter++);
         netWordTx = sRxpToTxp_Data.read();
 
-	// This is a normal termination of the axi stream from vitis functions
-	if(netWordTx.tlast == 1)
-	{
-	  dequeueFSM = WAIT_FOR_STREAM_PAIR;
-	}
+        // This is a normal termination of the axi stream from vitis functions
+        if(netWordTx.tlast == 1)
+        {
+            printf("DEBUGGGG: A netWordTx.tlast=1 ... sRxpToTxp_Data.empty()==%u \n", sRxpToTxp_Data.empty());
+            dequeueFSM = WAIT_FOR_STREAM_PAIR;
+        }
 	
-	// This is our own termination based on the custom MTU we have set in PACK_SIZE.
-	// TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
-	//       in order to have a functional bitstream for any MTU size
-	(*processed_word_tx)++;
-	if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
-	{
-	    netWordTx.tlast = 1;
-	    dequeueFSM = WAIT_FOR_STREAM_PAIR;
-	}
+        // This is our own termination based on the custom MTU we have set in PACK_SIZE.
+        // TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
+        //       in order to have a functional bitstream for any MTU size
+        (*processed_word_tx)++;
+        if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
+        {
+            printf("DEBUGGGG: B (*processed_word_tx)*8) % PACK_SIZE == 0 ...\n");
+            netWordTx.tlast = 1;
+            dequeueFSM = WAIT_FOR_STREAM_PAIR;
+        }
 	
         soTHIS_Shl_Data.write(netWordTx);
       }
@@ -984,6 +1012,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #endif
 			   meta_tmp,
 			   &processed_word_rx,
+               &processed_word_tx,
 			   &processed_bytes_rx,
 			   &image_loaded
 			  );
@@ -1030,6 +1059,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 #endif
     meta_tmp,
     &processed_word_rx,
+    &processed_word_tx,
     &processed_bytes_rx,
     &image_loaded,
     //sImageLoaded
