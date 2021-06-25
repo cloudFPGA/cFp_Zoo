@@ -514,6 +514,7 @@ void pRXPath(
     case WAIT_FOR_TX:
         printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_TX, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
                 *processed_word_rx, *processed_bytes_rx);
+       //printf("DEBUG: MIN_TX_LOOPS-1=%u", MIN_TX_LOOPS-1); exit(0);
         if (*processed_word_tx == MIN_TX_LOOPS) {
             enqueueFSM = WAIT_FOR_META;
         }
@@ -741,17 +742,18 @@ void pTXPath(
     //#pragma HLS DATAFLOW interval=1
     #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
-    NetworkWord      netWordTx;
-    NetworkMeta  meta_in = NetworkMeta();
-  
+    NetworkWord netWordTx;
+    NetworkMeta meta_in = NetworkMeta();
+    
   switch(dequeueFSM)
   {
     case WAIT_FOR_STREAM_PAIR:
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
         dequeueFSM, *processed_word_tx);
       //-- Forward incoming chunk to SHELL
-      *processed_word_tx = 0;
-      
+      if (*processed_word_tx == MIN_TX_LOOPS) {
+        *processed_word_tx = 0;
+      }
       /*
       printf("!sRxpToTxp_Data.empty()=%d\n", !sRxpToTxp_Data.empty());
       printf("!sRxtoTx_Meta.empty()=%d\n", !sRxtoTx_Meta.empty());
@@ -930,7 +932,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
-  static unsigned int processed_word_tx;
+  static unsigned int processed_word_tx = 0;
   static bool image_loaded;
   //static stream<bool> sImageLoaded("sImageLoaded");
   static bool skip_read;
