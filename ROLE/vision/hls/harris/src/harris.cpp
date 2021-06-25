@@ -489,8 +489,8 @@ void pRXPath(
                     }
                     else {
                         enqueueFSM = WAIT_FOR_TX;
-                        *image_loaded = false;
-                        *skip_read = false;                        
+                        //*image_loaded = false;
+                        //*skip_read = false;                        
                     }
                 }
             }
@@ -514,7 +514,7 @@ void pRXPath(
     case WAIT_FOR_TX:
         printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_TX, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
                 *processed_word_rx, *processed_bytes_rx);
-        if (*processed_word_tx == 32) {
+        if (*processed_word_tx == MIN_TX_LOOPS) {
             enqueueFSM = WAIT_FOR_META;
         }
       
