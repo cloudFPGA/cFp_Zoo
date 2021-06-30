@@ -141,7 +141,8 @@ void storeWordToMem(
   bool                      *signal_init
 )
 {
-    #pragma HLS INLINE
+    #pragma HLS INLINE off
+    #pragma HLS pipeline II=1
 
     Data_t_in v;
     v.data = 0;
@@ -388,8 +389,9 @@ void pRXPath(
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE
+    #pragma HLS INLINE off
+    #pragma HLS pipeline II=1
+    
     //-- LOCAL VARIABLES ------------------------------------------------------
     //static NetworkWord    netWord;
     #ifdef ENABLE_DDR
@@ -563,8 +565,9 @@ void pProcPath(
         )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE
+    #pragma HLS INLINE off
+    #pragma HLS pipeline II=1
+    
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord newWord;
     uint16_t Thresh = 442;
@@ -739,8 +742,9 @@ void pTXPath(
         )   
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE
+    #pragma HLS INLINE off
+    #pragma HLS pipeline II=1
+    
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord netWordTx;
     NetworkMeta meta_in = NetworkMeta();
@@ -925,7 +929,7 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
   num_read_outstanding=16 num_write_outstanding=16 latency=52
 
 #endif
-
+ 
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
