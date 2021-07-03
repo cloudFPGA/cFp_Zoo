@@ -53,11 +53,26 @@ enum EchoCtrl {
 #define WAIT_FOR_META             0
 #define WAIT_FOR_STREAM_PAIR      1
 #define PROCESSING_PACKET         2
-#define HARRIS_RETURN_RESULTS     3
-#define HARRIS_RETURN_RESULTS_FWD 4
-#define WAIT_FOR_TX               5
+#define LOAD_IN_STREAM            3
+#define HARRIS_RETURN_RESULTS     4
+#define HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT 5
+#define HARRIS_RETURN_RESULTS_UNPACK 6
+#define HARRIS_RETURN_RESULTS_FWD 7
+#define WAIT_FOR_TX               8
+#define FSM_IDLE                    9
+#define FSM_CHK_SKIP                10
+#define FSM_CHK_PROC_BYTES          11
+#define FSM_CHK_WRT_CHNK_TO_DDR_PND 12
+#define FSM_WR_PAT_CMD              13
+#define FSM_WR_PAT_LOAD             14
+#define FSM_WR_PAT_DATA             15
+#define FSM_WR_PAT_STS              16
 #define PacketFsmType uint8_t
 
+
+#define FSM_WRITE_NEW_DATA 0
+#define FSM_DONE 1
+#define PortFsmType uint8_t
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
@@ -94,19 +109,14 @@ typedef membus_512_t membus_t;
 //    FSM_WR_PAT_STS  = 2
 //} fsmStateDDRdef;
 //typedef enum fsmStateDDRenum fsmStateDDRdef;
-#define FSM_IDLE                    0
-#define FSM_CHK_SKIP                1
-#define FSM_CHK_PROC_BYTES          2
-#define FSM_CHK_WRT_CHNK_TO_DDR_PND 3
-#define FSM_WR_PAT_CMD              4
-#define FSM_WR_PAT_DATA             5
-#define FSM_WR_PAT_STS              6
+
 #define fsmStateDDRdef uint8_t
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100
-#define TYPICAL_DDR_LATENCY 16
-
+#define TYPICAL_DDR_LATENCY 4
+#define DDR_LATENCY 52 // The latency cycles of cF DDR
+#define EXTRA_DDR_LATENCY_DUE_II (64 + 8) // 8 is the write from input stream to local stream, 64 is read from local stream to DDR
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
  */

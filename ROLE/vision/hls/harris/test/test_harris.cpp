@@ -301,7 +301,7 @@ int main(int argc, char** argv) {
             if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10
 #ifdef ENABLE_DDR
 #ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB 
-                + TYPICAL_DDR_LATENCY * MEMORY_LINES_512
+                + (TYPICAL_DDR_LATENCY + EXTRA_DDR_LATENCY_DUE_II + DDR_LATENCY) * MEMORY_LINES_512
 #endif
 #endif
                ) {
