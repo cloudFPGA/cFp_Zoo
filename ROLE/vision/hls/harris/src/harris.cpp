@@ -327,7 +327,7 @@ void storeWordToMem(
                 if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
                     printf("DEBUG: (patternWriteNum == TRANSFERS_PER_CHUNK -1) \n");
                     memP0.tlast = 1;
-                    fsmStateDDR = FSM_WR_PAT_STS;
+                    fsmStateDDR = FSM_WR_PAT_STS_A;
                 }
                 else {
                     memP0.tlast = 0;
@@ -339,8 +339,8 @@ void storeWordToMem(
             }
         break;    
              
-        case FSM_WR_PAT_STS:
-            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_STS\n");                
+        case FSM_WR_PAT_STS_A:
+            printf("DEBUG in storeWordToMem: fsmStateDDR - FSM_WR_PAT_STS_A\n");                
             if (!siMemWrStsP0.empty()) {
                 printf(" 1 \n");
                 //-- Get the memory write status for Mem/Mp0
@@ -432,8 +432,8 @@ void pRXPathDDR(
     unsigned int                        *processed_word_rx,
     unsigned int                        *processed_word_tx,
     unsigned int                        *processed_bytes_rx,
-    bool                                *image_loaded
-    //stream<bool>                        &sImageLoaded
+    //bool                                *image_loaded
+    stream<bool>                        &sImageLoaded
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -450,7 +450,7 @@ void pRXPathDDR(
     const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
     const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
     static unsigned int bytes_with_keep;
-    static unsigned int cnt_rd_stream, cnt_wr_stream;
+    static unsigned int cnt_rd_stream, cnt_wr_stream, cnt_wr_img_loaded;
     static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
     #pragma HLS stream variable=img_in_axi_stream depth=65
     // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
@@ -468,6 +468,7 @@ void pRXPathDDR(
     #pragma HLS reset variable=bytes_with_keep
     #pragma HLS reset variable=cnt_rd_stream
     #pragma HLS reset variable=cnt_wr_stream
+    #pragma HLS reset variable=cnt_wr_img_loaded    
     #pragma HLS reset variable=ddr_addr_in
     #pragma HLS reset variable=tmp
     #pragma HLS reset variable=patternWriteNum
@@ -503,7 +504,7 @@ void pRXPathDDR(
             }
             enqueueFSM = PROCESSING_PACKET;
         }
-        *image_loaded = false;
+        //*image_loaded = false;
         //if (sImageLoaded.empty()) {
         //    sImageLoaded.write(false);
         //}
@@ -613,7 +614,8 @@ case FSM_WR_PAT_DATA:
         if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
             printf("DEBUG: (patternWriteNum == TRANSFERS_PER_CHUNK -1) \n");
             memP0.tlast = 1;
-            enqueueFSM = FSM_WR_PAT_STS;
+            cnt_wr_img_loaded = 0;
+            enqueueFSM = FSM_WR_PAT_STS_A;
         }
         else {
             memP0.tlast = 0;
@@ -623,52 +625,55 @@ case FSM_WR_PAT_DATA:
     }
     break;
 
-case FSM_WR_PAT_STS:
-    printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS\n");
+case FSM_WR_PAT_STS_A:
+    printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_A\n");
     if (!siMemWrStsP0.empty()) {
         printf(" 1 \n");
         //-- Get the memory write status for Mem/Mp0
         siMemWrStsP0.read(memWrStsP0);
-        // TODO: handle errors on memWrStsP0
+        enqueueFSM = FSM_WR_PAT_STS_B;
+    }
+    else {
+        if (timeoutCnt++ >= CYCLES_UNTIL_TIMEOUT) {
+            memWrStsP0.tag = 0;
+            memWrStsP0.interr = 0;
+            memWrStsP0.decerr = 0;
+            memWrStsP0.slverr = 0;
+            memWrStsP0.okay = 0;           
+            enqueueFSM = FSM_WR_PAT_STS_B;
+        }
+    }
+    break;
+
+case FSM_WR_PAT_STS_B:
+    printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_B\n");
+    if ((memWrStsP0.tag = 7) && (memWrStsP0.okay = 1)) {
+        if ((*processed_bytes_rx) == 0) {
+            if (!sImageLoaded.full()) {
+                if (cnt_wr_img_loaded++ == 1) {
+                    sImageLoaded.write(false);
+                    enqueueFSM = FSM_WR_PAT_STS_C;
+                }
+                else {
+                    //*image_loaded = true;
+                    sImageLoaded.write(true);
+                }
+            }
+        }
+    }
+    else {
+        ; // TODO: handle errors on memWrStsP0
+    }
+    break;
+
+case FSM_WR_PAT_STS_C:    
         if(netWord.tlast == 1) {
             enqueueFSM = WAIT_FOR_META;
         }
         else {
             enqueueFSM = PROCESSING_PACKET;
         }
-        if ((*processed_bytes_rx) == 0) {
-            *image_loaded = true;
-            //if (sImageLoaded.empty()) {
-            //    sImageLoaded.write(true);
-            //}
-        }
-    }
-    else {
-        printf(" 2 \n");
-        timeoutCnt++;
-        if (timeoutCnt >= CYCLES_UNTIL_TIMEOUT) {
-            printf(" 3 \n");
-            if(netWord.tlast == 1) {
-                enqueueFSM = WAIT_FOR_META;
-            }
-            else {
-                enqueueFSM = PROCESSING_PACKET;
-            }
-            if ((*processed_bytes_rx) == 0) {
-                *image_loaded = true;
-                //if (sImageLoaded.empty()) {
-                //    sImageLoaded.write(true);
-                //}
-            }
-        }
-    }
     break;
-
-
-
-
-
-
 /*
 case WAIT_FOR_TX:
     printf("DEBUG in pRXPathDDR: enqueueFSM - WAIT_FOR_TX, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
@@ -907,8 +912,8 @@ void pProcPath(
         
         unsigned int                            *processed_word_rx,
         unsigned int                            *processed_bytes_rx, 
-        bool                                    *image_loaded
-        //stream<bool>                            &sImageLoaded
+        //bool                                    *image_loaded
+        stream<bool>                            &sImageLoaded
         )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -946,10 +951,10 @@ void pProcPath(
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
-      if ( (*image_loaded) == true )
-      //if (!sImageLoaded.empty())
+      //if ( (*image_loaded) == true )
+      if (!sImageLoaded.empty())
         {
-        //    if (sImageLoaded.read() == true) {
+            if (sImageLoaded.read() == true) {
                 HarrisFSM = PROCESSING_PACKET;
                 //	*processed_word_rx = 0;
                 //	*processed_bytes_rx = 0;
@@ -961,7 +966,7 @@ void pProcPath(
                 cnt_i = 0;
                 //*image_loaded = false;
                 #endif
-        //    }
+            }
         }
     break;
 
@@ -1337,8 +1342,8 @@ const unsigned int ddr_latency = DDR_LATENCY;
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx = 0;
-  static bool image_loaded;
-  //static stream<bool> sImageLoaded("sImageLoaded");
+  //static bool image_loaded;
+  static stream<bool> sImageLoaded("sImageLoaded");
   static bool skip_read;
   static bool write_chunk_to_ddr_pending;
   //static stream<bool> sWriteChunkToDdrPending("sWriteChunkToDdrPending");
@@ -1368,8 +1373,8 @@ const unsigned int ddr_latency = DDR_LATENCY;
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=processed_bytes_rx
-#pragma HLS reset variable=image_loaded
-//#pragma HLS stream variable=sImageLoaded depth=1
+//#pragma HLS reset variable=image_loaded
+#pragma HLS stream variable=sImageLoaded depth=1
 #pragma HLS reset variable=skip_read
 #pragma HLS reset variable=write_chunk_to_ddr_pending
 //#pragma HLS stream variable=sWriteChunkToDdrPending depth=2
@@ -1473,8 +1478,8 @@ const unsigned int ddr_latency = DDR_LATENCY;
     &processed_word_rx,
     &processed_word_tx,
     &processed_bytes_rx,
-    &image_loaded
-    //sImageLoaded  
+    //&image_loaded
+    sImageLoaded  
     );
 
  #else // !ENABLE_DDR
@@ -1518,8 +1523,8 @@ const unsigned int ddr_latency = DDR_LATENCY;
 #endif
         &processed_word_rx,
         &processed_bytes_rx,
-        &image_loaded
-        //sImageLoaded
+        //&image_loaded
+        sImageLoaded
         );  
 
   pTXPath(

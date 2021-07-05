@@ -66,7 +66,9 @@ enum EchoCtrl {
 #define FSM_WR_PAT_CMD              13
 #define FSM_WR_PAT_LOAD             14
 #define FSM_WR_PAT_DATA             15
-#define FSM_WR_PAT_STS              16
+#define FSM_WR_PAT_STS_A            16
+#define FSM_WR_PAT_STS_B            17
+#define FSM_WR_PAT_STS_C            18
 #define PacketFsmType uint8_t
 
 
