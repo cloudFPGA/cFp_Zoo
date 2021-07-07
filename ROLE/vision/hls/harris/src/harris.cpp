@@ -650,7 +650,7 @@ case FSM_WR_PAT_STS_B:
     if ((memWrStsP0.tag = 7) && (memWrStsP0.okay = 1)) {
         if ((*processed_bytes_rx) == 0) {
             if (!sImageLoaded.full()) {
-                if (cnt_wr_img_loaded++ == 1) {
+                if (cnt_wr_img_loaded++ >= 1) {
                     sImageLoaded.write(false);
                     enqueueFSM = FSM_WR_PAT_STS_C;
                 }
@@ -660,13 +660,17 @@ case FSM_WR_PAT_STS_B:
                 }
             }
         }
+        else {
+            enqueueFSM = FSM_WR_PAT_STS_C;
+        }
     }
     else {
         ; // TODO: handle errors on memWrStsP0
     }
     break;
 
-case FSM_WR_PAT_STS_C:    
+case FSM_WR_PAT_STS_C:
+    printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_C\n");    
         if(netWord.tlast == 1) {
             enqueueFSM = WAIT_FOR_META;
         }
