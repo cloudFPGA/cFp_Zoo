@@ -107,9 +107,11 @@ void storeWordToAxiStream(
   #else
   stream<Data_t_in>                 &img_in_axi_stream,
   #endif
-  unsigned int  *processed_word_rx,
-  unsigned int  *processed_bytes_rx,
-  bool          *image_loaded)
+  unsigned int                      *processed_word_rx,
+  unsigned int                      *processed_bytes_rx,
+  //bool                              *image_loaded
+  stream<bool>                      &sImageLoaded    
+)
 {   
   #pragma HLS INLINE
   Data_t_in v;
@@ -147,7 +149,10 @@ void storeWordToAxiStream(
   else {
     printf("DEBUG in storeWordToAxiStream: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
     *processed_bytes_rx = 0;
-    *image_loaded = true;
+    //*image_loaded = true;
+    if (!sImageLoaded.full()) {
+        sImageLoaded.write(true);
+    }
   }
 }
 
@@ -414,20 +419,12 @@ void pRXPathDDR(
     stream<NetworkWord>                 &siSHL_This_Data,
     stream<NetworkMetaStream>           &siNrc_meta,
     stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    #ifdef ENABLE_DDR
     //---- P0 Write Path (S2MM) -----------
     stream<DmCmd>                       &soMemWrCmdP0,
     stream<DmSts>                       &siMemWrStsP0,
     stream<Axis<MEMDW_512> >            &soMemWriteP0,
     //---- P1 Memory mapped ---------------
     membus_t                            *lcl_mem0,
-    #else // !ENABLE_DDR
-    #ifdef USE_HLSLIB_STREAM
-    Stream<Data_t_in, MIN_RX_LOOPS>     &img_in_axi_stream,
-    #else // !USE_HLSLIB_STREAM
-    stream<Data_t_in>                   &img_in_axi_stream,
-    #endif // USE_HLSLIB_STREAM
-    #endif // ENABLE_DDR
     NetworkMetaStream                   meta_tmp,
     unsigned int                        *processed_word_rx,
     unsigned int                        *processed_word_tx,
@@ -783,7 +780,7 @@ void pRXPath(
         }
 #ifndef ENABLE_DDR
         //*image_loaded = false;
-        if (sImageLoaded.empty()) {
+        if (!sImageLoaded.full()) {
             sImageLoaded.write(false);
         }
 #endif
@@ -818,24 +815,6 @@ void pRXPath(
                         *skip_read = true;
                     }
                 }
-            //}
-            /*storeWordToMem( netWord,
-                        soMemWrCmdP0,
-                        siMemWrStsP0,
-                        soMemWriteP0,
-                        lcl_mem0, 
-                        processed_word_rx, 
-                        processed_bytes_rx, 
-                        image_loaded,
-                        //sImageLoaded,
-                        &skip_read,
-                        &write_chunk_to_ddr_pending,
-                        &ready_to_accept_new_data,
-                        &signal_init
-                        );
-            */
-            //if (!sWriteChunkToDdrPending.empty()) {
-                //if ((sWriteChunkToDdrPending.read() == false) && (*ready_to_accept_new_data == true)) {
             if ((*write_chunk_to_ddr_pending == false) && (*ready_to_accept_new_data == true)) {
                     if ((*processed_bytes_rx) != 0) {
                         *signal_init = true;
@@ -858,7 +837,7 @@ void pRXPath(
             //-- Read incoming data chunk
             netWord = siSHL_This_Data.read();
             storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
-                            image_loaded);
+                            sImageLoaded);
             if(netWord.tlast == 1)
             {
                 enqueueFSM = WAIT_FOR_META;
