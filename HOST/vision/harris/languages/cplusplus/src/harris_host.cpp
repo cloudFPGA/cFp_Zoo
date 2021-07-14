@@ -179,18 +179,22 @@ int main(int argc, char * argv[]) {
         Th = 41151168289701888.000000;
     }
     string out_img_file, out_points_file;
-    string out_video_file;
+    string out_video_file, out_video_points_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
     //#ifdef PY_WRAP
     //out_video_file.assign(output_str);
     //#else // !PY_WRAP
     out_video_file.assign(input_string);
-    out_video_file += "_fpga_img_out.avi";
+    out_video_file += "_fpga_video_out.avi";
+    out_video_points_file.assign(input_string);
+    out_video_points_file += "_fpga_video_points_out.avi";
     //#endif // PY_WRAP
 #if CV_MAJOR_VERSION < 4
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
+    VideoWriter videop(out_video_points_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
 #else
     VideoWriter video(out_video_file,cv::VideoWriter::fourcc('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
+    VideoWriter videop(out_video_points_file,cv::VideoWriter::fourcc('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
 #endif
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME) 
@@ -347,7 +351,7 @@ int main(int argc, char * argv[]) {
 		#else
 		sock.send( & sendarr[i * PACK_SIZE], sending_now);
 		#endif
-		delay(1000);  
+		delay(100);  
 	    }
             
             clock_t next_cycle_tx = clock();
@@ -474,14 +478,18 @@ int main(int argc, char * argv[]) {
 		break;
 	      }
 	      cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
-	      Mat tovideo;
+	      cout << "INFO: The output video -only points- file is stored at  : " << out_video_points_file << endl;
+	      Mat tovideo, tovideop;
 	      if (frame.channels() != 1) {
-		tovideo = frame;
+		tovideo  = out_img;
+		tovideop = frame;
 	      }
 	      else {
-		cvtColor(frame, tovideo, COLOR_GRAY2BGR);
+		cvtColor(out_img, tovideo, COLOR_GRAY2BGR);
+		cvtColor(frame, tovideop, COLOR_GRAY2BGR);        
 	      }
 	      video.write(tovideo);
+	      videop.write(tovideop);
 	    }
 #endif // WRITE_OUTPUT_FILE
 	    waitKey(FRAME_INTERVAL);
@@ -494,6 +502,7 @@ int main(int argc, char * argv[]) {
 	// When everything done, release the video capture and write object
 	cap.release();
 	video.release();
+    videop.release();
 
         // Closes all the windows
 	destroyAllWindows();

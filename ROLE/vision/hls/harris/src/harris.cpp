@@ -664,7 +664,7 @@ case FSM_WR_PAT_STS_B:
     else {
         ; // TODO: handle errors on memWrStsP0
     }
-    break;
+    break; 
 
 case FSM_WR_PAT_STS_C:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_C\n");    
