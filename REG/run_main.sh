@@ -3,16 +3,16 @@
 #  *                       cloudFPGA
 #  *     Copyright IBM Research, All Rights Reserved
 #  *    =============================================
-#  *     Created: Nov 2019
-#  *     Authors: FAB, WEI, NGL, POL
+#  *     Created: Aug 2021
+#  *     Authors: FAB, WEI, NGL, POL, DID
 #  *
 #  *     Description:
-#  *        Main cFp_Flash regressions script.
+#  *        Main cFp_Vitis regressions script.
 #  *
 #  *     Details:
 #  *       - This script is typically called the Jenkins server.
-#  *       - It expects to be executed from the cFDK root directory.
-#  *       - The '$cFpFlashRootDir' variable must be set externally. 
+#  *       - It expects to be executed from the cFp_Vitis root directory.
+#  *       - The '$cFpVitisRootDir' variable must be set externally. 
 #  *       - All environment variables must be sourced beforehand.
 #  *
 
@@ -30,7 +30,7 @@ function exit_on_error {
 export rootDir="$cFpRootDir/"  #the / is IMPORTANT
 export cFpIpDir="$rootDir/ip/"
 export cFpMOD="FMKU60"
-export usedRoleDir="$rootDir/ROLE/1/"
+export usedRoleDir="$rootDir/ROLE/vision/"
 export usedRole2Dir="$rootDir/ROLE/2/"
 export cFpSRAtype="Themisto"
 export cFpXprDir="$rootDir/xpr/"
