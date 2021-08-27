@@ -24,7 +24,7 @@
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
 #include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
 #endif
- 
+
 #ifdef USE_HLSLIB_STREAM
 using hlslib::Stream;
 #endif
