@@ -916,7 +916,8 @@ void pProcPath(
     ap_uint<OUTPUT_PTR_WIDTH> raw64;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
-    static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
+    //static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
+    static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
     #pragma HLS stream variable=img_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
     #endif
@@ -1019,7 +1020,7 @@ void pProcPath(
             temp.data = raw64; 
             #endif
             if ( !img_out_axi_stream.full() ) {
-                img_out_axi_stream.write(temp);
+                img_out_axi_stream.write(raw64);
             }
             if (cnt_i == (MEMDW_512/OUTPUT_PTR_WIDTH) - 1) {
                 HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
@@ -1032,7 +1033,7 @@ void pProcPath(
     case HARRIS_RETURN_RESULTS_FWD: 
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
       if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() ) {
-        temp = img_out_axi_stream.read();
+        temp.data = img_out_axi_stream.read();
         if (processed_word_proc++ == MIN_TX_LOOPS-1) {
             temp.last = 1;
             HarrisFSM = WAIT_FOR_META;
