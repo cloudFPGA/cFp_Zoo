@@ -401,7 +401,6 @@ void storeWordToMem(
 
 
 
-
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
  *
@@ -440,15 +439,16 @@ void pRXPathDDR(
     //-- LOCAL VARIABLES ------------------------------------------------------
     static NetworkWord    netWord;
 
-    Data_t_in v;
-    v.data = 0;
-    v.keep = 0;
-    v.last = 0;
+    ap_uint<INPUT_PTR_WIDTH> v = 0;
+    //v.data = 0;
+    //v.keep = 0;
+    //v.last = 0;
     const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
     const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
     static unsigned int bytes_with_keep;
     static unsigned int cnt_rd_stream, cnt_wr_stream, cnt_wr_img_loaded;
-    static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
+    //static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
+    static stream<ap_uint<INPUT_PTR_WIDTH>> img_in_axi_stream ("img_in_axi_stream");
     #pragma HLS stream variable=img_in_axi_stream depth=65
     // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
     static unsigned int ddr_addr_in; //= processed_word_rx;
@@ -529,9 +529,9 @@ void pRXPathDDR(
             printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
             //continue;
         }
-        v.data = (ap_uint<INPUT_PTR_WIDTH>)(netWord.tdata >> cnt_wr_stream*8);
-        v.keep = netWord.tkeep;
-        v.last = netWord.tlast;
+        v = (ap_uint<INPUT_PTR_WIDTH>)(netWord.tdata >> cnt_wr_stream*8);
+        //v.keep = netWord.tkeep;
+        //v.last = netWord.tlast;
         if ( !img_in_axi_stream.full() ) {
             img_in_axi_stream.write(v);
         }
@@ -594,7 +594,7 @@ case FSM_WR_PAT_LOAD:
     if ( !img_in_axi_stream.empty() ) {
         v = img_in_axi_stream.read();
     }
-    tmp((cnt_rd_stream+1)*INPUT_PTR_WIDTH-1, cnt_rd_stream*INPUT_PTR_WIDTH ) = v.data;
+    tmp((cnt_rd_stream+1)*INPUT_PTR_WIDTH-1, cnt_rd_stream*INPUT_PTR_WIDTH ) = v;
 
     if (cnt_rd_stream++ == BPERMDW_512-1) {
         enqueueFSM = FSM_WR_PAT_DATA;
