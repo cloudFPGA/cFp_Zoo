@@ -56,6 +56,9 @@ enum EchoCtrl {
 
 #define PacketFsmType uint8_t
 
+#define FSM_WRITE_NEW_DATA 0
+#define FSM_DONE 1
+#define PortFsmType uint8_t
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718

@@ -41,7 +41,39 @@ PacketFsmType UppercaseFSM  = WAIT_FOR_META;
 typedef char word_t[8];
 
 
+void pPortAndDestionation(
+    ap_uint<32>             *pi_rank,
+    ap_uint<32>             *pi_size,
+    stream<NodeId>          &sDstNode_sig,
+    ap_uint<32>                 *po_rx_ports
+    )
+{
+  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+#pragma HLS INLINE off
+  //-- STATIC VARIABLES (with RESET) ------------------------------------------
+  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
+#pragma HLS reset variable=port_fsm
 
+
+  switch(port_fsm)
+  {
+    default:
+    case FSM_WRITE_NEW_DATA:
+        //Triangle app needs to be reset to process new rank
+        if(!sDstNode_sig.full())
+        {
+          NodeId dst_rank = (*pi_rank + 1) % *pi_size;
+          printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
+          sDstNode_sig.write(dst_rank);
+          port_fsm = FSM_DONE;
+        }
+        break;
+    case FSM_DONE:
+        *po_rx_ports = 0x1; //currently work only with default ports...
+        break;
+  }
+
+}
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -67,7 +99,7 @@ void pRXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE
+     #pragma  HLS INLINE 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
     word_t text;
@@ -99,7 +131,9 @@ void pRXPath(
 	/* Convert lower cases to upper cases byte per byte */
 	uppercase_conversion:
 	for (unsigned int i = 0; i < sizeof(text); i++ ) {
+//#pragma HLS PIPELINE
 //#pragma HLS UNROLL
+
 	    if (text[i] >= 'a' && text[i] <= 'z')
 		text[i] = text[i] - ('a' - 'A');
 	}
@@ -128,7 +162,7 @@ void pRXPath(
  * @param[in]  sRxpToTxp_Data
  * @param[in]  sRxtoTx_Meta
  * @param[in]  pi_rank
- * @param[in]  pi_size
+ * @param[in]  sDstNode_sig
  *
  * @return Nothing.
  *****************************************************************************/
@@ -137,20 +171,29 @@ void pTXPath(
         stream<NetworkMetaStream>   &soNrc_meta,
 	stream<NetworkWord>         &sRxpToTxp_Data,
 	stream<NetworkMetaStream>   &sRxtoTx_Meta,
+  stream<NodeId>          &sDstNode_sig,
         unsigned int                *processed_word_tx, 
-        ap_uint<32>                 *pi_rank,
-        ap_uint<32>                 *pi_size
+        ap_uint<32>                 *pi_rank
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE
+    #pragma  HLS INLINE 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
+    static NodeId dst_rank;
   
   switch(dequeueFSM)
   {
+    case WAIT_FOR_META:
+      if(!sDstNode_sig.empty())
+      {
+        dst_rank = sDstNode_sig.read();
+        dequeueFSM = WAIT_FOR_STREAM_PAIR;
+        //Triangle app needs to be reset to process new rank
+      }
+      break;
     case WAIT_FOR_STREAM_PAIR:
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
 	     dequeueFSM, *processed_word_tx);
@@ -181,7 +224,7 @@ void pTXPath(
         meta_out_stream.tlast = 1;
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
-        meta_out_stream.tdata.dst_rank = (*pi_rank + 1) % *pi_size;
+        meta_out_stream.tdata.dst_rank = dst_rank;
         //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
         //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
@@ -189,7 +232,6 @@ void pTXPath(
         //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
-	
 	
 	//meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
@@ -277,7 +319,9 @@ void uppercase(
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
-  *po_rx_ports = 0x1; //currently work only with default ports...
+  //*po_rx_ports = 0x1; //currently work only with default ports...
+  static stream<NodeId>            sDstNode_sig   ("sDstNode_sig");
+
 
   
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -330,6 +374,13 @@ void uppercase(
   HLSLIB_DATAFLOW_FINALIZE();
   
 #else // !USE_HLSLIB_DATAFLOW
+
+ pPortAndDestionation(
+  pi_rank,
+  pi_size, 
+  sDstNode_sig,
+  po_rx_ports);
+
  pRXPath(
 	siSHL_This_Data,
         siNrc_meta,
@@ -344,9 +395,9 @@ void uppercase(
         soNrc_meta,
 	sRxpToTxp_Data,
 	sRxtoTx_Meta,
+  sDstNode_sig,
         &processed_word_tx,
-        pi_rank,
-        pi_size);
+        pi_rank);
 #endif // USE_HLSLIB_DATAFLOW
 }
 
