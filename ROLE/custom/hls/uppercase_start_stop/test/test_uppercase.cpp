@@ -129,10 +129,10 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR UPPERCASE
     //------------------------------------------------------
-    unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10+2;//adding 8 for the start and stop commands
+    unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
     unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE)+2);//adding 2 for the start and stop commands
-    char *charOutput = (char*)malloc(strInput.length()+16 * sizeof(char));
-    char *charInput = (char*)malloc(strInput.length()+16 * sizeof(char));
+    char *charOutput = (char*)malloc((strInput.length()+6) * sizeof(char));
+    char *charInput = (char*)malloc((strInput.length()+6) * sizeof(char));
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
