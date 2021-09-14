@@ -197,6 +197,7 @@ void pRXPath(
   ){
 
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+#pragma  HLS INLINE off
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
     word_t text;
@@ -244,8 +245,9 @@ void pRXPath(
           processingFSM = FSM_PROCESSING_STOP;
       }
       break;
+  
+      }
   }
-
  };
 
 
@@ -274,7 +276,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE 
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
