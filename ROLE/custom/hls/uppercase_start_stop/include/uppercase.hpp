@@ -46,7 +46,9 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
-
+/********************************************
+ * Internal uppercase accelerator command
+ ********************************************/
 enum UppercaseCmd {
     STOP_CMD  = 0,
     START_CMD  = 1

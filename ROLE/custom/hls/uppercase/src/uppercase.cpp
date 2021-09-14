@@ -3,6 +3,8 @@
  * @brief      The Role for a Uppercase Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
+ * @updates    DCO
+ * @date       September 2021
  *----------------------------------------------------------------------------
  *
  * @details      This application implements a UDP/TCP-oriented Vitis function.
@@ -40,7 +42,16 @@ PacketFsmType UppercaseFSM  = WAIT_FOR_META;
 
 typedef char word_t[8];
 
-
+/*****************************************************************************
+ * @brief pPortAndDestionation - Setup the port and the destination rank.
+ *
+ * @param[in]  pi_rank
+ * @param[in]  pi_size
+ * @param[out] sDstNode_sig
+ * @param[out] po_rx_ports
+ *
+ * @return Nothing.
+ ******************************************************************************/
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
@@ -125,25 +136,25 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-	/* Read in one word_t */
-	memcpy((char*) text, &netWord.tdata, 64/8);
-	
-	/* Convert lower cases to upper cases byte per byte */
-	uppercase_conversion:
-	for (unsigned int i = 0; i < sizeof(text); i++ ) {
-//#pragma HLS PIPELINE
-//#pragma HLS UNROLL
+      	/* Read in one word_t */
+      	memcpy((char*) text, &netWord.tdata, 64/8);
+      	
+      	/* Convert lower cases to upper cases byte per byte */
+      	uppercase_conversion:
+      	for (unsigned int i = 0; i < sizeof(text); i++ ) {
+      //#pragma HLS PIPELINE
+      //#pragma HLS UNROLL
 
-	    if (text[i] >= 'a' && text[i] <= 'z')
-		text[i] = text[i] - ('a' - 'A');
-	}
-	memcpy(&netWord.tdata, (char*) text, 64/8);
-	
-	sRxpToTxp_Data.write(netWord);
-        if(netWord.tlast == 1)
-        {
-          enqueueFSM = WAIT_FOR_META;
-        }
+      	    if (text[i] >= 'a' && text[i] <= 'z')
+      		text[i] = text[i] - ('a' - 'A');
+      	}
+      	memcpy(&netWord.tdata, (char*) text, 64/8);
+      	
+      	sRxpToTxp_Data.write(netWord);
+              if(netWord.tlast == 1)
+              {
+                enqueueFSM = WAIT_FOR_META;
+              }
       }
       break;
   }
@@ -236,7 +247,7 @@ void pTXPath(
 	//meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
-	(*processed_word_tx)++;
+	      (*processed_word_tx)++;
 	
         if(netWordTx.tlast != 1)
         {
@@ -383,21 +394,21 @@ void uppercase(
 
  pRXPath(
 	siSHL_This_Data,
-        siNrc_meta,
+  siNrc_meta,
 	sRxtoTx_Meta,
 	sRxpToTxp_Data,
-        meta_tmp,
-        &processed_word_rx,
+  meta_tmp,
+  &processed_word_rx,
 	&processed_bytes_rx);
   
   pTXPath(
-        soTHIS_Shl_Data,
-        soNrc_meta,
+  soTHIS_Shl_Data,
+   soNrc_meta,
 	sRxpToTxp_Data,
 	sRxtoTx_Meta,
   sDstNode_sig,
-        &processed_word_tx,
-        pi_rank);
+  &processed_word_tx,
+  pi_rank);
 #endif // USE_HLSLIB_DATAFLOW
 }
 

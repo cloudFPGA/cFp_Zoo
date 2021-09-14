@@ -3,6 +3,8 @@
  * @brief      The Role for a Uppercase Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
+ * @updates    DCO
+ * @date       September 2021
  *----------------------------------------------------------------------------
  *
  * @details      This application implements a UDP/TCP-oriented Vitis function.
@@ -41,7 +43,16 @@ ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
 
 typedef char word_t[8];
 
-
+/*****************************************************************************
+ * @brief pPortAndDestionation - Setup the port and the destination rank.
+ *
+ * @param[in]  pi_rank
+ * @param[in]  pi_size
+ * @param[out] sDstNode_sig
+ * @param[out] po_rx_ports
+ *
+ * @return Nothing.
+ ******************************************************************************/
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
@@ -185,20 +196,20 @@ void pRXPath(
   bool *                                             start_stop
   ){
 
-      //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
     word_t text;
     
-  switch(processingFSM)
-  {
-    case FSM_PROCESSING_STOP: 
-    	printf("DEBUG proc FSM, I am in the stop state\n");
+    switch(processingFSM)
+    {
+      case FSM_PROCESSING_STOP: 
+      printf("DEBUG proc FSM, I am in the stop state\n");
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
       {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
- 	 sProcpToTxp_Data.write(netWord);
+ 	      sProcpToTxp_Data.write(netWord);
       }
       if ( *start_stop )
       {
@@ -212,24 +223,23 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
-  /* Read in one word_t */
-  memcpy((char*) text, &netWord.tdata, 64/8);
-  
-  /* Convert lower cases to upper cases byte per byte */
-  uppercase_conversion:
-  for (unsigned int i = 0; i < sizeof(text); i++ ) {
+        /* Read in one word_t */
+        memcpy((char*) text, &netWord.tdata, 64/8);
+        
+        /* Convert lower cases to upper cases byte per byte */
+        uppercase_conversion:
+        for (unsigned int i = 0; i < sizeof(text); i++ ) {
 
-      if (text[i] >= 'a' && text[i] <= 'z')
-    text[i] = text[i] - ('a' - 'A');
-  }
-  memcpy(&netWord.tdata, (char*) text, 64/8);
-  
-  sProcpToTxp_Data.write(netWord);
+            if (text[i] >= 'a' && text[i] <= 'z')
+          text[i] = text[i] - ('a' - 'A');
+        }
+        memcpy(&netWord.tdata, (char*) text, 64/8);
+        
+        sProcpToTxp_Data.write(netWord);
         if(netWord.tlast == 1)
         {
           processingFSM = FSM_PROCESSING_STOP;
         }
-      }
       } else {
           processingFSM = FSM_PROCESSING_STOP;
       }
@@ -478,29 +488,28 @@ void uppercase(
 
  pRXPath(
 	siSHL_This_Data,
-        siNrc_meta,
+  siNrc_meta,
 	sRxtoTx_Meta,
 	sRxpToProcp_Data,
-        meta_tmp,
-        &start_stop,
-        &processed_word_rx,
+  meta_tmp,
+  &start_stop,
+  &processed_word_rx,
 	&processed_bytes_rx);
 
  pTHISProcessingData(
   sRxpToProcp_Data,
   sProcpToTxp_Data,
-  &start_stop
-  );
+  &start_stop);
 
   
   pTXPath(
-        soTHIS_Shl_Data,
-        soNrc_meta,
+  soTHIS_Shl_Data,
+  soNrc_meta,
 	sProcpToTxp_Data,
 	sRxtoTx_Meta,
   sDstNode_sig,
-        &processed_word_tx,
-        pi_rank);
+  &processed_word_tx,
+  pi_rank);
 #endif // USE_HLSLIB_DATAFLOW
 }
 

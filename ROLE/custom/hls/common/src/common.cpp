@@ -426,7 +426,7 @@ bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput,
         cout << "### ERROR : Could not open the input data file " << datFile << endl;
         return(KO);
     }
-    
+    // ignore the ack of the start command
     getline(inpFileStream, strLine);
     //-- STEP-2 : SET DATA STREAM
     while (inpFileStream) {
@@ -435,6 +435,7 @@ bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput,
             if (strLine.empty()) continue;
 
             getline(inpFileStream, strLine);
+    // ignore the ack of the stop command at the eof
             if (!inpFileStream.eof()){
                 if (strLine.empty()) continue;
             sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
