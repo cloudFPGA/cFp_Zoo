@@ -135,28 +135,24 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-        printf("DEBUG reading data from the network: %x\n", netWord.tdata);
 
         switch(netWord.tdata)
         {
           case(START_CMD):
-            printf("yeah I found a start command\n");
 	    start_stop_local=true;
             *start_stop=true;
 	    netWord.tdata=1;//28506595412;//"B_ACK";
             break;
           case(STOP_CMD):
             start_stop_local=false;
-            printf("yeah I found a stop command\n");
 	    *start_stop=false;
 	    netWord.tdata=0;//358080398155;//"S_ACK" string
 	    netWord.tlast = 1;
             break;
           default:
-            printf("yeah default command\n");
             if (start_stop_local)
             {
-            printf("Something to convert in uppercase :D\n");
+		    //some data manipulation here
             }
             break;
 
@@ -190,8 +186,6 @@ void pRXPath(
   ){
 
       //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
     word_t text;
@@ -204,26 +198,20 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
-        printf("DEBUG reading this network data my dear: %x%x",netWord.tdata);
  	 sProcpToTxp_Data.write(netWord);
-      	printf("YO DATA WRITTEN\n");
       }
       if ( *start_stop )
       {
-      printf("it seems a start :D\n");
         processingFSM = FSM_PROCESSING_START;
       }
       break;
 
     case FSM_PROCESSING_START:
-      printf("The start is real\n");
-      printf(" currently start stop flag is: %d\n");
       if ( *start_stop ) {
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
       {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
-        printf("DEBUG reading this network data my dear: %x%x",netWord.tdata);
   /* Read in one word_t */
   memcpy((char*) text, &netWord.tdata, 64/8);
   
@@ -237,7 +225,6 @@ void pRXPath(
   memcpy(&netWord.tdata, (char*) text, 64/8);
   
   sProcpToTxp_Data.write(netWord);
-      printf("YO DATA WRITTEN\n");
         if(netWord.tlast == 1)
         {
           processingFSM = FSM_PROCESSING_STOP;
