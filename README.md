@@ -36,7 +36,7 @@ rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 #### CentOS/EL7
 ```
 sudo yum groupinstall 'Development Tools'
-sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wireshark wireshark-gnome xauth
+sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wireshark wireshark-gnome xauth rpl
 ```
 
 ### Vivado/Vitis tool support
