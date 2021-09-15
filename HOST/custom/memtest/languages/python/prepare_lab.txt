@@ -1,0 +1,6 @@
+python3 -m venv jup1
+source jup1/bin/activate
+pip install --upgrade pip
+pip install jupyterlab
+jupyter lab
+
