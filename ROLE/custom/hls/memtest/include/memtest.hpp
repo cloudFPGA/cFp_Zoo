@@ -46,7 +46,13 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
-
+/********************************************
+ * Internal uppercase accelerator command
+ ********************************************/
+enum UppercaseCmd {
+    STOP_CMD  = 0,
+    START_CMD  = 1
+};
 
 
 #define WAIT_FOR_META 0
@@ -59,6 +65,10 @@ enum EchoCtrl {
 #define FSM_WRITE_NEW_DATA 0
 #define FSM_DONE 1
 #define PortFsmType uint8_t
+
+#define FSM_PROCESSING_STOP 0
+#define FSM_PROCESSING_START 1
+#define ProcessingFsmType uint8_t
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718

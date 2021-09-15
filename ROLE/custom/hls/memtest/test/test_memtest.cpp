@@ -233,7 +233,7 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
-    if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
+    if (!dumpFileToStringWithoutCommands("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < strInput.length(); i++)
        printf("%c", charInput[i]); 
     printf("\n");    
-    if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
+    if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
