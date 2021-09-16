@@ -22,9 +22,10 @@
 #include <string>
 #include <hls_stream.h>
 #include <sys/stat.h>
-#include "../../uppercase/include/uppercase.hpp"
+//#include "../../uppercase/include/uppercase.hpp"
+#include "../../memtest/include/memtest.hpp"
 #include "../../../../../HOST/custom/uppercase/languages/cplusplus/include/config.h"
-
+#include <bits/stdc++.h>
 
 //---------------------------------------------------------
 // HELPERS FOR THE DEBUGGING TRACES
@@ -122,6 +123,12 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
 
 
 bool dumpStringToFile(std::string s, const std::string outFileName, int simCnt);
+
+unsigned char hexval(unsigned char c);
+
+void hex2ascii(const std::string& in, std::string& out);
+
+bool isCornerPresent(std::string str, std::string corner);
 
 static inline ssize_t
 __file_size(const char *fname);

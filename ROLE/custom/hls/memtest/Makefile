@@ -16,7 +16,7 @@
 
 # Name of the HLS core to build
 ipName =memtest
-
+SHELL:=/bin/bash
 DEPS := $(shell find ./src/ -type f)
 
 .PHONY: all csim cosim_view
@@ -44,7 +44,18 @@ VIVADOBINDIR := `dirname ${CHECK_VIVADO}`
 CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
-INPUT_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_memtest_example."
+#START_COMMAND=0F0F0F0F0F0F0F0F
+START_COMMAND=0000000000000001
+#STOP_COMMAND=0E0E0E0E0E0E0E0E
+STOP_COMMAND=0000000000000000
+fConvert_hex_to_ascii= $(shell echo ${1} | xxd -r -p)
+fConvert_ascii_to_hex= $(shell xxd -pu <<< "${1}")
+
+MY_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_memtest_example."
+MY_STRING_WITH_SEPARATOR=$(call fConvert_ascii_to_hex,${MY_STRING})
+MY_STRING_CLEANED=$(shell sed -e 's/ //g' <<< "${MY_STRING_WITH_SEPARATOR}")
+#INPUT_STRING="$(call fConvert_hex_to_ascii,${START_COMMAND})${MY_STRING}$(call fConvert_hex_to_ascii,${STOP_COMMAND} )"
+INPUT_STRING="${START_COMMAND}$(MY_STRING_CLEANED)${STOP_COMMAND}"
 
 src = ./src/${ipName}.cpp \
 			./test/test_${ipName}.cpp
@@ -92,10 +103,11 @@ csynth: assert_env
 	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; vivado_hls -f run_hls.tcl
 
 csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=$(INPUT_STRING); vivado_hls -f run_hls.tcl
+	echo ${INPUT_STRING}
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=${INPUT_STRING}; vivado_hls -f run_hls.tcl
 
 cosim: assert_env
-	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimString=$(INPUT_STRING); vivado_hls -f run_hls.tcl
+		export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimString=$(INPUT_STRING); vivado_hls -f run_hls.tcl
 	#@#rm -rf ${ipName}_prj
 
 cosim_view:

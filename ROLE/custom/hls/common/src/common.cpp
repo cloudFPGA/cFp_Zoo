@@ -459,6 +459,56 @@ bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput,
     return(OK);
 }
 
+
+
+// C++98 guarantees that '0', '1', ... '9' are consecutive.
+// It only guarantees that 'a' ... 'f' and 'A' ... 'F' are
+// in increasing order, but the only two alternative encodings
+// of the basic source character set that are still used by
+// anyone today (ASCII and EBCDIC) make them consecutive.
+unsigned char hexval(unsigned char c)
+{
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    else if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    else if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    else abort();
+}
+
+
+void hex2ascii(const string& in, string& out)
+{
+    out.clear();
+    printf("i am alive\n");
+    out.reserve(in.length() / 2);
+    for (string::const_iterator p = in.begin(); p != in.end(); p++)
+    {
+       unsigned char c = hexval(*p);
+       p++;
+       if (p == in.end()) break; // incomplete last digit - should report error
+       c = (c << 4) + hexval(*p); // + takes precedence over <<
+       out.push_back(c);
+    }
+}
+
+bool isCornerPresent(string str, string corner)
+{
+    int n = str.length();
+    int cl = corner.length();
+ 
+    // If length of corner string is more, it
+    // cannot be present at corners.
+    if (n < cl)
+       return false;
+ 
+    // Return true if corner string is present at
+    // both corners of given string.
+    return (str.substr(0, cl).compare(corner) == 0 &&
+            str.substr(n-cl, cl).compare(corner) == 0);
+}
+
 static inline ssize_t
 __file_size(const char *fname)
 {
@@ -524,6 +574,5 @@ __file_write(const char *fname, const char *buff, size_t len)
 	fclose(fp);
 	return rc;
 }
-
 
 /*! \} */

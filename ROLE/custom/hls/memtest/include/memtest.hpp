@@ -50,8 +50,10 @@ enum EchoCtrl {
  * Internal uppercase accelerator command
  ********************************************/
 enum UppercaseCmd {
-    STOP_CMD  = 0,
-    START_CMD  = 1
+    //STOP_CMD  = 1414141414141414,
+    STOP_CMD  = 0000000000000000,
+   // START_CMD  = 1515151515151515
+    START_CMD  = 0000000000000001
 };
 
 

@@ -394,7 +394,21 @@ void memtest(
     ap_uint<32>                 *po_rx_ports
     )
 {
+  //-- LOCAL VARIABLES ------------------------------------------------------
+  // static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
+  NetworkMetaStream  meta_tmp = NetworkMetaStream();
+  static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
+  static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); // FIXME: works even with no static
+  static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
 
+
+
+  static unsigned int processed_word_rx;
+  static unsigned int processed_bytes_rx;
+  static unsigned int processed_word_tx;
+  //*po_rx_ports = 0x1; //currently work only with default ports...
+  static stream<NodeId>            sDstNode_sig   ("sDstNode_sig");
+  bool                              start_stop;
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS DATAFLOW 
 #pragma HLS reset variable=enqueueFSM
