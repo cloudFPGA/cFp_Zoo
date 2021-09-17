@@ -244,9 +244,9 @@ void pRXPath(
       } else {
           processingFSM = FSM_PROCESSING_STOP;
       }
-      break;
   
       }
+      break;
   }
  };
 
