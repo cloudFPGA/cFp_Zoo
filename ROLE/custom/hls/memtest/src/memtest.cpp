@@ -220,9 +220,9 @@ void pRXPath(
       break;
 
     case FSM_PROCESSING_START:
-      if ( *start_stop ) {
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
       {
+      if ( *start_stop ) {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
         /* Read in one word_t */
@@ -245,9 +245,9 @@ void pRXPath(
       } else {
           processingFSM = FSM_PROCESSING_STOP;
       }
-      break;
   
       }
+      break;
   }
  };
 
@@ -394,6 +394,21 @@ void memtest(
     ap_uint<32>                 *po_rx_ports
     )
 {
+  //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
+ //#pragma HLS INTERFACE ap_ctrl_none port=return
+
+  //#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
+
+#pragma HLS INTERFACE axis register both port=siSHL_This_Data
+#pragma HLS INTERFACE axis register both port=soTHIS_Shl_Data
+
+#pragma HLS INTERFACE axis register both port=siNrc_meta
+#pragma HLS INTERFACE axis register both port=soNrc_meta
+
+#pragma HLS INTERFACE ap_ovld register port=po_rx_ports name=poROL_NRC_Rx_ports
+#pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
+#pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
+
   //-- LOCAL VARIABLES ------------------------------------------------------
   // static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
   NetworkMetaStream  meta_tmp = NetworkMetaStream();

@@ -45,9 +45,9 @@ CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
 #START_COMMAND=0F0F0F0F0F0F0F0F
-START_COMMAND=0000000000000001
+START_COMMAND?=0100000000000000
 #STOP_COMMAND=0E0E0E0E0E0E0E0E
-STOP_COMMAND=0000000000000000
+STOP_COMMAND?=0000000000000000
 fConvert_hex_to_ascii= $(shell echo ${1} | xxd -r -p)
 fConvert_ascii_to_hex= $(shell xxd -pu <<< "${1}")
 
@@ -55,7 +55,8 @@ MY_STRING ?= "Hello_World!_It_is_extremely_fun_to_dive_into_cF_world_with_this_m
 MY_STRING_WITH_SEPARATOR=$(call fConvert_ascii_to_hex,${MY_STRING})
 MY_STRING_CLEANED=$(shell sed -e 's/ //g' <<< "${MY_STRING_WITH_SEPARATOR}")
 #INPUT_STRING="$(call fConvert_hex_to_ascii,${START_COMMAND})${MY_STRING}$(call fConvert_hex_to_ascii,${STOP_COMMAND} )"
-INPUT_STRING="${START_COMMAND}$(MY_STRING_CLEANED)${STOP_COMMAND}"
+INPUT_STRING ?="${START_COMMAND}$(MY_STRING_CLEANED)${STOP_COMMAND}"
+#INPUT_STRING ?="${START_COMMAND}$(MY_STRING_WITH_SEPARATOR)${STOP_COMMAND}"
 
 src = ./src/${ipName}.cpp \
 			./test/test_${ipName}.cpp

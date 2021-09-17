@@ -121,11 +121,14 @@ int main(int argc, char** argv) {
     //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
     if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
 	    tmp_string = tmp_string.substr(1,tmp_string.length()-2);
-    }    
-
+    }
+    cout << hex << tmp_string << dec << endl;
     //perform hex2ascii conversion so that we can codify our command as we wish, no restriction to null ascii characters
     hex2ascii(tmp_string, strInput);
+    if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
+	    strInput = strInput.substr(1,strInput.length()-2);
 
+    cout << hex << strInput << dec << endl;
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -140,9 +143,9 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
     unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
-    unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE));
-    char *charOutput = (char*)malloc(strInput.length() * sizeof(char));
-    char *charInput = (char*)malloc(strInput.length() * sizeof(char));
+    unsigned int tot_trasnfers = (CEIL(strInput.length() + 1 , PACK_SIZE));
+    char *charOutput = (char*)malloc((strInput.length()+2 )* sizeof(char));
+    char *charInput = (char*)malloc((strInput.length() +2)* sizeof(char));
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
