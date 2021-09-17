@@ -115,7 +115,11 @@ int main(int argc, char** argv) {
         return -1;
     }
     string strInput = argv[1];
-    
+       
+    //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
+    if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
+	    strInput = strInput.substr(1,strInput.length()-2);
+    }
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -130,9 +134,9 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR UPPERCASE
     //------------------------------------------------------
     unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
-    unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE)+2);//adding 2 for the start and stop commands
-    char *charOutput = (char*)malloc((strInput.length()+6) * sizeof(char));
-    char *charInput = (char*)malloc((strInput.length()+6) * sizeof(char));
+    unsigned int tot_trasnfers = (CEIL(strInput.length()+1, PACK_SIZE));
+    char *charOutput = (char*)malloc((strInput.length()+8) * sizeof(char));
+    char *charInput = (char*)malloc((strInput.length())+8 * sizeof(char));
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;

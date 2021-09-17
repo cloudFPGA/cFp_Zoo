@@ -168,7 +168,7 @@ void pRXPath(
             break;
 
         }	
-            sRxpToProcp_Data.write(netWord);
+        sRxpToProcp_Data.write(netWord);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -219,10 +219,10 @@ void pRXPath(
       break;
 
     case FSM_PROCESSING_START:
-      if ( *start_stop ) {
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
       {
         //-- Read incoming data chunk
+      if ( *start_stop ) {
         netWord = sRxpToProcp_Data.read();
         /* Read in one word_t */
         memcpy((char*) text, &netWord.tdata, 64/8);
