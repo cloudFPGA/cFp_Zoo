@@ -32,7 +32,6 @@ void ascii2hex(const string& in, string& out)
  std::stringstream sstream;
     for ( string::const_iterator item = in.begin(); item != in.end(); item++){
         sstream << std::hex << int(*item);
-	printf( "%c",(*item));
     }
     out=sstream.str(); 
 }
@@ -41,9 +40,7 @@ void attachCommand(const string& in, string& out)
 {
 	//string start_cmd = "0F0F0F0F0F0F0F0F";
 	string start_cmd = "0100000000000000";
-	//printf("let me begin %x\n",in);
 	cout  << "\n let me begin " << in << endl;
-//	printf("my start %x\n", start_cmd);
 
 	//string stop_cmd = "0E0E0E0E0E0E0E0E";
 	string stop_cmd = "0000000000000000";
@@ -52,10 +49,6 @@ void attachCommand(const string& in, string& out)
 	cout  << "in substr " << in.c_str()<< endl;
 	cout  << "in substr -1  " << in.substr(0, in.length()-1).c_str()<< endl;
 	cout  << "last in char " << in[in.length()] << endl;
-	//printf("now we have the start %x\n",out);
-	//out.erase(out.length()-1);
-
-	//if(in.length()%PACK_SIZE != 0){
 	unsigned int bytes_per_line = 8;
 	char value[bytes_per_line];
         unsigned int total_bytes = 0;
@@ -70,19 +63,11 @@ void attachCommand(const string& in, string& out)
 	    }
 	   out.append(value,bytes_per_line);
 	}
-	//} else {
-	//	out.append(in.substr(0, in.length()));
-	//}
 	cout  << "start and string " << out << endl;
-	//printf("now also the hello world %x\n",out);
-	//out.erase(out.length()-1);
-	//printf(" my start %x\n", stop_cmd);
-	//out.assign(tmp.substr(0, in.length())+stop_cmd);
 	out.append(stop_cmd);
 	cout  << "complete string " << out << endl;
 	cout  << "complete cstring " << out.c_str() << endl;
 	cout  << "cstring size " << strlen(out.c_str()) << endl;
-	//printf("complete printable string %s\n",out);
 }
 
 
@@ -195,9 +180,9 @@ int main(int argc, char *argv[])
             exit(1);
         }
     
-        clock_t start_cycle_main = clock();
-        cout << " ___________________________________________________________________ " << endl;
-        cout << "/                                                                   \\" << endl;
+    clock_t start_cycle_main = clock();
+    cout << " ___________________________________________________________________ " << endl;
+    cout << "/                                                                   \\" << endl;
 	cout << "INFO: Batch # " << ++num_frame << endl;
 	    
 	// Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
@@ -209,7 +194,7 @@ int main(int argc, char *argv[])
 
 	cout << "INFO: Network socket : " << ((net_type == tcp) ? "TCP" : "UDP") << endl;
 	cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-        cout << "INFO: Total bytes to send/receive   = " << input_string.length() << endl;
+    cout << "INFO: Total bytes to send/receive   = " << input_string.length() << endl;
 	cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
 	cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
 	cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;

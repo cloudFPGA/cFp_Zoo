@@ -114,7 +114,14 @@ int main(int argc, char** argv) {
         printf("Usage : %s <input string> , provided %d\n", argv[0], argc);
         return -1;
     }
-    string strInput = argv[1];
+
+    string tmp_string= argv[1];
+    string strInput;
+
+    //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
+    if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
+        tmp_string = tmp_string.substr(1,tmp_string.length()-2);
+    }    
     
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");

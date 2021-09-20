@@ -493,6 +493,18 @@ void hex2ascii(const string& in, string& out)
     }
 }
 
+
+void ascii2hex(const string& in, string& out)
+{
+ std::stringstream sstream;
+    for ( string::const_iterator item = in.begin(); item != in.end(); item++){
+        sstream << std::hex << int(item);
+    }
+    out=sstream.str(); 
+}
+
+
+
 bool isCornerPresent(string str, string corner)
 {
     int n = str.length();

@@ -128,6 +128,8 @@ unsigned char hexval(unsigned char c);
 
 void hex2ascii(const std::string& in, std::string& out);
 
+void ascii2hex(const std::string& in, std::string& out);
+
 bool isCornerPresent(std::string str, std::string corner);
 
 static inline ssize_t

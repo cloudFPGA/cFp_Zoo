@@ -83,6 +83,15 @@ bool findCharNullPos (char * str) {
 }
 
 
+void myCharBuffMemCpy (char * inStr, char * outStr, size_t bytesize ) {
+    for(unsigned int i=0; i<=bytesize; i++) {
+    	outStr[i]=inStr[i];
+	}
+	outStr[i]='\0';
+}
+
+
+
   /**
    *   Main testbench for the user-application for Memtest on host. Server
    *   @return O on success, 1 on fail 
@@ -153,14 +162,16 @@ int main(int argc, char * argv[]) {
 	    input_string_total_len += recvMsgSize;
 	    bytes_in_last_pack = recvMsgSize;
 	    bool nullcharfound = findCharNullPos(buffer);
+
+	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize)
 	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
-            memcpy( &longbuf[i * PACK_SIZE], buffer, recvMsgSize);
+        //memcpy( &longbuf[i * PACK_SIZE], buffer, recvMsgSize);
 	    //cout << "my string " << input_string << endl;
 	    cout << "my longbuff " << longbuf << endl;
 	    cout << "buff szie" << strlen(longbuf) << endl;
 	    cout << "sze _ " << recvMsgSize << endl;
 	    cout << " gni " << longbuf[recvMsgSize-1] << endl;
-	    longbuf[recvMsgSize] = '\0';
+	    //longbuf[recvMsgSize] = '\0';
 	    if (nullcharfound != true) {
 		cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
 	    }
