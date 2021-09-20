@@ -197,9 +197,13 @@ int main(int argc, char *argv[])
         input_string.assign(argv[3]);
 	#endif
 	string initial_input_string(input_string);
-	//ascii2hex(input_string, tmp);
-	//attachCommand(tmp,input_string);
+#ifdef TB_SIM_CFP_VITIS
+	string tmp;
+	ascii2hex(initial_input_string, tmp);
+	attachCommand(tmp,input_string);
+#else 
 	attachBitsCommandAndRefill(initial_input_string, input_string);
+#endif // TB_SIM_CFP_VITIS
 	//input_string.assign(tmp);
 	if (input_string.length() == 0) {
             cerr << "Empty string provided. Aborting...\n\n" << endl;
