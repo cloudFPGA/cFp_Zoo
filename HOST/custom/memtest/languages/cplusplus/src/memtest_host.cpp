@@ -3,8 +3,8 @@
  * @file       memtest_host.cpp
  * @brief      Memtest userspace application for cF (x86, ppc64).
  *
- * @date       May 2020
- * @author     DID
+ * @date       Sept 2021
+ * @author     DCO
  * 
  * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
@@ -40,15 +40,9 @@ void attachCommand(const string& in, string& out)
 {
 	//string start_cmd = "0F0F0F0F0F0F0F0F";
 	string start_cmd = "0100000000000000";
-	cout  << "\n let me begin " << in << endl;
-
 	//string stop_cmd = "0E0E0E0E0E0E0E0E";
 	string stop_cmd = "0000000000000000";
 	out = start_cmd;
-	cout  << "with start " << out << endl;
-	cout  << "in substr " << in.c_str()<< endl;
-	cout  << "in substr -1  " << in.substr(0, in.length()-1).c_str()<< endl;
-	cout  << "last in char " << in[in.length()] << endl;
 	unsigned int bytes_per_line = 8;
 	char value[bytes_per_line];
         unsigned int total_bytes = 0;
@@ -63,11 +57,7 @@ void attachCommand(const string& in, string& out)
 	    }
 	   out.append(value,bytes_per_line);
 	}
-	cout  << "start and string " << out << endl;
 	out.append(stop_cmd);
-	cout  << "complete string " << out << endl;
-	cout  << "complete cstring " << out.c_str() << endl;
-	cout  << "cstring size " << strlen(out.c_str()) << endl;
 }
 
 
@@ -82,13 +72,13 @@ void print_cFpMemtest(void)
 	// http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=cFp_Memtest
         cout <<  "                                                          " << endl;
 	cout <<  "...build with:                                            " << endl;
-	cout <<  " ██████╗███████╗██████╗    ██╗   ██╗██████╗ ██████╗ ███████╗██████╗  ██████╗ █████╗ ███████╗███████╗" << endl;
-	cout <<  "██╔════╝██╔════╝██╔══██╗   ██║   ██║██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝" << endl;
-	cout <<  "██║     █████╗  █████╔   ██║   ██║██████╔╝██████╔╝█████╗  ██████╔╝██║     ███████║███████╗█████╗  " << endl;
-	cout <<  "██║     ██╔══╝  ██╔═══╝    ██║   ██║██╔═══╝ ██╔═══╝ ██╔══╝  ██╔══██╗██║     ██╔══██║╚════██║██╔══╝  " << endl;
-	cout <<  "╚██████╗██║     ██║███████╗╚██████╔╝██║     ██║     ███████╗██║  ██║╚██████╗██║  ██║███████║███████╗" << endl;
- 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝══════╝" << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███╗   ███╗███████╗███╗   ███╗████████╗███████╗███████╗████████╗" << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ████╗ ████║██╔════╝████╗ ████║╚══██╔══╝██╔════╝██╔════╝╚══██╔══╝" << endl;
+	cout <<  "██║     █████╗  ██████╔╝   ██╔████╔██║█████╗  ██╔████╔██║   ██║   █████╗  ███████╗   ██║   " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝    ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║   ██║   ██╔══╝  ╚════██║   ██║   " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║   ██║   ███████╗███████║   ██║   " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝   ╚═╝   ╚══════╝╚══════╝   ╚═╝   " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --dco " << endl;
 	cout <<  "                                                          " << endl;
 }
                                                                                                     

@@ -151,7 +151,6 @@ int main(int argc, char * argv[]) {
         cout << "/                                                                   \\" << endl;
 	cout << "INFO: Proxy tb batch # " << ++num_batch << endl;	    
         char * longbuf = new char[PACK_SIZE * (total_pack+1)];
-	string input_string;
 	// RX Loop
         for (int i = 0; msg_received != true; i++, total_pack++) {
 	    #if NET_TYPE == udp
@@ -159,38 +158,22 @@ int main(int argc, char * argv[]) {
 	    #else
 	    recvMsgSize = servsock->recv(buffer, receiving_now);
 	    #endif
-	    cout << "my bufferz " << buffer << " " << i << endl;
 	    input_string_total_len += recvMsgSize;
 	    bytes_in_last_pack = recvMsgSize;
-	    //myCharBuffMemCpy(buffer, longbuf+(i*PACK_SIZE), recvMsgSize); 
 	    bool nullcharfound = findCharNullPos(buffer);
 	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
 	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
-        //memcpy( &longbuf[i * PACK_SIZE], buffer, recvMsgSize);
-	    //cout << "my string " << input_string << endl;
-	    cout << "my longbuff " << longbuf << endl;
-	    cout << "buff szie" << strlen(longbuf) << endl;
-	    cout << "sze _ " << recvMsgSize << endl;
-	    cout << " gni " << longbuf[recvMsgSize-1] << endl;
-	    //longbuf[recvMsgSize] = '\0';
 	    if (nullcharfound != true) {
 		cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
 	    }
 	    else {
 		msg_received = true;
-		cout << "msg received :D " << endl;
 	    }
         }
 
         cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
-	 //string input_string = longbuf;
-	//string input_string (longbuf);
-	input_string.append(buffer, recvMsgSize);
-	cout <<endl <<"OUT OF THE LOOOP " << endl;
-	cout << "my lon1buff " << input_string << endl;
-	cout << "my bufferz " << buffer << endl;
-	cout << "my longbuff " << longbuf << endl;
+	string input_string (longbuf);
 	if (input_string.length() == 0) {
 	    cerr << "ERROR: received an empty string! Aborting..." << endl;
             return -1;
@@ -222,13 +205,10 @@ int main(int argc, char * argv[]) {
 	if (num_batch == 1) {
 	    clean_cmd = "make clean && ";
 	}
- 	cout << "my wonderful string " << input_string << endl;
- 	cout << "my wonderful buf char " << input_string.c_str() << endl;
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
         str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd+" INPUT_STRING=\"");
 	str_command = str_command.append(input_string);
 	str_command = str_command.append("\" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ");
-  	cout << "Calling TB with command:" << str_command << endl; 
 
 
        //string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && " + clean_cmd + synth_cmd + "\
@@ -237,9 +217,6 @@ int main(int argc, char * argv[]) {
 	const char *command =(char*)malloc((str_command.length()+1)* sizeof(char));
 	command = str_command.c_str(); 
   	cout << "Calling TB with command:" << command << endl; 
- 	cout << "my wonderful string " << input_string << endl;
- 	cout << "my wonderful buf char " << input_string.c_str() << endl;
-  	cout << "Calling TB with command:" << str_command << endl; 
 	system(command); 
 
 	ssize_t size = __file_size(ouf_file.c_str());

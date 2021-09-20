@@ -481,7 +481,6 @@ unsigned char hexval(unsigned char c)
 void hex2ascii(const string& in, string& out)
 {
     out.clear();
-    printf("i am alive\n");
     out.reserve(in.length() / 2);
     for (string::const_iterator p = in.begin(); p != in.end(); p++)
     {
