@@ -59,6 +59,41 @@ void attachCommand(const string& in, string& out)
 	}
 	out.append(stop_cmd);
 }
+void attachBitsCommandAndRefill(const string& in, string& out)
+{
+	unsigned int bytes_per_line = 8;
+	//string start_cmd = "0100000000000000";
+	//string start_cmd = "0F0F0F0F0F0F0F0F";
+	char start_cmd [bytes_per_line];
+	char stop_cmd [bytes_per_line];
+	//string stop_cmd = "0E0E0E0E0E0E0E0E";
+	//string stop_cmd = "0000000000000000";
+	for (unsigned int k = 0; k < bytes_per_line; k++) {
+		if (k != 0) {
+			start_cmd[k] = (char)0;
+			stop_cmd[k] = (char)0;
+	      	}
+	      	else {
+			start_cmd[k] = (char)1;
+			stop_cmd[k] = (char)0;
+	      	}
+	 }
+	out = start_cmd;
+	char value[bytes_per_line];
+        unsigned int total_bytes = 0;
+	for (unsigned int i = 0; i < in.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
+	    for (unsigned int k = 0; k < bytes_per_line; k++) {
+	      if (i+k < in.length()) {
+		value[k] = in[i+k];
+	      }
+	      else {
+		value[k] = '0';
+	      }
+	    }
+	   out.append(value,bytes_per_line);
+	}
+	out.append(stop_cmd);
+}
 
 
 void delay(unsigned int mseconds)
@@ -161,9 +196,10 @@ int main(int argc, char *argv[])
 	#else
         input_string.assign(argv[3]);
 	#endif
-	string tmp;
-	ascii2hex(input_string, tmp);
-	attachCommand(tmp,input_string);
+	string initial_input_string(input_string);
+	//ascii2hex(input_string, tmp);
+	//attachCommand(tmp,input_string);
+	attachBitsCommandAndRefill(initial_input_string, input_string);
 	//input_string.assign(tmp);
 	if (input_string.length() == 0) {
             cerr << "Empty string provided. Aborting...\n\n" << endl;
@@ -248,10 +284,11 @@ int main(int argc, char *argv[])
 	#ifdef PY_WRAP
 	char *output_string = output_str;
 	#else
-        char *output_string = (char*)malloc((input_string.length()+1)*sizeof(char));
+        char *output_string = (char*)malloc((initial_input_string.length())*sizeof(char));
 	#endif
-	output_string = strncpy(output_string, longbuf, input_string.length());
-	output_string[input_string.length()]='\0';
+	// the +1 is intended to ignore the ack of the start command
+	output_string = strncpy(output_string, longbuf+1, initial_input_string.length());
+	output_string[initial_input_string.length()]='\0';
 	cout << "INFO: Received string : " << output_string << endl;
         clock_t next_cycle_rx = clock();
         double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
