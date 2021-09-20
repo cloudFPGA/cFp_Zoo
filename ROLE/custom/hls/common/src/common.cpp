@@ -498,7 +498,7 @@ void ascii2hex(const string& in, string& out)
 {
  std::stringstream sstream;
     for ( string::const_iterator item = in.begin(); item != in.end(); item++){
-        sstream << std::hex << int(item);
+        sstream << std::hex << int(*item);
     }
     out=sstream.str(); 
 }

@@ -84,7 +84,8 @@ bool findCharNullPos (char * str) {
 
 
 void myCharBuffMemCpy (char * inStr, char * outStr, size_t bytesize ) {
-    for(unsigned int i=0; i<=bytesize; i++) {
+    	int i;
+	for(i=0; i<=bytesize; i++) {
     	outStr[i]=inStr[i];
 	}
 	outStr[i]='\0';
@@ -149,7 +150,7 @@ int main(int argc, char * argv[]) {
         cout << " ___________________________________________________________________ " << endl;
         cout << "/                                                                   \\" << endl;
 	cout << "INFO: Proxy tb batch # " << ++num_batch << endl;	    
-        char * longbuf = new char[PACK_SIZE * total_pack+1];
+        char * longbuf = new char[PACK_SIZE * (total_pack+1)];
 	string input_string;
 	// RX Loop
         for (int i = 0; msg_received != true; i++, total_pack++) {
@@ -158,12 +159,12 @@ int main(int argc, char * argv[]) {
 	    #else
 	    recvMsgSize = servsock->recv(buffer, receiving_now);
 	    #endif
-	    cout << "my bufferz " << buffer << endl;
+	    cout << "my bufferz " << buffer << " " << i << endl;
 	    input_string_total_len += recvMsgSize;
 	    bytes_in_last_pack = recvMsgSize;
+	    //myCharBuffMemCpy(buffer, longbuf+(i*PACK_SIZE), recvMsgSize); 
 	    bool nullcharfound = findCharNullPos(buffer);
-
-	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize)
+	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
 	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
         //memcpy( &longbuf[i * PACK_SIZE], buffer, recvMsgSize);
 	    //cout << "my string " << input_string << endl;
@@ -186,8 +187,9 @@ int main(int argc, char * argv[]) {
 	 //string input_string = longbuf;
 	//string input_string (longbuf);
 	input_string.append(buffer, recvMsgSize);
+	cout <<endl <<"OUT OF THE LOOOP " << endl;
 	cout << "my lon1buff " << input_string << endl;
-	    cout << "my bufferz " << buffer << endl;
+	cout << "my bufferz " << buffer << endl;
 	cout << "my longbuff " << longbuf << endl;
 	if (input_string.length() == 0) {
 	    cerr << "ERROR: received an empty string! Aborting..." << endl;

@@ -127,7 +127,7 @@ int main(int argc, char** argv) {
     hex2ascii(tmp_string, strInput);
     if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
 	    strInput = strInput.substr(1,strInput.length()-2);
-
+    }
     cout << hex << strInput << dec << endl;
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
@@ -290,7 +290,6 @@ int main(int argc, char** argv) {
 
     return(nrErr);
 }
-
 
 
 
