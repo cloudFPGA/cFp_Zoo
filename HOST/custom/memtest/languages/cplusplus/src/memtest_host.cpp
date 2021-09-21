@@ -62,12 +62,8 @@ void attachCommand(const string& in, string& out)
 void attachBitsCommandAndRefill(const string& in, string& out)
 {
 	unsigned int bytes_per_line = 8;
-	//string start_cmd = "0100000000000000";
-	//string start_cmd = "0F0F0F0F0F0F0F0F";
 	char start_cmd [bytes_per_line];
 	char stop_cmd [bytes_per_line];
-	//string stop_cmd = "0E0E0E0E0E0E0E0E";
-	//string stop_cmd = "0000000000000000";
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
 		if (k != 0) {
 			start_cmd[k] = (char)0;
@@ -113,7 +109,7 @@ void print_cFpMemtest(void)
 	cout <<  "██║     ██╔══╝  ██╔═══╝    ██║╚██╔╝██║██╔══╝  ██║╚██╔╝██║   ██║   ██╔══╝  ╚════██║   ██║   " << endl;
 	cout <<  "╚██████╗██║     ██║███████╗██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║   ██║   ███████╗███████║   ██║   " << endl;
 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝   ╚═╝   ╚══════╝╚══════╝   ╚═╝   " << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --dco " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL               v0.1 --dco " << endl;
 	cout <<  "                                                          " << endl;
 }
                                                                                                     
