@@ -128,7 +128,7 @@ void pRXPath(
        *processed_word_rx, *processed_bytes_rx);
       if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
       {
-        meta_tmp = siNrc_meta.read();
+        meta_tmp = siNrc_meta.read();//not sure if I have to continue to test or not, hence sending the meta or not is different
         meta_tmp.tlast = 1; //just to be sure...
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
@@ -146,28 +146,36 @@ void pRXPath(
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
 
-        switch(netWord.tdata)
+        switch(netWord.tdata.range(1,0))//the command is in the first two bits
         {
-          case(START_CMD):
-      start_stop_local=true;
+          case(TEST_START_CMD):
+            start_stop_local=true;
             *start_stop=true;
-      netWord.tdata=1;//28506595412;//"B_ACK";
+            netWord.tdata.range(1,0)=TEST_START_CMD;//28506595412;//"B_ACK";
+            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32)//32 bits for the number of addresses to test 
+            sRxpToProcp_Data.write(netWord);
             break;
-          case(STOP_CMD):
+          case(TEST_STOP_CMD):
             start_stop_local=false;
-      *start_stop=false;
-      netWord.tdata=0;//358080398155;//"S_ACK" string
-      netWord.tlast = 1;
+            *start_stop=false;
+            netWord.tdata=TEST_STOP_CMD;//358080398155;//"S_ACK" string
+            netWord.tlast = 1;
+            sRxpToProcp_Data.write(netWord);
             break;
           default:
             if (start_stop_local)
             {
-        //some data manipulation here
+              //some data manipulation here
+              // everything is running and should no sending anything back
+            } else {
+              netWord.tdata.range(1,0)=TEST_INVLD_CMD;
+              sRxpToProcp_Data.write(netWord);
             }
             break;
 
         } 
-            sRxpToProcp_Data.write(netWord);
+        //no need to forwarding every packet to the processing, hence commenting out
+        //sRxpToProcp_Data.write(netWord);
         if(netWord.tlast == 1)
         {
           enqueueFSM = WAIT_FOR_META;
@@ -199,55 +207,142 @@ void pRXPath(
 #pragma  HLS INLINE off
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
+    NetworkWord    outNetWord;
     word_t text;
+    static local_mem_word_t [LOCAL_MEM_ADDR_SIZE] local_under_test_memory;
+    static local_mem_addr_t max_address_under_test; // byte addressable;
+    static ap_uint<32> local_mem_addr_non_byteaddressable;
+    static local_mem_addr_t curr_address_under_test;
+    static local_mem_addr_t first_faulty_address;
+    static ap_uint<32> faulty_addresses_cntr;
     static ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
+
+    static ap_uint<30> testCounter;
+
+#pragma HLS reset variable=testCounter
+#pragma HLS reset variable=local_under_test_memory
+#pragma HLS reset variable=max_address_under_test
+#pragma HLS reset variable=local_mem_addr_non_byteaddressable
+#pragma HLS reset variable=curr_address_under_test
+#pragma HLS reset variable=first_faulty_address
+#pragma HLS reset variable=faulty_addresses_cntr
+#pragma HLS reset variable=address_under_test
 #pragma HLS reset variable=processingFSM
 
+
+//assuming that whnever I send a start I must complete the run and then restart unless a stop
+// or stopping once done with the run
     switch(processingFSM)
     {
-      case FSM_PROCESSING_STOP: 
+      case FSM_PROCESSING_STOP:
+      /////////////////////////////////////////////////////////////////////////////////////////////
+      //TODO adding logic for saving the meta and sending continuously at the end of each test????
+      /////////////////////////////////////////////////////////////////////////////////////////////
+      //resetting once per test suite
+      max_address_under_test = 0; 
+
       printf("DEBUG proc FSM, I am in the stop state\n");
-      if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
+      if ( !sRxpToProcp_Data.empty() ) //&& !sProcpToTxp_Data.full() )
       {
         //-- Read incoming data chunk
         netWord = sRxpToProcp_Data.read();
-        sProcpToTxp_Data.write(netWord);
+        //sProcpToTxp_Data.write(netWord);
       }
       if ( *start_stop )
       {
+        max_address_under_test = netWord.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
         processingFSM = FSM_PROCESSING_START;
+
+      } else {
+        testCounter = 0;
       }
       break;
 
     case FSM_PROCESSING_START:
-      if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
-      {
-      if ( *start_stop ) {
-        //-- Read incoming data chunk
-        netWord = sRxpToProcp_Data.read();
-        /* Read in one word_t */
-        memcpy((char*) text, &netWord.tdata, 64/8);
-        
-        /* Convert lower cases to upper cases byte per byte */
-        uppercase_conversion:
-        for (unsigned int i = 0; i < sizeof(text); i++ ) {
+      //resetting each execution to the 0 address
+      curr_address_under_test = 0; 
+      first_faulty_address = 0; 
+      faulty_addresses_cntr = 0;
+      local_mem_addr_non_byteaddressable = 0;
 
-            if (text[i] >= 'a' && text[i] <= 'z')
-          text[i] = text[i] - ('a' - 'A');
-        }
-        memcpy(&netWord.tdata, (char*) text, 64/8);
-        
-        sProcpToTxp_Data.write(netWord);
-        if(netWord.tlast == 1)
-        {
-          processingFSM = FSM_PROCESSING_STOP;
-        }
+      if ( *start_stop && testCounter != 0)
+      {
+        testCounter += 1;
+        processingFSM = FSM_PROCESSING_WRITE;
+
       } else {
-          processingFSM = FSM_PROCESSING_STOP;
-      }
-  
+
+        testCounter = 0;
+        processingFSM = FSM_PROCESSING_STOP;
+
       }
       break;
+
+
+    case FSM_PROCESSING_WRITE:
+    //if not written all the needed memory cells write
+      if (curr_address_under_test != max_address_under_test)
+      {
+        memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
+        local_mem_addr_non_byteaddressable += 1;
+        curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
+
+      } else{
+        
+        local_mem_addr_non_byteaddressable = 0;
+        curr_address_under_test = 0;
+        processingFSM = FSM_PROCESSING_READ;
+
+      }
+      break;
+
+
+    case FSM_PROCESSING_READ:
+
+    //if not read all the needed memory cells read
+      if (curr_address_under_test != max_address_under_test)
+      {
+        char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
+        memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressabl,LOCAL_MEM_WORD_BYTE_SIZE);
+        for (int i = 0; i < curr_address_under_test+LOCAL_MEM_ADDR_OFFSET; ++i)
+        {
+          if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
+          {
+            if (faulty_addresses_cntr == 0) //first fault
+            {
+              first_faulty_address = i+curr_address_under_test; //save the fault address
+            }
+            faulty_addresses_cntr += 1; //increment the fault counter
+          } 
+        }
+        curr_address_under_test += LOCAL_MEM_ADDR_OFFSET; //next test
+        local_mem_addr_non_byteaddressable += 1;
+
+      } else{ //done with the reads
+
+        if (!sProcpToTxp_Data.full() )
+        {
+          //wrtie first part so the result so how many addresses had problems
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 0;
+          outNetWord.tdata = faulty_addresses_cntr;
+          processingFSM = FSM_PROCESSING_OUTPUT;
+        }
+
+      }
+      break;
+
+    case FSM_PROCESSING_OUTPUT:
+      if (!sProcpToTxp_Data.full() )
+      {
+          //wrtie second part of the result, so which was the first address with problems
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 1;
+          outNetWord.tdata = first_faulty_address;
+          processingFSM = FSM_PROCESSING_START;
+      }
+      break;
+
   }
  };
 
