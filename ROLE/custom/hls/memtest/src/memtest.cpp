@@ -20,7 +20,7 @@
  *****************************************************************************/
 
 #include "../include/memtest.hpp"
-#include "../include/mem_pattern.hpp"
+#include "../include/memtest_pattern.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -41,51 +41,6 @@ PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 
 typedef char word_t[8];
 
-/*****************************************************************************
- * @brief pPortAndDestionation - Setup the port and the destination rank.
- *
- * @param[in]  pi_rank
- * @param[in]  pi_size
- * @param[out] sDstNode_sig
- * @param[out] po_rx_ports
- *
- * @return Nothing.
- ******************************************************************************/
-void pPortAndDestionation(
-    ap_uint<32>             *pi_rank,
-    ap_uint<32>             *pi_size,
-    stream<NodeId>          &sDstNode_sig,
-    ap_uint<32>                 *po_rx_ports
-    )
-{
-  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS INLINE off
-  //-- STATIC VARIABLES (with RESET) ------------------------------------------
-  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
-#pragma HLS reset variable=port_fsm
-#pragma HLS reset variable=MemtestFSM
-
-
-
-  switch(port_fsm)
-  {
-    default:
-    case FSM_WRITE_NEW_DATA:
-        //Triangle app needs to be reset to process new rank
-        if(!sDstNode_sig.full())
-        {
-          NodeId dst_rank = (*pi_rank + 1) % *pi_size;
-          printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
-          sDstNode_sig.write(dst_rank);
-          port_fsm = FSM_DONE;
-        }
-        break;
-    case FSM_DONE:
-        *po_rx_ports = 0x1; //currently work only with default ports...
-        break;
-  }
-
-}
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -236,13 +191,14 @@ void pRXPath(
     switch(processingFSM)
     {
       case FSM_PROCESSING_STOP:
+      printf("DEBUG proc FSM, I am in the STOP state\n");
+
       /////////////////////////////////////////////////////////////////////////////////////////////
       //TODO adding logic for saving the meta and sending continuously at the end of each test????
       /////////////////////////////////////////////////////////////////////////////////////////////
       //resetting once per test suite
       max_address_under_test = 0; 
 
-      printf("DEBUG proc FSM, I am in the stop state\n");
       if ( !sRxpToProcp_Data.empty() ) //&& !sProcpToTxp_Data.full() )
       {
         //-- Read incoming data chunk
@@ -260,15 +216,17 @@ void pRXPath(
       break;
 
     case FSM_PROCESSING_START:
+      printf("DEBUG proc FSM, I am in the START state\n");
+
       //resetting each execution to the 0 address
       curr_address_under_test = 0; 
       first_faulty_address = 0; 
       faulty_addresses_cntr = 0;
       local_mem_addr_non_byteaddressable = 0;
 
-      if ( *start_stop && testCounter != 0)
+      if ( *start_stop )
       {
-        testCounter += 1;
+        testCounter =  (testCounter != 0) ? testCounter += 1 : 1;
         processingFSM = FSM_PROCESSING_WRITE;
 
       } else {
@@ -281,14 +239,19 @@ void pRXPath(
 
 
     case FSM_PROCESSING_WRITE:
+      printf("DEBUG proc FSM, I am in the WRITE state\n");
+
     //if not written all the needed memory cells write
       if (curr_address_under_test != max_address_under_test)
       {
+        printf("DEBUG WRITE FSM, writing the memory\n");
+
         memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
         local_mem_addr_non_byteaddressable += 1;
         curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
 
       } else{
+        printf("DEBUG WRITE FSM, done with the write\n");
         
         local_mem_addr_non_byteaddressable = 0;
         curr_address_under_test = 0;
@@ -299,10 +262,12 @@ void pRXPath(
 
 
     case FSM_PROCESSING_READ:
+      printf("DEBUG proc FSM, I am in the READ state\n");
 
     //if not read all the needed memory cells read
       if (curr_address_under_test != max_address_under_test)
       {
+        printf("DEBUG READ FSM, reading the memory\n");
         char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
         memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
         for (int i = 0; i < curr_address_under_test+LOCAL_MEM_ADDR_OFFSET; ++i)
@@ -320,6 +285,7 @@ void pRXPath(
         local_mem_addr_non_byteaddressable += 1;
 
       } else{ //done with the reads
+        printf("DEBUG READ FSM, done with the read\n");
 
         if (!sProcpToTxp_Data.full() )
         {
@@ -334,6 +300,8 @@ void pRXPath(
       break;
 
     case FSM_PROCESSING_OUTPUT:
+      printf("DEBUG proc FSM, I am in the OUTPUT state\n");
+
       if (!sProcpToTxp_Data.full() )
       {
           //wrtie second part of the result, so which was the first address with problems

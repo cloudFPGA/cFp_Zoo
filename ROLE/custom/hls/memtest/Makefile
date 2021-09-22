@@ -45,9 +45,9 @@ CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
 #START_COMMAND=0F0F0F0F0F0F0F0F
-START_COMMAND?=0100000000000000
+START_COMMAND?=0200000000000000
 #STOP_COMMAND=0E0E0E0E0E0E0E0E
-STOP_COMMAND?=0000000000000000
+STOP_COMMAND?=0100000000000000
 fConvert_hex_to_ascii= $(shell echo ${1} | xxd -r -p)
 fConvert_ascii_to_hex= $(shell xxd -pu <<< "${1}")
 

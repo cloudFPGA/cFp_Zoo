@@ -103,6 +103,51 @@ typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your nee
 #define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_ELMT_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
 #define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
 
+/*****************************************************************************
+ * @brief pPortAndDestionation - Setup the port and the destination rank.
+ *
+ * @param[in]  pi_rank
+ * @param[in]  pi_size
+ * @param[out] sDstNode_sig
+ * @param[out] po_rx_ports
+ *
+ * @return Nothing.
+ ******************************************************************************/
+void pPortAndDestionation(
+    ap_uint<32>             *pi_rank,
+    ap_uint<32>             *pi_size,
+    stream<NodeId>          &sDstNode_sig,
+    ap_uint<32>             *po_rx_ports
+    )
+{
+  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+#pragma HLS INLINE off
+  //-- STATIC VARIABLES (with RESET) ------------------------------------------
+  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
+#pragma HLS reset variable=port_fsm
+#pragma HLS reset variable=MemtestFSM
+
+
+
+  switch(port_fsm)
+  {
+    default:
+    case FSM_WRITE_NEW_DATA:
+        //Triangle app needs to be reset to process new rank
+        if(!sDstNode_sig.full())
+        {
+          NodeId dst_rank = (*pi_rank + 1) % *pi_size;
+          printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
+          sDstNode_sig.write(dst_rank);
+          port_fsm = FSM_DONE;
+        }
+        break;
+    case FSM_DONE:
+        *po_rx_ports = 0x1; //currently work only with default ports...
+        break;
+  }
+
+}
 
 void memtest(
 

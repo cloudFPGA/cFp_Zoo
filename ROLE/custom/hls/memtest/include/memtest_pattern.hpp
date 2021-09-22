@@ -39,4 +39,5 @@ Vestibulum rhoncus est pellentesque elit ullamcorper dignissim cras.\
 Morbi tincidunt augue interdum velit euismod in pellentesque massa placerat.\
 Pellentesque massa placerat duis ultricies lacus sed turpis tincidunt.\
 Sit amet nisl purus in mollis. Posuere sollicitudin aliquam ultrices sagittis orci a.\0";
-#endif
+
+#endif //_ROLE_MEMTEST_PATTERN_H_
