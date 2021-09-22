@@ -20,6 +20,7 @@
  *****************************************************************************/
 
 #include "../include/memtest.hpp"
+#include "../include/mem_pattern.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -152,7 +153,7 @@ void pRXPath(
             start_stop_local=true;
             *start_stop=true;
             netWord.tdata.range(1,0)=TEST_START_CMD;//28506595412;//"B_ACK";
-            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32)//32 bits for the number of addresses to test 
+            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
             sRxpToProcp_Data.write(netWord);
             break;
           case(TEST_STOP_CMD):
@@ -209,7 +210,7 @@ void pRXPath(
     NetworkWord    netWord;
     NetworkWord    outNetWord;
     word_t text;
-    static local_mem_word_t [LOCAL_MEM_ADDR_SIZE] local_under_test_memory;
+    static local_mem_word_t local_under_test_memory [LOCAL_MEM_ADDR_SIZE];
     static local_mem_addr_t max_address_under_test; // byte addressable;
     static ap_uint<32> local_mem_addr_non_byteaddressable;
     static local_mem_addr_t curr_address_under_test;
@@ -250,7 +251,7 @@ void pRXPath(
       }
       if ( *start_stop )
       {
-        max_address_under_test = netWord.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
+        max_address_under_test = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
         processingFSM = FSM_PROCESSING_START;
 
       } else {
@@ -303,7 +304,7 @@ void pRXPath(
       if (curr_address_under_test != max_address_under_test)
       {
         char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
-        memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressabl,LOCAL_MEM_WORD_BYTE_SIZE);
+        memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
         for (int i = 0; i < curr_address_under_test+LOCAL_MEM_ADDR_OFFSET; ++i)
         {
           if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
