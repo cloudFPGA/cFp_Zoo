@@ -110,31 +110,38 @@ int main(int argc, char** argv) {
     simCnt = 0;
     nrErr  = 0;
 
-    if (argc != 2) {
-        printf("Usage : %s <input string> , provided %d\n", argv[0], argc);
+    if (argc != 3) {
+        printf("Usage : %s <number of address to test> , <testing times> provided %d\n", argv[0], argc);
         return -1;
     }
 
-    string tmp_string= argv[1];
-    string strInput;
+    string strInput_memaddrUT = argv[1];
+    string strInput_nmbrTest = argv[2];
+    unsigned int memory_addr_under_test=0;
+    int testingNumber = 1;
+    // string tmp_string= argv[1];
+    // string strInput;
 
-    //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
-    if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
-	    tmp_string = tmp_string.substr(1,tmp_string.length()-2);
-    }
-    cout << hex << tmp_string << dec << endl;
-    //perform hex2ascii conversion so that we can codify our command as we wish, no restriction to null ascii characters
-    hex2ascii(tmp_string, strInput);
-    if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
-	    strInput = strInput.substr(1,strInput.length()-2);
-    }
-    cout << hex << strInput << dec << endl;
-    if (!strInput.length()) {
+    // //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
+    // if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
+	  //   tmp_string = tmp_string.substr(1,tmp_string.length()-2);
+    // }
+    // cout << hex << tmp_string << dec << endl;
+    // //perform hex2ascii conversion so that we can codify our command as we wish, no restriction to null ascii characters
+    // hex2ascii(tmp_string, strInput);
+    // if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
+	  //   strInput = strInput.substr(1,strInput.length()-2);
+    // }
+    // cout << hex << strInput << dec << endl;
+    if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
     }
     else {
+      memory_addr_under_test = stoul(strInput_memaddrUT);
+      testingNumber = stoi(strInput_nmbrTest);
       printf("Succesfully loaded string ... %s\n", argv[1]);
+      printf("Succesfully loaded the address number %u and the number of testings %d\n", memory_addr_under_test, testingNumber);
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
     }
@@ -142,10 +149,21 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
-    unsigned int tot_trasnfers = (CEIL(strInput.length() + 1 , PACK_SIZE));
-    char *charOutput = (char*)malloc((strInput.length()+2 )* sizeof(char));
-    char *charInput = (char*)malloc((strInput.length() +2)* sizeof(char));
+    // unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
+    // unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE));
+    // char *charOutput = (char*)malloc((strInput.length()+2 )* sizeof(char));
+    // char *charInput = (char*)malloc((strInput.length() +2)* sizeof(char));
+    // if (!charOutput || !charInput) {
+    //     printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
+    //     return -1;
+    // }
+    unsigned int sim_time = testingNumber * (2 * (memory_addr_under_test) + 5) ; // at least iterate 4 reads and writes
+    unsigned int tot_input_transfers = (CEIL(testingNumber*memory_addr_under_test*testingNumber, PACK_SIZE)); // only a single tx
+    unsigned int tot_output_transfers = (CEIL(3*testingNumber*8, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+
+    char *charOutput = (char*)malloc((sizeof(unsigned int) * 2 + 2)* sizeof(char)); // reading two 32 ints + others?
+    char *charInput = (char*)malloc((strInput_memaddrUT.length() + strInput_nmbrTest.length())* sizeof(char)); // at least print the inputs
+    
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
@@ -155,6 +173,11 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
+    string strInput;
+    // string strTmp_addr;
+    // ascii2hex(strInput_memaddrUT, strTmp_addr);
+    createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
+
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
@@ -168,23 +191,15 @@ int main(int argc, char** argv) {
             nrErr++;
         }
 
-        //there are tot_trasnfers streams from the the App to the Role
+        //there are tot_input_transfers streams from the the App to the Role
         NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-	for (unsigned int i=0; i<tot_trasnfers; i++) {
+	for (unsigned int i=0; i<tot_input_transfers; i++) {
 	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
 	}        
 	//set correct node_rank and cluster_size
         node_rank = 1;
         cluster_size = 2;
     }
-
-    //------------------------------------------------------
-    //-- STEP-2.2 : SET THE PASS-THROUGH MODE
-    //------------------------------------------------------
-    //piSHL_This_MmioEchoCtrl.write(ECHO_PATH_THRU);
-    //[TODO] piSHL_This_MmioPostPktEn.write(DISABLED);
-    //[TODO] piSHL_This_MmioCaptPktEn.write(DISABLED);
-
     //------------------------------------------------------
     //-- STEP-3 : MAIN TRAFFIC LOOP
     //------------------------------------------------------
@@ -236,7 +251,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      assert(i == tot_trasnfers);
+      assert(i == tot_output_transfers);
     }
     else {
       printf("Error No metadata received...\n");
@@ -246,7 +261,8 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
-    if (!dumpFileToStringWithoutCommands("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
+    //if (!dumpFileToStringWithoutCommands("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
+    if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
@@ -254,7 +270,8 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < strInput.length(); i++)
        printf("%c", charInput[i]); 
     printf("\n");    
-    if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
+    if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
+    //if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }

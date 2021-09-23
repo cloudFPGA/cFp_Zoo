@@ -58,7 +58,7 @@ typedef char word_t[8];
 void pRXPath(
   stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
-  stream<NetworkMetaStream>                        &sRxtoTx_Meta,
+  stream<NetworkMetaStream>                        &sRxtoProc_Meta,
   stream<NetworkWord>                              &sRxpToProcp_Data,
   NetworkMetaStream                                meta_tmp,
   bool  *                                           start_stop,
@@ -82,11 +82,11 @@ void pRXPath(
     case WAIT_FOR_META: 
       printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
        *processed_word_rx, *processed_bytes_rx);
-      if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
+      if ( !siNrc_meta.empty() && !sRxtoProc_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();//not sure if I have to continue to test or not, hence sending the meta or not is different
         meta_tmp.tlast = 1; //just to be sure...
-        sRxtoTx_Meta.write(meta_tmp);
+        sRxtoProc_Meta.write(meta_tmp); //valid destination
         enqueueFSM = PROCESSING_PACKET;
       }
      // *start_stop = start_stop_local;
@@ -107,9 +107,15 @@ void pRXPath(
           case(TEST_START_CMD):
             start_stop_local=true;
             *start_stop=true;
-            netWord.tdata.range(1,0)=TEST_START_CMD;//28506595412;//"B_ACK";
-            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
+            //netWord.tdata.range(1,0)=TEST_START_CMD;//28506595412;//"B_ACK";
+            //netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
+            //printf("%d %d gne \n", NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
+            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,0) = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
+	    //printf("DEBUG I have to test %u\n",netWord.tdata);
+      //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
+      std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
             sRxpToProcp_Data.write(netWord);
+	    printf("Hallo, I received a start command :D\n");
             break;
           case(TEST_STOP_CMD):
             start_stop_local=false;
@@ -117,6 +123,7 @@ void pRXPath(
             netWord.tdata=TEST_STOP_CMD;//358080398155;//"S_ACK" string
             netWord.tlast = 1;
             sRxpToProcp_Data.write(netWord);
+	    printf("Hallo, I received a stop command D:\n");
             break;
           default:
             if (start_stop_local)
@@ -156,6 +163,8 @@ void pRXPath(
  void pTHISProcessingData(
   stream<NetworkWord>                              &sRxpToProcp_Data,
   stream<NetworkWord>                              &sProcpToTxp_Data,
+  stream<NetworkMetaStream>                        &sRxtoProc_Meta,
+  stream<NetworkMetaStream>                        &sProctoTx_Meta,
   bool *                                             start_stop
   ){
 
@@ -165,6 +174,7 @@ void pRXPath(
     NetworkWord    netWord;
     NetworkWord    outNetWord;
     word_t text;
+    static NetworkMetaStream  outNetMeta = NetworkMetaStream();;
     static local_mem_word_t local_under_test_memory [LOCAL_MEM_ADDR_SIZE];
     static local_mem_addr_t max_address_under_test; // byte addressable;
     static ap_uint<32> local_mem_addr_non_byteaddressable;
@@ -173,9 +183,12 @@ void pRXPath(
     static ap_uint<32> faulty_addresses_cntr;
     static ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
 
+    static int writingCounter;
+    static int readingCounter;
+
     static ap_uint<30> testCounter;
 
-#pragma HLS reset variable=testCounter
+#pragma HLS reset variable=outNetMeta
 #pragma HLS reset variable=local_under_test_memory
 #pragma HLS reset variable=max_address_under_test
 #pragma HLS reset variable=local_mem_addr_non_byteaddressable
@@ -184,6 +197,9 @@ void pRXPath(
 #pragma HLS reset variable=faulty_addresses_cntr
 #pragma HLS reset variable=address_under_test
 #pragma HLS reset variable=processingFSM
+#pragma HLS reset variable=writingCounter
+#pragma HLS reset variable=readingCounter
+#pragma HLS reset variable=testCounter
 
 
 //assuming that whnever I send a start I must complete the run and then restart unless a stop
@@ -198,21 +214,28 @@ void pRXPath(
       /////////////////////////////////////////////////////////////////////////////////////////////
       //resetting once per test suite
       max_address_under_test = 0; 
-
-      if ( !sRxpToProcp_Data.empty() ) //&& !sProcpToTxp_Data.full() )
+      if ( !sRxtoProc_Meta.empty()  )
       {
-        //-- Read incoming data chunk
-        netWord = sRxpToProcp_Data.read();
-        //sProcpToTxp_Data.write(netWord);
+       outNetMeta = sRxtoProc_Meta.read();
       }
-      if ( *start_stop )
+      
+      if ( !sRxpToProcp_Data.empty() )
       {
-        max_address_under_test = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
-        processingFSM = FSM_PROCESSING_START;
+        if ( *start_stop )
+        {
+          netWord = sRxpToProcp_Data.read();
+          max_address_under_test = netWord.tdata.range(32-1,0);// NETWORK_WORD_BIT_WIDTH-32);
+          std::cout << "DEBUG FSM_PROCESSING_STOP I have to test " << max_address_under_test << std::endl;
+  //	printf("DEBUG I have to test %u\n", max_address_under_test);
 
-      } else {
-        testCounter = 0;
+          //-- Read incoming data chunk
+          
+          processingFSM = FSM_PROCESSING_START;
+          } else {
+          testCounter = 0;
+        }
       }
+
       break;
 
     case FSM_PROCESSING_START:
@@ -223,32 +246,47 @@ void pRXPath(
       first_faulty_address = 0; 
       faulty_addresses_cntr = 0;
       local_mem_addr_non_byteaddressable = 0;
-
+      readingCounter=0;
+      writingCounter=0;
       if ( *start_stop )
       {
-        testCounter =  (testCounter != 0) ? testCounter += 1 : 1;
+
+      if ( !sProctoTx_Meta.full() )
+      {
+        sProctoTx_Meta.write(outNetMeta);
+
+	      if( testCounter != 0){
+		      testCounter += 1;
+	      }else{
+		      testCounter = 1;
+	      }
+        //testCounter =  (testCounter != 0) ? testCounter += 1 : 1;
         processingFSM = FSM_PROCESSING_WRITE;
+      }
 
       } else {
 
         testCounter = 0;
         processingFSM = FSM_PROCESSING_STOP;
-
       }
       break;
 
 
     case FSM_PROCESSING_WRITE:
       printf("DEBUG proc FSM, I am in the WRITE state\n");
+      std::cout << "DEBUG I have to test " << max_address_under_test << std::endl;
 
     //if not written all the needed memory cells write
-      if (curr_address_under_test != max_address_under_test)
+      if (local_mem_addr_non_byteaddressable < max_address_under_test)
       {
-        printf("DEBUG WRITE FSM, writing the memory\n");
+        printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
 
         memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
+        printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
+        
         local_mem_addr_non_byteaddressable += 1;
         curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
+        writingCounter += 1;
 
       } else{
         printf("DEBUG WRITE FSM, done with the write\n");
@@ -265,13 +303,15 @@ void pRXPath(
       printf("DEBUG proc FSM, I am in the READ state\n");
 
     //if not read all the needed memory cells read
-      if (curr_address_under_test != max_address_under_test)
+      if (local_mem_addr_non_byteaddressable < max_address_under_test)
       {
         printf("DEBUG READ FSM, reading the memory\n");
         char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
         memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
-        for (int i = 0; i < curr_address_under_test+LOCAL_MEM_ADDR_OFFSET; ++i)
+        for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
         {
+          printf("%c",readingString[i]);
+          // printf("comparing %c and %c\t",readingString[i],lorem_ipsum_pattern[i+curr_address_under_test]);
           if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
           {
             if (faulty_addresses_cntr == 0) //first fault
@@ -292,7 +332,10 @@ void pRXPath(
           //wrtie first part so the result so how many addresses had problems
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
+          outNetWord.tdata = max_address_under_test;
+	  sProcpToTxp_Data.write(outNetWord);
           outNetWord.tdata = faulty_addresses_cntr;
+	  sProcpToTxp_Data.write(outNetWord);
           processingFSM = FSM_PROCESSING_OUTPUT;
         }
 
@@ -308,6 +351,7 @@ void pRXPath(
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 1;
           outNetWord.tdata = first_faulty_address;
+	  sProcpToTxp_Data.write(outNetWord);
           processingFSM = FSM_PROCESSING_START;
       }
       break;
@@ -476,7 +520,8 @@ void memtest(
   //-- LOCAL VARIABLES ------------------------------------------------------
   // static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
-  static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
+  static stream<NetworkMetaStream> sRxtoProc_Meta("sRxtoProc_Meta");
+  static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
   static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); // FIXME: works even with no static
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
 
@@ -547,7 +592,7 @@ void memtest(
  pRXPath(
   siSHL_This_Data,
   siNrc_meta,
-  sRxtoTx_Meta,
+  sRxtoProc_Meta,
   sRxpToProcp_Data,
   meta_tmp,
   &start_stop,
@@ -557,6 +602,8 @@ void memtest(
  pTHISProcessingData(
   sRxpToProcp_Data,
   sProcpToTxp_Data,
+  sRxtoProc_Meta,
+  sProctoTx_Meta,
   &start_stop);
 
   
@@ -564,7 +611,7 @@ void memtest(
   soTHIS_Shl_Data,
   soNrc_meta,
   sProcpToTxp_Data,
-  sRxtoTx_Meta,
+  sProctoTx_Meta,
   sDstNode_sig,
   &processed_word_tx,
   pi_rank);
