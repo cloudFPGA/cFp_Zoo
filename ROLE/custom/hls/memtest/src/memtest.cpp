@@ -1,9 +1,7 @@
 /*****************************************************************************
  * @file       memtest.cpp
  * @brief      The Role for a Memtest Example application (UDP or TCP)
- * @author     FAB, WEI, NGL, DID
- * @date       May 2020
- * @updates    DCO
+ * @author     FAB, WEI, NGL, DID, DCO
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
@@ -182,6 +180,8 @@ void pRXPath(
     static local_mem_addr_t first_faulty_address;
     static ap_uint<32> faulty_addresses_cntr;
     static ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
+    local_mem_word_t testingVector;
+    local_mem_word_t goldenVector;
 
     static int writingCounter;
     static int readingCounter;
@@ -200,6 +200,7 @@ void pRXPath(
 #pragma HLS reset variable=writingCounter
 #pragma HLS reset variable=readingCounter
 #pragma HLS reset variable=testCounter
+#pragma HLS reset variable=testingVector
 
 
 //assuming that whnever I send a start I must complete the run and then restart unless a stop
@@ -225,7 +226,10 @@ void pRXPath(
         {
           netWord = sRxpToProcp_Data.read();
           max_address_under_test = netWord.tdata.range(32-1,0);// NETWORK_WORD_BIT_WIDTH-32);
+          #ifndef __SYNTHESIS__
           std::cout << "DEBUG FSM_PROCESSING_STOP I have to test " << max_address_under_test << std::endl;
+          #endif //__SYNTHESIS__
+
   //	printf("DEBUG I have to test %u\n", max_address_under_test);
 
           //-- Read incoming data chunk
@@ -274,16 +278,21 @@ void pRXPath(
 
     case FSM_PROCESSING_WRITE:
       printf("DEBUG proc FSM, I am in the WRITE state\n");
+    #ifndef __SYNTHESIS__
       std::cout << "DEBUG I have to test " << max_address_under_test << std::endl;
+    #endif //__SYNTHESIS__
 
     //if not written all the needed memory cells write
       if (local_mem_addr_non_byteaddressable < max_address_under_test)
       {
         printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
-
-        memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
-        printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
-        
+        genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+        //memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
+        //printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
+    #ifndef __SYNTHESIS__
+        std::cout << "local mem " << local_under_test_memory[local_mem_addr_non_byteaddressable] << std::endl;
+     #endif //__SYNTHESIS__
+      
         local_mem_addr_non_byteaddressable += 1;
         curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
         writingCounter += 1;
@@ -306,13 +315,26 @@ void pRXPath(
       if (local_mem_addr_non_byteaddressable < max_address_under_test)
       {
         printf("DEBUG READ FSM, reading the memory\n");
-        char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
-        memcpy(readingString,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
+
+
+        genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
+
+        // char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
+        //memcpy(testingVector,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
+        testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
+
+
         for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
         {
-          printf("%c",readingString[i]);
-          // printf("comparing %c and %c\t",readingString[i],lorem_ipsum_pattern[i+curr_address_under_test]);
-          if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
+          //printf("READ %d ,%d %d\n", i, (i+1)*8-1, i*8);
+          //printf("%c",readingString[i]);
+          #ifndef __SYNTHESIS__
+          std::cout << "comparing " << testingVector.range((i+1)*8-1,i*8) << " and  " << goldenVector.range((i+1)*8-1,i*8)<< std::endl;
+          #endif //__SYNTHESIS__
+
+          //printf("comparing %x and %x\t",testingVector[i],goldenVector.range((i+1)*8-1,i*8));
+          if (testingVector.range((i+1)*8-1,i*8) != goldenVector.range((i+1)*8-1,i*8))//[i+curr_address_under_test]) // fault check
+          // if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
           {
             if (faulty_addresses_cntr == 0) //first fault
             {
@@ -333,9 +355,9 @@ void pRXPath(
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
           outNetWord.tdata = max_address_under_test;
-	  sProcpToTxp_Data.write(outNetWord);
+	        sProcpToTxp_Data.write(outNetWord);
           outNetWord.tdata = faulty_addresses_cntr;
-	  sProcpToTxp_Data.write(outNetWord);
+	        sProcpToTxp_Data.write(outNetWord);
           processingFSM = FSM_PROCESSING_OUTPUT;
         }
 
@@ -351,7 +373,7 @@ void pRXPath(
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 1;
           outNetWord.tdata = first_faulty_address;
-	  sProcpToTxp_Data.write(outNetWord);
+	        sProcpToTxp_Data.write(outNetWord);
           processingFSM = FSM_PROCESSING_START;
       }
       break;

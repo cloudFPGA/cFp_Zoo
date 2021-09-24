@@ -2,14 +2,14 @@
  * @file       commom.cpp
  * @brief      Common functions for testbenches - body.
  *
- * @date       June 2020
- * @author     FAB, WEI, NGL, DID
+ * @date       September 2021
+ * @author     FAB, WEI, NGL, DID, DCO
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup VitisVision 
- * @addtogroup VitisVision 
+ * @ingroup CustomIBMZRL 
+ * @addtogroup CustomIBMZRL 
  * \{
  *****************************************************************************/
 
@@ -518,6 +518,70 @@ bool isCornerPresent(string str, string corner)
     // both corners of given string.
     return (str.substr(0, cl).compare(corner) == 0 &&
             str.substr(n-cl, cl).compare(corner) == 0);
+}
+
+
+void attachBitformattedStringCommandAndRefill(const string& in, string& out)
+{
+	unsigned int bytes_per_line = 8;
+	char start_cmd [bytes_per_line];
+	char stop_cmd [bytes_per_line];
+    //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
+	for (unsigned int k = 0; k < bytes_per_line; k++) {
+		if (k != 0) {
+			start_cmd[k] = (char)0;
+			stop_cmd[k] = (char)0;
+	      	}
+	      	else {
+			start_cmd[k] = (char)1; 
+			stop_cmd[k] = (char)2;
+	      	}
+	 }
+	out = start_cmd;
+	char value[bytes_per_line];
+        unsigned int total_bytes = 0;
+	for (unsigned int i = 0; i < in.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
+	    for (unsigned int k = 0; k < bytes_per_line; k++) {
+	      if (i+k < in.length()) {
+		value[k] = in[i+k];
+	      }
+	      else {
+		value[k] = '0';
+	      }
+	    }
+	   out.append(value,bytes_per_line);
+	}
+	out.append(stop_cmd);
+}
+
+
+//void createMemTestCommands(const string &in, string& out)
+void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
+{
+	unsigned int bytes_per_line = 8;
+	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
+	char stop_cmd [bytes_per_line];
+	char filler_cmd [bytes_per_line];
+    //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
+	for (unsigned int k = 0; k < bytes_per_line; k++) {
+        filler_cmd[k]    = (char)0;
+		if (k != 0) {
+			stop_cmd[k] = (char)0;
+			start_cmd[k] = (char)0;
+	    }
+	    else {
+			start_cmd[k] = (char)1; 
+			stop_cmd[k] = (char)2;
+	    }
+	 }
+	out.append(start_cmd,bytes_per_line/2);
+	char value[bytes_per_line];
+    memcpy(value, (char*)&mem_address, sizeof(unsigned int));
+    out.append(value,bytes_per_line/2);
+    for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
+	    out.append(filler_cmd,bytes_per_line);
+    }
+	out.append(stop_cmd,bytes_per_line);
 }
 
 static inline ssize_t

@@ -2,14 +2,14 @@
  * @file       commom.hpp
  * @brief      Common functions for testbenches - headers.
  *
- * @date       June 2020
- * @author     FAB, WEI, NGL, DID
+ * @date       September 2021
+ * @author     FAB, WEI, NGL, DID, DCO
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup VitisVision 
- * @addtogroup VitisVision 
+ * @ingroup CustomIBMZRL 
+ * @addtogroup CustomIBMZRL 
  * \{
  *****************************************************************************/
 
@@ -22,6 +22,10 @@
 #include <string>
 #include <hls_stream.h>
 #include <sys/stat.h>
+#include <cstdlib>                      // For atoi()
+#include <string>                       // For to_string
+#include <string.h>
+#include <bitset>
 //#include "../../uppercase/include/uppercase.hpp"
 #include "../../memtest/include/memtest.hpp"
 #include "../../../../../HOST/custom/uppercase/languages/cplusplus/include/config.h"
@@ -131,6 +135,10 @@ void hex2ascii(const std::string& in, std::string& out);
 void ascii2hex(const std::string& in, std::string& out);
 
 bool isCornerPresent(std::string str, std::string corner);
+
+void attachBitformattedStringCommandAndRefill(const std::string& in, std::string& out);
+
+void createMemTestCommands(unsigned int mem_address, std::string& out, int testingNumber);
 
 static inline ssize_t
 __file_size(const char *fname);

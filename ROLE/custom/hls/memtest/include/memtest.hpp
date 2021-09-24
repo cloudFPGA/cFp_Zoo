@@ -1,8 +1,8 @@
 /*****************************************************************************
  * @file       memtest.hpp
  * @brief      The Role for a Memtest Example application (UDP or TCP)
- * @author     FAB, WEI, NGL, DID
- * @date       May 2020
+ * @author     FAB, WEI, NGL, DID, DCO
+ * @date       September 2021
  *----------------------------------------------------------------------------
  *
  * @details    : This application implements a set of UDP-oriented tests and
@@ -82,13 +82,6 @@ enum MemTestCmd {
 #define FSM_PROCESSING_READ 3
 #define FSM_PROCESSING_OUTPUT 4
 #define ProcessingFsmType uint8_t
-
-#define LOCAL_MEM_WORD_SIZE 512
-#define LOCAL_MEM_ADDR_SIZE 20
-typedef ap_uint<LOCAL_MEM_WORD_SIZE>  local_mem_word_t;    // change to float or double depending on your needs
-typedef ap_uint<32>  local_mem_addr_t;    // change to float or double depending on your needs
-#define LOCAL_MEM_ADDR_OFFSET (LOCAL_MEM_WORD_SIZE/8) //byte addres offset
-#define LOCAL_MEM_WORD_BYTE_SIZE (LOCAL_MEM_WORD_SIZE/8) //byte addres offset
 
 
 #define DEFAULT_TX_PORT 2718

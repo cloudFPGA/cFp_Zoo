@@ -6,11 +6,11 @@
  * Component   : Role
  * Language    : Vivado HLS
  *
- * Created: April 2020
- * Authors: FAB, WEI, NGL, DID
+ * Created: September 2021
+ * Authors: FAB, WEI, NGL, DID, DCO
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
- * Copyright 2015-2020 - IBM Research - All Rights Reserved.
+ * Copyright 2015-2021 - IBM Research - All Rights Reserved.
  *
  * @ingroup MemtestTB
  * @addtogroup MemtestTB
@@ -157,12 +157,17 @@ int main(int argc, char** argv) {
     //     printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
     //     return -1;
     // }
-    unsigned int sim_time = testingNumber * (2 * (memory_addr_under_test) + 5) ; // at least iterate 4 reads and writes
-    unsigned int tot_input_transfers = (CEIL(testingNumber*memory_addr_under_test*testingNumber, PACK_SIZE)); // only a single tx
-    unsigned int tot_output_transfers = (CEIL(3*testingNumber*8, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+1)) + 2) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
 
-    char *charOutput = (char*)malloc((sizeof(unsigned int) * 2 + 2)* sizeof(char)); // reading two 32 ints + others?
-    char *charInput = (char*)malloc((strInput_memaddrUT.length() + strInput_nmbrTest.length())* sizeof(char)); // at least print the inputs
+
+    unsigned int tot_input_transfers = (CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
+    unsigned int tot_output_transfers = (CEIL(testingNumber*PACK_SIZE, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+
+
+    size_t charInputSize =  (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2;
+    size_t charOutputSize = (sizeof(unsigned int) * 2 +1) * testingNumber ;
+    char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
+    char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
@@ -251,6 +256,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
+      printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
       assert(i == tot_output_transfers);
     }
     else {
@@ -267,8 +273,8 @@ int main(int argc, char** argv) {
       nrErr++;
     }
     printf("Input string : ");
-    for (unsigned int i = 0; i < strInput.length(); i++)
-       printf("%c", charInput[i]); 
+    for (unsigned int i = 0; i <  charInputSize; i++)
+       printf("%x", charInput[i]); 
     printf("\n");    
     if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
     //if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
@@ -277,8 +283,8 @@ int main(int argc, char** argv) {
     }
     __file_write("./hls_out.txt", charOutput, strInput.length());
     printf("Output string: ");
-    for (unsigned int i = 0; i < strInput.length(); i++)
-       printf("%c", charOutput[i]); 
+    for (unsigned int i = 0; i < charOutputSize; i++)
+       printf("%x", charOutput[i]); 
     printf("\n");
 
     //------------------------------------------------------
@@ -286,6 +292,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
                                             ../../../../test/verify_UAF_Shl_Data.dat");
+    
     if (rc1)
     {
         printf("## Error : File \'ofsUAF_Shl_Data.dat\' does not match \'verify_UAF_Shl_Data.dat\'.\n");
@@ -303,7 +310,8 @@ int main(int argc, char** argv) {
         printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
     }
     printf("#####################################################\n");
-
+    free(charOutput);
+    free(charInput);
 
     return(nrErr);
 }
