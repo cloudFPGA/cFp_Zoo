@@ -175,7 +175,7 @@ void pRXPath(
     static NetworkMetaStream  outNetMeta = NetworkMetaStream();;
     static local_mem_word_t local_under_test_memory [LOCAL_MEM_ADDR_SIZE];
     static local_mem_addr_t max_address_under_test; // byte addressable;
-    static ap_uint<32> local_mem_addr_non_byteaddressable;
+    static local_mem_addr_non_byteaddressable_t local_mem_addr_non_byteaddressable;
     static local_mem_addr_t curr_address_under_test;
     static local_mem_addr_t first_faulty_address;
     static ap_uint<32> faulty_addresses_cntr;
@@ -286,7 +286,9 @@ void pRXPath(
       if (local_mem_addr_non_byteaddressable < max_address_under_test)
       {
         printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
-        genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+        //genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+        genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+        
         //memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
         //printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
     #ifndef __SYNTHESIS__
@@ -317,15 +319,17 @@ void pRXPath(
         printf("DEBUG READ FSM, reading the memory\n");
 
 
-        genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
-
+        //genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
+        genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
+        
         // char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
         //memcpy(testingVector,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
         testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
 
 
-        for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
+        golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
         {
+#pragma HLS UNROLL
           //printf("READ %d ,%d %d\n", i, (i+1)*8-1, i*8);
           //printf("%c",readingString[i]);
           #ifndef __SYNTHESIS__
@@ -546,9 +550,6 @@ void memtest(
   static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
   static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); // FIXME: works even with no static
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
-
-
-
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;

@@ -88,7 +88,7 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -O -compiler gcc -argv "`${SimString} ${SimNumberTests}`"
+  csim_design -O -compiler gcc -argv "${SimString} ${SimNumberTests}"
 } else {
 
   if { $hlsSyn } {
@@ -96,7 +96,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${SimString}" "${SimNumberTests}"
+    cosim_design -compiler gcc -trace_level all -argv "${SimString} ${SimNumberTests}"
   } else {
 
   # Export RTL

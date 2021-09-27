@@ -132,7 +132,8 @@ int main(int argc, char** argv) {
     // if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
 	  //   strInput = strInput.substr(1,strInput.length()-2);
     // }
-    // cout << hex << strInput << dec << endl;
+     cout << hex << strInput_memaddrUT << dec << endl;
+     cout << hex << strInput_nmbrTest << dec << endl;
     if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
