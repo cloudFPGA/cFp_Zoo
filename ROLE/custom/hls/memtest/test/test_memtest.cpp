@@ -164,8 +164,8 @@ int main(int argc, char** argv) {
     unsigned int tot_output_transfers = (CEIL(testingNumber*PACK_SIZE, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
 
 
-    size_t charInputSize =  (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2;
-    size_t charOutputSize = (sizeof(unsigned int) * 2 +1) * testingNumber ;
+    size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8; //30+ (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2;
+    size_t charOutputSize = 8 * (2 + 1) * testingNumber;
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
-    __file_write("./hls_out.txt", charOutput, strInput.length());
+    __file_write("./hls_out.txt", charOutput, charOutputSize);
     printf("Output string: ");
     for (unsigned int i = 0; i < charOutputSize; i++)
        printf("%x", charOutput[i]); 
