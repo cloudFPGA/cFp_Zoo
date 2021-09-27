@@ -186,7 +186,7 @@ void pRXPath(
     static int writingCounter;
     static int readingCounter;
 
-    static ap_uint<30> testCounter;
+    static ap_uint<32> testCounter;
 
 #pragma HLS reset variable=outNetMeta
 #pragma HLS reset variable=local_under_test_memory
@@ -288,12 +288,17 @@ void pRXPath(
         printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
         //genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
         genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
-        
+        #ifdef FAULT_INJECTION
+        if(testCounter > 2 && local_mem_addr_non_byteaddressable > 0){
+          //std::cout  << testCounter << std::endl;
+            local_under_test_memory[local_mem_addr_non_byteaddressable] &= 0;
+        }
+        #endif // FAULT_INJECTION
         //memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
         //printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
-    #ifndef __SYNTHESIS__
-        std::cout << "local mem " << local_under_test_memory[local_mem_addr_non_byteaddressable] << std::endl;
-     #endif //__SYNTHESIS__
+    // #ifndef __SYNTHESIS__
+    //     std::cout << "local mem " << local_under_test_memory[local_mem_addr_non_byteaddressable] << std::endl;
+    //  #endif //__SYNTHESIS__
       
         local_mem_addr_non_byteaddressable += 1;
         curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
@@ -332,14 +337,17 @@ void pRXPath(
 #pragma HLS UNROLL
           //printf("READ %d ,%d %d\n", i, (i+1)*8-1, i*8);
           //printf("%c",readingString[i]);
-          #ifndef __SYNTHESIS__
-          std::cout << "comparing " << testingVector.range((i+1)*8-1,i*8) << " and  " << goldenVector.range((i+1)*8-1,i*8)<< std::endl;
-          #endif //__SYNTHESIS__
+          // #ifndef __SYNTHESIS__
+          //  std::cout << "comparing " << testingVector.range((i+1)*8-1,i*8) << " and  " << goldenVector.range((i+1)*8-1,i*8)<< std::endl;
+          // #endif //__SYNTHESIS__
 
           //printf("comparing %x and %x\t",testingVector[i],goldenVector.range((i+1)*8-1,i*8));
           if (testingVector.range((i+1)*8-1,i*8) != goldenVector.range((i+1)*8-1,i*8))//[i+curr_address_under_test]) // fault check
           // if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
           {
+          // #ifndef __SYNTHESIS__
+          //   std::cout << "curr addr " << curr_address_under_test << " idx  " << i << " faulty_addresses_cntr  " << faulty_addresses_cntr << " gne " << first_faulty_address << std::endl;
+          // #endif //__SYNTHESIS__
             if (faulty_addresses_cntr == 0) //first fault
             {
               first_faulty_address = i+curr_address_under_test; //save the fault address
@@ -377,6 +385,8 @@ void pRXPath(
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 1;
           outNetWord.tdata = first_faulty_address;
+          // std::cout << " faulty_addresses_cntr  " << faulty_addresses_cntr << " gne " << first_faulty_address << std::endl;
+
 	        sProcpToTxp_Data.write(outNetWord);
           processingFSM = FSM_PROCESSING_START;
       }

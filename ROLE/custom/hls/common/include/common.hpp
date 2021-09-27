@@ -113,6 +113,7 @@ bool dumpDataToFile(UdpWord *udpWord, std::ofstream &outFileStream);
  ******************************************************************************/
 bool dumpFileToString(const std::string inpFileName, std::string strOutput, int simCnt);
 
+bool dumpStringToFileWithLastSetEveryGno(std::string s, const std::string   outFileName, int simCnt, int gno);
 
 /*****************************************************************************
  * @brief Fill an output file with data from an output stream.
@@ -139,6 +140,9 @@ bool isCornerPresent(std::string str, std::string corner);
 void attachBitformattedStringCommandAndRefill(const std::string& in, std::string& out);
 
 void createMemTestCommands(unsigned int mem_address, std::string& out, int testingNumber);
+
+void createMemTestGoldenOutput(unsigned int mem_address, std::string& out, int testingNumber);
+
 
 static inline ssize_t
 __file_size(const char *fname);

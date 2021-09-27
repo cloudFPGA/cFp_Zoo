@@ -132,8 +132,8 @@ int main(int argc, char** argv) {
     // if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
 	  //   strInput = strInput.substr(1,strInput.length()-2);
     // }
-     cout << hex << strInput_memaddrUT << dec << endl;
-     cout << hex << strInput_nmbrTest << dec << endl;
+     //cout << hex << strInput_memaddrUT << dec << endl;
+     //cout << hex << strInput_nmbrTest << dec << endl;
     if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -180,11 +180,19 @@ int main(int argc, char** argv) {
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
     string strInput;
+    string strGold;
+
     // string strTmp_addr;
     // ascii2hex(strInput_memaddrUT, strTmp_addr);
     createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
+    createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
+
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
+      nrErr++;
+    }
+    //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
+    if (!dumpStringToFileWithLastSetEveryGno(strGold, "verify_UAF_Shl_Data.dat", simCnt, 3)) {
       nrErr++;
     }
 
@@ -257,7 +265,7 @@ int main(int argc, char** argv) {
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
+      //printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
       assert(i == tot_output_transfers);
     }
     else {

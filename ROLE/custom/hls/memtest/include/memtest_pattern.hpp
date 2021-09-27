@@ -12,6 +12,8 @@
 
 using namespace hls;
 
+#define FAULT_INJECTION // macro for fault injection insertion
+
 /*****************************************************************************
  * @brief pPortAndDestionation - Setup the port and the destination rank.
  *
@@ -108,7 +110,7 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
   //assert( (BIGWORD_T%SMALLWORD_T)==0);
 
   SMALLWORD_T currentNumber = static_cast<SMALLWORD_T>(curr);
-  SMALLWORD_T nextNumber = currentNumber xor 1;
+  SMALLWORD_T nextNumber = (currentNumber+1) xor 1;
   SMALLWORD_T prevNumber = currentNumber;
 
   gen_sequence_loop: for (unsigned int i = 0; i < sequenceDim; i++)
@@ -118,14 +120,15 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
     // printf("MEMTEST PATTERN Next fibo number %u\n", nextFibonacciNumber.to_string());
     //   std'::cout << "MEMTEST PATTERN Next fibo number " << nextFibonacciNumber << std::endl;
     (*outBigWord).range(smallWordDim*(i+1)-1,smallWordDim*i)=nextNumber;
-    prevNumber = nextNumber;
-    currentNumber = (nextNumber + 1 ) xor i;
-    #ifndef __SYNTHESIS__
-    std::cout << "MEMTEST PATTERN prev " << prevNumber << " curr " << currentNumber << "  next " << nextNumber << std::endl;
-    #endif //__SYNTHESIS__
+    prevNumber = currentNumber;
+    currentNumber = nextNumber;
+    nextNumber = (nextNumber + 1 ) xor i;
+    // #ifndef __SYNTHESIS__
+    //  std::cout << "MEMTEST PATTERN prev " << prevNumber << " curr " << currentNumber << "  next " << nextNumber << " \t";
+   //  std::cout << "MEMTEST PATTERN curr " << currentNumber << " \t";
+    // #endif //__SYNTHESIS__
   }
-  
-
+ //    std::cout << std::endl;
 }
 
 #endif //_ROLE_MEMTEST_PATTERN_H_
