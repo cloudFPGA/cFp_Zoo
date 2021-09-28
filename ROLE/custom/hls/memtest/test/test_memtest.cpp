@@ -110,13 +110,14 @@ int main(int argc, char** argv) {
     simCnt = 0;
     nrErr  = 0;
 
-    if (argc != 3) {
-        printf("Usage : %s <number of address to test> , <testing times> provided %d\n", argv[0], argc);
+    if (argc < 3 || argc > 4) {
+        printf("Usage : %s <number of address to test> , <testing times> , <command string ready2go> ;provided %d\n", argv[0], argc);
         return -1;
     }
 
     string strInput_memaddrUT = argv[1];
     string strInput_nmbrTest = argv[2];
+    string strInput_commandstring = argv[3];
     unsigned int memory_addr_under_test=0;
     int testingNumber = 1;
     // string tmp_string= argv[1];
@@ -182,9 +183,25 @@ int main(int argc, char** argv) {
     string strInput;
     string strGold;
 
-    // string strTmp_addr;
-    // ascii2hex(strInput_memaddrUT, strTmp_addr);
-    createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
+
+// Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
+// otheriwse the TB takes care and create the commands based on the inputs
+    if(!strInput_commandstring.length()){
+      createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
+    }else{
+      char * char_command = new char[strInput_commandstring.length()];
+      for (int i = 0; i < strInput_commandstring.length(); i++)
+      {
+        char tmp = strInput_commandstring[i];
+        unsigned int tmp_int = atoi(&tmp);
+        memcpy(char_command+i,(char*)&tmp_int, sizeof(char));
+      }
+      strInput.append(char_command,strInput_commandstring.length());
+      //printStringHex(strInput_commandstring, strInput_commandstring.length());
+      //printCharBuffHex(char_command, strInput_commandstring.length());
+      //printStringHex(strInput, strInput_commandstring.length());
+    }
+    
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
 
 
@@ -192,7 +209,7 @@ int main(int argc, char** argv) {
       nrErr++;
     }
     //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
-    if (!dumpStringToFileWithLastSetEveryGno(strGold, "verify_UAF_Shl_Data.dat", simCnt, 3)) {
+    if (!dumpStringToFileWithLastSetEveryGnoPackets(strGold, "verify_UAF_Shl_Data.dat", simCnt, 3)) {
       nrErr++;
     }
 

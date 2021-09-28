@@ -59,6 +59,10 @@ if { [info exists env(SimNumberTests)] } {
   set SimNumberTests $env(SimNumberTests)
 }
 
+if { [info exists env(CommandString)] } {
+  set CommandString $env(CommandString)
+}
+
 # Open and Setup Project
 #-------------------------------------------------
 open_project  ${projectName}_prj
@@ -88,7 +92,7 @@ create_clock -period 6.4 -name default
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -O -compiler gcc -argv "${SimString} ${SimNumberTests}"
+  csim_design -O -compiler gcc -argv "${SimString} ${SimNumberTests} ${CommandString}"
 } else {
 
   if { $hlsSyn } {
@@ -96,7 +100,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${SimString} ${SimNumberTests}"
+    cosim_design -compiler gcc -trace_level all -argv "${SimString} ${SimNumberTests} ${CommandString}"
   } else {
 
   # Export RTL
