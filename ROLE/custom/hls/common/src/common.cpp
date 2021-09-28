@@ -200,6 +200,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
  * @param[in] sDataStream    the input image in xf::cv::Mat format.
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
+ * DEPRECATED
  ******************************************************************************/
 bool dumpStringToFileWithCommands(string s, const string   outFileName, int simCnt)
 {
@@ -356,14 +357,17 @@ bool dumpStringToFile(string s, const string   outFileName, int simCnt)
 
 
 /*****************************************************************************
- * @brief Fill an output file with data from an image.
+ * @brief Fill an output file with data from a string and
+ *          set the tlast every gno packets
  * 
  * 
  * @param[in] sDataStream    the input image in xf::cv::Mat format.
  * @param[in] outFileName    the name of the output file to write to.
+ * @param[in] simCnt         
+ * @param[in] gno            the counter value at which this function set the tlast=1
  * @return OK if successful, otherwise KO.
  ******************************************************************************/
-bool dumpStringToFileWithLastSetEveryGno(string s, const string   outFileName, int simCnt, int gno)
+bool dumpStringToFileWithLastSetEveryGnoPackets(string s, const string   outFileName, int simCnt, int gno)
 {
     string      strLine;
     ofstream    outFileStream;
@@ -477,6 +481,7 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
  * @param[in]  inpFileName the name of the input file to read from.
  * @param[out] strOutput the output string to set.
  * @return OK if successful otherwise KO.
+ * DEPRECATED
  ******************************************************************************/
 bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput, int simCnt) {
     string      strLine;
@@ -527,7 +532,12 @@ bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput,
 }
 
 
-
+/*****************************************************************************
+ * @brief convert a char to its hexadecimal representation.
+ *
+ * @param[in]  c the standard char value to convert to hex
+ * @return     the hexadecimal value of the input
+ ******************************************************************************/
 // C++98 guarantees that '0', '1', ... '9' are consecutive.
 // It only guarantees that 'a' ... 'f' and 'A' ... 'F' are
 // in increasing order, but the only two alternative encodings
@@ -544,7 +554,12 @@ unsigned char hexval(unsigned char c)
     else abort();
 }
 
-
+/*****************************************************************************
+ * @brief Convert a hexadecimal string to a ascii string
+ *
+ * @param[in]  in the input hexadecimal string
+ * @param[out] out the output ascii string
+ ******************************************************************************/
 void hex2ascii(const string& in, string& out)
 {
     out.clear();
@@ -559,7 +574,12 @@ void hex2ascii(const string& in, string& out)
     }
 }
 
-
+/*****************************************************************************
+ * @brief Convert a ascii string to a hexadecimal string
+ *
+ * @param[in]  in the input ascii string
+ * @param[out] out the output hexadecimal string
+ ******************************************************************************/
 void ascii2hex(const string& in, string& out)
 {
  std::stringstream sstream;
@@ -570,7 +590,13 @@ void ascii2hex(const string& in, string& out)
 }
 
 
-
+/*****************************************************************************
+ * @brief Check the presence of a given corner value at the begin and the end of a string
+ *
+ * @param[in]  str the input string to be checked
+ * @param[in]  corner the corner char to find
+ * @return true if it is present, false otherwise
+ ******************************************************************************/
 bool isCornerPresent(string str, string corner)
 {
     int n = str.length();
@@ -587,7 +613,28 @@ bool isCornerPresent(string str, string corner)
             str.substr(n-cl, cl).compare(corner) == 0);
 }
 
+/*****************************************************************************
+ * @brief Convert a hex string to a integer into a char buffer with the SAME dimensions
+ *
+ * @param[in]  in the input hex string
+ * @param[out] out the output numerical hexadec string string
+ * @param[in]  byteSize the bytesize of the input string and the buffer, it assumes equal dimension
+ ******************************************************************************/
+void string2hexnumerics(const string& in, char * out, size_t byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		std::sprintf(out+i, "%d", (int)in[i]);
+	}
+}
 
+/*****************************************************************************
+ * @brief Attach the commands start (000000001) and stop (000000002) 
+ * to a given input string, aligning to a bytesize of 8 byte per tdata values
+ *
+ * @param[in]  in the input string
+ * @param[out] out the output string with start-in(8byte aligned)-stop
+ ******************************************************************************/
 void attachBitformattedStringCommandAndRefill(const string& in, string& out)
 {
 	unsigned int bytes_per_line = 8;
@@ -621,8 +668,14 @@ void attachBitformattedStringCommandAndRefill(const string& in, string& out)
 	out.append(stop_cmd);
 }
 
-
-//void createMemTestCommands(const string &in, string& out)
+/*****************************************************************************
+ * @brief Create the commands for a memory test with start/max address to test-nop to execute-stop
+ *
+ * @param[in]  mem_address max target address to test
+ * @param[out] out the output string with start/max address-nops4trgtCCsNeeded-stop
+ * @param[in]  testingNumber the number of tests to perform on the memory
+ * 
+ ******************************************************************************/
 void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
@@ -651,6 +704,14 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 	out.append(stop_cmd,bytes_per_line);
 }
 
+/*****************************************************************************
+ * @brief Create the expected output results for the memory test (with FAULT INJECTION)
+ *
+ * @param[in]  mem_address max target address to test
+ * @param[out] out the results of the memory test (with FAULT INJECTION)
+ * @param[in]  testingNumber the number of tests to perform on the memory
+ * 
+ ******************************************************************************/
 void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
@@ -666,7 +727,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
     unsigned int mem_size_of_word_size = 20;
 // computations the first faulty address and the the fault counter
     unsigned int mem_addr_per_word = mem_word_size / 8; // byte size of this word
-    unsigned int fault_cntr = 0;//mem_addr_per_word * mem_address ; // byte size of this word
+    unsigned int fault_cntr = 0;
 
 //simulating the fault injection
     for (unsigned int j = 0; j < mem_address; j++)
@@ -676,9 +737,9 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
         ap_uint<32> prevNumber = currentNumber;
         ap_uint<32> tmpNumber = nextNumber;
         ap_uint<32> mask = 0;
+
         for (unsigned int i = 0; i < mem_word_size/32 && j > 0; i++){
             tmpNumber = nextNumber & 0;
-            //std::cout << "GOLD comparing " << nextNumber << " with " << tmpNumber << "\t";
 
         if( nextNumber != (tmpNumber)){
             fault_cntr+=1;
@@ -686,14 +747,10 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
         prevNumber = currentNumber;
         currentNumber = nextNumber;
         nextNumber = (nextNumber + 1 ) xor i;
-     //std::cout << "GOLD curr " << currentNumber << "\t";
-
         }
-     //std::cout << std::endl;
     }
-    //  std::cout << "fault cntr " << fault_cntr << std::endl;
 
-
+//init the commands and fill em out of the fault simulation before
     for(unsigned int i = 0; i < testingNumber; i++){
         for (unsigned int k = 0; k < bytes_per_line; k++) {
             addr_cmd[k]    = (char)0;
@@ -704,6 +761,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
 
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out.append(addr_cmd,bytes_per_line);
+        //if not yet in the fault injection point just let em empty as expected from good tests
         if(i < first_faultTests-1 )
         {
           out.append(filler_cmd,bytes_per_line);
@@ -717,6 +775,39 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
     }
 }
 
+/*****************************************************************************
+ * @brief print byte-per-byte a given string in hexadecimal format
+ *
+ * @param[in]  inStr string to print
+ * @param[in]  strSize bytsize to print (can be even less, NOT more )
+ * 
+ ******************************************************************************/
+void printStringHex(const string inStr, size_t strSize){
+	printf("Going to prit a hex string :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
+
+/*****************************************************************************
+ * @brief print byte-per-byte a given char buff in hexadecimal format
+ *
+ * @param[in]  inStr char buff to print
+ * @param[in]  strSize bytsize to print (can be even less, NOT more )
+ * 
+ ******************************************************************************/
+void printCharBuffHex(const char * inStr, size_t strSize){
+	printf("Going to prit a hex char buff :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
 
 static inline ssize_t
 __file_size(const char *fname)
