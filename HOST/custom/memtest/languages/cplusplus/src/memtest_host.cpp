@@ -91,6 +91,46 @@ void attachBitsCommandAndRefill(const string& in, string& out)
 	out.append(stop_cmd);
 }
 
+void printStringHex(const string inStr, size_t strSize){
+	printf("Going to prit a hex string :D");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
+void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
+{
+	unsigned int bytes_per_line = 8;
+	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
+	char stop_cmd [bytes_per_line];
+	char filler_cmd [bytes_per_line];
+    //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
+	for (unsigned int k = 0; k < bytes_per_line; k++) {
+        filler_cmd[k]    = (char)0;
+		if (k != 0) {
+			stop_cmd[k] = (char)0;
+			start_cmd[k] = (char)0;
+	    }
+	    else {
+			start_cmd[k] = (char)1; 
+			stop_cmd[k] = (char)2;
+	    }
+	 }
+	out.append(start_cmd,bytes_per_line/2);
+	//printStringHex(out,bytes_per_line/2);
+	char value[bytes_per_line];
+    memcpy(value, (char*)&mem_address, sizeof(unsigned int));
+    out.append(value,bytes_per_line/2);
+	//printStringHex(out,bytes_per_line);
+    for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
+	    out.append(filler_cmd,bytes_per_line);
+    }
+	out.append(stop_cmd,bytes_per_line);
+	//printStringHex(out,bytes_per_line*2+bytes_per_line*(testingNumber * (2 * (mem_address+1)) + 2));
+
+}
 
 void delay(unsigned int mseconds)
 {
@@ -127,8 +167,8 @@ int memtest(char *s_servAddress, char *s_servPort, char *input_str, char *output
    */
 int main(int argc, char *argv[])
 {
-    if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <input string> <optional output string>\n";
+    if ((argc < 3) || (argc > 5)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <number of address to test> <testing times>\n";
         exit(1);
     }
 #endif
@@ -139,7 +179,7 @@ int main(int argc, char *argv[])
     //------------------------------------------------------
     
     #ifndef PY_WRAP
-    assert (argc == 4);
+    assert (argc == 5);
     string s_servAddress = argv[1]; // First arg: server address
     char *s_servPort = argv[2];
     bool net_type = NET_TYPE;
@@ -160,7 +200,11 @@ int main(int argc, char *argv[])
     char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
     unsigned int num_frame = 0;
-    std::string input_string;
+	std::string input_string;
+	std::string strInput_memaddrUT;
+    std::string strInput_nmbrTest;
+	unsigned int memory_addr_under_test=0;
+    int testingNumber = 1;
     //UDPSocket *udpsock_p;
     //TCPSocket *tcpsock_p;
   
@@ -188,19 +232,23 @@ int main(int argc, char *argv[])
         //-- STEP-3 : Create a string from input argument
         //------------------------------------------------------------------------------------
 	#ifdef PY_WRAP
-	input_string.assign(input_str);
+	input_string.assign(input_str); //TBC
 	#else
-        input_string.assign(argv[3]);
+    strInput_memaddrUT.assign(argv[3]);
+    strInput_nmbrTest.assign(argv[4]);
 	#endif
+
+    memory_addr_under_test = stoul(strInput_memaddrUT);
+    testingNumber = stoi(strInput_nmbrTest);
+
+    size_t charOutputSize = 8 * (2 + 1) * testingNumber;
+
 	string initial_input_string(input_string);
-#ifdef TB_SIM_CFP_VITIS
-	string tmp;
-	ascii2hex(initial_input_string, tmp);
-	attachCommand(tmp,input_string);
-#else 
-	attachBitsCommandAndRefill(initial_input_string, input_string);
-#endif // TB_SIM_CFP_VITIS
-	//input_string.assign(tmp);
+
+	createMemTestCommands(memory_addr_under_test, input_string, testingNumber);
+	size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8;
+	//printStringHex(input_string,charInputSize*sizeof(char));
+
 	if (input_string.length() == 0) {
             cerr << "Empty string provided. Aborting...\n\n" << endl;
             exit(1);
@@ -214,15 +262,27 @@ int main(int argc, char *argv[])
 	// Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
 	assert(PACK_SIZE % 8 == 0);
    
-        unsigned int total_pack  = 1 + (input_string.length() - 1) / PACK_SIZE;
-        unsigned int total_bytes = total_pack * PACK_SIZE;
-        unsigned int bytes_in_last_pack = input_string.length() - (total_pack - 1) * PACK_SIZE;
+        unsigned int total_out_pack  = (CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
+        unsigned int total_in_pack  = testingNumber;//1 + (input_string.length() - 1) / PACK_SIZE;
+
+        unsigned int total_out_bytes = charInputSize;
+		////////////////////////
+		//////////////TODO: check with others the functionalities////////////////////////
+		////////////////////////
+        unsigned int total_in_bytes = total_in_pack * PACK_SIZE;//TODO
+		//size_t charOutputSize = 8 * (2 + 1) * testingNumber;
+        unsigned int bytes_in_last_pack_out = input_string.length() - (total_out_pack-1) * PACK_SIZE;
+        unsigned int bytes_in_last_pack_in = 8 * 3; //8 bytes for three tdata words
+		//input_string.length() - (total_pack - 1) * PACK_SIZE;
 
 	cout << "INFO: Network socket : " << ((net_type == tcp) ? "TCP" : "UDP") << endl;
-	cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-    cout << "INFO: Total bytes to send/receive   = " << input_string.length() << endl;
-	cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
-	cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+	cout << "INFO: Total packets to send = " << total_out_pack << endl;
+	cout << "INFO: Total packets to receive = " << total_in_pack << endl;
+    cout << "INFO: Total bytes to send   = " << total_out_bytes << endl;
+    cout << "INFO: Total bytes to receive   = " << total_in_bytes << endl;
+	cout << "INFO: Total bytes rx " << total_in_bytes << " packets = "  << total_in_pack << endl;
+	cout << "INFO: Bytes in last packet tx          = " << bytes_in_last_pack_out << endl;
+	cout << "INFO: Bytes in last packet  rx         = " << bytes_in_last_pack_in << endl;
 	cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 	    
 	//------------------------------------------------------
@@ -235,11 +295,12 @@ int main(int argc, char *argv[])
         //------------------------------------------------------
         clock_t last_cycle_tx = clock();
 	unsigned int sending_now = PACK_SIZE;
-        for (unsigned int i = 0; i < total_pack; i++) {
-	    if ( i == total_pack - 1 ) {
-		sending_now = bytes_in_last_pack;
+        for (unsigned int i = 0; i < total_out_pack; i++) {
+	    if ( i == total_out_pack - 1 ) {
+		sending_now = bytes_in_last_pack_out;
 	    }
 	    #if NET_TYPE == udp
+		//printStringHex(input_string,charInputSize*sizeof(char));
 	    udpsock.sendTo( & input_string[i * PACK_SIZE], sending_now, servAddress, servPort);
 	    #else
             tcpsock.send( & input_string[i * PACK_SIZE], sending_now);
@@ -249,7 +310,7 @@ int main(int argc, char *argv[])
         clock_t next_cycle_tx = clock();
         double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
         cout << "INFO: Effective SPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
-             total_pack / duration_tx / 1024 * 8) << endl;
+             total_out_pack / duration_tx / 1024 * 8) << endl;
         last_cycle_tx = next_cycle_tx;
 	   
 	    
@@ -258,12 +319,16 @@ int main(int argc, char *argv[])
         //------------------------------------------------------    
 	clock_t last_cycle_rx = clock();
 	unsigned int receiving_now = PACK_SIZE;
-        cout << "INFO: Expecting length of packs:" << total_pack << endl;
-        char * longbuf = new char[PACK_SIZE * total_pack];
-        for (unsigned int i = 0; i < input_string.length(); ) {
+        cout << "INFO: Expecting length of packs:" << total_in_pack << endl;
+        char * longbuf = new char[PACK_SIZE * total_in_pack];
+        for (unsigned int i = 0; i < charOutputSize; ) {
+		////////////////////////
+		//TODO: check the receiving loop
+		////////////////////////
+
 	    //cout << "DEBUG: " << i << endl;
-            if ( i == total_pack - 1 ) {
-                receiving_now = bytes_in_last_pack;
+            if ( i == total_in_pack - 1 ) {
+                receiving_now = bytes_in_last_pack_in;
             }
 	    #if NET_TYPE == udp               
 	    recvMsgSize = udpsock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
@@ -284,7 +349,7 @@ int main(int argc, char *argv[])
 	#ifdef PY_WRAP
 	char *output_string = output_str;
 	#else
-        char *output_string = (char*)malloc((initial_input_string.length())*sizeof(char));
+        char *output_string = (char*)malloc(charOutputSize*sizeof(char));
 	#endif
 	// the +1 is intended to ignore the ack of the start command
 	output_string = strncpy(output_string, longbuf+1, initial_input_string.length());
@@ -293,7 +358,8 @@ int main(int argc, char *argv[])
         clock_t next_cycle_rx = clock();
         double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
         cout << "INFO: Effective SPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
-                    total_pack / duration_rx / 1024 * 8) << endl;
+                    total_in_pack / duration_rx / 1024 * 8) << endl;
+		//TODO: Check this number :D
         last_cycle_rx = next_cycle_rx;
 	   
 	clock_t end_cycle_memtest_hw = next_cycle_rx;
@@ -302,7 +368,8 @@ int main(int argc, char *argv[])
 	                                (double) CLOCKS_PER_SEC;
 	cout << "INFO: HW exec. time:" << duration_memtest_hw << " seconds" << endl;
         cout << "INFO: Effective SPS HW:" << (1 / duration_memtest_hw) << " \tkbps:" << 
-                (PACK_SIZE * total_pack / duration_memtest_hw / 1024 * 8) << endl;	    
+                (PACK_SIZE * total_in_pack / duration_memtest_hw / 1024 * 8) << endl;	
+				//TODO: CHECK THIS OUT    
 	    
         double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
         cout << "INFO: Effective SPS E2E:" << (1 / duration_main) << endl;

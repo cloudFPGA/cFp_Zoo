@@ -22,6 +22,9 @@
 #include <string.h>
 #include <array>
 #include <sys/stat.h>
+#include <sstream>
+#include <stdlib.h>
+#include <stdio.h>
 #include "../../../../../PracticalSockets/src/PracticalSockets.h"
 #include "../include/config.h"
 
@@ -92,22 +95,68 @@ void myCharBuffMemCpy (char * inStr, char * outStr, size_t bytesize ) {
 }
 
 
+void printStringHex(const string inStr, size_t strSize){
+	printf("Going to prit a hex string :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
 
+void printCharBuffHex(const char * inStr, size_t strSize){
+	printf("Going to prit a hex char buff :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
+
+void ascii2hex(const string& in, string& out)
+{
+ std::stringstream sstream;
+    for ( string::const_iterator item = in.begin(); item != in.end(); item++){
+        sstream << std::hex << int(*item);
+    }
+    out=sstream.str(); 
+}
+
+void string2hexnumerics(const string& in, char * out, size_t byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		std::sprintf(out+i, "%d", (int)in[i]);
+	}
+}
   /**
    *   Main testbench for the user-application for Memtest on host. Server
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
 
-    if ((argc < 2) || (argc > 3)) { // Test for correct number of parameters
-        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode>" << endl;
+    if ((argc < 2) || (argc > 4)) { // Test for correct number of parameters
+        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode> <optional number of repetitions>" << endl;
         exit(1);
     }
 
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_batch = 0;
-    string clean_cmd, synth_cmd;;
+    string clean_cmd, synth_cmd;
+    string strInput_nmbrTest = argv[3];
+    int testingNumber;
     
+	if (!strInput_nmbrTest.length())
+	{
+		testingNumber = 3;
+	}	else	{
+		testingNumber = stoi(strInput_nmbrTest);
+	}
+	
+	
+
     try {
       	#if NET_TYPE == udp
         UDPSocket sock(servPort);
@@ -144,8 +193,9 @@ int main(int argc, char * argv[]) {
     
 	int input_string_total_len = 0;
 	//int receiving_now = PACK_SIZE;
-	int total_pack = 0;
+	int total_pack = testingNumber;
 	int bytes_in_last_pack;
+	size_t total_size =0;
 	bool msg_received = false;
         cout << " ___________________________________________________________________ " << endl;
         cout << "/                                                                   \\" << endl;
@@ -161,7 +211,13 @@ int main(int argc, char * argv[]) {
 	    input_string_total_len += recvMsgSize;
 	    bytes_in_last_pack = recvMsgSize;
 	    bool nullcharfound = findCharNullPos(buffer);
+		//printCharBuffHex(buffer, recvMsgSize);
+
 	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
+		longbuf[total_size+1]='\0';
+		//printCharBuffHex(longbuf, recvMsgSize);
+		total_size += recvMsgSize;
+		
 	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
 	    if (nullcharfound != true) {
 		cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
@@ -173,11 +229,22 @@ int main(int argc, char * argv[]) {
 
         cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
-	string input_string (longbuf);
+	string input_string;
+	//printCharBuffHex(longbuf, total_size);
+	input_string.append(longbuf,total_size);
+	//printStringHex(input_string,input_string.length());
 	if (input_string.length() == 0) {
 	    cerr << "ERROR: received an empty string! Aborting..." << endl;
             return -1;
 	}
+	// unsigned int memory_addr_under_test = 0;
+	// unsigned int testingNumber = 0;
+	// memcpy(&memory_addr_under_test,(char*)&input_string,8);
+	// memcpy(&testingNumber,(char*)(&input_string+8),8);
+	// cout << "My wonderful input string is: " << hex << input_string << dec << endl;
+	// cout << "mem addr " << memory_addr_under_test << endl;
+	// cout << "test " << testingNumber << endl;
+
 	    
 	// Select simulation mode, default fcsim
 	synth_cmd = " ";
@@ -206,17 +273,26 @@ int main(int argc, char * argv[]) {
 	    clean_cmd = "make clean && ";
 	}
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
-        str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd+" INPUT_STRING=\"");
-	str_command = str_command.append(input_string);
-	str_command = str_command.append("\" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ");
+    str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd+" COMMAND_STRING=\"");
+	//printStringHex(str_command,str_command.length());
+	size_t str_command_size = str_command.length();
+	char hexInputString [total_size];
+	string2hexnumerics(input_string,hexInputString,total_size);
+	str_command = str_command.append(hexInputString,total_size);
+	str_command_size+=total_size;
+	//printStringHex(str_command,str_command_size);
+	string final_cmd = "\" TEST_NUMBER=" + std::to_string(testingNumber) + " && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
+	str_command = str_command.append(final_cmd);
+	str_command_size+=final_cmd.length();
 
+  	//cout << "Calling TB with command:" << str_command << endl; 
 
-       //string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && " + clean_cmd + synth_cmd + "\
-	//		      INPUT_STRING=\"" + input_string + "\" " + exec_cmd + " && \
-//			      cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ "; 
-	const char *command =(char*)malloc((str_command.length()+1)* sizeof(char));
-	command = str_command.c_str(); 
+	char *command =(char*)malloc((str_command_size+1)* sizeof(char));
+	for(int i=0; i < (str_command_size+1); i++){
+		command[i]=str_command[i];
+	}
   	cout << "Calling TB with command:" << command << endl; 
+
 	system(command); 
 
 	ssize_t size = __file_size(ouf_file.c_str());
