@@ -55,7 +55,7 @@ typedef char word_t[8];
  ******************************************************************************/
 void pRXPath(
   stream<NetworkWord>                              &siSHL_This_Data,
-        stream<NetworkMetaStream>                        &siNrc_meta,
+  stream<NetworkMetaStream>                        &siNrc_meta,
   stream<NetworkMetaStream>                        &sRxtoProc_Meta,
   stream<NetworkWord>                              &sRxpToProcp_Data,
   NetworkMetaStream                                meta_tmp,
@@ -410,14 +410,14 @@ void pRXPath(
  * @return Nothing.
  *****************************************************************************/
 void pTXPath(
-        stream<NetworkWord>         &soTHIS_Shl_Data,
-        stream<NetworkMetaStream>   &soNrc_meta,
+  stream<NetworkWord>         &soTHIS_Shl_Data,
+  stream<NetworkMetaStream>   &soNrc_meta,
   stream<NetworkWord>         &sProcpToTxp_Data,
   stream<NetworkMetaStream>   &sRxtoTx_Meta,
   stream<NodeId>          &sDstNode_sig,
-        unsigned int                *processed_word_tx, 
-        ap_uint<32>                 *pi_rank
-      )
+  unsigned int                *processed_word_tx, 
+  ap_uint<32>                 *pi_rank
+)
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
