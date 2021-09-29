@@ -294,7 +294,9 @@ int main(int argc, char * argv[]) {
   	cout << "Calling TB with command:" << command << endl; 
 
 	system(command); 
-
+////////////////////////////////////////////////////////
+//////////////TODO: need to check the proper emulation
+////////////////////////////////////////////////////////
 	ssize_t size = __file_size(ouf_file.c_str());
 	int rc = __file_read(ouf_file.c_str(), longbuf, size);
 	if (rc < 0) {

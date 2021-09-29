@@ -92,7 +92,7 @@ void attachBitsCommandAndRefill(const string& in, string& out)
 }
 
 void printStringHex(const string inStr, size_t strSize){
-	printf("Going to prit a hex string :D");
+	printf("Going to prit a hex string :D\ns");
 	for (size_t i = 0; i < strSize; i++)
 	{
 		printf("%x",inStr[i]);
@@ -100,6 +100,17 @@ void printStringHex(const string inStr, size_t strSize){
 	printf("\n");
 	
 }
+
+void printCharBuffHex(const char * inStr, size_t strSize){
+	printf("Going to prit a hex char buff :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
+
 void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
@@ -239,9 +250,10 @@ int main(int argc, char *argv[])
 	#endif
 
     memory_addr_under_test = stoul(strInput_memaddrUT);
-    testingNumber = stoi(strInput_nmbrTest);
+    testingNumber = stoul(strInput_nmbrTest);
 
-    size_t charOutputSize = 8 * (2 + 1) * testingNumber;
+    size_t charOutputSize = PACK_SIZE*testingNumber; 
+	//8 * (2 + 1) * testingNumber; this should be the real number but seems to send everything
 
 	string initial_input_string(input_string);
 
@@ -262,8 +274,9 @@ int main(int argc, char *argv[])
 	// Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
 	assert(PACK_SIZE % 8 == 0);
    
-        unsigned int total_out_pack  = (CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
-        unsigned int total_in_pack  = testingNumber;//1 + (input_string.length() - 1) / PACK_SIZE;
+        unsigned int total_out_pack  =  1 + (input_string.length() - 1) / PACK_SIZE;// only a single tx
+        unsigned int total_in_pack  = testingNumber;
+		
 
         unsigned int total_out_bytes = charInputSize;
 		////////////////////////
@@ -349,12 +362,16 @@ int main(int argc, char *argv[])
 	#ifdef PY_WRAP
 	char *output_string = output_str;
 	#else
-        char *output_string = (char*)malloc(charOutputSize*sizeof(char));
+        char *output_string = (char*)malloc(PACK_SIZE * total_in_pack*sizeof(char));
 	#endif
-	// the +1 is intended to ignore the ack of the start command
-	output_string = strncpy(output_string, longbuf+1, initial_input_string.length());
-	output_string[initial_input_string.length()]='\0';
+	output_string = strncpy(output_string, longbuf, PACK_SIZE * total_in_pack*sizeof(char));
+	output_string[PACK_SIZE * total_in_pack]='\0';
 	cout << "INFO: Received string : " << output_string << endl;
+	for(int i=0; i<total_in_pack; i++){
+		printCharBuffHex(output_string+(i*PACK_SIZE),(2+1)*8);
+		
+	}
+
         clock_t next_cycle_rx = clock();
         double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
         cout << "INFO: Effective SPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
