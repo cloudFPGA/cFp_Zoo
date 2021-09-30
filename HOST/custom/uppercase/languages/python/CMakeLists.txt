@@ -25,6 +25,9 @@ endforeach()
 
 set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP")
 
+add_executable( uppercase_host_fwd_tb ../cplusplus/src/uppercase_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+target_link_libraries( uppercase_host_fwd_tb ${LIBXML2_LIBRARIES} )
+
 #this sets the output directory of anything SWIG generates
 set (CMAKE_SWIG_OUTDIR  ./swig_trieres_output)
 
