@@ -694,10 +694,10 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 			stop_cmd[k] = (char)2;
 	    }
 	 }
-	out.append(start_cmd,bytes_per_line/2);
+	out.append(start_cmd,3);//bytes_per_line/2);
 	char value[bytes_per_line];
-    memcpy(value, (char*)&mem_address, sizeof(unsigned int));
-    out.append(value,bytes_per_line/2);
+    memcpy(value, (char*)&mem_address, 5);
+    out.append(value,5);//bytes_per_line/2);
     for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
 	    out.append(filler_cmd,bytes_per_line);
     }

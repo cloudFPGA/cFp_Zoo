@@ -100,18 +100,19 @@ void pRXPath(
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
 
-        switch(netWord.tdata.range(1,0))//the command is in the first two bits
+        switch(netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT))//the command is in the first two bits
         {
           case(TEST_START_CMD):
             start_stop_local=true;
             *start_stop=true;
-            //netWord.tdata.range(1,0)=TEST_START_CMD;//28506595412;//"B_ACK";
-            //netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
-            //printf("%d %d gne \n", NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);
-            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,0) = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,NETWORK_WORD_BIT_WIDTH-32);//32 bits for the number of addresses to test 
+            //printf("%d %d gne \n", MEMTEST_ADDRESS_HIGH_BIT, MEMTEST_ADDRESS_LOW_BIT);
+      //std::cout << "DEBUG PROCESSING_PACKET before is " << netWord.tdata << std::endl;
+      //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
+
+            netWord.tdata = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT); 
 	    //printf("DEBUG I have to test %u\n",netWord.tdata);
       //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
-      std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
+      //std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
             sRxpToProcp_Data.write(netWord);
 	    printf("Hallo, I received a start command :D\n");
             break;
@@ -129,7 +130,7 @@ void pRXPath(
               //some data manipulation here
               // everything is running and should no sending anything back
             } else {
-              netWord.tdata.range(1,0)=TEST_INVLD_CMD;
+              netWord.tdata=TEST_INVLD_CMD;
               sRxpToProcp_Data.write(netWord);
             }
             break;
@@ -150,254 +151,6 @@ void pRXPath(
 
 
 /*****************************************************************************
- * @brief THIS processing the data once recieved a start command
- *
- * @param[in]  sRxpToProcp_Data
- * @param[out] sProcpToTxp_Data
- * @param[in]  start_stop
- *
- * @return Nothing.
- ******************************************************************************/
- void pTHISProcessingData(
-  stream<NetworkWord>                              &sRxpToProcp_Data,
-  stream<NetworkWord>                              &sProcpToTxp_Data,
-  stream<NetworkMetaStream>                        &sRxtoProc_Meta,
-  stream<NetworkMetaStream>                        &sProctoTx_Meta,
-  bool *                                             start_stop
-  ){
-
-    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma  HLS INLINE off
-    //-- LOCAL VARIABLES ------------------------------------------------------
-    NetworkWord    netWord;
-    NetworkWord    outNetWord;
-    word_t text;
-    static NetworkMetaStream  outNetMeta = NetworkMetaStream();;
-    static local_mem_word_t local_under_test_memory [LOCAL_MEM_ADDR_SIZE];
-    static local_mem_addr_t max_address_under_test; // byte addressable;
-    static local_mem_addr_non_byteaddressable_t local_mem_addr_non_byteaddressable;
-    static local_mem_addr_t curr_address_under_test;
-    static local_mem_addr_t first_faulty_address;
-    static ap_uint<32> faulty_addresses_cntr;
-    static ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
-    local_mem_word_t testingVector;
-    local_mem_word_t goldenVector;
-
-    static int writingCounter;
-    static int readingCounter;
-
-    static ap_uint<32> testCounter;
-
-#pragma HLS reset variable=outNetMeta
-#pragma HLS reset variable=local_under_test_memory
-#pragma HLS reset variable=max_address_under_test
-#pragma HLS reset variable=local_mem_addr_non_byteaddressable
-#pragma HLS reset variable=curr_address_under_test
-#pragma HLS reset variable=first_faulty_address
-#pragma HLS reset variable=faulty_addresses_cntr
-#pragma HLS reset variable=address_under_test
-#pragma HLS reset variable=processingFSM
-#pragma HLS reset variable=writingCounter
-#pragma HLS reset variable=readingCounter
-#pragma HLS reset variable=testCounter
-#pragma HLS reset variable=testingVector
-
-
-//assuming that whnever I send a start I must complete the run and then restart unless a stop
-// or stopping once done with the run
-    switch(processingFSM)
-    {
-      case FSM_PROCESSING_STOP:
-      printf("DEBUG proc FSM, I am in the STOP state\n");
-
-      /////////////////////////////////////////////////////////////////////////////////////////////
-      //TODO adding logic for saving the meta and sending continuously at the end of each test????
-      /////////////////////////////////////////////////////////////////////////////////////////////
-      //resetting once per test suite
-      max_address_under_test = 0; 
-      if ( !sRxtoProc_Meta.empty()  )
-      {
-       outNetMeta = sRxtoProc_Meta.read();
-      }
-      
-      if ( !sRxpToProcp_Data.empty() )
-      {
-        if ( *start_stop )
-        {
-          netWord = sRxpToProcp_Data.read();
-          max_address_under_test = netWord.tdata.range(32-1,0);// NETWORK_WORD_BIT_WIDTH-32);
-          #ifndef __SYNTHESIS__
-          std::cout << "DEBUG FSM_PROCESSING_STOP I have to test " << max_address_under_test << std::endl;
-          #endif //__SYNTHESIS__
-
-  //	printf("DEBUG I have to test %u\n", max_address_under_test);
-
-          //-- Read incoming data chunk
-          
-          processingFSM = FSM_PROCESSING_START;
-          } else {
-          testCounter = 0;
-        }
-      }
-
-      break;
-
-    case FSM_PROCESSING_START:
-      printf("DEBUG proc FSM, I am in the START state\n");
-
-      //resetting each execution to the 0 address
-      curr_address_under_test = 0; 
-      first_faulty_address = 0; 
-      faulty_addresses_cntr = 0;
-      local_mem_addr_non_byteaddressable = 0;
-      readingCounter=0;
-      writingCounter=0;
-      if ( *start_stop )
-      {
-
-      if ( !sProctoTx_Meta.full() )
-      {
-        sProctoTx_Meta.write(outNetMeta);
-
-	      if( testCounter != 0){
-		      testCounter += 1;
-	      }else{
-		      testCounter = 1;
-	      }
-        //testCounter =  (testCounter != 0) ? testCounter += 1 : 1;
-        processingFSM = FSM_PROCESSING_WRITE;
-      }
-
-      } else {
-
-        testCounter = 0;
-        processingFSM = FSM_PROCESSING_STOP;
-      }
-      break;
-
-
-    case FSM_PROCESSING_WRITE:
-      printf("DEBUG proc FSM, I am in the WRITE state\n");
-    #ifndef __SYNTHESIS__
-      std::cout << "DEBUG I have to test " << max_address_under_test << std::endl;
-    #endif //__SYNTHESIS__
-
-    //if not written all the needed memory cells write
-      if (local_mem_addr_non_byteaddressable < max_address_under_test)
-      {
-        printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
-        //genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
-        genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
-        #ifdef FAULT_INJECTION
-        if(testCounter > 2 && local_mem_addr_non_byteaddressable > 0){
-          //std::cout  << testCounter << std::endl;
-            local_under_test_memory[local_mem_addr_non_byteaddressable] &= 0;
-        }
-        #endif // FAULT_INJECTION
-        //memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable, lorem_ipsum_pattern+curr_address_under_test, LOCAL_MEM_WORD_BYTE_SIZE);
-        //printf("DEBUG WRITE FSM: writing %s \n",local_under_test_memory+local_mem_addr_non_byteaddressable);
-    // #ifndef __SYNTHESIS__
-    //     std::cout << "local mem " << local_under_test_memory[local_mem_addr_non_byteaddressable] << std::endl;
-    //  #endif //__SYNTHESIS__
-      
-        local_mem_addr_non_byteaddressable += 1;
-        curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
-        writingCounter += 1;
-
-      } else{
-        printf("DEBUG WRITE FSM, done with the write\n");
-        
-        local_mem_addr_non_byteaddressable = 0;
-        curr_address_under_test = 0;
-        processingFSM = FSM_PROCESSING_READ;
-
-      }
-      break;
-
-
-    case FSM_PROCESSING_READ:
-      printf("DEBUG proc FSM, I am in the READ state\n");
-
-    //if not read all the needed memory cells read
-      if (local_mem_addr_non_byteaddressable < max_address_under_test)
-      {
-        printf("DEBUG READ FSM, reading the memory\n");
-
-
-        //genFibonacciNumbers<ap_uint<32>, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
-        genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
-        
-        // char readingString [LOCAL_MEM_WORD_BYTE_SIZE];
-        //memcpy(testingVector,local_under_test_memory+local_mem_addr_non_byteaddressable,LOCAL_MEM_WORD_BYTE_SIZE);
-        testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
-
-
-        golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
-        {
-#pragma HLS UNROLL
-          //printf("READ %d ,%d %d\n", i, (i+1)*8-1, i*8);
-          //printf("%c",readingString[i]);
-          // #ifndef __SYNTHESIS__
-          //  std::cout << "comparing " << testingVector.range((i+1)*8-1,i*8) << " and  " << goldenVector.range((i+1)*8-1,i*8)<< std::endl;
-          // #endif //__SYNTHESIS__
-
-          //printf("comparing %x and %x\t",testingVector[i],goldenVector.range((i+1)*8-1,i*8));
-          if (testingVector.range((i+1)*8-1,i*8) != goldenVector.range((i+1)*8-1,i*8))//[i+curr_address_under_test]) // fault check
-          // if (readingString[i] != lorem_ipsum_pattern[i+curr_address_under_test]) // fault check
-          {
-          // #ifndef __SYNTHESIS__
-          //   std::cout << "curr addr " << curr_address_under_test << " idx  " << i << " faulty_addresses_cntr  " << faulty_addresses_cntr << " gne " << first_faulty_address << std::endl;
-          // #endif //__SYNTHESIS__
-            if (faulty_addresses_cntr == 0) //first fault
-            {
-              first_faulty_address = i+curr_address_under_test; //save the fault address
-            }
-            faulty_addresses_cntr += 1; //increment the fault counter
-          } 
-        }
-        curr_address_under_test += LOCAL_MEM_ADDR_OFFSET; //next test
-        local_mem_addr_non_byteaddressable += 1;
-
-      } else{ //done with the reads
-        printf("DEBUG READ FSM, done with the read\n");
-
-        if (!sProcpToTxp_Data.full() )
-        {
-          //wrtie first part so the result so how many addresses had problems
-          outNetWord.tkeep = 0xFF;
-          outNetWord.tlast = 0;
-          outNetWord.tdata = max_address_under_test;
-	        sProcpToTxp_Data.write(outNetWord);
-          outNetWord.tdata = faulty_addresses_cntr;
-	        sProcpToTxp_Data.write(outNetWord);
-          processingFSM = FSM_PROCESSING_OUTPUT;
-        }
-
-      }
-      break;
-
-    case FSM_PROCESSING_OUTPUT:
-      printf("DEBUG proc FSM, I am in the OUTPUT state\n");
-
-      if (!sProcpToTxp_Data.full() )
-      {
-          //wrtie second part of the result, so which was the first address with problems
-          outNetWord.tkeep = 0xFF;
-          outNetWord.tlast = 1;
-          outNetWord.tdata = first_faulty_address;
-          // std::cout << " faulty_addresses_cntr  " << faulty_addresses_cntr << " gne " << first_faulty_address << std::endl;
-
-	        sProcpToTxp_Data.write(outNetWord);
-          processingFSM = FSM_PROCESSING_START;
-      }
-      break;
-
-  }
- };
-
-
-
-/*****************************************************************************
  * @brief Transmit Path - From THIS to SHELL.
  *
  * @param[out] soTHIS_Shl_Data
@@ -414,7 +167,7 @@ void pTXPath(
   stream<NetworkMetaStream>   &soNrc_meta,
   stream<NetworkWord>         &sProcpToTxp_Data,
   stream<NetworkMetaStream>   &sRxtoTx_Meta,
-  stream<NodeId>          &sDstNode_sig,
+  stream<NodeId>              &sDstNode_sig,
   unsigned int                *processed_word_tx, 
   ap_uint<32>                 *pi_rank
 )

@@ -57,7 +57,7 @@ MY_STRING_CLEANED=$(shell sed -e 's/ //g' <<< "${MY_STRING_WITH_SEPARATOR}")
 #INPUT_STRING ?="${START_COMMAND}$(MY_STRING_WITH_SEPARATOR)${STOP_COMMAND}"
 INPUT_STRING ?= 5
 TEST_NUMBER ?= 1
-COMMAND_STRING ?=
+COMMAND_STRING ?=""
 
 src = ./src/${ipName}.cpp \
 			./test/test_${ipName}.cpp

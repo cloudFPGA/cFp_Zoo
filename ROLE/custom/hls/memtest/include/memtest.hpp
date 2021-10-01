@@ -65,6 +65,9 @@ enum MemTestCmd {
     TEST_INVLD_CMD = 0
 };
 
+#define MEMTEST_COMMANDS_HIGH_BIT 5
+#define MEMTEST_COMMANDS_LOW_BIT 0
+
 #define WAIT_FOR_META 0
 #define WAIT_FOR_STREAM_PAIR 1
 #define PROCESSING_PACKET 2
@@ -75,13 +78,6 @@ enum MemTestCmd {
 #define FSM_WRITE_NEW_DATA 0
 #define FSM_DONE 1
 #define PortFsmType uint8_t
-
-#define FSM_PROCESSING_STOP 0
-#define FSM_PROCESSING_START 1
-#define FSM_PROCESSING_WRITE 2
-#define FSM_PROCESSING_READ 3
-#define FSM_PROCESSING_OUTPUT 4
-#define ProcessingFsmType uint8_t
 
 
 #define DEFAULT_TX_PORT 2718
