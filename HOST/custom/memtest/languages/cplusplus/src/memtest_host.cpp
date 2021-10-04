@@ -117,6 +117,7 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char stop_cmd [bytes_per_line];
 	char filler_cmd [bytes_per_line];
+	char value[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
         filler_cmd[k]    = (char)0;
@@ -129,16 +130,14 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 			stop_cmd[k] = (char)2;
 	    }
 	 }
-	out.append(start_cmd,bytes_per_line/2);
-	//printStringHex(out,bytes_per_line/2);
-	char value[bytes_per_line];
+	out.append(start_cmd,3);
     memcpy(value, (char*)&mem_address, sizeof(unsigned int));
-    out.append(value,bytes_per_line/2);
+    out.append(value,5);
 	//printStringHex(out,bytes_per_line);
-    for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
-	    out.append(filler_cmd,bytes_per_line);
-    }
-	out.append(stop_cmd,bytes_per_line);
+    // for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
+	//     out.append(filler_cmd,bytes_per_line);
+    // }
+	// out.append(stop_cmd,bytes_per_line);
 	//printStringHex(out,bytes_per_line*2+bytes_per_line*(testingNumber * (2 * (mem_address+1)) + 2));
 
 }
@@ -251,8 +250,11 @@ int main(int argc, char *argv[])
 
     memory_addr_under_test = stoul(strInput_memaddrUT);
     testingNumber = stoul(strInput_nmbrTest);
-
-    size_t charOutputSize = PACK_SIZE*testingNumber; 
+	unsigned int test_pack = 1;
+	if((8 * (2+1) * testingNumber) / PACK_SIZE > 1){
+		test_pack = (unsigned int)(8 * (2+1) * testingNumber) / PACK_SIZE;
+	}
+    size_t charOutputSize = PACK_SIZE*(1+test_pack); 
 	//8 * (2 + 1) * testingNumber; this should be the real number but seems to send everything
 
 	string initial_input_string(input_string);
@@ -275,7 +277,7 @@ int main(int argc, char *argv[])
 	assert(PACK_SIZE % 8 == 0);
    
         unsigned int total_out_pack  =  1 + (input_string.length() - 1) / PACK_SIZE;// only a single tx
-        unsigned int total_in_pack  = testingNumber;
+        unsigned int total_in_pack  = 1 + test_pack;
 		
 
         unsigned int total_out_bytes = charInputSize;
@@ -333,7 +335,7 @@ int main(int argc, char *argv[])
 	clock_t last_cycle_rx = clock();
 	unsigned int receiving_now = PACK_SIZE;
         cout << "INFO: Expecting length of packs:" << total_in_pack << endl;
-        char * longbuf = new char[PACK_SIZE * total_in_pack];
+        char * longbuf = new char[PACK_SIZE * total_in_pack+1];
         for (unsigned int i = 0; i < charOutputSize; ) {
 		////////////////////////
 		//TODO: check the receiving loop
@@ -367,10 +369,10 @@ int main(int argc, char *argv[])
 	output_string = strncpy(output_string, longbuf, PACK_SIZE * total_in_pack*sizeof(char));
 	output_string[PACK_SIZE * total_in_pack]='\0';
 	cout << "INFO: Received string : " << output_string << endl;
-	for(int i=0; i<total_in_pack; i++){
-		printCharBuffHex(output_string+(i*PACK_SIZE),(2+1)*8);
-		
-	}
+	//for(int i=0; i<total_in_pack; i++){
+		//printCharBuffHex(output_string+(i*PACK_SIZE),PACK_SIZE);
+		printCharBuffHex(output_string,PACK_SIZE+8);
+	//}
 
         clock_t next_cycle_rx = clock();
         double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;

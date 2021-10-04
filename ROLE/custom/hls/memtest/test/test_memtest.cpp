@@ -172,8 +172,9 @@ int main(int argc, char** argv) {
     unsigned int tot_output_transfers = 1+(CEIL(8 * (2 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
 
 
-    size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8; //30+ (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2;
-    size_t charOutputSize = (1 * 8) + (8 * (2 + 1)) * testingNumber;
+    //size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 1 ) * 8;
+    size_t charInputSize = ( 1 ) * 8;
+    size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
@@ -186,11 +187,11 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-    string strInput;
-    string strGold;
+  std::string strInput="";
+  std::string strGold;
   
   
-  string strStop; 
+  std::string strStop; 
   unsigned int bytes_per_line = 8;
 	char stop_cmd [bytes_per_line];
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
@@ -203,13 +204,13 @@ int main(int argc, char** argv) {
 	 }
   strStop.append(stop_cmd,8);
 
-
+char * char_command;
 // Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
 // otheriwse the TB takes care and create the commands based on the inputs
     if(!strInput_commandstring.length()){
       createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
     }else{
-      char * char_command = new char[strInput_commandstring.length()];
+      char_command = new char[strInput_commandstring.length()];
       for (int i = 0; i < strInput_commandstring.length(); i++)
       {
         char tmp = strInput_commandstring[i];
@@ -217,11 +218,11 @@ int main(int argc, char** argv) {
         memcpy(char_command+i,(char*)&tmp_int, sizeof(char));
       }
       strInput.append(char_command,strInput_commandstring.length());
-      //printStringHex(strInput_commandstring, strInput_commandstring.length());
-      //printCharBuffHex(char_command, strInput_commandstring.length());
-      //printStringHex(strInput, strInput_commandstring.length());
+      printStringHex(strInput_commandstring, strInput_commandstring.length());
+      printCharBuffHex(char_command, strInput_commandstring.length());
+      printStringHex(strInput, strInput_commandstring.length());
     }
-    
+    strInput[strInput.length()]='\0';
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
 
 #ifdef DEBUG_MULTI_RUNS

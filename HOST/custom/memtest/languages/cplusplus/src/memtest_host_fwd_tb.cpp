@@ -250,7 +250,7 @@ int main(int argc, char * argv[]) {
 	synth_cmd = " ";
 	string exec_cmd = "make fcsim -j 4";
 	string ouf_file = "../../../../../../ROLE/custom/hls/memtest/memtest_prj/solution1/fcsim/build/hls_out.txt";
-	if (argc == 3) {
+	if (argc >= 3) {
 	    if (atoi(argv[2]) == 2) {
 		exec_cmd = "make csim";
 		ouf_file = "../../../../../../ROLE/custom/hls/memtest/memtest_prj/solution1/csim/build/hls_out.txt";
@@ -319,6 +319,8 @@ int main(int argc, char * argv[]) {
 	}
 	else {
 	    cout << "INFO: Succesfully received string from TB : " << out_string << endl; 
+		size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
+		printStringHex(out_string, charOutputSize);
 	    cout << "INFO: Will forward it back to host app ... total_pack=" << endl; 
 	}
 	        
