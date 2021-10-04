@@ -425,6 +425,74 @@ bool dumpStringToFileWithLastSetEveryGnoPackets(string s, const string   outFile
 }
 
 /*****************************************************************************
+ * @brief Fill an output file with data from a string and
+ *          set the tlast every gno packets
+ * 
+ * 
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @param[in] simCnt         
+ * @param[in] gno            the counter value at which this function set the tlast=1
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+bool dumpStringToFileWithLastInTheLastTwo64Bytes(string s, const string   outFileName, int simCnt)
+{
+    string      strLine;
+    ofstream    outFileStream;
+    string      datFile = "../../../../test/" + outFileName;
+    UdpWord     udpWord;
+    bool        rc = OK;
+    unsigned int bytes_per_line = 8;
+    
+    //-- STEP-1 : OPEN FILE
+    outFileStream.open(datFile.c_str());
+    if ( !outFileStream ) {
+        cout << "### ERROR : Could not open the output data file " << datFile << endl;
+        return(KO);
+    }
+    printf("came to dumpStringToFile: s.length()=%u\n", s.length());
+    
+    ap_uint<8> value[bytes_per_line];
+    unsigned int total_bytes = 0;
+    int cntr = 0;
+
+    //-- STEP-2 : DUMP STRING DATA TO FILE
+    for (unsigned int i = 0; i < s.length(); cntr += 1, i+=bytes_per_line, total_bytes+=bytes_per_line) {
+      //if (NPIX == XF_NPPC8) {
+        for (unsigned int k = 0; k < bytes_per_line; k++) {
+          if (i+k < s.length()) {
+        value[k] = s[i+k];
+          }
+          else {
+        value[k] = 0;
+          }
+          printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
+        }
+        udpWord.tdata = pack_ap_uint_64_(value);
+        udpWord.tkeep = 255;
+        // We are signaling a packet termination either at the end of the image or the end of MTU
+        if ((total_bytes >= (s.length() - bytes_per_line)) || 
+            ((total_bytes + bytes_per_line) % PACK_SIZE == 0) || ( i == s.length() - 2*bytes_per_line ) ) {
+          udpWord.tlast = 1;
+        }
+        else {
+          udpWord.tlast = 0;
+        }
+            printf("[%4.4d] IMG TB is dumping string to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+                    simCnt, datFile.c_str(), total_bytes, value,
+                    udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
+            if (!dumpDataToFile(&udpWord, outFileStream)) {
+          rc = KO;
+              break;
+            }
+    }
+    //-- STEP-3: CLOSE FILE
+    outFileStream.close();
+
+    return(rc);
+}
+
+/*****************************************************************************
  * @brief Initialize an input data stream from a file.
  *
  * @param[in]  inpFileName the name of the input file to read from.
@@ -682,6 +750,7 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char stop_cmd [bytes_per_line];
 	char filler_cmd [bytes_per_line];
+	char value[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
         filler_cmd[k]    = (char)0;
@@ -695,13 +764,17 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 	    }
 	 }
 	out.append(start_cmd,3);//bytes_per_line/2);
-	char value[bytes_per_line];
-    memcpy(value, (char*)&mem_address, 5);
+    memcpy(value, (char*)&mem_address, 4);
     out.append(value,5);//bytes_per_line/2);
-    for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
-	    out.append(filler_cmd,bytes_per_line);
-    }
-	out.append(stop_cmd,bytes_per_line);
+   // char tmp = (char)0;
+   // out.append(tmp,1);
+    cout << out.length() << endl;
+    printStringHex(out,8);
+
+    // for (int i = 0; i < (testingNumber * ((2 * (mem_address+1))) + 2); i++){
+	//     out.append(filler_cmd,bytes_per_line);
+    // }
+	// out.append(stop_cmd,bytes_per_line);
 }
 
 /*****************************************************************************
@@ -719,6 +792,8 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
 	char fault_cntr_cmd [bytes_per_line];
 	char fault_addr_cmd [bytes_per_line];
 	char filler_cmd [bytes_per_line];
+	char end_of_tests_cmd [bytes_per_line];
+	char stop_cmd [bytes_per_line];
     unsigned int fault_addr = 0;
     unsigned int first_faultTests = 3;
 
@@ -753,11 +828,16 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
 //init the commands and fill em out of the fault simulation before
     for(unsigned int i = 0; i < testingNumber; i++){
         for (unsigned int k = 0; k < bytes_per_line; k++) {
-            addr_cmd[k]    = (char)0;
-            filler_cmd[k]    = (char)0;
+            addr_cmd[k]          = (char)0;
+            filler_cmd[k]        = (char)0;
             fault_cntr_cmd[k]    = (char)0;
             fault_addr_cmd[k]    = (char)0;
+            stop_cmd[k]          = (char)0;
+            stop_cmd[k]          = (char)0;
+            end_of_tests_cmd[k]  = (char)0;
         }
+        stop_cmd[0]    = (char)2;
+        end_of_tests_cmd[0]    = (char)3;
 
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out.append(addr_cmd,bytes_per_line);
@@ -773,7 +853,10 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
             out.append(fault_addr_cmd,bytes_per_line);
         }
     }
+    out.append(end_of_tests_cmd,bytes_per_line);
+    out.append(stop_cmd,bytes_per_line);
 }
+
 
 /*****************************************************************************
  * @brief print byte-per-byte a given string in hexadecimal format

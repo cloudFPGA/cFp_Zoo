@@ -117,7 +117,13 @@ int main(int argc, char** argv) {
 
     string strInput_memaddrUT = argv[1];
     string strInput_nmbrTest = argv[2];
-    string strInput_commandstring = argv[3];
+    string strInput_commandstring= "";
+    cout << argc << " argc was, and argv "<< argv << endl;
+    if(argc > 3)
+    {
+      strInput_commandstring.assign(argv[3]);
+    }
+    
     unsigned int memory_addr_under_test=0;
     int testingNumber = 1;
     // string tmp_string= argv[1];
@@ -163,11 +169,11 @@ int main(int argc, char** argv) {
 
 
     unsigned int tot_input_transfers = (CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
-    unsigned int tot_output_transfers = (CEIL(testingNumber*PACK_SIZE, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+    unsigned int tot_output_transfers = 1+(CEIL(8 * (2 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
 
 
     size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8; //30+ (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2;
-    size_t charOutputSize = 8 * (2 + 1) * testingNumber;
+    size_t charOutputSize = (1 * 8) + (8 * (2 + 1)) * testingNumber;
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
@@ -182,6 +188,20 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     string strInput;
     string strGold;
+  
+  
+  string strStop; 
+  unsigned int bytes_per_line = 8;
+	char stop_cmd [bytes_per_line];
+	for (unsigned int k = 0; k < bytes_per_line; k++) {
+		if (k != 0) {
+			stop_cmd[k] = (char)0;
+	    }
+	    else {
+			stop_cmd[k] = (char)2;
+	    }
+	 }
+  strStop.append(stop_cmd,8);
 
 
 // Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
@@ -204,12 +224,19 @@ int main(int argc, char** argv) {
     
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
 
+#ifdef DEBUG_MULTI_RUNS
+for(int iterations=0; iterations < 5; iterations++){
+#endif //DEBUG_MULTI_RUNS
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
     //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
-    if (!dumpStringToFileWithLastSetEveryGnoPackets(strGold, "verify_UAF_Shl_Data.dat", simCnt, 3)) {
+    if (!dumpStringToFileWithLastInTheLastTwo64Bytes(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
+      //, 3)) {
+      nrErr++;
+    }
+    if (!dumpStringToFile(strStop, "ifsSHL_Uaf_STOPData.dat", simCnt)){ 
       nrErr++;
     }
 
@@ -247,6 +274,20 @@ int main(int argc, char** argv) {
               assert(s_udp_rx_ports == 0x1);
             }
 
+            if(simCnt == testingNumber * ((2 * (memory_addr_under_test+1))) + 2){
+              if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_STOPData.dat", simCnt)) { 
+              printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
+              nrErr++;
+              }
+              //there are tot_input_transfers streams from the the App to the Role
+              NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
+              for (unsigned int i=0; i<tot_input_transfers; i++) {
+                siUdp_meta.write(NetworkMetaStream(tmp_meta));
+              }        
+              //set correct node_rank and cluster_size
+                    node_rank = 1;
+                    cluster_size = 2;
+              }
             //if( !soUdp_meta.empty())
             //{
             //  NetworkMetaStream tmp_meta = soUdp_meta.read();
@@ -293,7 +334,6 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
-    //if (!dumpFileToStringWithoutCommands("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
     if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
@@ -303,7 +343,6 @@ int main(int argc, char** argv) {
        printf("%x", charInput[i]); 
     printf("\n");    
     if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
-    //if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
@@ -312,7 +351,9 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < charOutputSize; i++)
        printf("%x", charOutput[i]); 
     printf("\n");
-
+#ifdef DEBUG_MULTI_RUNS
+}
+ #endif//DEBUG_MULTI_RUNS  
     //------------------------------------------------------
     //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------

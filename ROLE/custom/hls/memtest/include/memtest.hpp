@@ -60,6 +60,7 @@ enum UppercaseCmd {
  * Internal MemTest accelerator command
  ********************************************/
 enum MemTestCmd {
+    TEST_ENDOFTESTS_CMD  = 3,
     TEST_STOP_CMD  = 2,
     TEST_START_CMD = 1,
     TEST_INVLD_CMD = 0
@@ -79,6 +80,7 @@ enum MemTestCmd {
 #define FSM_DONE 1
 #define PortFsmType uint8_t
 
+//#define DEBUG_MULTI_RUNS
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718

@@ -108,8 +108,7 @@ void pRXPath(
             //printf("%d %d gne \n", MEMTEST_ADDRESS_HIGH_BIT, MEMTEST_ADDRESS_LOW_BIT);
       //std::cout << "DEBUG PROCESSING_PACKET before is " << netWord.tdata << std::endl;
       //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
-
-            netWord.tdata = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT); 
+            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,0) = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT); 
 	    //printf("DEBUG I have to test %u\n",netWord.tdata);
       //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
       //std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
@@ -311,8 +310,10 @@ void memtest(
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkMetaStream> sRxtoProc_Meta("sRxtoProc_Meta");
   static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
-  static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); // FIXME: works even with no static
-  static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
+  static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); 
+ #pragma HLS STREAM variable=sProcpToTxp_Data depth=max_proc_fifo_depth dim=1
+
+  static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
