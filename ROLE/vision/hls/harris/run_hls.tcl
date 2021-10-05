@@ -26,7 +26,8 @@
 # ------------------------------------------------------------------------------
 set projectName    "harris"
 set solutionName   "solution1"
-set xilPartName    "xcku060-ffva1156-2-i"
+#set xilPartName    "xcku060-ffva1156-2-i"
+set xilPartName    "xcvu9p-flgb2104-2-i"
 
 set ipName         ${projectName}
 set ipDisplayName  "Harris Application Example."
@@ -46,6 +47,7 @@ set incDir       ${currDir}/include
 set testDir      ${currDir}/test
 set implDir      ${currDir}/${projectName}_prj/${solutionName}/impl/ip
 set repoDir      ${currDir}/../../ip
+set hlsVersion   $env(hlsVersion)
 
 # ------------------------------------------------------------------------------
 # Get targets out of env
@@ -83,7 +85,7 @@ set OPENCV_LIB_REF   "-lopencv_imgcodecs -lopencv_imgproc -lopencv_core -lopencv
 # ------------------------------------------------------------------------------
 open_project  ${projectName}_prj
 set_top       ${projectName}
-#set_top cornerHarris_accel
+#set_top cornerHarrisAccelMem
 #set_top harris_accel
 
 set vitis_flags  "-D__SDSVHLS__ -std=c++0x"
@@ -92,7 +94,7 @@ if { $hlsSim} {
   set hlslib_flags "-std=c++11 "
 }
 if { $hlsSyn || $hlsCoSim}  {
-  set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS"
+  set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS -DHLS_VERSION=${hlsVersion}"
 }
 # the -I flag without trailing '/'!!
 add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${VISION_INC_FLAGS} ${vitis_flags} ${hlslib_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${VISION_INC_FLAGS} ${vitis_flags} ${hlslib_flags}"
@@ -102,10 +104,17 @@ add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFD
 # ------------------------------------------------------------------------------
 # Create a solution
 # ------------------------------------------------------------------------------
-open_solution ${solutionName}
+open_solution ${solutionName} -flow_target vitis
 
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default
+
+set vpp_optimize_level 0
+config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512
+config_rtl -m_axi_conservative_mode=1 -register_reset_num 3
+config_export -vivado_optimization_level $vpp_optimize_level
+config_dataflow -strict_mode warning
+
 
 # Enable an 64-bit address interface for axi master. We need it for the FPGA DRAM I/F
 config_interface -m_axi_addr64

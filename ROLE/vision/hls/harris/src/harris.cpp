@@ -1280,10 +1280,18 @@ void harris(
 #pragma HLS INTERFACE axis register both port=soNrc_meta
 
 #pragma HLS INTERFACE ap_ovld register port=po_rx_ports name=poROL_NRC_Rx_ports
+    
+#if HLS_VERSION < 20211
 #pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
-
-  
+#elif HLS_VERSION >= 20211
+  #pragma HLS stable variable=pi_rank
+  #pragma HLS stable variable=pi_size    
+#else
+    printf("ERROR: Invalid HLS_VERSION=%s\n", HLS_VERSION);
+    exit(-1);
+#endif
+    
 #ifdef ENABLE_DDR
 
 // Bundling: SHELL / Role / Mem / Mp0 / Read Interface
@@ -1299,8 +1307,16 @@ void harris(
 #pragma HLS INTERFACE axis register both port=siMemWrStsP0
 #pragma HLS INTERFACE axis register both port=soMemWriteP0
 
+#if HLS_VERSION <= 20201
 #pragma HLS DATA_PACK variable=soMemWrCmdP0 instance=soMemWrCmdP0
 #pragma HLS DATA_PACK variable=siMemWrStsP0 instance=siMemWrStsP0    
+#elif HLS_VERSION >= 20211
+#pragma HLS aggregate variable=soMemWrCmdP0 compact=bit    
+#pragma HLS aggregate variable=siMemWrStsP0 compact=bit  
+#else
+    printf("ERROR: Invalid HLS_VERSION=%s\n", HLS_VERSION);
+    exit(-1);
+#endif
     
 const unsigned int ddr_mem_depth = TOTMEMDW_512;
 const unsigned int ddr_latency = DDR_LATENCY;
