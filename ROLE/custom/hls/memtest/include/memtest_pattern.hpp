@@ -28,6 +28,8 @@ using namespace hls;
 #define LOCAL_MEM_WORD_SIZE 512
 #define LOCAL_MEM_ADDR_SIZE 20
 #define MEMTEST_ADDRESS_BITWIDTH 40
+#define MEMTEST_ITERATION_BITWIDTH 16
+
 
 typedef ap_uint<LOCAL_MEM_WORD_SIZE>  local_mem_word_t;
 typedef ap_uint<MEMTEST_ADDRESS_BITWIDTH>  local_mem_addr_t; 
@@ -36,8 +38,11 @@ typedef ap_uint<LOCAL_MEM_ADDR_SIZE_NON_BYTE_ADDRESSABLE>  local_mem_addr_non_by
 #define LOCAL_MEM_ADDR_OFFSET (LOCAL_MEM_WORD_SIZE/8) //byte addres offset
 #define LOCAL_MEM_WORD_BYTE_SIZE (LOCAL_MEM_WORD_SIZE/8) //byte size of a local mem word
 
-#define MEMTEST_ADDRESS_HIGH_BIT NETWORK_WORD_BIT_WIDTH-1
-#define MEMTEST_ADDRESS_LOW_BIT NETWORK_WORD_BIT_WIDTH-MEMTEST_ADDRESS_BITWIDTH
+#define MEMTEST_ADDRESS_HIGH_BIT NETWORK_WORD_BIT_WIDTH-1 // 63
+#define MEMTEST_ADDRESS_LOW_BIT NETWORK_WORD_BIT_WIDTH-MEMTEST_ADDRESS_BITWIDTH //64-40 = 24
+
+#define MEMTEST_ITERATIONS_HIGH_BIT MEMTEST_ADDRESS_LOW_BIT-1 // 23
+#define MEMTEST_ITERATIONS_LOW_BIT  MEMTEST_ITERATIONS_HIGH_BIT+1-MEMTEST_ITERATION_BITWIDTH // 
 
 #define MAX_ITERATION_COUNT 10
 const unsigned int max_proc_fifo_depth = MAX_ITERATION_COUNT;
@@ -180,7 +185,7 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
     static NetworkMetaStream  outNetMeta = NetworkMetaStream();;
     static ProcessingFsmType processingFSM  = FSM_PROCESSING_WAIT_FOR_META;
 
-
+    static ap_uint<16> max_iterations;
     static local_mem_addr_t first_faulty_address;
 #pragma HLS reset variable=first_faulty_address
     static ap_uint<32> faulty_addresses_cntr;
@@ -226,7 +231,8 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
       //assuming also the shell is able to take care of sending multiple meta if needed
       printf("DEBUG proc FSM, I am in the WAIT_FOR_META state\n");
       //resetting once per test suite
-      max_address_under_test = 0; 
+      max_address_under_test = 0;
+      max_iterations=0;
       if ( !sRxtoProc_Meta.empty()  && !sProctoTx_Meta.full())
       {
         outNetMeta = sRxtoProc_Meta.read();
@@ -244,7 +250,7 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full())
       {
         netWord = sRxpToProcp_Data.read();
-        switch (netWord.tdata)
+        switch (netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT))
         {
         case TEST_INVLD_CMD:
           /* FWD an echo of the invalid*/
@@ -263,8 +269,12 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
           break;    
         default:
           /* Execute*/
-          printf("DEBUG processing the packet with the address within cmd\n");
-          max_address_under_test = netWord.tdata(MEMTEST_ADDRESS_BITWIDTH-1,0);
+         // printf("DEBUG processing the packet with the address within cmd\n");
+          max_address_under_test = netWord.tdata(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT);
+          max_iterations = netWord.tdata.range(MEMTEST_ITERATIONS_HIGH_BIT,MEMTEST_ITERATIONS_LOW_BIT);
+    #ifndef __SYNTHESIS__
+          printf("DEBUG processing the packet with the address %s within cmd %s\n", max_address_under_test.to_string().c_str(), max_iterations.to_string().c_str());
+    #endif //__SYNTHESIS__
           processingFSM = FSM_PROCESSING_START;
           break;
         }
@@ -290,16 +300,20 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
         readingCounter=0;
         writingCounter=0;
         faulty_addresses_cntr = 0;
-        if(*start_stop){
+        if(*start_stop && testCounter < max_iterations){ //stopping conditions: either a Stop or the maximum iterations
     #ifndef __SYNTHESIS__
-          printf("DEBUG processing continuous run (still run, iter %s)\n",testCounter.to_string().c_str());
+          printf("DEBUG processing continuous run (still run, iter %s) max iters: %s\n",testCounter.to_string().c_str(),max_iterations.to_string().c_str());
     #endif //__SYNTHESIS__
           processingFSM = FSM_PROCESSING_WRITE;
           break;
         }else{
-          printf("DEBUG processing continuous run (stop the run)\n");
-          //FWD the stop and signal the end of the packet
-          outNetWord.tdata=TEST_ENDOFTESTS_CMD;
+    #ifndef __SYNTHESIS__
+          printf("DEBUG processing continuous run (stop the run at iter %s) max iters: %s \n",testCounter.to_string().c_str(),max_iterations.to_string().c_str());
+    #endif //__SYNTHESIS__
+          
+          //FWD the stop and signal the end of the packet with the iteration of the tests performed
+          outNetWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT)=TEST_ENDOFTESTS_CMD;
+          outNetWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,MEMTEST_COMMANDS_HIGH_BIT+1)=testCounter;
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 1;
           sProcpToTxp_Data.write(outNetWord);

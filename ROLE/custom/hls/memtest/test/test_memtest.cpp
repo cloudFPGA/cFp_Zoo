@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
     }
     
     unsigned int memory_addr_under_test=0;
-    int testingNumber = 1;
+    unsigned int testingNumber = 1;
     // string tmp_string= argv[1];
     // string strInput;
 
@@ -147,9 +147,9 @@ int main(int argc, char** argv) {
     }
     else {
       memory_addr_under_test = stoul(strInput_memaddrUT);
-      testingNumber = stoi(strInput_nmbrTest);
+      testingNumber = stoul(strInput_nmbrTest);
       printf("Succesfully loaded string ... %s\n", argv[1]);
-      printf("Succesfully loaded the address number %u and the number of testings %d\n", memory_addr_under_test, testingNumber);
+      printf("Succesfully loaded the address number %u and the number of testings %u\n", memory_addr_under_test, testingNumber);
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
     }
@@ -168,13 +168,13 @@ int main(int argc, char** argv) {
     unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+1)) + 2) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
 
 
-    unsigned int tot_input_transfers = (CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
-    unsigned int tot_output_transfers = 1+(CEIL(8 * (2 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
+    unsigned int tot_output_transfers = (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
 
 
     //size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 1 ) * 8;
     size_t charInputSize = ( 1 ) * 8;
-    size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
+    size_t charOutputSize = ((8 * (2 + 1 + 1)) * testingNumber);
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
@@ -190,6 +190,7 @@ int main(int argc, char** argv) {
   std::string strInput="";
   std::string strGold;
   
+#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
   
   std::string strStop; 
   unsigned int bytes_per_line = 8;
@@ -203,6 +204,7 @@ int main(int argc, char** argv) {
 	    }
 	 }
   strStop.append(stop_cmd,8);
+#endif //SIM_STOP_COMPUTATION
 
 char * char_command;
 // Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
@@ -233,14 +235,16 @@ for(int iterations=0; iterations < 5; iterations++){
       nrErr++;
     }
     //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
-    if (!dumpStringToFileWithLastInTheLastTwo64Bytes(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
+    if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
       //, 3)) {
       nrErr++;
     }
+#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
+
     if (!dumpStringToFile(strStop, "ifsSHL_Uaf_STOPData.dat", simCnt)){ 
       nrErr++;
     }
-
+#endif // SIM_STOP_COMPUTATION
     //------------------------------------------------------
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
@@ -274,7 +278,7 @@ for(int iterations=0; iterations < 5; iterations++){
             {
               assert(s_udp_rx_ports == 0x1);
             }
-
+#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
             if(simCnt == testingNumber * ((2 * (memory_addr_under_test+1))) + 2){
               if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_STOPData.dat", simCnt)) { 
               printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
@@ -289,6 +293,8 @@ for(int iterations=0; iterations < 5; iterations++){
                     node_rank = 1;
                     cluster_size = 2;
               }
+#endif //SIM_STOP_COMPUTATION
+              
             //if( !soUdp_meta.empty())
             //{
             //  NetworkMetaStream tmp_meta = soUdp_meta.read();
@@ -347,7 +353,12 @@ for(int iterations=0; iterations < 5; iterations++){
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
-    __file_write("./hls_out.txt", charOutput, charOutputSize);
+    //__file_write("./hls_out.txt", charOutput, charOutputSize);
+    charOutput[charOutputSize]='\0';
+    string out_string;
+    out_string.append(charOutput,charOutputSize);
+
+    dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
     printf("Output string: ");
     for (unsigned int i = 0; i < charOutputSize; i++)
        printf("%x", charOutput[i]); 
@@ -367,6 +378,25 @@ for(int iterations=0; iterations < 5; iterations++){
     } else {
       printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
     }
+///////////////////////
+////TODO: create an output parsing stuff
+///////////////////////
+
+  char * longbuf = new char[PACK_SIZE];
+  string ouf_file ="./hls_out.txt";
+	int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
+  	// TX step
+
+    
+  string provaciancora;
+  provaciancora.append(longbuf,charOutputSize*2+1);
+  printCharBuffHex(longbuf, charOutputSize*2+1);
+	out_string = longbuf;
+  string out_hex_string;
+	cout << "INFO: received string : " << provaciancora << endl; 
+	cout << "INFO: received string : " << longbuf << endl; 
+		printStringHex(provaciancora, charOutputSize);
+///////////////////////
 
     nrErr += rc1;
 

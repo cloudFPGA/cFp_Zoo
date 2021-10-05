@@ -355,6 +355,57 @@ bool dumpStringToFile(string s, const string   outFileName, int simCnt)
     return(rc);
 }
 
+/*****************************************************************************
+ * @brief Fill an output file with data from an image.
+ * 
+ * 
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+bool dumpStringToFileOnlyRawData(string s, const string   outFileName, int simCnt, size_t out_size)
+{
+    printStringHex(s, out_size);
+
+    string      strLine;
+    ofstream    outFileStream;
+    string      datFile = outFileName; //"../../../../test/" + outFileName;
+    bool        rc = OK;
+    unsigned int bytes_per_line = 8;
+    
+    //-- STEP-1 : OPEN FILE
+    outFileStream.open(datFile.c_str());
+    if ( !outFileStream ) {
+        cout << "### ERROR : Could not open the output data file " << datFile << endl;
+        return(KO);
+    }
+    printf("came to dumpStringToFile: s.length()=%u\n", out_size);
+    
+    ap_uint<8> value[bytes_per_line];
+    unsigned int total_bytes = 0;
+    //-- STEP-2 : DUMP STRING DATA TO FILE
+    for (unsigned int i = 0; i < out_size; i+=bytes_per_line, total_bytes+=bytes_per_line) {
+        for (unsigned int k = 0; k < bytes_per_line; k++) {
+          if (i+k < out_size) {
+        value[k] = s[i+k];
+          }
+          else {
+        value[k] = 0;
+          }
+          printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
+        }
+        ap_uint<64> tdata = pack_ap_uint_64_(value);
+
+            printf("[%4.4d] IMG TB is dumping string to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX} \n",
+                    simCnt, datFile.c_str(), total_bytes, value, tdata.to_long());
+        outFileStream << hex << noshowbase << setfill('0') << setw(16) << tdata.to_uint64();
+    }
+    outFileStream << "\n";
+    //-- STEP-3: CLOSE FILE
+    outFileStream.close();
+
+    return(rc);
+}
 
 /*****************************************************************************
  * @brief Fill an output file with data from a string and
@@ -744,7 +795,7 @@ void attachBitformattedStringCommandAndRefill(const string& in, string& out)
  * @param[in]  testingNumber the number of tests to perform on the memory
  * 
  ******************************************************************************/
-void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
+void createMemTestCommands(unsigned int mem_address, string& out, unsigned int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
@@ -763,14 +814,13 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 			stop_cmd[k] = (char)2;
 	    }
 	 }
+    memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out.append(start_cmd,3);//bytes_per_line/2);
     memcpy(value, (char*)&mem_address, 4);
     out.append(value,5);//bytes_per_line/2);
    // char tmp = (char)0;
    // out.append(tmp,1);
-    cout << out.length() << endl;
-    printStringHex(out,8);
-
+   
     // for (int i = 0; i < (testingNumber * ((2 * (mem_address+1))) + 2); i++){
 	//     out.append(filler_cmd,bytes_per_line);
     // }
@@ -785,7 +835,7 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
  * @param[in]  testingNumber the number of tests to perform on the memory
  * 
  ******************************************************************************/
-void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testingNumber)
+void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
 	char addr_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
@@ -838,6 +888,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
         }
         stop_cmd[0]    = (char)2;
         end_of_tests_cmd[0]    = (char)3;
+        memcpy(end_of_tests_cmd+1, (char*)&testingNumber, 2);
 
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out.append(addr_cmd,bytes_per_line);
@@ -854,7 +905,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, int testin
         }
     }
     out.append(end_of_tests_cmd,bytes_per_line);
-    out.append(stop_cmd,bytes_per_line);
+  //  out.append(stop_cmd,bytes_per_line);
 }
 
 
@@ -922,6 +973,36 @@ __file_read(const char *fname, char *buff, size_t len)
 		return -ENODEV;
 	}
 	rc = fread(buff, len, 1, fp);
+	if (rc == -1) {
+		fprintf(stderr, "err: Cannot read from %s: %s\n",
+			fname, strerror(errno));
+		fclose(fp);
+		return -EIO;
+	}
+	fclose(fp);
+	return rc;
+}
+
+static inline ssize_t
+__file_read_hex(const char *fname, char *buff, size_t len)
+{
+	int rc;
+	FILE *fp;
+    ifstream infile(fname, fstream::in);
+
+
+	if ((fname == NULL) || (buff == NULL) || (len == 0))
+		return -EINVAL;
+
+	fp = fopen(fname, "r");
+	if (!fp) {
+		fprintf(stderr, "err: Cannot open file %s: %s\n",
+			fname, strerror(errno));
+		return -ENODEV;
+	}
+	//rc = fread(buff, len, 1, fp);
+    infile.setf (std::ios::hex);
+    infile.get(buff, len);
 	if (rc == -1) {
 		fprintf(stderr, "err: Cannot read from %s: %s\n",
 			fname, strerror(errno));

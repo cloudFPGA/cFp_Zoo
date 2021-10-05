@@ -69,8 +69,7 @@ void pRXPath(
      #pragma  HLS INLINE 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
-    // word_t text;
-    //UppercaseCmd fsmCmd;
+    ap_uint<16> max_iterations;
     static bool start_stop_local = false;
 #pragma HLS reset variable=start_stop_local
 
@@ -105,11 +104,13 @@ void pRXPath(
           case(TEST_START_CMD):
             start_stop_local=true;
             *start_stop=true;
+            //max_iterations= netWord.tdata.range(MEMTEST_ITERATIONS_HIGH_BIT,MEMTEST_ITERATIONS_LOW_BIT);
             //printf("%d %d gne \n", MEMTEST_ADDRESS_HIGH_BIT, MEMTEST_ADDRESS_LOW_BIT);
       //std::cout << "DEBUG PROCESSING_PACKET before is " << netWord.tdata << std::endl;
       //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
-            netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,0) = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT); 
-	    //printf("DEBUG I have to test %u\n",netWord.tdata);
+           // netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,0) = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT);
+            //netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,MEMTEST_ADDRESS_HIGH_BIT) = max_iterations;
+
       //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
       //std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
             sRxpToProcp_Data.write(netWord);
