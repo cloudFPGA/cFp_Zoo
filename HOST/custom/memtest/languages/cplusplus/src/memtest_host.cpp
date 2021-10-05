@@ -111,7 +111,7 @@ void printCharBuffHex(const char * inStr, size_t strSize){
 	
 }
 
-void createMemTestCommands(unsigned int mem_address, string& out, int testingNumber)
+void createMemTestCommands(unsigned int mem_address, string& out, unsigned int testingNumber)
 {
 	unsigned int bytes_per_line = 8;
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
@@ -130,6 +130,7 @@ void createMemTestCommands(unsigned int mem_address, string& out, int testingNum
 			stop_cmd[k] = (char)2;
 	    }
 	 }
+	memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out.append(start_cmd,3);
     memcpy(value, (char*)&mem_address, sizeof(unsigned int));
     out.append(value,5);
@@ -214,7 +215,7 @@ int main(int argc, char *argv[])
 	std::string strInput_memaddrUT;
     std::string strInput_nmbrTest;
 	unsigned int memory_addr_under_test=0;
-    int testingNumber = 1;
+    unsigned int testingNumber = 1;
     //UDPSocket *udpsock_p;
     //TCPSocket *tcpsock_p;
   
@@ -261,7 +262,7 @@ int main(int argc, char *argv[])
 
 	createMemTestCommands(memory_addr_under_test, input_string, testingNumber);
 	size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8;
-	//printStringHex(input_string,charInputSize*sizeof(char));
+	printStringHex(input_string,charInputSize*sizeof(char));
 
 	if (input_string.length() == 0) {
             cerr << "Empty string provided. Aborting...\n\n" << endl;

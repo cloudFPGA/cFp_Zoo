@@ -27,6 +27,8 @@
 #include <stdio.h>
 #include "../../../../../PracticalSockets/src/PracticalSockets.h"
 #include "../include/config.h"
+#include<algorithm>
+#include <fstream>
 
 
 static inline ssize_t
@@ -69,6 +71,35 @@ __file_read(const char *fname, char *buff, size_t len)
 	return rc;
 }
 
+static inline ssize_t
+__file_read_hex(const char *fname, char *buff, size_t len)
+{
+	int rc;
+	FILE *fp;
+    ifstream infile(fname, fstream::in);
+
+
+	if ((fname == NULL) || (buff == NULL) || (len == 0))
+		return -EINVAL;
+
+	fp = fopen(fname, "r");
+	if (!fp) {
+		fprintf(stderr, "err: Cannot open file %s: %s\n",
+			fname, strerror(errno));
+		return -ENODEV;
+	}
+	//rc = fread(buff, len, 1, fp);
+    infile.setf (std::ios::hex);
+    infile.get(buff, len);
+	if (rc == -1) {
+		fprintf(stderr, "err: Cannot read from %s: %s\n",
+			fname, strerror(errno));
+		fclose(fp);
+		return -EIO;
+	}
+	fclose(fp);
+	return rc;
+}
 
 bool findCharNullPos (char * str) {
     unsigned int len = strlen(str);
@@ -214,9 +245,10 @@ int main(int argc, char * argv[]) {
 		//printCharBuffHex(buffer, recvMsgSize);
 
 	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
-		longbuf[total_size+1]='\0';
-		//printCharBuffHex(longbuf, recvMsgSize);
+		printCharBuffHex(longbuf, recvMsgSize);
 		total_size += recvMsgSize;
+		longbuf[total_size+1]='\0';
+
 		
 	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
 	    if (nullcharfound != true) {
@@ -237,15 +269,28 @@ int main(int argc, char * argv[]) {
 	    cerr << "ERROR: received an empty string! Aborting..." << endl;
             return -1;
 	}
-	// unsigned int memory_addr_under_test = 0;
-	// unsigned int testingNumber = 0;
-	// memcpy(&memory_addr_under_test,(char*)&input_string,8);
-	// memcpy(&testingNumber,(char*)(&input_string+8),8);
-	// cout << "My wonderful input string is: " << hex << input_string << dec << endl;
+
+	//DECODING LOGIC for output size determination
+	unsigned int memory_addr_under_test = 0;
+	unsigned int testingNumber = 0;
+	printStringHex(input_string,input_string.length());
+	char char_addres[6];
+	char char_testNmbr[3];
+	// revert the input string and extract substring
+	reverse(input_string.begin(), input_string.end());
+	string2hexnumerics(input_string.substr(5,2),char_testNmbr,2);
+	string2hexnumerics(input_string.substr(0,5),char_addres,5);
+	//
+	string tmp;
+	tmp.assign(char_testNmbr,2);
+
+	testingNumber = stoul(tmp,nullptr,10);
+	tmp.assign(char_addres,5);
+
+	memory_addr_under_test = stoul(tmp,nullptr,10);
 	// cout << "mem addr " << memory_addr_under_test << endl;
 	// cout << "test " << testingNumber << endl;
-
-	    
+	reverse(input_string.begin(), input_string.end());
 	// Select simulation mode, default fcsim
 	synth_cmd = " ";
 	string exec_cmd = "make fcsim -j 4";
@@ -298,7 +343,9 @@ int main(int argc, char * argv[]) {
 //////////////TODO: need to check the proper emulation
 ////////////////////////////////////////////////////////
 	ssize_t size = __file_size(ouf_file.c_str());
-	int rc = __file_read(ouf_file.c_str(), longbuf, size);
+	size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
+
+	int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
 	if (rc < 0) {
 	    cerr << "ERROR: Cannot read file " << ouf_file << " . Aborting..."<< endl;
 	    return -1;
@@ -319,7 +366,6 @@ int main(int argc, char * argv[]) {
 	}
 	else {
 	    cout << "INFO: Succesfully received string from TB : " << out_string << endl; 
-		size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
 		printStringHex(out_string, charOutputSize);
 	    cout << "INFO: Will forward it back to host app ... total_pack=" << endl; 
 	}
