@@ -174,7 +174,7 @@ int main(int argc, char** argv) {
 
     //size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 1 ) * 8;
     size_t charInputSize = ( 1 ) * 8;
-    size_t charOutputSize = ((8 * (2 + 1 + 1)) * testingNumber);
+    size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
     
@@ -357,7 +357,7 @@ for(int iterations=0; iterations < 5; iterations++){
     charOutput[charOutputSize]='\0';
     string out_string;
     out_string.append(charOutput,charOutputSize);
-
+		printStringHex(out_string, charOutputSize);
     dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
     printf("Output string: ");
     for (unsigned int i = 0; i < charOutputSize; i++)
@@ -384,19 +384,49 @@ for(int iterations=0; iterations < 5; iterations++){
 
   char * longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
-	int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
-  	// TX step
+  int rawdatalines=0;
+  dumpFileToStringRawData(ouf_file, longbuf, &rawdatalines);
+  printCharBuffHex(longbuf, charOutputSize);
+  longbuf[charOutputSize+1]='\0';
+  string longbuf_string(longbuf);
+  int rawiterations = charOutputSize / 8;
+  cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
+  bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
-    
-  string provaciancora;
-  provaciancora.append(longbuf,charOutputSize*2+1);
-  printCharBuffHex(longbuf, charOutputSize*2+1);
-	out_string = longbuf;
-  string out_hex_string;
-	cout << "INFO: received string : " << provaciancora << endl; 
-	cout << "INFO: received string : " << longbuf << endl; 
-		printStringHex(provaciancora, charOutputSize);
+  int k = 1;
+  for (int i = 1; i < rawdatalines+1; i++)
+  {
+    cout << "DEBUG current iterator " << k << endl;
+    //priority encoding inverse
+    if(is_stop_present && k==5){
+
+      cout << "DEBUG the stop i s present and is here" << endl;
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
+      cout << "DEBUG last command with the iterations " << endl;
+
+    } else  if(k==3){ //first faut addres
+      //substr extraction and parsing
+      cout << "DEBUG first fault address (or the third data pckt)" << endl;
+      if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
+        k=0;
+      cout << "DEBUG reinit the counter" << endl;
+        
+      }
+
+    }else if(k==2){ // fault cntr
+      //substr extraction and parsing
+      cout << "DEBUG the fault counters (or the second data pack)" << endl;
+    }else { //max addrss
+      //substr extraction and parsing
+      cout << "DEBUG max address (or the first data pack)" << endl;
+
+    }
+    k++;
+  }
+  
+
 ///////////////////////
+
 
     nrErr += rc1;
 
@@ -408,8 +438,9 @@ for(int iterations=0; iterations < 5; iterations++){
         printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
     }
     printf("#####################################################\n");
-    free(charOutput);
-    free(charInput);
+    delete[] longbuf;
+         free(charInput);
+     free(charOutput);
 
     return(nrErr);
 }

@@ -398,9 +398,10 @@ bool dumpStringToFileOnlyRawData(string s, const string   outFileName, int simCn
 
             printf("[%4.4d] IMG TB is dumping string to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX} \n",
                     simCnt, datFile.c_str(), total_bytes, value, tdata.to_long());
-        outFileStream << hex << noshowbase << setfill('0') << setw(16) << tdata.to_uint64();
-    }
+        outFileStream << hex << setfill('0') << setw(16) << tdata.to_uint64();
+        //outFileStream << hex << noshowbase << setfill('0') << setw(16) << tdata.to_uint64();
     outFileStream << "\n";
+    }
     //-- STEP-3: CLOSE FILE
     outFileStream.close();
 
@@ -584,6 +585,50 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
 		//printf("[%4.4d] TB is filling string with character %c\n",
                 //   simCnt, (char)value[k]);
 	    }
+        }
+    }
+
+    //-- STEP-3: CLOSE FILE
+    inpFileStream.close();
+
+    return(OK);
+}
+
+/*****************************************************************************
+ * @brief Initialize an input data stream from a file.
+ *
+ * @param[in]  inpFileName the name of the input file to read from.
+ * @param[out] strOutput the output string to set.
+ * @return OK if successful otherwise KO.
+ ******************************************************************************/
+bool dumpFileToStringRawData(const string inpFileName, char* charOutput, int * rawdatalines) {
+    string      strLine;
+    ifstream    inpFileStream;
+    string      datFile = inpFileName;
+    long unsigned int  mylongunsigned;
+    unsigned int i = 0;
+    unsigned int bytes_per_line = 8;
+    //-- STEP-1 : OPEN FILE
+    inpFileStream.open(datFile.c_str());
+    if ( !inpFileStream ) {
+        cout << "### ERROR : Could not open the input data file " << datFile << endl;
+        return(KO);
+    }
+
+    //-- STEP-2 : SET DATA STREAM
+    while (inpFileStream) {
+
+        if (!inpFileStream.eof()) {
+
+            getline(inpFileStream, strLine);
+            //cout << strLine << endl;
+            if (strLine.empty()) continue;
+            *rawdatalines+=1;
+            sscanf(strLine.c_str(), "%llx", &mylongunsigned);
+            // Write to strOutput
+
+      memcpy(charOutput+(i*sizeof(long unsigned int)),(char*)&mylongunsigned, sizeof(long unsigned int));
+      i++;
         }
     }
 
@@ -984,7 +1029,7 @@ __file_read(const char *fname, char *buff, size_t len)
 }
 
 static inline ssize_t
-__file_read_hex(const char *fname, char *buff, size_t len)
+__file_read_hex(const char *fname, char *buff, size_t len, size_t byte_per_line)
 {
 	int rc;
 	FILE *fp;
@@ -994,15 +1039,32 @@ __file_read_hex(const char *fname, char *buff, size_t len)
 	if ((fname == NULL) || (buff == NULL) || (len == 0))
 		return -EINVAL;
 
-	fp = fopen(fname, "r");
-	if (!fp) {
-		fprintf(stderr, "err: Cannot open file %s: %s\n",
-			fname, strerror(errno));
-		return -ENODEV;
-	}
-	//rc = fread(buff, len, 1, fp);
-    infile.setf (std::ios::hex);
-    infile.get(buff, len);
+
+  infile.setf (std::ios::hex);
+  char tmp;
+  char tmp_buff [byte_per_line];
+  string tmp_buff_string;
+  printf("trying to read this hex file...\n");
+  for (size_t i = 0; i < len; i+=byte_per_line)
+  {
+    infile.getline(tmp_buff, byte_per_line);
+    tmp_buff_string.append(tmp_buff,byte_per_line);
+    cout << "printing the usigned int " << tmp_buff_string << endl;
+
+    long unsigned int tmp_u = stoul(tmp_buff_string);
+    memcpy(buff+(i*byte_per_line), tmp_buff , byte_per_line);
+    cout << buff << endl;
+    cout << strlen(buff) << " lenght " << endl;
+   // infile.get(buff+(i*byte_per_line), byte_per_line);
+    printCharBuffHex(buff+(i*byte_per_line), byte_per_line);
+    printCharBuffHex(buff, byte_per_line*(i+1));
+    printf("GNAAAAAAAA\n");
+    tmp_buff_string.erase();
+    //remove the \n
+    //infile.get(&tmp, 1);
+    
+  }
+  
 	if (rc == -1) {
 		fprintf(stderr, "err: Cannot read from %s: %s\n",
 			fname, strerror(errno));
