@@ -26,8 +26,7 @@
 # ------------------------------------------------------------------------------
 set projectName    "harris"
 set solutionName   "solution1"
-#set xilPartName    "xcku060-ffva1156-2-i"
-set xilPartName    "xcvu9p-flgb2104-2-i"
+set xilPartName    "xcku060-ffva1156-2-i"
 
 set ipName         ${projectName}
 set ipDisplayName  "Harris Application Example."
@@ -104,17 +103,10 @@ add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFD
 # ------------------------------------------------------------------------------
 # Create a solution
 # ------------------------------------------------------------------------------
-open_solution ${solutionName} -flow_target vitis
+open_solution ${solutionName} 
 
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default
-
-set vpp_optimize_level 0
-config_interface -default_slave_interface s_axilite -m_axi_alignment_byte_size 64 -m_axi_latency 64 -m_axi_max_widen_bitwidth 512
-config_rtl -m_axi_conservative_mode=1 -register_reset_num 3
-config_export -vivado_optimization_level $vpp_optimize_level
-config_dataflow -strict_mode warning
-
 
 # Enable an 64-bit address interface for axi master. We need it for the FPGA DRAM I/F
 config_interface -m_axi_addr64

@@ -31,14 +31,14 @@ assert_env:
 	@( [ -f ../../../../cFDK/SRA/LIB/bash/assert_envs.sh ] && ../../../../cFDK/SRA/LIB/bash/assert_envs.sh ) || ../../../cFDK/SRA/LIB/bash/assert_envs.sh
 
 ## Either vivado_hls or vitis_hls
-hlstool=vitis_hls
+hlstool=vivado_hls
 
-HLS_VERSION := $(shell echo `$(hlstool) -version | head -n 1 | awk '{ print $$11}' | tr -d 'v' | tr -d '.'`)
+HLS_VERSION := $(shell echo `$(hlstool) -version | head -n 1 | awk '{ print $$11}' | tr -d 'v' | tr -d '.'` | cut -c1-5)
 
 ${ipName}_prj/solution1/impl/ip: $(DEPS)
 	@#rm -rf $@
 	rm -rf ${ipName}_prj
-	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; $(hlstool) -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; export hlsVersion=$(HLS_VERSION); $(hlstool) -f run_hls.tcl
 	@#touch ${ipName}_prj
 	@touch $@
 	@touch ../../.ip_guard
