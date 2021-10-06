@@ -419,6 +419,17 @@ for(int iterations=0; iterations < 5; iterations++){
     }else { //max addrss
       //substr extraction and parsing
       cout << "DEBUG max address (or the first data pack)" << endl;
+      	reverse(input_string.begin(), input_string.end());
+        string2hexnumerics(input_string.substr(5,2),char_testNmbr,2);
+        string2hexnumerics(input_string.substr(0,5),char_addres,5);
+        //
+        string tmp;
+        tmp.assign(char_testNmbr,2);
+
+        testingNumber = stoul(tmp,nullptr,10);
+        tmp.assign(char_addres,5);
+
+        memory_addr_under_test = stoul(tmp,nullptr,10);
 
     }
     k++;
