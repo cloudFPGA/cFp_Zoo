@@ -34,7 +34,7 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
     string      strLine;
     ifstream    inpFileStream;
     string      datFile = "../../../../test/" + inpFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
 
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
@@ -163,7 +163,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
     string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     bool        rc = OK;
 
     //-- STEP-1 : OPEN FILE
@@ -207,7 +207,7 @@ bool dumpStringToFileWithCommands(string s, const string   outFileName, int simC
     string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     bool        rc = OK;
     unsigned int bytes_per_line = 8;
     
@@ -304,7 +304,7 @@ bool dumpStringToFile(string s, const string   outFileName, int simCnt)
     string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     bool        rc = OK;
     unsigned int bytes_per_line = 8;
     
@@ -424,7 +424,7 @@ bool dumpStringToFileWithLastSetEveryGnoPackets(string s, const string   outFile
     string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     bool        rc = OK;
     unsigned int bytes_per_line = 8;
     
@@ -492,7 +492,7 @@ bool dumpStringToFileWithLastInTheLastTwo64Bytes(string s, const string   outFil
     string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     bool        rc = OK;
     unsigned int bytes_per_line = 8;
     
@@ -555,7 +555,7 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
     string      strLine;
     ifstream    inpFileStream;
     string      datFile = "../../../../test/" + inpFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     unsigned int i = 0;
     unsigned int bytes_per_line = 8;
     ap_uint<8> value[bytes_per_line];
@@ -651,7 +651,7 @@ bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput,
     string      strLine;
     ifstream    inpFileStream;
     string      datFile = "../../../../test/" + inpFileName;
-    UdpWord     udpWord;
+    UdpWord     udpWord=NetworkWord(0,0,0);
     unsigned int i = 0;
     unsigned int bytes_per_line = 8;
     ap_uint<8> value[bytes_per_line];

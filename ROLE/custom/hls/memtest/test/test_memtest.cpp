@@ -172,11 +172,13 @@ int main(int argc, char** argv) {
 
 
     //size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 1 ) * 8;
-    size_t charInputSize = ( 1 ) * 8;
+    size_t charInputSize = 8;//( 1 ) * 8;
     size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
-    char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
+    char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
-    char * longbuf;
+    char * longbuf= new char[PACK_SIZE];
+    char * char_command = new char[strInput_commandstring.length()];
+
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
@@ -205,8 +207,6 @@ int main(int argc, char** argv) {
   strStop.append(stop_cmd,8);
 #endif //SIM_STOP_COMPUTATION
 
-char * char_command;
-
 #ifdef DEBUG_MULTI_RUNS
 for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #endif //DEBUG_MULTI_RUNS
@@ -218,7 +218,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     if(!strInput_commandstring.length()){
       createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
     }else{
-      char_command = new char[strInput_commandstring.length()];
+      //char_command = new char[strInput_commandstring.length()];
       for (int i = 0; i < strInput_commandstring.length(); i++)
       {
         char tmp = strInput_commandstring[i];
@@ -279,6 +279,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 
             if(simCnt > 2)
             {
+              cout << "Verifying the assert, curr value of udp port: " << s_udp_rx_ports << endl;
               assert(s_udp_rx_ports == 0x1);
             }
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
@@ -382,7 +383,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 ////TODO: create an output parsing stuff
 ///////////////////////
 
-  longbuf = new char[PACK_SIZE];
+  //longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
   dumpFileToStringRawData(ouf_file, longbuf, &rawdatalines);
@@ -390,7 +391,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   longbuf[charOutputSize+1]='\0';
   string longbuf_string(longbuf);
   int rawiterations = charOutputSize / 8;
-  cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
+  //cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
@@ -435,14 +436,13 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
       reverseStr(tmp_outbuff);
       printStringHex(tmp_outbuff, bytes_per_line);
 
-      string2hexUnsignedNumerics(tmp_outbuff.substr(5,4), stringHexBuff,4);
-      cout << tmp_outbuff.substr(5,4) << endl;
-      printStringHex(tmp_outbuff.substr(5,4), 4);
+      string2hexUnsignedNumerics(tmp_outbuff.substr(4,4), stringHexBuff,4);
+      cout << tmp_outbuff.substr(4,4) << endl;
+      printStringHex(tmp_outbuff.substr(4,4), 4);
       
-
 	    substr_tmp.assign(stringHexBuff,4);
       cout << substr_tmp << endl;
-      sscanf(tmp_outbuff.substr(5,4).c_str(), "%u", &fault_addr_out); 
+      sscanf(tmp_outbuff.substr(4,4).c_str(), "%u", &fault_addr_out); 
       cout << endl <<  fault_addr_out << endl; 
       try
       {
@@ -520,10 +520,10 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS  
-    delete[] longbuf;
-    free(charInput);
+  delete[] char_command;
+  delete[] longbuf;
     free(charOutput);
-
+    free(charInput);
     return(nrErr);
 }
 
