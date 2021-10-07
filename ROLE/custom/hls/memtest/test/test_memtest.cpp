@@ -32,7 +32,8 @@ using namespace std;
 #define TRACE_UAF    1 <<  2
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
-
+#define DEBUG_MULTI_RUNS 
+#define TB_MULTI_RUNS_ITERATIONS 5
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -107,8 +108,6 @@ int main(int argc, char** argv) {
     printf("## TESTBENCH STARTS HERE                           ##\n");
     printf("#####################################################\n");
 
-    simCnt = 0;
-    nrErr  = 0;
 
     if (argc < 3 || argc > 4) {
         printf("Usage : %s <number of address to test> , <testing times> , <command string ready2go> ;provided %d\n", argv[0], argc);
@@ -177,7 +176,7 @@ int main(int argc, char** argv) {
     size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
     char *charOutput = (char*)malloc(charOutputSize* sizeof(char)); // reading two 32 ints + others?
     char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
-    
+    char * longbuf;
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
@@ -189,11 +188,11 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
   std::string strInput="";
   std::string strGold;
+  unsigned int bytes_per_line = 8;
   
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
   
   std::string strStop; 
-  unsigned int bytes_per_line = 8;
 	char stop_cmd [bytes_per_line];
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
 		if (k != 0) {
@@ -207,6 +206,13 @@ int main(int argc, char** argv) {
 #endif //SIM_STOP_COMPUTATION
 
 char * char_command;
+
+#ifdef DEBUG_MULTI_RUNS
+for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
+#endif //DEBUG_MULTI_RUNS
+
+    simCnt = 0;
+    nrErr  = 0;
 // Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
 // otheriwse the TB takes care and create the commands based on the inputs
     if(!strInput_commandstring.length()){
@@ -227,9 +233,6 @@ char * char_command;
     strInput[strInput.length()]='\0';
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
 
-#ifdef DEBUG_MULTI_RUNS
-for(int iterations=0; iterations < 5; iterations++){
-#endif //DEBUG_MULTI_RUNS
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
@@ -363,9 +366,6 @@ for(int iterations=0; iterations < 5; iterations++){
     for (unsigned int i = 0; i < charOutputSize; i++)
        printf("%x", charOutput[i]); 
     printf("\n");
-#ifdef DEBUG_MULTI_RUNS
-}
- #endif//DEBUG_MULTI_RUNS  
     //------------------------------------------------------
     //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------
@@ -382,7 +382,7 @@ for(int iterations=0; iterations < 5; iterations++){
 ////TODO: create an output parsing stuff
 ///////////////////////
 
-  char * longbuf = new char[PACK_SIZE];
+  longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
   dumpFileToStringRawData(ouf_file, longbuf, &rawdatalines);
@@ -394,45 +394,111 @@ for(int iterations=0; iterations < 5; iterations++){
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
+  string tmp_outbuff;
+  string substr_tmp;
+  char stringHexBuff [bytes_per_line];
+  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
-    cout << "DEBUG current iterator " << k << endl;
+    tmp_outbuff.erase();
+    substr_tmp.erase();
+    tmp_outbuff.append(longbuf+((i-1)*bytes_per_line), bytes_per_line);
+    cout<<endl << " *****************************" <<endl<<endl;
+
+    printStringHex(longbuf+((i-1)*bytes_per_line), bytes_per_line);
+
+    //cout << "DEBUG current iterator " << k << endl;
     //priority encoding inverse
     if(is_stop_present && k==5){
 
-      cout << "DEBUG the stop i s present and is here" << endl;
+      cout << "DEBUG the stop is present and is here" << endl;
     } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
-      cout << "DEBUG last command with the iterations " << endl;
+      reverse(tmp_outbuff.begin(), tmp_outbuff.end());
+      printStringHex(tmp_outbuff, bytes_per_line);
+      
+      string2hexnumerics(tmp_outbuff.substr(0,7), stringHexBuff,7);
+	    substr_tmp.assign(stringHexBuff,7);
+      try
+      {
+       testingNumber_out = stoul(substr_tmp,nullptr,10);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        testingNumber_out=0;
+      }
+      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
 
     } else  if(k==3){ //first faut addres
       //substr extraction and parsing
-      cout << "DEBUG first fault address (or the third data pckt)" << endl;
+      //reverse(tmp_outbuff.begin(), tmp_outbuff.end());
+      reverseStr(tmp_outbuff);
+      printStringHex(tmp_outbuff, bytes_per_line);
+
+      string2hexUnsignedNumerics(tmp_outbuff.substr(5,4), stringHexBuff,4);
+      cout << tmp_outbuff.substr(5,4) << endl;
+      printStringHex(tmp_outbuff.substr(5,4), 4);
+      
+
+	    substr_tmp.assign(stringHexBuff,4);
+      cout << substr_tmp << endl;
+      sscanf(tmp_outbuff.substr(5,4).c_str(), "%u", &fault_addr_out); 
+      cout << endl <<  fault_addr_out << endl; 
+      try
+      {
+        fault_addr_out = stoul(tmp_outbuff.substr(4,4),nullptr,16);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        fault_addr_out=0;
+      }
+      
+      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
-      cout << "DEBUG reinit the counter" << endl;
-        
+      //cout << "DEBUG reinit the counter" << endl;
       }
 
     }else if(k==2){ // fault cntr
       //substr extraction and parsing
-      cout << "DEBUG the fault counters (or the second data pack)" << endl;
+      reverse(tmp_outbuff.begin(), tmp_outbuff.end());
+      printStringHex(tmp_outbuff, bytes_per_line);
+
+      string2hexnumerics(tmp_outbuff.substr(4,4), stringHexBuff,4);
+	    substr_tmp.assign(stringHexBuff,4);
+      try
+      {
+      fault_cntr_out = stoul(substr_tmp,nullptr,10);
+       }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        fault_cntr_out=0;
+      }
+      cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     }else { //max addrss
       //substr extraction and parsing
-      cout << "DEBUG max address (or the first data pack)" << endl;
-      	reverse(input_string.begin(), input_string.end());
-        string2hexnumerics(input_string.substr(5,2),char_testNmbr,2);
-        string2hexnumerics(input_string.substr(0,5),char_addres,5);
-        //
-        string tmp;
-        tmp.assign(char_testNmbr,2);
+      reverse(tmp_outbuff.begin(), tmp_outbuff.end());
+      printStringHex(tmp_outbuff, bytes_per_line);
 
-        testingNumber = stoul(tmp,nullptr,10);
-        tmp.assign(char_addres,5);
-
-        memory_addr_under_test = stoul(tmp,nullptr,10);
+      string2hexnumerics(tmp_outbuff.substr(4,4), stringHexBuff,4);
+	    substr_tmp.assign(stringHexBuff,4);
+      try
+      {
+      max_memory_addr_out = stoul(substr_tmp,nullptr,10);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        max_memory_addr_out=0;
+      }
+      cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
 
     }
     k++;
+    cout<<endl << " *****************************" <<endl<<endl;
+
   }
   
 
@@ -449,9 +515,14 @@ for(int iterations=0; iterations < 5; iterations++){
         printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
     }
     printf("#####################################################\n");
+  strInput.erase();
+  strGold.erase();
+#ifdef DEBUG_MULTI_RUNS
+}
+ #endif//DEBUG_MULTI_RUNS  
     delete[] longbuf;
-         free(charInput);
-     free(charOutput);
+    free(charInput);
+    free(charOutput);
 
     return(nrErr);
 }

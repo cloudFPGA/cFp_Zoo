@@ -792,6 +792,38 @@ void string2hexnumerics(const string& in, char * out, size_t byteSize)
 	}
 }
 
+void string2hexUnsignedNumerics(const string& in, char * out, size_t byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		std::sprintf(out+i, "%u", (unsigned int)in[i]);
+	}
+}
+
+void stringHex2Unsigned(const string& in, unsigned int * out, size_t byteSize)
+{
+	for (int i = 0; i < byteSize; i++)
+	{
+		std::sprintf((char*)out+i, "%u", (unsigned int)in[i]);
+	}
+}
+/*****************************************************************************
+ * @brief Convert a hex string to a integer into a char buffer with the SAME dimensions
+ *
+ * @param[in]  in the input hex string
+ * @param[out] out the output numerical hexadec string string
+ * @param[in]  byteSize the bytesize of the input string and the buffer, it assumes equal dimension
+ ******************************************************************************/
+void string2hexnumericsString(const string& in, string &out, size_t byteSize)
+{
+  char tmp_out [byteSize];
+	for (int i = 0; i < byteSize; i++)
+	{
+		std::sprintf(tmp_out+i, "%d", (int)in[i]);
+	}
+  out.append(tmp_out);
+}
+
 /*****************************************************************************
  * @brief Attach the commands start (000000001) and stop (000000002) 
  * to a given input string, aligning to a bytesize of 8 byte per tdata values
@@ -986,6 +1018,17 @@ void printCharBuffHex(const char * inStr, size_t strSize){
 	}
 	printf("\n");
 	
+}
+
+// Function to reverse a string
+void reverseStr(string& str)
+{
+    int n = str.length();
+ 
+    // Swap character starting from two
+    // corners
+    for (int i = 0; i < n / 2; i++)
+        swap(str[i], str[n - i - 1]);
 }
 
 static inline ssize_t
