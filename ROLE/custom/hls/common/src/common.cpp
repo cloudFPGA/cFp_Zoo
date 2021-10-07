@@ -99,7 +99,7 @@ bool readDataStream(stream <UdpWord> &sDataStream, UdpWord *udpWord) {
  ******************************************************************************/
 ap_uint<64> pack_ap_uint_64_ (ap_uint<8> *buffer) {
 
-    ap_uint<64>  value;
+    ap_uint<64>  value = 0;
 
     value = buffer[7];
     value = (value << 8 ) + buffer[6];
@@ -244,10 +244,10 @@ bool dumpStringToFileWithCommands(string s, const string   outFileName, int simC
 	  //if (NPIX == XF_NPPC8) {
 	    for (unsigned int k = 0; k < bytes_per_line; k++) {
 	      if (i+k < s.length()) {
-		value[k] = s[i+k];
+		      value[k] = s[i+k];
 	      }
 	      else {
-		value[k] = 0;
+		      value[k] = 0;
 	      }
 	      printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
 	    }
@@ -560,6 +560,10 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
     unsigned int bytes_per_line = 8;
     ap_uint<8> value[bytes_per_line];
     
+    for(i=0; i < bytes_per_line; i++){
+      value[i]=0;
+    }
+    i=0;
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
     if ( !inpFileStream ) {
@@ -753,6 +757,15 @@ void ascii2hex(const string& in, string& out)
     out=sstream.str(); 
 }
 
+void ascii2hexWithSize(const string& in, string& out, size_t  bytesize)
+{
+ std::stringstream sstream;
+    for ( int i=0; i<bytesize; i++){
+        sstream << std::hex << int(in[i]);
+    }
+    out=sstream.str(); 
+}
+
 
 /*****************************************************************************
  * @brief Check the presence of a given corner value at the begin and the end of a string
@@ -891,17 +904,10 @@ void createMemTestCommands(unsigned int mem_address, string& out, unsigned int t
 			stop_cmd[k] = (char)2;
 	    }
 	 }
-    memcpy(start_cmd+1, (char*)&testingNumber, 2);
-	out.append(start_cmd,3);//bytes_per_line/2);
-    memcpy(value, (char*)&mem_address, 4);
-    out.append(value,5);//bytes_per_line/2);
-   // char tmp = (char)0;
-   // out.append(tmp,1);
-   
-    // for (int i = 0; i < (testingNumber * ((2 * (mem_address+1))) + 2); i++){
-	//     out.append(filler_cmd,bytes_per_line);
-    // }
-	// out.append(stop_cmd,bytes_per_line);
+  memcpy(start_cmd+1, (char*)&testingNumber, 2);
+	out.append(start_cmd,3);
+  memcpy(value, (char*)&mem_address, 4);
+  out.append(value,5);
 }
 
 /*****************************************************************************

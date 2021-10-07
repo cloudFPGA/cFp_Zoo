@@ -80,6 +80,7 @@ void pPortAndDestionation(
           NodeId dst_rank = (*pi_rank + 1) % *pi_size;
           printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
           sDstNode_sig.write(dst_rank);
+          *po_rx_ports = 0x0; //init the value
           port_fsm = FSM_DONE;
         }
         break;
