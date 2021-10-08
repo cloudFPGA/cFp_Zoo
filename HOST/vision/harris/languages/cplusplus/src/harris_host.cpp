@@ -288,8 +288,8 @@ int main(int argc, char * argv[]) {
 	    
 	    unsigned int send_total = (unsigned int)total_size;
 	    unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
-	    unsigned char * sendarr = input_img;
-	    
+	    //unsigned char * sendarr = input_img;
+	    unsigned char * sendarr = (unsigned char*)malloc(FRAME_WIDTH*FRAME_HEIGHT*sizeof(unsigned char));
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
    
@@ -509,7 +509,9 @@ int main(int argc, char * argv[]) {
 
 #else
 	//output_img = longbuf;
-	memcpy( output_img, longbuf, total_size);
+    free(sendarr);
+	//memcpy( output_img, longbuf, total_size);
+    delete(longbuf);
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	
 	// Destructor closes the socket

@@ -99,9 +99,9 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
-    fpgas = deque([["10.12.200.139", "2718"],
-                   ["10.12.200.140", "2719"],
-                   ["10.12.200.141", "2720"]])
+    fpgas = deque([["10.12.200.237", "2718"],
+                   ["10.12.200.49", "2718"]])
+
     
     def process_frame(frame, t0, accel_mode, fpga):
         if accel_mode:
