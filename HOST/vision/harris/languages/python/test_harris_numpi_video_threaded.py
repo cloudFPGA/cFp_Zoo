@@ -99,8 +99,9 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
-    fpgas = deque([["10.12.200.237", "2718"],
-                   ["10.12.200.49", "2718"]])
+    fpgas = deque([ ["10.12.200.190", "2718"],
+                    ["10.12.200.237", "2718"],
+                    ["10.12.200.49" , "2718"]])
 
     
     def process_frame(frame, t0, accel_mode, fpga):
@@ -109,10 +110,10 @@ def main():
             # some intensive computation...
             frame = cv.medianBlur(frame, 19)
             # Flattening the image from 2D to 1D
-            #image = frame.flatten()
-            #output_array = _trieres_harris_numpi.harris(image, total_size, "10.12.200.139", "2718")
+            image = frame.flatten()
+            output_array = _trieres_harris_numpi.harris(image, total_size, fpga[0], fpga[1])
             # Convert 1D array to a 2D numpy array 
-            #frame = np.reshape(output_array, (height, width))
+            frame = np.reshape(output_array, (height, width))
             print("Declare free the fpga: "+str(fpga))
             fpgas.append(fpga)
         else:

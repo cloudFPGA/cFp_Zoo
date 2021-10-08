@@ -65,7 +65,7 @@ void pPortAndDestionation(
         }
         break;
     case FSM_DONE:
-        *po_rx_ports = 0x1; //currently work only with default ports...
+        *po_rx_ports = 0x3; // work with ports 2719 and 2718
         break;
   }
 }

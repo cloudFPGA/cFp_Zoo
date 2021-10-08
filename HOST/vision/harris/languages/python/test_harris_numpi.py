@@ -44,7 +44,7 @@ total_size = height * width
 
 input_array = image
 
-output_array = _trieres_harris_numpi.harris(input_array, total_size, "10.12.200.139", "2718")
+output_array = _trieres_harris_numpi.harris(input_array, total_size, "10.12.200.237", "2718")
 
 # Convert 1D array to a 2D numpy array of 2 rows and 3 columns
 output_array_2d = np.reshape(output_array, (height, width))
