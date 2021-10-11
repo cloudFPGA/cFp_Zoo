@@ -605,13 +605,14 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
  * @param[out] strOutput the output string to set.
  * @return OK if successful otherwise KO.
  ******************************************************************************/
+template<unsigned int bytes_per_line = 8>
 bool dumpFileToStringRawData(const string inpFileName, char* charOutput, int * rawdatalines) {
     string      strLine;
     ifstream    inpFileStream;
     string      datFile = inpFileName;
-    long unsigned int  mylongunsigned;
+    unsigned long long int  mylongunsigned;
     unsigned int i = 0;
-    unsigned int bytes_per_line = 8;
+    char my_tmp_buf [bytes_per_line];
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
     if ( !inpFileStream ) {
@@ -630,16 +631,100 @@ bool dumpFileToStringRawData(const string inpFileName, char* charOutput, int * r
             *rawdatalines+=1;
             sscanf(strLine.c_str(), "%llx", &mylongunsigned);
             // Write to strOutput
+      printf("my long long %llx\n", mylongunsigned);
+      memcpy(my_tmp_buf,&mylongunsigned, bytes_per_line);
+      memcpy(charOutput+(i*bytes_per_line),&my_tmp_buf, bytes_per_line);
+      printCharBuffHex(charOutput+(i*bytes_per_line), bytes_per_line);
 
-      memcpy(charOutput+(i*sizeof(long unsigned int)),(char*)&mylongunsigned, sizeof(long unsigned int));
       i++;
         }
+     for (int i = 0; i < strlen(my_tmp_buf)+1; ++i) {
+        bitset<8> bs4(my_tmp_buf[i]);
+        cout << bs4 << " ";
+
+        if (i % 6 == 0 && i != 0)
+            cout << endl;
+    }
+    cout << endl;
     }
 
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
 
     return(OK);
+}
+
+void printBits(size_t const size, void const * const ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}
+
+template<unsigned int bytes_per_line = 8>
+string dumpFileToStringRawDataString(const string inpFileName, int * rawdatalines, size_t outputSize) {
+    string      strLine;
+    string      tmp_Out;
+    ifstream    inpFileStream;
+    string      datFile = inpFileName;
+    string charOutput;
+    charOutput.reserve(outputSize);
+    strLine.reserve(outputSize);
+    tmp_Out.reserve(bytes_per_line);
+    unsigned long long int  mylongunsigned;
+    unsigned long long int  zero_byte=0;
+    unsigned int i = 0;
+    char my_tmp_buf [bytes_per_line];
+    //-- STEP-1 : OPEN FILE
+    inpFileStream.open(datFile.c_str());
+cout<<endl<<endl;
+
+    if ( !inpFileStream ) {
+        cout << "### ERROR : Could not open the input data file " << datFile << endl;
+        return "";
+    }
+
+    //-- STEP-2 : SET DATA STREAM
+    while (inpFileStream) {
+
+        if (!inpFileStream.eof()) {
+
+            getline(inpFileStream, strLine);
+            memcpy(my_tmp_buf,&zero_byte, bytes_per_line);
+            //cout << strLine << endl;
+            if (strLine.empty()) continue;
+            *rawdatalines+=1;
+            //sscanf(strLine.c_str(), "%llx", &mylongunsigned);
+            mylongunsigned=stoul(strLine,nullptr,16);
+            hex2ascii(strLine, tmp_Out);
+            // Write to strOutput
+      printf("my long long %llx\n", mylongunsigned);
+      printf("my long long non hex %llu\n", mylongunsigned);
+      memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
+      printBits(sizeof(unsigned long long int), my_tmp_buf);
+      printBits(sizeof(unsigned long long int), tmp_Out.c_str());
+      // cout << endl;
+      // printBits(sizeof(unsigned long long int), &mylongunsigned);
+      charOutput.append(my_tmp_buf, bytes_per_line);
+      i++;
+        }
+        strLine.clear();
+cout<<endl<<endl;
+    }
+      //printBits(*rawdatalines*sizeof(unsigned long long int), &charOutput);
+
+    //-- STEP-3: CLOSE FILE
+    inpFileStream.close();
+
+    return(charOutput);
 }
 
 
@@ -742,6 +827,22 @@ void hex2ascii(const string& in, string& out)
     }
 }
 
+void hex2asciiByteByByte(const string& in, string& out)
+{
+    out.clear();
+    out.reserve(in.length() / 2);
+    for (string::const_iterator p = in.begin(); p != in.end(); p++)
+    {
+       unsigned char c = hexval(*p);
+       //p++;
+       //if (p == in.end()) break; // incomplete last digit - should report error
+       //c = (c << 4) + hexval(*p); // + takes precedence over <<
+       out.push_back(c);
+    }
+}
+
+
+
 /*****************************************************************************
  * @brief Convert a ascii string to a hexadecimal string
  *
@@ -757,11 +858,40 @@ void ascii2hex(const string& in, string& out)
     out=sstream.str(); 
 }
 
+template<typename T>
+T ascii2hexTheRevenge(const string& in)
+{
+  T out;
+ std::stringstream sstream;
+ sstream << std::hex << in;
+sstream >> out;
+  return out;
+
+}
+
 void ascii2hexWithSize(const string& in, string& out, size_t  bytesize)
 {
  std::stringstream sstream;
     for ( int i=0; i<bytesize; i++){
         sstream << std::hex << int(in[i]);
+    }
+    out=sstream.str(); 
+}
+
+void ascii2hexCharWithSize(const string& in, string& out, size_t  bytesize)
+{
+ std::stringstream sstream;
+    for ( int i=0; i<bytesize; i++){
+        sstream << std::hex << int8_t(in[i]);
+    }
+    out=sstream.str(); 
+}
+
+void hex2Unsigned(const string& in, string& out, size_t  bytesize){
+ std::stringstream sstream;
+    
+    for ( int i=0; i<bytesize; i++){
+        sstream << std::hex << uint8_t(in[i]);
     }
     out=sstream.str(); 
 }
@@ -885,16 +1015,17 @@ void attachBitformattedStringCommandAndRefill(const string& in, string& out)
  * @param[in]  testingNumber the number of tests to perform on the memory
  * 
  ******************************************************************************/
-void createMemTestCommands(unsigned int mem_address, string& out, unsigned int testingNumber)
+template<unsigned int bytes_per_line = 8>
+string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
 {
-	unsigned int bytes_per_line = 8;
+  string out;
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char stop_cmd [bytes_per_line];
-	char filler_cmd [bytes_per_line];
-	char value[bytes_per_line];
+	//char filler_cmd [bytes_per_line];
+	char value_cmd[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
-        filler_cmd[k]    = (char)0;
+       value_cmd[k]    = (char)0;
 		if (k != 0) {
 			stop_cmd[k] = (char)0;
 			start_cmd[k] = (char)0;
@@ -906,9 +1037,10 @@ void createMemTestCommands(unsigned int mem_address, string& out, unsigned int t
 	 }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out.append(start_cmd,3);
-  memcpy(value, (char*)&mem_address, 4);
-  out.append(value,5);
-}
+  memcpy(value_cmd, (char*)&mem_address, 4);
+  out.append(value_cmd,5);
+  return out;
+  }
 
 /*****************************************************************************
  * @brief Create the expected output results for the memory test (with FAULT INJECTION)
@@ -918,9 +1050,9 @@ void createMemTestCommands(unsigned int mem_address, string& out, unsigned int t
  * @param[in]  testingNumber the number of tests to perform on the memory
  * 
  ******************************************************************************/
+template<unsigned int bytes_per_line = 8>
 void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned int testingNumber)
 {
-	unsigned int bytes_per_line = 8;
 	char addr_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char fault_cntr_cmd [bytes_per_line];
 	char fault_addr_cmd [bytes_per_line];
@@ -1037,6 +1169,132 @@ void reverseStr(string& str)
         swap(str[i], str[n - i - 1]);
 }
 
+struct MemoryTestResult {
+  unsigned int    target_address;
+  unsigned int    fault_cntr;
+  unsigned int    first_fault_address;
+
+  MemoryTestResult()      {}
+  MemoryTestResult(unsigned int target_address, unsigned int fault_cntr, unsigned int  first_fault_address) :
+    target_address(target_address), fault_cntr(fault_cntr), first_fault_address(first_fault_address) {}
+};
+
+
+std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charOutputSize, unsigned int bytes_per_line, int rawdatalines)
+{
+  std::vector<MemoryTestResult> testResults_vector;
+
+  int rawiterations = charOutputSize / 8;
+  //cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
+  bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
+
+  int k = 1;
+  string tmp_outbuff;
+  string substr_tmp;
+  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
+  for (int i = 1; i < rawdatalines+1; i++)
+  {
+    tmp_outbuff.clear();
+    substr_tmp.clear();
+    tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
+    //tmp_outbuff.append(longbuf+((i-1)*bytes_per_line), bytes_per_line);
+    //cout<<endl << " *****************************" <<endl<<endl;
+     //printStringHex(longbuf+((i-1)*bytes_per_line), bytes_per_line);
+     printStringHex(tmp_outbuff, bytes_per_line);
+    //cout << "DEBUG current iterator " << k << endl;
+
+    //priority encoding inverse
+    if(is_stop_present && k==5){
+      cout << "DEBUG the stop is present and is here" << endl;
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
+
+      reverseStr(tmp_outbuff);
+      //string tmp_substr;
+      //tmp_substr.append(tmp_outbuff.substr(0,7),7);
+      tmp_outbuff.pop_back();
+      ascii2hexWithSize(tmp_outbuff,substr_tmp,7);
+      try
+      {
+       testingNumber_out = stoul(substr_tmp,nullptr,16);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        testingNumber_out=0;
+      }
+      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
+
+    } else  if(k==3){ //first faut addres
+      //substr extraction and parsing
+      reverseStr(tmp_outbuff);
+      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
+      try
+      {
+        fault_addr_out = stoul(substr_tmp,nullptr,16);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        fault_addr_out=0;
+      }
+      MemoryTestResult tmp(max_memory_addr_out,fault_cntr_out,fault_addr_out);
+      testResults_vector.push_back(tmp);
+      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
+      if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
+        k=0;
+      //cout << "DEBUG reinit the counter" << endl;
+      }
+      cout << "DEBUG overall test results: target address " << tmp.target_address << " ";
+      cout << " fault counter: " << tmp.fault_cntr << " ";
+      cout << "first fault at address: " << tmp.first_fault_address << " "  << endl;
+
+    }else if(k==2){ // fault cntr
+      //substr extraction and parsing
+      reverseStr(tmp_outbuff);
+      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
+      //cout << "GNI" << tmp_outbuff << endl;
+      fault_cntr_out= ascii2hexTheRevenge<unsigned long int>(tmp_outbuff);
+      reverseStr(tmp_outbuff);
+      cout << "DEBUG the fault " <<  ascii2hexTheRevenge<unsigned long long int>(tmp_outbuff) << endl;
+      try
+      {
+      //fault_cntr_out = stoul(substr_tmp,nullptr,16);
+      fault_cntr_out = stoul(substr_tmp,nullptr,16);
+      //std::cout << static_cast<unsigned int>(substr_tmp.c_str()) << std::endl;
+      printBits(sizeof(unsigned long long int), tmp_outbuff.c_str());
+      printBits(sizeof(unsigned long long int), substr_tmp.c_str());
+
+       }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        fault_cntr_out=0;
+      }
+      cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
+    }else { //max addrss
+      //substr extraction and parsing
+      reverseStr(tmp_outbuff);
+      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
+      try
+      {
+      max_memory_addr_out = stoul(substr_tmp,nullptr,16);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        max_memory_addr_out=0;
+      }
+      cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
+
+    }
+    k++;
+  //  cout<<endl << " *****************************" <<endl<<endl;
+
+  }
+  tmp_outbuff.clear();
+  substr_tmp.clear();
+  return testResults_vector;
+}
 static inline ssize_t
 __file_size(const char *fname)
 {
@@ -1067,53 +1325,6 @@ __file_read(const char *fname, char *buff, size_t len)
 		return -ENODEV;
 	}
 	rc = fread(buff, len, 1, fp);
-	if (rc == -1) {
-		fprintf(stderr, "err: Cannot read from %s: %s\n",
-			fname, strerror(errno));
-		fclose(fp);
-		return -EIO;
-	}
-	fclose(fp);
-	return rc;
-}
-
-static inline ssize_t
-__file_read_hex(const char *fname, char *buff, size_t len, size_t byte_per_line)
-{
-	int rc;
-	FILE *fp;
-    ifstream infile(fname, fstream::in);
-
-
-	if ((fname == NULL) || (buff == NULL) || (len == 0))
-		return -EINVAL;
-
-
-  infile.setf (std::ios::hex);
-  char tmp;
-  char tmp_buff [byte_per_line];
-  string tmp_buff_string;
-  printf("trying to read this hex file...\n");
-  for (size_t i = 0; i < len; i+=byte_per_line)
-  {
-    infile.getline(tmp_buff, byte_per_line);
-    tmp_buff_string.append(tmp_buff,byte_per_line);
-    cout << "printing the usigned int " << tmp_buff_string << endl;
-
-    long unsigned int tmp_u = stoul(tmp_buff_string);
-    memcpy(buff+(i*byte_per_line), tmp_buff , byte_per_line);
-    cout << buff << endl;
-    cout << strlen(buff) << " lenght " << endl;
-   // infile.get(buff+(i*byte_per_line), byte_per_line);
-    printCharBuffHex(buff+(i*byte_per_line), byte_per_line);
-    printCharBuffHex(buff, byte_per_line*(i+1));
-    printf("GNAAAAAAAA\n");
-    tmp_buff_string.erase();
-    //remove the \n
-    //infile.get(&tmp, 1);
-    
-  }
-  
 	if (rc == -1) {
 		fprintf(stderr, "err: Cannot read from %s: %s\n",
 			fname, strerror(errno));

@@ -33,7 +33,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 5
+#define TB_MULTI_RUNS_ITERATIONS 2
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -50,15 +50,6 @@ using namespace std;
 #define DISABLED    (ap_uint<1>)0
 
 
-struct MemoryTestResult {
-  unsigned int    target_address;
-  unsigned int    fault_cntr;
-  unsigned int    first_fault_address;
-
-  MemoryTestResult()      {}
-  MemoryTestResult(unsigned int target_address, unsigned int fault_cntr, unsigned int  first_fault_address) :
-    target_address(target_address), fault_cntr(fault_cntr), first_fault_address(first_fault_address) {}
-};
 
 //------------------------------------------------------
 //-- DUT INTERFACES AS GLOBAL VARIABLES
@@ -214,27 +205,47 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 // Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
 // otheriwse the TB takes care and create the commands based on the inputs
     if(!strInput_commandstring.length()){
-      createMemTestCommands(memory_addr_under_test, strInput, testingNumber);
+      strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
     }else{
-      //char_command = new char[strInput_commandstring.length()];
-      for (int i = 0; i < strInput_commandstring.length(); i++)
-      {
-        char tmp = strInput_commandstring[i];
-        unsigned int tmp_int = atoi(&tmp);
-        memcpy(char_command+i,(char*)&tmp_int, sizeof(char));
-      }
-      strInput.append(char_command,strInput_commandstring.length());
-     // printStringHex(strInput_commandstring, strInput_commandstring.length());
-     // printCharBuffHex(char_command, strInput_commandstring.length());
-     // printStringHex(strInput, strInput_commandstring.length());
+      char_command = new char[strInput_commandstring.length()];
+
+      // strInput.append(char_command,strInput_commandstring.length());
+   //reverse(strInput_commandstring.begin(), strInput_commandstring.end());
+    // //ascii2hexCharWithSize(strInput_commandstring,tmp_strCmd,strInput_commandstring.length());
+    //   for (int i = 0; i < strInput_commandstring.length(); i++)
+    //     {
+    //      string tmp = strInput_commandstring.substr(i,1);
+    //      //char tmp = strInput_commandstring[i];
+      
+    //      unsigned int tmp_int = *((unsigned int *)(&tmp));
+    //      cout << tmp << " ";
+    //      cout << tmp_int << endl;
+    //      //std::stoul(tmp, nullptr, 16);
+    //      //unsigned int tmp_int = std::stoul(tmp, nullptr, 16);
+    //      memcpy(char_command+i,(char*)&tmp_int, sizeof(char));
+    //    }
+    hex2Unsigned(strInput_commandstring,strInput,strInput_commandstring.length());
+    //strInput=char_command;
+    //cout << char_command << endl;
+    //printCharBuffHex(char_command, strInput_commandstring.length());
+    printStringHex(strInput_commandstring, strInput_commandstring.length());
+    //printStringHex(tmp_strCmd, strInput_commandstring.length());
+    printStringHex(strInput, strInput_commandstring.length());
+    cout << strInput_commandstring << endl;
+    //(strInput_commandstring.begin(), strInput_commandstring.end());
+    //string2hexUnsignedNumerics(strInput_commandstring, char_command, strInput_commandstring.length());
+
+    //strInput.append(strInput_commandstring, strInput_commandstring.length());
+   // strInput.assign(strInput_commandstring);
+    cout << strInput << endl;
     }
     strInput[strInput.length()]='\0';
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
 
-
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
+    //return 0;
     //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
     if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
       //, 3)) {
@@ -384,110 +395,15 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   //longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
-  dumpFileToStringRawData(ouf_file, longbuf, &rawdatalines);
+  string longbuf_string;
+  longbuf_string = dumpFileToStringRawDataString(ouf_file, &rawdatalines, charOutputSize);
   //printCharBuffHex(longbuf, charOutputSize);
-  longbuf[charOutputSize+1]='\0';
+  printStringHex(longbuf_string, charOutputSize);
+  //cout << longbuf << endl;
+  //longbuf[charOutputSize+1]='\0';
   //string longbuf_string(longbuf);
-  int rawiterations = charOutputSize / 8;
-  //cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
-  bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
-
-  int k = 1;
-  string tmp_outbuff;
-  string substr_tmp;
-  char stringHexBuff [bytes_per_line];
-  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
-  for (int i = 1; i < rawdatalines+1; i++)
-  {
-    tmp_outbuff.clear();
-    substr_tmp.clear();
-    tmp_outbuff.append(longbuf+((i-1)*bytes_per_line), bytes_per_line);
-    //cout<<endl << " *****************************" <<endl<<endl;
-   // printStringHex(longbuf+((i-1)*bytes_per_line), bytes_per_line);
-    //cout << "DEBUG current iterator " << k << endl;
-
-
-    //priority encoding inverse
-    if(is_stop_present && k==5){
-      cout << "DEBUG the stop is present and is here" << endl;
-    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
-
-      reverseStr(tmp_outbuff);
-      //string tmp_substr;
-      //tmp_substr.append(tmp_outbuff.substr(0,7),7);
-      tmp_outbuff.pop_back();
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,7);
-      try
-      {
-       testingNumber_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        testingNumber_out=0;
-      }
-      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
-
-    } else  if(k==3){ //first faut addres
-      //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      try
-      {
-        fault_addr_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        fault_addr_out=0;
-      }
-      MemoryTestResult tmp(max_memory_addr_out,fault_cntr_out,fault_addr_out);
-      testResults_vector.push_back(tmp);
-      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
-      if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
-        k=0;
-      //cout << "DEBUG reinit the counter" << endl;
-      }
-      cout << "DEBUG overall test results: target address " << tmp.target_address << " ";
-      cout << " fault counter: " << tmp.fault_cntr << " ";
-      cout << "first fault at address: " << tmp.first_fault_address << " "  << endl;
-
-    }else if(k==2){ // fault cntr
-      //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      try
-      {
-      fault_cntr_out = stoul(substr_tmp,nullptr,16);
-       }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        fault_cntr_out=0;
-      }
-      cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
-    }else { //max addrss
-      //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      try
-      {
-      max_memory_addr_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        max_memory_addr_out=0;
-      }
-      cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
-
-    }
-    k++;
-  //  cout<<endl << " *****************************" <<endl<<endl;
-
-  }
-
-    cout<< endl << "  Going to close the TB" <<endl<<endl;
+  testResults_vector=parseMemoryTestOutput(longbuf_string,charOutputSize,bytes_per_line,rawdatalines);
+    cout<< endl << "  Going to close the TB with iteration " << iterations << endl << endl;
 
     nrErr += rc1;
 
@@ -502,8 +418,6 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   strInput.clear();
   strGold.clear();
   out_string.clear();
-  tmp_outbuff.clear();
-  substr_tmp.clear();
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS  
