@@ -92,7 +92,7 @@ void attachBitsCommandAndRefill(const string& in, string& out)
 }
 
 void printStringHex(const string inStr, size_t strSize){
-	printf("Going to prit a hex string :D\ns");
+	printf("Going to prit a hex string :D\n");
 	for (size_t i = 0; i < strSize; i++)
 	{
 		printf("%x",inStr[i]);
@@ -111,16 +111,17 @@ void printCharBuffHex(const char * inStr, size_t strSize){
 	
 }
 
-void createMemTestCommands(unsigned int mem_address, string& out, unsigned int testingNumber)
+template<unsigned int bytes_per_line = 8>
+string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
 {
-	unsigned int bytes_per_line = 8;
+  string out;
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char stop_cmd [bytes_per_line];
-	char filler_cmd [bytes_per_line];
-	char value[bytes_per_line];
+	//char filler_cmd [bytes_per_line];
+	char value_cmd[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
-        filler_cmd[k]    = (char)0;
+       value_cmd[k]    = (char)0;
 		if (k != 0) {
 			stop_cmd[k] = (char)0;
 			start_cmd[k] = (char)0;
@@ -130,18 +131,12 @@ void createMemTestCommands(unsigned int mem_address, string& out, unsigned int t
 			stop_cmd[k] = (char)2;
 	    }
 	 }
-	memcpy(start_cmd+1, (char*)&testingNumber, 2);
+  memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out.append(start_cmd,3);
-    memcpy(value, (char*)&mem_address, sizeof(unsigned int));
-    out.append(value,5);
-	//printStringHex(out,bytes_per_line);
-    // for (int i = 0; i < (testingNumber * (2 * (mem_address+1)) + 2); i++){
-	//     out.append(filler_cmd,bytes_per_line);
-    // }
-	// out.append(stop_cmd,bytes_per_line);
-	//printStringHex(out,bytes_per_line*2+bytes_per_line*(testingNumber * (2 * (mem_address+1)) + 2));
-
-}
+  memcpy(value_cmd, (char*)&mem_address, 4);
+  out.append(value_cmd,5);
+  return out;
+  }
 
 void delay(unsigned int mseconds)
 {
@@ -252,16 +247,19 @@ int main(int argc, char *argv[])
     memory_addr_under_test = stoul(strInput_memaddrUT);
     testingNumber = stoul(strInput_nmbrTest);
 	unsigned int test_pack = 1;
-	if((8 * (2+1) * testingNumber) / PACK_SIZE > 1){
-		test_pack = (unsigned int)(8 * (2+1) * testingNumber) / PACK_SIZE;
+
+	size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1)) * testingNumber);
+	if( charOutputSizeRoughBytes / PACK_SIZE > 1){
+		test_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
 	}
-    size_t charOutputSize = PACK_SIZE*(1+test_pack); 
+    size_t charOutputSize = PACK_SIZE*(test_pack); 
+    //size_t charOutputSizeRoughBytes= = (8 * (2 + 3 * testingNumber) ); 
 	//8 * (2 + 1) * testingNumber; this should be the real number but seems to send everything
 
 	string initial_input_string(input_string);
 
-	createMemTestCommands(memory_addr_under_test, input_string, testingNumber);
-	size_t charInputSize = ( (testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 ) * 8;
+	input_string=createMemTestCommands(memory_addr_under_test, testingNumber);
+	size_t charInputSize = 8; //a single tdata
 	printStringHex(input_string,charInputSize*sizeof(char));
 
 	if (input_string.length() == 0) {
@@ -277,19 +275,15 @@ int main(int argc, char *argv[])
 	// Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
 	assert(PACK_SIZE % 8 == 0);
    
+   //packt host2FPGA
         unsigned int total_out_pack  =  1 + (input_string.length() - 1) / PACK_SIZE;// only a single tx
-        unsigned int total_in_pack  = 1 + test_pack;
-		
-
         unsigned int total_out_bytes = charInputSize;
-		////////////////////////
-		//////////////TODO: check with others the functionalities////////////////////////
-		////////////////////////
-        unsigned int total_in_bytes = total_in_pack * PACK_SIZE;//TODO
-		//size_t charOutputSize = 8 * (2 + 1) * testingNumber;
         unsigned int bytes_in_last_pack_out = input_string.length() - (total_out_pack-1) * PACK_SIZE;
-        unsigned int bytes_in_last_pack_in = 8 * 3; //8 bytes for three tdata words
-		//input_string.length() - (total_pack - 1) * PACK_SIZE;
+
+   //packt FPGA2host
+        unsigned int total_in_pack  = test_pack;
+        unsigned int total_in_bytes = total_in_pack * PACK_SIZE;
+        unsigned int bytes_in_last_pack_in = charOutputSizeRoughBytes - (total_in_pack - 1) * PACK_SIZE;
 
 	cout << "INFO: Network socket : " << ((net_type == tcp) ? "TCP" : "UDP") << endl;
 	cout << "INFO: Total packets to send = " << total_out_pack << endl;
@@ -334,10 +328,11 @@ int main(int argc, char *argv[])
         //-- STEP-5.2 : RX Loop
         //------------------------------------------------------    
 	clock_t last_cycle_rx = clock();
+	unsigned int bytes_received = 0;
 	unsigned int receiving_now = PACK_SIZE;
         cout << "INFO: Expecting length of packs:" << total_in_pack << endl;
         char * longbuf = new char[PACK_SIZE * total_in_pack+1];
-        for (unsigned int i = 0; i < charOutputSize; ) {
+        for (unsigned int i = 0; i < total_in_pack; ) {
 		////////////////////////
 		//TODO: check the receiving loop
 		////////////////////////
@@ -355,9 +350,11 @@ int main(int argc, char *argv[])
 		cerr << "WARNING: Received unexpected size pack:" << recvMsgSize << ". Expected: " << 
 			receiving_now << endl;
             }
-            memcpy( & longbuf[i], buffer, recvMsgSize);
-	    //cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
-	    i += recvMsgSize;
+            memcpy( longbuf+(i*bytes_received), buffer, recvMsgSize);
+	    cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
+	    //i += recvMsgSize;
+		bytes_received  += recvMsgSize;
+	    i ++;
         }
 
         cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
@@ -367,12 +364,13 @@ int main(int argc, char *argv[])
 	#else
         char *output_string = (char*)malloc(PACK_SIZE * total_in_pack*sizeof(char));
 	#endif
-	output_string = strncpy(output_string, longbuf, PACK_SIZE * total_in_pack*sizeof(char));
+	memcpy( output_string, longbuf, bytes_received*sizeof(char));
+	//output_string = strncpy(output_string, longbuf, PACK_SIZE * total_in_pack*sizeof(char));
 	output_string[PACK_SIZE * total_in_pack]='\0';
 	cout << "INFO: Received string : " << output_string << endl;
 	//for(int i=0; i<total_in_pack; i++){
 		//printCharBuffHex(output_string+(i*PACK_SIZE),PACK_SIZE);
-		printCharBuffHex(output_string,PACK_SIZE+8);
+		printCharBuffHex(output_string,bytes_received);
 	//}
 
         clock_t next_cycle_rx = clock();

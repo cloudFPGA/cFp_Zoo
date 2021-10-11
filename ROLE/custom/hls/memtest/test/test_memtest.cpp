@@ -33,7 +33,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 2
+#define TB_MULTI_RUNS_ITERATIONS 5
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -123,7 +123,7 @@ int main(int argc, char** argv) {
     {
       strInput_commandstring.assign(argv[3]);
     }
-    
+    printStringHex(strInput_commandstring, strInput_commandstring.length());
     unsigned int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
     // string tmp_string= argv[1];
@@ -163,10 +163,15 @@ int main(int argc, char** argv) {
 
     size_t charInputSize = 8; //a single tdata
     size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
-    char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
-    char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
+    //char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
+    char *charOutput = new char[(charOutputSize+1)* sizeof(char)]; // reading two 32 ints + others?
+    //char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
+    char *charInput = new char[(charInputSize* sizeof(char))]; // at least print the inputs
     char * longbuf= new char[PACK_SIZE];
     char * char_command = new char[strInput_commandstring.length()];
+    char tmp_char_cmd [1];
+    tmp_char_cmd[1] = (char)0;
+    unsigned int tmp_int_cmd = 0;
 
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
@@ -177,8 +182,11 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-  std::string strInput="";
-  std::string strGold;
+  string strInput="";
+  string strGold;
+  string out_string="";
+  //out_string.reserve(charOutputSize+1);
+
   unsigned int bytes_per_line = 8;
   
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
@@ -207,37 +215,23 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     if(!strInput_commandstring.length()){
       strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
     }else{
-      char_command = new char[strInput_commandstring.length()];
-
-      // strInput.append(char_command,strInput_commandstring.length());
-   //reverse(strInput_commandstring.begin(), strInput_commandstring.end());
-    // //ascii2hexCharWithSize(strInput_commandstring,tmp_strCmd,strInput_commandstring.length());
-    //   for (int i = 0; i < strInput_commandstring.length(); i++)
-    //     {
-    //      string tmp = strInput_commandstring.substr(i,1);
-    //      //char tmp = strInput_commandstring[i];
-      
-    //      unsigned int tmp_int = *((unsigned int *)(&tmp));
-    //      cout << tmp << " ";
-    //      cout << tmp_int << endl;
-    //      //std::stoul(tmp, nullptr, 16);
-    //      //unsigned int tmp_int = std::stoul(tmp, nullptr, 16);
-    //      memcpy(char_command+i,(char*)&tmp_int, sizeof(char));
-    //    }
-    hex2Unsigned(strInput_commandstring,strInput,strInput_commandstring.length());
-    //strInput=char_command;
-    //cout << char_command << endl;
-    //printCharBuffHex(char_command, strInput_commandstring.length());
-    printStringHex(strInput_commandstring, strInput_commandstring.length());
-    //printStringHex(tmp_strCmd, strInput_commandstring.length());
-    printStringHex(strInput, strInput_commandstring.length());
-    cout << strInput_commandstring << endl;
-    //(strInput_commandstring.begin(), strInput_commandstring.end());
-    //string2hexUnsignedNumerics(strInput_commandstring, char_command, strInput_commandstring.length());
-
-    //strInput.append(strInput_commandstring, strInput_commandstring.length());
-   // strInput.assign(strInput_commandstring);
-    cout << strInput << endl;
+      ////////////////////////////////////////////////////////////
+      //////TODO: this parsing is not working
+      ////////////////////////////////////////////////////////////
+      //char_command = new char[strInput_commandstring.length()];
+     cout << strInput_commandstring << endl;
+      for (int i = 0; i < strInput_commandstring.length(); i++)
+      {
+        tmp_char_cmd[1] = strInput_commandstring[i];
+        tmp_int_cmd = (unsigned int)atoi(tmp_char_cmd);
+        memcpy(char_command+i,(char*)&tmp_int_cmd, sizeof(char));
+        tmp_char_cmd[1] = (char)0;
+        tmp_int_cmd = 0;
+      }
+      strInput.append(char_command,strInput_commandstring.length());
+      printStringHex(strInput_commandstring, strInput_commandstring.length());
+      printCharBuffHex(char_command, strInput_commandstring.length());
+      printStringHex(strInput, strInput_commandstring.length());
     }
     strInput[strInput.length()]='\0';
     createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
@@ -368,7 +362,6 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     }
     //__file_write("./hls_out.txt", charOutput, charOutputSize);
     charOutput[charOutputSize]='\0';
-    string out_string;
     out_string.append(charOutput,charOutputSize);
 		printStringHex(out_string, charOutputSize);
     dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
@@ -420,13 +413,19 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   strInput.clear();
   strGold.clear();
   out_string.clear();
+
 #ifdef DEBUG_MULTI_RUNS
 }
- #endif//DEBUG_MULTI_RUNS  
+ #endif//DEBUG_MULTI_RUNS
+ cout << "Clearing the char command" << endl;
   delete[] char_command;
+ cout << "Clearing the longbuf" << endl;
   delete[] longbuf;
-  free(charOutput);
-  free(charInput);
+ cout << "Clearing the char output" << endl;
+  delete [] charOutput;
+ cout << "Clearing the char input" << endl;
+  delete [] charInput;
+  cout << nrErr << " gni " << endl;
   return(nrErr);
 }
 

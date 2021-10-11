@@ -30,6 +30,11 @@
 #include<algorithm>
 #include <fstream>
 
+//------------------------------------------------------
+//-- TESTBENCH DEFINES
+//------------------------------------------------------
+#define OK          true
+#define KO          false
 
 static inline ssize_t
 __file_size(const char *fname)
@@ -71,34 +76,92 @@ __file_read(const char *fname, char *buff, size_t len)
 	return rc;
 }
 
-static inline ssize_t
-__file_read_hex(const char *fname, char *buff, size_t len)
+unsigned char hexval(unsigned char c)
 {
-	int rc;
-	FILE *fp;
-    ifstream infile(fname, fstream::in);
+    if ('0' <= c && c <= '9')
+        return c - '0';
+    else if ('a' <= c && c <= 'f')
+        return c - 'a' + 10;
+    else if ('A' <= c && c <= 'F')
+        return c - 'A' + 10;
+    else abort();
+}
 
+void hex2ascii(const string& in, string& out)
+{
+    out.clear();
+    out.reserve(in.length() / 2);
+    for (string::const_iterator p = in.begin(); p != in.end(); p++)
+    {
+       unsigned char c = hexval(*p);
+       p++;
+       if (p == in.end()) break; // incomplete last digit - should report error
+       c = (c << 4) + hexval(*p); // + takes precedence over <<
+       out.push_back(c);
+    }
+}
 
-	if ((fname == NULL) || (buff == NULL) || (len == 0))
-		return -EINVAL;
+template<unsigned int bytes_per_line = 8>
+string dumpFileToStringRawDataString(const string inpFileName, int * rawdatalines, size_t outputSize) {
+    string      strLine;
+    string      tmp_Out;
+    ifstream    inpFileStream;
+    string      datFile = inpFileName;
+    string charOutput;
+    charOutput.reserve(outputSize);
+    strLine.reserve(outputSize);
+    tmp_Out.reserve(bytes_per_line);
+    unsigned long long int  mylongunsigned;
+    unsigned long long int  zero_byte=0;
+    unsigned int i = 0;
+    char my_tmp_buf [bytes_per_line];
+    //-- STEP-1 : OPEN FILE
+    inpFileStream.open(datFile.c_str());
+cout<<endl<<endl;
 
-	fp = fopen(fname, "r");
-	if (!fp) {
-		fprintf(stderr, "err: Cannot open file %s: %s\n",
-			fname, strerror(errno));
-		return -ENODEV;
-	}
-	//rc = fread(buff, len, 1, fp);
-    infile.setf (std::ios::hex);
-    infile.get(buff, len);
-	if (rc == -1) {
-		fprintf(stderr, "err: Cannot read from %s: %s\n",
-			fname, strerror(errno));
-		fclose(fp);
-		return -EIO;
-	}
-	fclose(fp);
-	return rc;
+    if ( !inpFileStream ) {
+        cout << "### ERROR : Could not open the input data file " << datFile << endl;
+        return "";
+    }
+
+    //-- STEP-2 : SET DATA STREAM
+    while (inpFileStream) {
+
+        if (!inpFileStream.eof()) {
+
+            getline(inpFileStream, strLine);
+            memcpy(my_tmp_buf,&zero_byte, bytes_per_line);
+            //cout << strLine << endl;
+            if (strLine.empty()) continue;
+            *rawdatalines+=1;
+            //sscanf(strLine.c_str(), "%llx", &mylongunsigned);
+            mylongunsigned=stoul(strLine,nullptr,16);
+            hex2ascii(strLine, tmp_Out);
+            // Write to strOutput
+     //	printf("my long long %llx\n", mylongunsigned);
+     // printf("my long long non hex %llu\n", mylongunsigned);
+      memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
+     // printBits(sizeof(unsigned long long int), my_tmp_buf);
+      // printBits(sizeof(unsigned long long int), tmp_Out.c_str());
+      charOutput.append(my_tmp_buf, bytes_per_line);
+      i++;
+        }
+        strLine.clear();
+//cout<<endl<<endl;
+    }
+    //-- STEP-3: CLOSE FILE
+    inpFileStream.close();
+
+    return(charOutput);
+}
+
+void ascii2hexWithSize(const string& in, string& out, size_t  bytesize)
+{
+ std::stringstream sstream;
+    for ( int i=0; i<bytesize; i++){
+        sstream << std::hex << int(in[i]);
+    }
+    out=sstream.str(); 
 }
 
 bool findCharNullPos (char * str) {
@@ -117,15 +180,6 @@ bool findCharNullPos (char * str) {
 }
 
 
-void myCharBuffMemCpy (char * inStr, char * outStr, size_t bytesize ) {
-    	int i;
-	for(i=0; i<=bytesize; i++) {
-    	outStr[i]=inStr[i];
-	}
-	outStr[i]='\0';
-}
-
-
 void printStringHex(const string inStr, size_t strSize){
 	printf("Going to prit a hex string :D\n");
 	for (size_t i = 0; i < strSize; i++)
@@ -141,6 +195,17 @@ void printCharBuffHex(const char * inStr, size_t strSize){
 	for (size_t i = 0; i < strSize; i++)
 	{
 		printf("%x",inStr[i]);
+	}
+	printf("\n");
+	
+}
+
+void printCharBuffHexSafe(const char * inStr, size_t strSize){
+	printf("Going to prit a hex char buff :D\n");
+	for (size_t i = 0; i < strSize; i++)
+	{
+		char tmp = inStr[i];
+		printf("%x",tmp);
 	}
 	printf("\n");
 	
@@ -177,13 +242,13 @@ int main(int argc, char * argv[]) {
     unsigned int num_batch = 0;
     string clean_cmd, synth_cmd;
     string strInput_nmbrTest = argv[3];
-    int testingNumber;
+    unsigned int testingNumber;
     
 	if (!strInput_nmbrTest.length())
 	{
 		testingNumber = 3;
 	}	else	{
-		testingNumber = stoi(strInput_nmbrTest);
+		testingNumber = stoul(strInput_nmbrTest);
 	}
 	
 	
@@ -224,7 +289,7 @@ int main(int argc, char * argv[]) {
     
 	int input_string_total_len = 0;
 	//int receiving_now = PACK_SIZE;
-	int total_pack = testingNumber;
+	int total_pack = 1;
 	int bytes_in_last_pack;
 	size_t total_size =0;
 	bool msg_received = false;
@@ -245,7 +310,7 @@ int main(int argc, char * argv[]) {
 		//printCharBuffHex(buffer, recvMsgSize);
 
 	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
-		printCharBuffHex(longbuf, recvMsgSize);
+		//printCharBuffHex(longbuf, recvMsgSize);
 		total_size += recvMsgSize;
 		longbuf[total_size+1]='\0';
 
@@ -272,25 +337,36 @@ int main(int argc, char * argv[]) {
 
 	//DECODING LOGIC for output size determination
 	unsigned int memory_addr_under_test = 0;
-	unsigned int testingNumber = 0;
+	testingNumber = 0;
 	printStringHex(input_string,input_string.length());
-	char char_addres[6];
-	char char_testNmbr[3];
 	// revert the input string and extract substring
 	reverse(input_string.begin(), input_string.end());
-	string2hexnumerics(input_string.substr(5,2),char_testNmbr,2);
-	string2hexnumerics(input_string.substr(0,5),char_addres,5);
-	//
-	string tmp;
-	tmp.assign(char_testNmbr,2);
 
-	testingNumber = stoul(tmp,nullptr,10);
-	tmp.assign(char_addres,5);
+	string substr_tmp, to_translate_String;
+	substr_tmp = input_string.substr(5,2);
+	ascii2hexWithSize(substr_tmp,to_translate_String,2);
 
-	memory_addr_under_test = stoul(tmp,nullptr,10);
-	// cout << "mem addr " << memory_addr_under_test << endl;
-	// cout << "test " << testingNumber << endl;
+	try{
+	testingNumber = stoul(to_translate_String,nullptr,16);
+	}catch(const std::exception& e){
+	std::cerr << e.what() << '\n';
+	testingNumber=0;
+	}
+	substr_tmp.clear();
+	to_translate_String.clear();
+
+	substr_tmp=input_string.substr(0,5);
+	ascii2hexWithSize(substr_tmp,to_translate_String,5);
+	try{
+	memory_addr_under_test = stoul(to_translate_String,nullptr,16);
+	}catch(const std::exception& e){
+	std::cerr << e.what() << '\n';
+	memory_addr_under_test=0;
+	}
+	substr_tmp.clear();
+	to_translate_String.clear();
 	reverse(input_string.begin(), input_string.end());
+	//
 	// Select simulation mode, default fcsim
 	synth_cmd = " ";
 	string exec_cmd = "make fcsim -j 4";
@@ -318,15 +394,15 @@ int main(int argc, char * argv[]) {
 	    clean_cmd = "make clean && ";
 	}
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
-    str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd+" COMMAND_STRING=\"");
-	//printStringHex(str_command,str_command.length());
+    str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd);//+" COMMAND_STRING=\"");
 	size_t str_command_size = str_command.length();
-	char hexInputString [total_size];
-	string2hexnumerics(input_string,hexInputString,total_size);
-	str_command = str_command.append(hexInputString,total_size);
-	str_command_size+=total_size;
-	//printStringHex(str_command,str_command_size);
-	string final_cmd = "\" TEST_NUMBER=" + std::to_string(testingNumber) + " && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
+	string hexInputString;
+	ascii2hexWithSize(input_string, hexInputString, total_size);
+	//str_command = str_command.append(hexInputString.c_str(),total_size);
+	//str_command_size+=total_size;
+	printStringHex(str_command,str_command_size);
+	//string final_cmd = "\" TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
+	string final_cmd = " TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	str_command = str_command.append(final_cmd);
 	str_command_size+=final_cmd.length();
 
@@ -337,15 +413,20 @@ int main(int argc, char * argv[]) {
 		command[i]=str_command[i];
 	}
   	cout << "Calling TB with command:" << command << endl; 
-
+//return 0;
 	system(command); 
 ////////////////////////////////////////////////////////
 //////////////TODO: need to check the proper emulation
 ////////////////////////////////////////////////////////
 	ssize_t size = __file_size(ouf_file.c_str());
-	size_t charOutputSize = ((1+1) * 8) + ((8 * (2 + 1)) * testingNumber);
+	size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
 
-	int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
+	//int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
+	int rawdatalines=0;
+  	int rc = 0;
+	string out_string =  dumpFileToStringRawDataString(ouf_file.c_str(), &rawdatalines, charOutputSize);
+	memcpy(longbuf,out_string.data(),charOutputSize);
+	//strncpy(longbuf, out_string.c_str(), charOutputSize);
 	if (rc < 0) {
 	    cerr << "ERROR: Cannot read file " << ouf_file << " . Aborting..."<< endl;
 	    return -1;
@@ -359,7 +440,12 @@ int main(int argc, char * argv[]) {
     
 
 	// TX step
-	string out_string = longbuf;
+	
+	unsigned int total_retx_pack = 1;
+	if (charOutputSize / PACK_SIZE > 1)
+	{
+		total_retx_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
+	}
 	if (out_string.length() == 0) {
 	      cerr << "ERROR: Received empty string!" << endl; 
 	      return -1;
@@ -367,28 +453,28 @@ int main(int argc, char * argv[]) {
 	else {
 	    cout << "INFO: Succesfully received string from TB : " << out_string << endl; 
 		printStringHex(out_string, charOutputSize);
-	    cout << "INFO: Will forward it back to host app ... total_pack=" << endl; 
+	    cout << "INFO: Will forward it back to host app ... total_pack=" << total_retx_pack << endl; 
+		printCharBuffHexSafe(longbuf, charOutputSize);
 	}
-	        
 
 	// TX Loop
 	unsigned int sending_now = PACK_SIZE;
 	clock_t last_cycle_tx = clock();
-        for (int i = 0; i < total_pack; i++) {
-	    if ( i == total_pack - 1 ) {
-		sending_now = bytes_in_last_pack;
+	unsigned int bytes_in_last_pack_in = charOutputSize - (total_retx_pack - 1) * PACK_SIZE;
+        for (int i = 0; i < total_retx_pack; i++) {
+	    if ( i == total_retx_pack - 1 ) {
+		sending_now = bytes_in_last_pack_in;
 	    }
 	    #if NET_TYPE == udp
-	    sock.sendTo( & longbuf[i * PACK_SIZE], sending_now, sourceAddress, sourcePort);
+	    sock.sendTo( longbuf+(i * PACK_SIZE), sending_now, sourceAddress, sourcePort);
 	    #else
 	    servsock->send( & longbuf[i * PACK_SIZE], sending_now);
 	    #endif
 	}
-            
         clock_t next_cycle_tx = clock();
         double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
         cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
-               total_pack / duration_tx / 1024 * 8) << endl;
+               total_retx_pack / duration_tx / 1024 * 8) << endl;
         last_cycle_tx = next_cycle_tx; 
         free(longbuf);
         cout << "\\___________________________________________________________________/" << endl;
