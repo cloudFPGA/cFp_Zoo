@@ -298,7 +298,7 @@ int main(int argc, char * argv[]) {
             unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
-        cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
 	    cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
             cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
@@ -368,7 +368,7 @@ int main(int argc, char * argv[]) {
 	    clock_t last_cycle_rx = clock();
 #endif
 	    unsigned int receiving_now = PACK_SIZE;
-            cout << "INFO: Expecting length of packs:" << total_pack << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             for (unsigned int i = 0; i < send_total; ) {
 	        //cout << "DEBUG: " << i << endl;
@@ -502,7 +502,7 @@ int main(int argc, char * argv[]) {
 	// When everything done, release the video capture and write object
 	cap.release();
 	video.release();
-    videop.release();
+    	videop.release();
 
         // Closes all the windows
 	destroyAllWindows();
@@ -510,7 +510,7 @@ int main(int argc, char * argv[]) {
 #else
 	//output_img = longbuf;
 	memcpy( output_img, longbuf, total_size);
-    delete(longbuf);
+    	delete(longbuf);
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	
 	// Destructor closes the socket
