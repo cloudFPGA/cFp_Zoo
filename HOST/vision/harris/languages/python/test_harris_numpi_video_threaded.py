@@ -47,9 +47,6 @@ import _trieres_harris_numpi
 height = width = 256
 total_size = height * width
 
-num_frame = 1
-
-
 # import the necessary packages
 import datetime
 class FPS:
@@ -99,33 +96,46 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
-    fpgas = deque([["10.12.200.237", "2718"],
-                   ["10.12.200.49", "2718"]])
+    video_name = fn+"_out.avi"
+    video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
+    
+    fpgas = deque([ ["10.12.200.37" , "2718"],
+                    ["10.12.200.131", "2719"],
+                    ["10.12.200.75" , "2720"],
+                    ["10.12.200.143", "2721"]])
 
     
     def process_frame(frame, t0, accel_mode, fpga):
         if accel_mode:
             print("Will execute on fpga with ip:port: "+fpga[0]+":"+fpga[1])
             # some intensive computation...
-            frame = cv.medianBlur(frame, 19)
+            # frame = cv.medianBlur(frame, 19)
+            # Converting to grayscale
+            frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
+            # Adjusting the image file if needed
+            if ((frame.shape[0] != height) or (frame.shape[1] != width)):
+                print("WARNING: The image was resized from [", frame.shape[0] , " x ", frame.shape[1] , "] to [", height  , " x ", width, "]")
+            dim = (width, height)
+            frame = cv.resize(frame, dim, interpolation = cv.INTER_LINEAR)
             # Flattening the image from 2D to 1D
-            #image = frame.flatten()
-            #output_array = _trieres_harris_numpi.harris(image, total_size, "10.12.200.139", "2718")
+            image = frame.flatten()
+            output_array = _trieres_harris_numpi.harris(image, total_size, fpga[0], fpga[1])
             # Convert 1D array to a 2D numpy array 
-            #frame = np.reshape(output_array, (height, width))
+            frame = np.reshape(output_array, (height, width))
             print("Declare free the fpga: "+str(fpga))
-            fpgas.append(fpga)
+            fpgas.appendleft(fpga)
         else:
+            frame = cv.medianBlur(frame, 19)
+            frame = cv.medianBlur(frame, 19)
             frame = cv.medianBlur(frame, 19)
         return frame, t0
 
-    threadn = cv.getNumberOfCPUs()
+    threadn = 4 #cv.getNumberOfCPUs()
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
     threaded_mode = True
-    accel_mode = False
-    thread_id=1
+    accel_mode = True
     latency = StatValue()
     frame_interval = StatValue()
     last_frame_time = clock()
@@ -133,21 +143,22 @@ def main():
         while len(pending) > 0 and pending[0].ready() and len(fpgas) > 0:
             res, t0 = pending.popleft().get()
             latency.update(clock() - t0)
+#            video_out.write(res)
             draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))
             draw_str(res, (20, 40), "cloudFPA       :  " + str(accel_mode))
             draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-            cv.imshow('threaded video', res)
+            #cv.imshow('threaded video', res)
         if len(pending) < threadn and len(fpgas) != 0:
             _ret, frame = cap.read()
-            # Converting to grayscale
-            #frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
-            # Adjusting the image file if needed
-            #if ((frame.shape[0] != height) or (frame.shape[1] != width)):
-                #print("WARNING: The image was resized from [", frame.shape[0] , " x ", frame.shape[1] , "] to [", height  , " x ", width, "]")
-            #    dim = (width, height) 
-            #    frame = cv.resize(frame, dim, interpolation = cv.INTER_LINEAR)             
+            if _ret is False:
+                print("Reached EOF.")
+                print("Saved video: " + video_name)
+                video_out.release()
+                break
+            else:
+                video_out.write(frame)
             t = clock()
             frame_interval.update(t - last_frame_time)
             last_frame_time = t
@@ -184,4 +195,5 @@ def main():
 if __name__ == '__main__':
     print(__doc__)
     main()
-    cv.destroyAllWindows()
+    #cv.destroyAllWindows()
+

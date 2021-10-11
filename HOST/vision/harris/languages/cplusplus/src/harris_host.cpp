@@ -288,8 +288,7 @@ int main(int argc, char * argv[]) {
 	    
 	    unsigned int send_total = (unsigned int)total_size;
 	    unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
-	    //unsigned char * sendarr = input_img;
-	    unsigned char * sendarr = (unsigned char*)malloc(FRAME_WIDTH*FRAME_HEIGHT*sizeof(unsigned char));
+	    unsigned char * sendarr = input_img;
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
    
@@ -299,7 +298,8 @@ int main(int argc, char * argv[]) {
             unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
-	    cout << "INFO: Network socket : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+	    cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
             cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
@@ -351,7 +351,7 @@ int main(int argc, char * argv[]) {
 		#else
 		sock.send( & sendarr[i * PACK_SIZE], sending_now);
 		#endif
-		delay(100);  
+		delay(500);  
 	    }
             
             clock_t next_cycle_tx = clock();
@@ -368,7 +368,7 @@ int main(int argc, char * argv[]) {
 	    clock_t last_cycle_rx = clock();
 #endif
 	    unsigned int receiving_now = PACK_SIZE;
-            cout << "INFO: Expecting length of packs:" << total_pack << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             for (unsigned int i = 0; i < send_total; ) {
 	        //cout << "DEBUG: " << i << endl;
@@ -502,16 +502,15 @@ int main(int argc, char * argv[]) {
 	// When everything done, release the video capture and write object
 	cap.release();
 	video.release();
-    videop.release();
+    	videop.release();
 
         // Closes all the windows
 	destroyAllWindows();
 
 #else
 	//output_img = longbuf;
-    free(sendarr);
-	//memcpy( output_img, longbuf, total_size);
-    delete(longbuf);
+	memcpy( output_img, longbuf, total_size);
+    	delete(longbuf);
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	
 	// Destructor closes the socket
