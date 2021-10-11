@@ -398,11 +398,13 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   string longbuf_string;
   longbuf_string = dumpFileToStringRawDataString(ouf_file, &rawdatalines, charOutputSize);
   //printCharBuffHex(longbuf, charOutputSize);
-  printStringHex(longbuf_string, charOutputSize);
+  //
+  //printStringHex(longbuf_string, charOutputSize);
+  //
   //cout << longbuf << endl;
   //longbuf[charOutputSize+1]='\0';
   //string longbuf_string(longbuf);
-  testResults_vector=parseMemoryTestOutput(longbuf_string,charOutputSize,bytes_per_line,rawdatalines);
+  testResults_vector=parseMemoryTestOutput(longbuf_string,charOutputSize,rawdatalines);
     cout<< endl << "  Going to close the TB with iteration " << iterations << endl << endl;
 
     nrErr += rc1;

@@ -706,21 +706,17 @@ cout<<endl<<endl;
             mylongunsigned=stoul(strLine,nullptr,16);
             hex2ascii(strLine, tmp_Out);
             // Write to strOutput
-      printf("my long long %llx\n", mylongunsigned);
-      printf("my long long non hex %llu\n", mylongunsigned);
+     // printf("my long long %llx\n", mylongunsigned);
+      //printf("my long long non hex %llu\n", mylongunsigned);
       memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
-      printBits(sizeof(unsigned long long int), my_tmp_buf);
-      printBits(sizeof(unsigned long long int), tmp_Out.c_str());
-      // cout << endl;
-      // printBits(sizeof(unsigned long long int), &mylongunsigned);
+     // printBits(sizeof(unsigned long long int), my_tmp_buf);
+      // printBits(sizeof(unsigned long long int), tmp_Out.c_str());
       charOutput.append(my_tmp_buf, bytes_per_line);
       i++;
         }
         strLine.clear();
 cout<<endl<<endl;
     }
-      //printBits(*rawdatalines*sizeof(unsigned long long int), &charOutput);
-
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
 
@@ -1179,8 +1175,8 @@ struct MemoryTestResult {
     target_address(target_address), fault_cntr(fault_cntr), first_fault_address(first_fault_address) {}
 };
 
-
-std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charOutputSize, unsigned int bytes_per_line, int rawdatalines)
+template<unsigned int bytes_per_line=8>
+std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charOutputSize, int rawdatalines)
 {
   std::vector<MemoryTestResult> testResults_vector;
 
@@ -1190,53 +1186,25 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
 
   int k = 1;
   string tmp_outbuff;
-  string substr_tmp;
+  char myTmpOutBuff [bytes_per_line+1];
   unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
     tmp_outbuff.clear();
-    substr_tmp.clear();
     tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
-    //tmp_outbuff.append(longbuf+((i-1)*bytes_per_line), bytes_per_line);
-    //cout<<endl << " *****************************" <<endl<<endl;
-     //printStringHex(longbuf+((i-1)*bytes_per_line), bytes_per_line);
-     printStringHex(tmp_outbuff, bytes_per_line);
-    //cout << "DEBUG current iterator " << k << endl;
-
-    //priority encoding inverse
     if(is_stop_present && k==5){
       cout << "DEBUG the stop is present and is here" << endl;
     } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
-
-      reverseStr(tmp_outbuff);
-      //string tmp_substr;
-      //tmp_substr.append(tmp_outbuff.substr(0,7),7);
-      tmp_outbuff.pop_back();
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,7);
-      try
-      {
-       testingNumber_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        testingNumber_out=0;
-      }
+      //substr extraction and parsing
+      tmp_outbuff.erase(tmp_outbuff.begin());
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
+      testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
 
     } else  if(k==3){ //first faut addres
       //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      try
-      {
-        fault_addr_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        fault_addr_out=0;
-      }
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       MemoryTestResult tmp(max_memory_addr_out,fault_cntr_out,fault_addr_out);
       testResults_vector.push_back(tmp);
       cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
@@ -1249,50 +1217,19 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
       cout << "first fault at address: " << tmp.first_fault_address << " "  << endl;
 
     }else if(k==2){ // fault cntr
-      //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      //cout << "GNI" << tmp_outbuff << endl;
-      fault_cntr_out= ascii2hexTheRevenge<unsigned long int>(tmp_outbuff);
-      reverseStr(tmp_outbuff);
-      cout << "DEBUG the fault " <<  ascii2hexTheRevenge<unsigned long long int>(tmp_outbuff) << endl;
-      try
-      {
-      //fault_cntr_out = stoul(substr_tmp,nullptr,16);
-      fault_cntr_out = stoul(substr_tmp,nullptr,16);
-      //std::cout << static_cast<unsigned int>(substr_tmp.c_str()) << std::endl;
-      printBits(sizeof(unsigned long long int), tmp_outbuff.c_str());
-      printBits(sizeof(unsigned long long int), substr_tmp.c_str());
-
-       }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        fault_cntr_out=0;
-      }
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     }else { //max addrss
       //substr extraction and parsing
-      reverseStr(tmp_outbuff);
-      ascii2hexWithSize(tmp_outbuff,substr_tmp,8);
-      try
-      {
-      max_memory_addr_out = stoul(substr_tmp,nullptr,16);
-      }
-      catch(const std::exception& e)
-      {
-        std::cerr << e.what() << '\n';
-        max_memory_addr_out=0;
-      }
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
 
     }
     k++;
-  //  cout<<endl << " *****************************" <<endl<<endl;
-
   }
   tmp_outbuff.clear();
-  substr_tmp.clear();
   return testResults_vector;
 }
 static inline ssize_t

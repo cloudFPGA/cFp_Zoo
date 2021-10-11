@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include <cstdlib>                      // For atoi()
 #include <string>                       // For to_string
+#include <cstring>                       
 #include <string.h>
 #include <bitset>
 //#include "../../uppercase/include/uppercase.hpp"
