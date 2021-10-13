@@ -18,6 +18,7 @@
  *****************************************************************************/
 
 #include "../../common/src/common.cpp"
+#include <math.h>
 
 using namespace std;
 
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
     {
       strInput_commandstring.assign(argv[3]);
     }
-    printStringHex(strInput_commandstring, strInput_commandstring.length());
+    //printStringHex(strInput_commandstring, strInput_commandstring.length());
     unsigned int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
     // string tmp_string= argv[1];
@@ -146,8 +147,26 @@ int main(int argc, char** argv) {
         return -1;
     }
     else {
-      memory_addr_under_test = stoul(strInput_memaddrUT);
-      testingNumber = stoul(strInput_nmbrTest);
+      try
+      {
+       memory_addr_under_test = stoul(strInput_memaddrUT);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        memory_addr_under_test = 65; //at least a fault
+      }
+      try
+      {     
+        testingNumber = stoul(strInput_nmbrTest);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        testingNumber = 3; //at least see the fault
+      }
+      
+
       printf("Succesfully loaded string ... %s\n", argv[1]);
       printf("Succesfully loaded the address number %u and the number of testings %u\n", memory_addr_under_test, testingNumber);
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
@@ -157,18 +176,22 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
     unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+1)) + 2) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
-
-    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
-    unsigned int tot_output_transfers = (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
-
     size_t charInputSize = 8; //a single tdata
     size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
+
+    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
+    unsigned int tot_output_transfers =  1;// (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
+    if(charOutputSize>PACK_SIZE){
+      tot_output_transfers = ceil((unsigned int)(charOutputSize/PACK_SIZE));
+    }
+    cout << tot_output_transfers << " tx, outsize " << charOutputSize <<endl;
+
+
     //char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
-    char *charOutput = new char[(charOutputSize+1)* sizeof(char)]; // reading two 32 ints + others?
+    char * charOutput = new char[(charOutputSize+1)* sizeof(char)]; // reading two 32 ints + others?
     //char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
-    char *charInput = new char[(charInputSize* sizeof(char))]; // at least print the inputs
-    char * longbuf= new char[PACK_SIZE];
-    char * char_command = new char[strInput_commandstring.length()];
+    char * charInput = new char[(charInputSize+1)* sizeof(char)]; // at least print the inputs
+    //char * longbuf= new char[PACK_SIZE+1];
     char tmp_char_cmd [1];
     tmp_char_cmd[1] = (char)0;
     unsigned int tmp_int_cmd = 0;
@@ -182,9 +205,10 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-  string strInput="";
-  string strGold;
-  string out_string="";
+  string strInput;//="";
+  string strGold;//="";
+  string out_string;//="";
+  string longbuf_string;//="";
   //out_string.reserve(charOutputSize+1);
 
   unsigned int bytes_per_line = 8;
@@ -204,9 +228,6 @@ int main(int argc, char** argv) {
   strStop.append(stop_cmd,8);
 #endif //SIM_STOP_COMPUTATION
 
-#ifdef DEBUG_MULTI_RUNS
-for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
-#endif //DEBUG_MULTI_RUNS
 
     simCnt = 0;
     nrErr  = 0;
@@ -218,23 +239,31 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
       ////////////////////////////////////////////////////////////
       //////TODO: this parsing is not working
       ////////////////////////////////////////////////////////////
+      char * char_command = new char[strInput_commandstring.length()+1];
+      char_command[0]='\0';//initi just for the sake
       //char_command = new char[strInput_commandstring.length()];
-     cout << strInput_commandstring << endl;
-      for (int i = 0; i < strInput_commandstring.length(); i++)
-      {
-        tmp_char_cmd[1] = strInput_commandstring[i];
-        tmp_int_cmd = (unsigned int)atoi(tmp_char_cmd);
-        memcpy(char_command+i,(char*)&tmp_int_cmd, sizeof(char));
-        tmp_char_cmd[1] = (char)0;
-        tmp_int_cmd = 0;
-      }
-      strInput.append(char_command,strInput_commandstring.length());
-      printStringHex(strInput_commandstring, strInput_commandstring.length());
-      printCharBuffHex(char_command, strInput_commandstring.length());
-      printStringHex(strInput, strInput_commandstring.length());
+    //  cout << strInput_commandstring << endl;
+    //   for (int i = 0; i < strInput_commandstring.length(); i++)
+    //   {
+    //     tmp_char_cmd[1] = strInput_commandstring[i];
+    //     tmp_int_cmd = (unsigned int)atoi(tmp_char_cmd);
+    //     memcpy(char_command+i,(char*)&tmp_int_cmd, sizeof(char));
+    //     tmp_char_cmd[1] = (char)0;
+    //     tmp_int_cmd = 0;
+    //   }
+    //   strInput.append(char_command,strInput_commandstring.length());
+    //   printStringHex(strInput_commandstring, strInput_commandstring.length());
+    //   printCharBuffHex(char_command, strInput_commandstring.length());
+    //   printStringHex(strInput, strInput_commandstring.length());
+    strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
+        if(char_command != NULL){
+          cout << "Clearing the char command" << endl;
+          delete[] char_command;
+          //char_command = NULL;
+        }
     }
-    strInput[strInput.length()]='\0';
-    createMemTestGoldenOutput(memory_addr_under_test, strGold, testingNumber);
+    //strInput[strInput.length()]='\0';
+    strGold = createMemTestGoldenOutput(memory_addr_under_test, testingNumber);
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
@@ -251,6 +280,9 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
       nrErr++;
     }
 #endif // SIM_STOP_COMPUTATION
+#ifdef DEBUG_MULTI_RUNS
+for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
+#endif //DEBUG_MULTI_RUNS
     //------------------------------------------------------
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
     //------------------------------------------------------
@@ -337,7 +369,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      //printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
+      printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
       assert(i == tot_output_transfers);
     }
     else {
@@ -361,14 +393,15 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
       nrErr++;
     }
     //__file_write("./hls_out.txt", charOutput, charOutputSize);
-    charOutput[charOutputSize]='\0';
+    //charOutput[charOutputSize+1]='\0';
     out_string.append(charOutput,charOutputSize);
-		printStringHex(out_string, charOutputSize);
+		//printStringHex(out_string, charOutputSize);
     dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
     printf("Output string: ");
     for (unsigned int i = 0; i < charOutputSize; i++)
        printf("%x", charOutput[i]); 
     printf("\n");
+  out_string.clear();
     //------------------------------------------------------
     //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
     //------------------------------------------------------
@@ -388,7 +421,6 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   //longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
-  string longbuf_string;
   longbuf_string = dumpFileToStringRawDataString(ouf_file, &rawdatalines, charOutputSize);
   //printCharBuffHex(longbuf, charOutputSize);
   //
@@ -398,34 +430,46 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   //longbuf[charOutputSize+1]='\0';
   //string longbuf_string(longbuf);
   testResults_vector=parseMemoryTestOutput(longbuf_string,charOutputSize,rawdatalines);
-    cout<< endl << "  Going to close the TB with iteration " << iterations << endl << endl;
+  longbuf_string.clear();
+  testResults_vector.clear();
+  cout<< endl << "  Going to close the TB with iteration " << iterations << endl << endl;
 
-    nrErr += rc1;
+  nrErr += rc1;
 
-    printf("#####################################################\n");
-    if (nrErr) 
-    {
-        printf("## ERROR - TESTBENCH FAILED (RC=%d) !!!             ##\n", nrErr);
-    } else {
-        printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
-    }
-    printf("#####################################################\n");
-  strInput.clear();
-  strGold.clear();
-  out_string.clear();
+  printf("#####################################################\n");
+  if (nrErr) 
+  {
+      printf("## ERROR - TESTBENCH FAILED (RC=%d) !!!             ##\n", nrErr);
+  } else {
+      printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
+  }
+  printf("#####################################################\n");
+  //strGold="";
+  //strInput="";
+  simCnt = 0;
 
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS
- cout << "Clearing the char command" << endl;
-  delete[] char_command;
- cout << "Clearing the longbuf" << endl;
-  delete[] longbuf;
+  strInput.clear();
+  strGold.clear();
+ //safe deletion
+// if(longbuf != NULL){
+//  cout << "Clearing the longbuf" << endl;
+//  delete[] longbuf;
+//  longbuf = NULL;
+// }
+
+if(charOutput != NULL){
  cout << "Clearing the char output" << endl;
-  delete [] charOutput;
+  delete[] charOutput;
+ //charOutput = NULL;
+}
+if(charInput != NULL){
  cout << "Clearing the char input" << endl;
-  delete [] charInput;
-  cout << nrErr << " gni " << endl;
+  delete[] charInput;
+ //charInput = NULL;
+}
   return(nrErr);
 }
 

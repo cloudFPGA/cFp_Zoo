@@ -313,6 +313,14 @@ void memtest(
   static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
   static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); 
  #pragma HLS STREAM variable=sProcpToTxp_Data depth=max_proc_fifo_depth dim=1
+  static hls::stream<bool> sOfEnableCCIncrement("sOfEnableCCIncrement");
+ #pragma HLS STREAM variable=sOfEnableCCIncrement depth=20 dim=1
+  static hls::stream<bool> sOfResetCounter("sOfResetCounter");
+ #pragma HLS STREAM variable=sOfResetCounter depth=20 dim=1
+  static hls::stream<bool> sOfGetTheCounter("sOfGetTheCounter");
+ #pragma HLS STREAM variable=sOfGetTheCounter depth=20 dim=1
+  static hls::stream<ap_uint<32>> sClockCounter("sClockCounter");
+ #pragma HLS STREAM variable=sClockCounter depth=20 dim=1
 
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
   static unsigned int processed_word_rx;
@@ -387,13 +395,22 @@ void memtest(
   &processed_word_rx,
   &processed_bytes_rx);
 
- pTHISProcessingData(
+ pTHISProcessingData<bool,32>(
   sRxpToProcp_Data,
   sProcpToTxp_Data,
   sRxtoProc_Meta,
   sProctoTx_Meta,
-  &start_stop);
+  &start_stop,
+  sOfEnableCCIncrement,
+  sOfResetCounter,
+  sOfGetTheCounter,
+  sClockCounter);
 
+  pCountClockCycles<bool,32,4000000>(
+    sOfEnableCCIncrement,
+    sOfResetCounter,
+    sOfGetTheCounter,
+    sClockCounter);
   
   pTXPath(
   soTHIS_Shl_Data,

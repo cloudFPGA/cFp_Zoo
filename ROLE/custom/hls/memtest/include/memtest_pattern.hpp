@@ -7,6 +7,7 @@
 #include <hls_stream.h>
 #include "ap_int.h"
 #include <stdint.h>
+#include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
 
 #include "network.hpp"
 
@@ -21,7 +22,12 @@ using namespace hls;
 #define FSM_PROCESSING_WRITE 4
 #define FSM_PROCESSING_READ 5
 #define FSM_PROCESSING_OUTPUT 6
-#define FSM_PROCESSING_CONTINUOUS_RUN 7
+#define FSM_PROCESSING_OUTPUT_2 7
+#define FSM_PROCESSING_OUTPUT_3 8
+#define FSM_PROCESSING_OUTPUT_4 9
+#define FSM_PROCESSING_OUTPUT_5 10
+#define FSM_PROCESSING_CONTINUOUS_RUN 11
+
 #define ProcessingFsmType uint8_t
 
 
@@ -46,6 +52,49 @@ typedef ap_uint<LOCAL_MEM_ADDR_SIZE_NON_BYTE_ADDRESSABLE>  local_mem_addr_non_by
 
 #define MAX_ITERATION_COUNT 10
 const unsigned int max_proc_fifo_depth = MAX_ITERATION_COUNT;
+
+template<typename Tevent=bool, const unsigned int counter_width=32, const unsigned int maximum_counter_value_before_reset=4000000>
+void pCountClockCycles(
+hls::stream<Tevent> &sOfEnableCCIncrement,
+hls::stream<Tevent> &sOfResetCounter, 
+hls::stream<Tevent> &sOfGetTheCounter,
+hls::stream<ap_uint<counter_width> > &oSClockCounter)
+{
+
+  static ap_uint<counter_width> internal_counter = 0;
+  static bool pop_the_counter = false;
+#pragma HLS reset variable=internal_counter
+#pragma HLS reset variable=pop_the_counter
+
+//giving priority to the pop
+  if(!sOfGetTheCounter.empty()){
+    pop_the_counter = sOfGetTheCounter.read();
+  }
+  if (pop_the_counter && !oSClockCounter.full())
+  {
+    oSClockCounter.write(internal_counter);
+    pop_the_counter=false;
+  }
+  if(!sOfResetCounter.empty()){
+    bool reset_or_not = sOfResetCounter.read();
+    if (reset_or_not)
+    {
+      internal_counter = 0;
+    }
+  }
+  if(!sOfEnableCCIncrement.empty()){
+    bool increment = sOfEnableCCIncrement.read();
+    if (increment)
+    {
+      if(internal_counter==maximum_counter_value_before_reset){
+        internal_counter=1;
+      }else{
+        internal_counter++;
+      }
+      
+    }
+  }
+}
 
 /*****************************************************************************
  * @brief pPortAndDestionation - Setup the port and the destination rank.
@@ -171,12 +220,17 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
  *
  * @return Nothing.
  ******************************************************************************/
+ template<typename Tevent=bool, const unsigned int counter_width=32>
  void pTHISProcessingData(
   stream<NetworkWord>                              &sRxpToProcp_Data,
   stream<NetworkWord>                              &sProcpToTxp_Data,
   stream<NetworkMetaStream>                        &sRxtoProc_Meta,
   stream<NetworkMetaStream>                        &sProctoTx_Meta,
-  bool *                                             start_stop
+  bool *                                           start_stop,
+  hls::stream<Tevent>                              &sOutEnableCCIncrement,
+  hls::stream<Tevent>                              &sOutResetCounter, 
+  hls::stream<Tevent>                              &sOutGetTheCounter,
+  hls::stream<ap_uint<counter_width>>              &sInClockCounter
 ){
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma  HLS INLINE off
@@ -195,6 +249,7 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
 #pragma HLS reset variable=max_address_under_test
 #pragma HLS reset variable=outNetMeta
 #pragma HLS reset variable=processingFSM
+static size_t bytes_sent_for_tx =0;
 
 
 // static hls::stream<ap_uint<32>> sFaulty_addresses_cntr("sFaulty_addresses_cntr");
@@ -204,12 +259,14 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
 
 
     static local_mem_word_t local_under_test_memory [LOCAL_MEM_ADDR_SIZE];
-
     static local_mem_addr_non_byteaddressable_t local_mem_addr_non_byteaddressable;
     static local_mem_addr_t curr_address_under_test;
     static int writingCounter;
     static int readingCounter;
     static ap_uint<32> testCounter;
+    static ap_uint<counter_width> reading_cntr = 0;
+    static ap_uint<counter_width> writing_cntr = 0;
+
 
     local_mem_word_t testingVector;
     local_mem_word_t goldenVector;
@@ -301,6 +358,15 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
         readingCounter=0;
         writingCounter=0;
         faulty_addresses_cntr = 0;
+        // check if need another meta to send out!
+        // if already over the MTU size, or with a command (stop case) or with another iteration I need to send out another meta
+        if(bytes_sent_for_tx >= PACK_SIZE){
+          sProctoTx_Meta.write(outNetMeta);
+          std::cout <<  "DEBUG: writing an additional meta with bytes sent equal to " << bytes_sent_for_tx << std::endl;
+          bytes_sent_for_tx -= PACK_SIZE;
+          #ifndef __SYNTHESIS__
+    #endif //__SYNTHESIS__
+        }
         if(*start_stop && testCounter < max_iterations){ //stopping conditions: either a Stop or the maximum iterations
     #ifndef __SYNTHESIS__
           printf("DEBUG processing continuous run (still run, iter %s) max iters: %s\n",testCounter.to_string().c_str(),max_iterations.to_string().c_str());
@@ -336,11 +402,12 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
     #endif //__SYNTHESIS__
 
     //if not written all the needed memory cells write
-      if (local_mem_addr_non_byteaddressable < max_address_under_test)
+      if (curr_address_under_test < max_address_under_test)// max is byte addressable!
       {
         printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
         genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
         #ifdef FAULT_INJECTION
+        //TODO:  place for control fault injection
         if(testCounter >= 2 && local_mem_addr_non_byteaddressable > 0){
             local_under_test_memory[local_mem_addr_non_byteaddressable] &= static_cast<local_mem_word_t>(0);
         }
@@ -348,6 +415,9 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
         local_mem_addr_non_byteaddressable += 1;
         curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
         writingCounter += 1;
+        if(!sOutEnableCCIncrement.full()){
+          sOutEnableCCIncrement.write(true);
+        }
         processingFSM = FSM_PROCESSING_WRITE;
         break;
 
@@ -355,6 +425,12 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
         printf("DEBUG WRITE FSM, done with the write\n");
         local_mem_addr_non_byteaddressable = 0;
         curr_address_under_test = 0;
+        if(!sOutGetTheCounter.full()){
+          sOutGetTheCounter.write(true);
+        }
+        if(!sOutResetCounter.full()){
+          sOutResetCounter.write(true);
+        }
         processingFSM = FSM_PROCESSING_READ;
         break;
       }
@@ -362,7 +438,12 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
     case FSM_PROCESSING_READ:
         printf("DEBUG proc FSM, I am in the READ state\n");
       //if not read all the needed memory cells read
-        if (local_mem_addr_non_byteaddressable < max_address_under_test)
+        if (!sInClockCounter.empty())
+        {
+          writing_cntr = sInClockCounter.read();
+        }
+      
+        if (curr_address_under_test < max_address_under_test) // max is byte addressable!
         {
           printf("DEBUG READ FSM, reading the memory\n");
           genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
@@ -383,13 +464,20 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
           curr_address_under_test += LOCAL_MEM_ADDR_OFFSET; //next test
           local_mem_addr_non_byteaddressable += 1;
           readingCounter += 1;
+          if(!sOutEnableCCIncrement.full()){
+            sOutEnableCCIncrement.write(true);
+          }
           processingFSM = FSM_PROCESSING_READ;
           break;
         } else{ //done with the reads
           printf("DEBUG READ FSM, done with the read\n");
           std::cout << "First faulty address " << first_faulty_address << " address faulty cntr " << faulty_addresses_cntr << std::endl;
-          //sFaulty_addresses_cntr.write(faulty_addresses_cntr);
-          //sFirst_faulty_address.write(first_faulty_address);
+          if(!sOutGetTheCounter.full()){
+            sOutGetTheCounter.write(true);
+          }
+          if(!sOutResetCounter.full()){
+            sOutResetCounter.write(true);
+          }
           processingFSM = FSM_PROCESSING_OUTPUT;
           break;
         }
@@ -400,37 +488,73 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
 //////////////////////////////////////////////////////////////////////////////
       case FSM_PROCESSING_OUTPUT:
       printf("DEBUG processing the output of a run\n");
+      if (!sInClockCounter.empty())
+      {
+          reading_cntr = sInClockCounter.read();
+      }
+      
       if(!sProcpToTxp_Data.full()){
-         // while (!sFaulty_addresses_cntr.empty()&& !sFirst_faulty_address.empty())
-         // {
-          /* read results and forward*/
           outNetWord.tdata = max_address_under_test;
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
 	        sProcpToTxp_Data.write(outNetWord);
-          //  faulty_addresses_cntr = sFaulty_addresses_cntr.read();
           outNetWord.tdata=faulty_addresses_cntr;
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
           sProcpToTxp_Data.write(outNetWord);
-           // first_faulty_address = sFirst_faulty_address.read();
           outNetWord.tdata=first_faulty_address;
           outNetWord.tkeep = 0xFF;
-          //if (sFaulty_addresses_cntr.empty())
-          //{
-         //   outNetWord.tlast = 1;
-          //}else{
           outNetWord.tlast = 0;
-          //}
           sProcpToTxp_Data.write(outNetWord);
-         // }
-          // outNetWord.tdata=TEST_STOP_CMD;
-          // outNetWord.tkeep = 0xFF;
-          // outNetWord.tlast = 1;
-	        // sProcpToTxp_Data.write(outNetWord);
+          bytes_sent_for_tx += 8 * 3;
           processingFSM = FSM_PROCESSING_CONTINUOUS_RUN;
       }
       break;
+
+      ///////
+      ////TODO: right now not used
+      ///////
+
+      case FSM_PROCESSING_OUTPUT_2:
+      printf("DEBUG processing the output of a run part 3\n");
+      
+      if(!sProcpToTxp_Data.full()){
+          outNetWord.tdata=faulty_addresses_cntr;
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 0;
+          sProcpToTxp_Data.write(outNetWord);
+          bytes_sent_for_tx += 8 ;
+          processingFSM = FSM_PROCESSING_OUTPUT_3;
+      }
+      break;
+      case FSM_PROCESSING_OUTPUT_3:
+      printf("DEBUG processing the output of a run part 4\n");
+      
+      if(!sProcpToTxp_Data.full()){
+          outNetWord.tdata=first_faulty_address;
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 0;
+          sProcpToTxp_Data.write(outNetWord);
+          bytes_sent_for_tx += 8;
+          processingFSM = FSM_PROCESSING_OUTPUT_4;
+      }
+      break;
+      case FSM_PROCESSING_OUTPUT_4:
+      printf("DEBUG processing the output of a run part 5\n");
+      
+      if(!sProcpToTxp_Data.full()){
+          outNetWord.tdata.range(64-1,64-32) = writing_cntr;
+          outNetWord.tdata.range(32-1,0) = reading_cntr;
+          //memcpy(outNetWord.tdata.range(), &writing_cntr, 4);
+          //memcpy(outNetWord.tdata.range(), &reading_cntr, 4);
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 0;
+          sProcpToTxp_Data.write(outNetWord);
+          bytes_sent_for_tx += 8;
+          processingFSM = FSM_PROCESSING_CONTINUOUS_RUN;
+      }
+      break;
+
 
     // default:
     //   processingFSM = FSM_PROCESSING_WAIT_FOR_META;
