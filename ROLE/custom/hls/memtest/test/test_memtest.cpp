@@ -175,9 +175,9 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+1)) + 2) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
+    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+2)) + 4) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
     size_t charInputSize = 8; //a single tdata
-    size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
+    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //stop, 4 for each test, potential stop?
 
     unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
     unsigned int tot_output_transfers =  1;// (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
@@ -190,9 +190,9 @@ int main(int argc, char** argv) {
 
 
     //char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
-    char * charOutput = new char[(charOutputSize+1)* sizeof(char)]; // reading two 32 ints + others?
+    char * charOutput = new char[(charOutputSize)* sizeof(char)]; // reading two 32 ints + others?
     //char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
-    char * charInput = new char[(charInputSize+1)* sizeof(char)]; // at least print the inputs
+    char * charInput = new char[(charInputSize)* sizeof(char)]; // at least print the inputs
     //char * longbuf= new char[PACK_SIZE+1];
     char tmp_char_cmd [1];
     tmp_char_cmd[1] = (char)0;
@@ -207,13 +207,15 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-  string strInput;//="";
+  unsigned int bytes_per_line = 8;
+  string strInput;
+  strInput.reserve(charInputSize+1);//="";
   string strGold;//="";
-  string out_string;//="";
-  string longbuf_string;//="";
+  strGold.reserve(charOutputSize+1);
+  //="";
+  //string longbuf_string;//="";
   //out_string.reserve(charOutputSize+1);
 
-  unsigned int bytes_per_line = 8;
   
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
   
@@ -261,11 +263,11 @@ int main(int argc, char** argv) {
         if(char_command != NULL){
           cout << "Clearing the char command" << endl;
           delete[] char_command;
-          //char_command = NULL;
+          char_command = NULL;
         }
     }
     //strInput[strInput.length()]='\0';
-    strGold = createMemTestGoldenOutput(memory_addr_under_test, testingNumber);
+    strGold = createMemTestGoldenOutput(memory_addr_under_test, testingNumber, true);
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
@@ -316,7 +318,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 
             if(simCnt > 2)
             {
-              cout << "Verifying the assert, curr value of udp port: " << s_udp_rx_ports << endl;
+              //cout << "Verifying the assert, curr value of udp port: " << s_udp_rx_ports << endl;
               assert(s_udp_rx_ports == 0x1);
             }
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
@@ -371,7 +373,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
+      //printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
       assert(i == tot_output_transfers);
     }
     else {
@@ -396,6 +398,8 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     }
     //__file_write("./hls_out.txt", charOutput, charOutputSize);
     //charOutput[charOutputSize+1]='\0';
+    string out_string;
+    out_string.reserve(charOutputSize);
     string tmpToDebug = string(charOutput,charOutputSize);
     out_string.append(tmpToDebug,0, charOutputSize);
 		//printStringHex(out_string, charOutputSize);
@@ -424,6 +428,8 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   //longbuf = new char[PACK_SIZE];
   string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
+  string longbuf_string;
+  longbuf_string.reserve(charOutputSize);
   longbuf_string = dumpFileToStringRawDataString(ouf_file, &rawdatalines, charOutputSize);
   //printCharBuffHex(longbuf, charOutputSize);
   //
@@ -454,8 +460,8 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS
-  strInput.clear();
-  strGold.clear();
+//strInput.clear();
+//strGold.clear();
  //safe deletion
 // if(longbuf != NULL){
 //  cout << "Clearing the longbuf" << endl;
@@ -465,13 +471,13 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 
 if(charOutput != NULL){
  cout << "Clearing the char output" << endl;
-  delete[] charOutput;
- //charOutput = NULL;
+ delete[] charOutput;
+ charOutput = NULL;
 }
 if(charInput != NULL){
  cout << "Clearing the char input" << endl;
   delete[] charInput;
- //charInput = NULL;
+  charInput = NULL;
 }
   return(nrErr);
 }

@@ -65,7 +65,6 @@ hls::stream<ap_uint<counter_width> > &oSClockCounter)
   static bool pop_the_counter = false;
 #pragma HLS reset variable=internal_counter
 #pragma HLS reset variable=pop_the_counter
-
 //giving priority to the pop
   if(!sOfGetTheCounter.empty()){
     pop_the_counter = sOfGetTheCounter.read();
@@ -91,6 +90,9 @@ hls::stream<ap_uint<counter_width> > &oSClockCounter)
       }else{
         internal_counter++;
       }
+#ifndef __SYNTHESIS__
+      printf("DEBUG pCountClockCycles counter value = %s\n", internal_counter.to_string().c_str());
+#endif //__SYNTHESIS__
       
     }
   }
@@ -291,6 +293,8 @@ static size_t bytes_sent_for_tx =0;
       //resetting once per test suite
       max_address_under_test = 0;
       max_iterations=0;
+      bytes_sent_for_tx = 0;
+
       if ( !sRxtoProc_Meta.empty()  && !sProctoTx_Meta.full())
       {
         outNetMeta = sRxtoProc_Meta.read();
@@ -360,18 +364,16 @@ static size_t bytes_sent_for_tx =0;
         faulty_addresses_cntr = 0;
         // check if need another meta to send out!
         // if already over the MTU size, or with a command (stop case) or with another iteration I need to send out another meta
-        if(bytes_sent_for_tx >= PACK_SIZE){
-          sProctoTx_Meta.write(outNetMeta);
-          std::cout <<  "DEBUG: writing an additional meta with bytes sent equal to " << bytes_sent_for_tx << std::endl;
-          bytes_sent_for_tx -= PACK_SIZE;
-          #ifndef __SYNTHESIS__
-    #endif //__SYNTHESIS__
-        }
         if(*start_stop && testCounter < max_iterations){ //stopping conditions: either a Stop or the maximum iterations
     #ifndef __SYNTHESIS__
           printf("DEBUG processing continuous run (still run, iter %s) max iters: %s\n",testCounter.to_string().c_str(),max_iterations.to_string().c_str());
     #endif //__SYNTHESIS__
           processingFSM = FSM_PROCESSING_WRITE;
+          if(bytes_sent_for_tx >= PACK_SIZE){
+            sProctoTx_Meta.write(outNetMeta);
+            std::cout <<  "DEBUG: writing an additional meta with bytes sent equal to " << bytes_sent_for_tx << std::endl;
+            bytes_sent_for_tx = 0;
+          }
           break;
         }else{
     #ifndef __SYNTHESIS__
@@ -497,21 +499,23 @@ static size_t bytes_sent_for_tx =0;
           outNetWord.tdata = max_address_under_test;
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
-	        sProcpToTxp_Data.write(outNetWord);
-          outNetWord.tdata=faulty_addresses_cntr;
-          outNetWord.tkeep = 0xFF;
-          outNetWord.tlast = 0;
           sProcpToTxp_Data.write(outNetWord);
-          outNetWord.tdata=first_faulty_address;
-          outNetWord.tkeep = 0xFF;
-          outNetWord.tlast = 0;
-          sProcpToTxp_Data.write(outNetWord);
-          bytes_sent_for_tx += 8 * 3;
-          processingFSM = FSM_PROCESSING_CONTINUOUS_RUN;
+          bytes_sent_for_tx += 8;
+          processingFSM = FSM_PROCESSING_OUTPUT_2;
+          // outNetWord.tdata=faulty_addresses_cntr;
+          // outNetWord.tkeep = 0xFF;
+          // outNetWord.tlast = 0;
+          // sProcpToTxp_Data.write(outNetWord);
+          // outNetWord.tdata=first_faulty_address;
+          // outNetWord.tkeep = 0xFF;
+          // outNetWord.tlast = 0;
+          // sProcpToTxp_Data.write(outNetWord);
+          // bytes_sent_for_tx += 8 * 3;
+          // processingFSM = FSM_PROCESSING_CONTINUOUS_RUN;
       }
       break;
 
-      ///////
+        ///////
       ////TODO: right now not used
       ///////
 

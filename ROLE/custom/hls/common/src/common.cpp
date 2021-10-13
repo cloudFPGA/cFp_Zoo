@@ -194,104 +194,6 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
     return(rc);
 }
 
-
-/*****************************************************************************
- * @brief Fill an output file with data from an input data string and add start and stop commands.
- * 
- * @param[in] sDataStream    the input image in xf::cv::Mat format.
- * @param[in] outFileName    the name of the output file to write to.
- * @return OK if successful, otherwise KO.
- * DEPRECATED
- ******************************************************************************/
-bool dumpStringToFileWithCommands(string s, const string   outFileName, int simCnt)
-{
-    string      strLine;
-    ofstream    outFileStream;
-    string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord=NetworkWord(0,0,0);
-    bool        rc = OK;
-    unsigned int bytes_per_line = 8;
-    
-    //-- STEP-1 : OPEN FILE
-    outFileStream.open(datFile.c_str());
-    if ( !outFileStream ) {
-        cout << "### ERROR : Could not open the output data file " << datFile << endl;
-        return(KO);
-    }
-    printf("came to dumpStringToFile: s.length()=%u\n", s.length());
-    
-    ap_uint<8> value[bytes_per_line];
-    unsigned int total_bytes = 0;
-
-// Preparing the start command encoded as 1 bit set and the remaining unset
-    for (unsigned int k = 0; k < bytes_per_line; k++)
-    {
-        if(k==0){
-            value[k] = 1;
-        } else{
-            value[k] = 0;
-        }
-    }
-    udpWord.tdata = pack_ap_uint_64_(value);
-    udpWord.tkeep = 255;
-    udpWord.tlast = 0;
-    if (!dumpDataToFile(&udpWord, outFileStream))
-    {
-      rc = KO;
-    }
-
-    //-- STEP-2 : DUMP STRING DATA TO FILE
-	for (unsigned int i = 0; i < s.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
-	  //if (NPIX == XF_NPPC8) {
-	    for (unsigned int k = 0; k < bytes_per_line; k++) {
-	      if (i+k < s.length()) {
-		      value[k] = s[i+k];
-	      }
-	      else {
-		      value[k] = 0;
-	      }
-	      printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
-	    }
-	    udpWord.tdata = pack_ap_uint_64_(value);
-	    udpWord.tkeep = 255;
-	    // We are signaling a packet termination either at the end of the image or the end of MTU
-	    // if ((total_bytes >= (s.length() - bytes_per_line)) || 
-	    //     ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
-	    //   udpWord.tlast = 1;
-	    // }
-	    // else {
-	       udpWord.tlast = 0;
-	    // }
-            printf("[%4.4d] IMG TB is dumping string to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-                    simCnt, datFile.c_str(), total_bytes, value,
-                    udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
-            if (!dumpDataToFile(&udpWord, outFileStream)) {
-	      rc = KO;
-              break;
-            }
-	}
-
-// Preparing the start command encoded as only unset bits
-    for (unsigned int k = 0; k < bytes_per_line; k++)
-    {
-        value[k] = 0;
-    }
-    udpWord.tdata = pack_ap_uint_64_(value);
-    udpWord.tkeep = 255;
-    udpWord.tlast = 1;
-    if (!dumpDataToFile(&udpWord, outFileStream))
-    {
-      rc = KO;
-    }
-
-
-    //-- STEP-3: CLOSE FILE
-    outFileStream.close();
-
-    return(rc);
-}
-
-
 /*****************************************************************************
  * @brief Fill an output file with data from an image.
  * 
@@ -478,74 +380,6 @@ bool dumpStringToFileWithLastSetEveryGnoPackets(string s, const string   outFile
 }
 
 /*****************************************************************************
- * @brief Fill an output file with data from a string and
- *          set the tlast every gno packets
- * 
- * 
- * @param[in] sDataStream    the input image in xf::cv::Mat format.
- * @param[in] outFileName    the name of the output file to write to.
- * @param[in] simCnt         
- * @param[in] gno            the counter value at which this function set the tlast=1
- * @return OK if successful, otherwise KO.
- ******************************************************************************/
-bool dumpStringToFileWithLastInTheLastTwo64Bytes(string s, const string   outFileName, int simCnt)
-{
-    string      strLine;
-    ofstream    outFileStream;
-    string      datFile = "../../../../test/" + outFileName;
-    UdpWord     udpWord=NetworkWord(0,0,0);
-    bool        rc = OK;
-    unsigned int bytes_per_line = 8;
-    
-    //-- STEP-1 : OPEN FILE
-    outFileStream.open(datFile.c_str());
-    if ( !outFileStream ) {
-        cout << "### ERROR : Could not open the output data file " << datFile << endl;
-        return(KO);
-    }
-    printf("came to dumpStringToFile: s.length()=%u\n", s.length());
-    
-    ap_uint<8> value[bytes_per_line];
-    unsigned int total_bytes = 0;
-    int cntr = 0;
-
-    //-- STEP-2 : DUMP STRING DATA TO FILE
-    for (unsigned int i = 0; i < s.length(); cntr += 1, i+=bytes_per_line, total_bytes+=bytes_per_line) {
-      //if (NPIX == XF_NPPC8) {
-        for (unsigned int k = 0; k < bytes_per_line; k++) {
-          if (i+k < s.length()) {
-        value[k] = s[i+k];
-          }
-          else {
-        value[k] = 0;
-          }
-          printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
-        }
-        udpWord.tdata = pack_ap_uint_64_(value);
-        udpWord.tkeep = 255;
-        // We are signaling a packet termination either at the end of the image or the end of MTU
-        if ((total_bytes >= (s.length() - bytes_per_line)) || 
-            ((total_bytes + bytes_per_line) % PACK_SIZE == 0) || ( i == s.length() - 2*bytes_per_line ) ) {
-          udpWord.tlast = 1;
-        }
-        else {
-          udpWord.tlast = 0;
-        }
-            printf("[%4.4d] IMG TB is dumping string to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
-                    simCnt, datFile.c_str(), total_bytes, value,
-                    udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
-            if (!dumpDataToFile(&udpWord, outFileStream)) {
-          rc = KO;
-              break;
-            }
-    }
-    //-- STEP-3: CLOSE FILE
-    outFileStream.close();
-
-    return(rc);
-}
-
-/*****************************************************************************
  * @brief Initialize an input data stream from a file.
  *
  * @param[in]  inpFileName the name of the input file to read from.
@@ -624,30 +458,19 @@ bool dumpFileToStringRawData(const string inpFileName, char* charOutput, int * r
 
     //-- STEP-2 : SET DATA STREAM
     while (inpFileStream) {
-
         if (!inpFileStream.eof()) {
-
-            getline(inpFileStream, strLine);
-            //cout << strLine << endl;
-            if (strLine.empty()) continue;
-            *rawdatalines+=1;
-            sscanf(strLine.c_str(), "%llx", &mylongunsigned);
-            // Write to strOutput
-      printf("my long long %llx\n", mylongunsigned);
-      memcpy(my_tmp_buf,&mylongunsigned, bytes_per_line);
-      memcpy(charOutput+(i*bytes_per_line),&my_tmp_buf, bytes_per_line);
-      printCharBuffHex(charOutput+(i*bytes_per_line), bytes_per_line);
-
-      i++;
+          getline(inpFileStream, strLine);
+          //cout << strLine << endl;
+          if (strLine.empty()) continue;
+          *rawdatalines+=1;
+          sscanf(strLine.c_str(), "%llx", &mylongunsigned);
+          // Write to strOutput
+          printf("my long long %llx\n", mylongunsigned);
+          memcpy(my_tmp_buf,&mylongunsigned, bytes_per_line);
+          memcpy(charOutput+(i*bytes_per_line),&my_tmp_buf, bytes_per_line);
+          printCharBuffHex(charOutput+(i*bytes_per_line), bytes_per_line);
+          i++;
         }
-     for (int i = 0; i < strlen(my_tmp_buf)+1; ++i) {
-        bitset<8> bs4(my_tmp_buf[i]);
-        cout << bs4 << " ";
-
-        if (i % 6 == 0 && i != 0)
-            cout << endl;
-    }
-    cout << endl;
     }
 
     //-- STEP-3: CLOSE FILE
@@ -656,6 +479,7 @@ bool dumpFileToStringRawData(const string inpFileName, char* charOutput, int * r
     return(OK);
 }
 
+// Assumes little endian
 void printBits(size_t const size, void const * const ptr)
 {
     unsigned char *b = (unsigned char*) ptr;
@@ -711,7 +535,8 @@ string dumpFileToStringRawDataString(const string inpFileName, int * rawdataline
      // printf("my long long %llx\n", mylongunsigned);
       //printf("my long long non hex %llu\n", mylongunsigned);
       memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
-     // printBits(sizeof(unsigned long long int), my_tmp_buf);
+      printBits(sizeof(unsigned long long int), my_tmp_buf);
+      cout << endl;
       // printBits(sizeof(unsigned long long int), tmp_Out.c_str());
       charOutput.append(my_tmp_buf, bytes_per_line);
       i++;
@@ -723,65 +548,9 @@ string dumpFileToStringRawDataString(const string inpFileName, int * rawdataline
     inpFileStream.close();
     //tmp_Out.clear();
 
-    return(charOutput);
+    return string(charOutput);
 }
 
-
-/*****************************************************************************
- * @brief Initialize an input data stream from a file.
- *
- * @param[in]  inpFileName the name of the input file to read from.
- * @param[out] strOutput the output string to set.
- * @return OK if successful otherwise KO.
- * DEPRECATED
- ******************************************************************************/
-bool dumpFileToStringWithoutCommands(const string inpFileName, char* charOutput, int simCnt) {
-    string      strLine;
-    ifstream    inpFileStream;
-    string      datFile = "../../../../test/" + inpFileName;
-    UdpWord     udpWord=NetworkWord(0,0,0);
-    unsigned int i = 0;
-    unsigned int bytes_per_line = 8;
-    ap_uint<8> value[bytes_per_line];
-    
-    //-- STEP-1 : OPEN FILE
-    inpFileStream.open(datFile.c_str());
-    if ( !inpFileStream ) {
-        cout << "### ERROR : Could not open the input data file " << datFile << endl;
-        return(KO);
-    }
-    // ignore the ack of the start command
-    getline(inpFileStream, strLine);
-    //-- STEP-2 : SET DATA STREAM
-    while (inpFileStream) {
-
-        if (!inpFileStream.eof()) {
-            if (strLine.empty()) continue;
-
-            getline(inpFileStream, strLine);
-    // ignore the ack of the stop command at the eof
-            if (!inpFileStream.eof()){
-                if (strLine.empty()) continue;
-            sscanf(strLine.c_str(), "%llx %x %d", &udpWord.tdata, &udpWord.tkeep, &udpWord.tlast);
-            // Write to strOutput
-            //printf("Debug: (char)udpWord.tdata.to_long()=%c\n", (char)udpWord.tdata.to_long());
-            unpack_ap_uint_64_(udpWord.tdata, value);
-            for (unsigned int k = 0; k < bytes_per_line; k++) {
-            charOutput[i++] = value[k];
-            }
-
-        // Print Data to console
-        //printf("[%4.4d] TB is filling string with character %c\n",
-                //   simCnt, (char)value[k]);
-                }
-        }
-    }
-
-    //-- STEP-3: CLOSE FILE
-    inpFileStream.close();
-
-    return(OK);
-}
 
 
 /*****************************************************************************
@@ -841,7 +610,6 @@ void hex2asciiByteByByte(const string& in, string& out)
 }
 
 
-
 /*****************************************************************************
  * @brief Convert a ascii string to a hexadecimal string
  *
@@ -865,7 +633,6 @@ T ascii2hexTheRevenge(const string& in)
  sstream << std::hex << in;
 sstream >> out;
   return out;
-
 }
 
 void ascii2hexWithSize(const string& in, string& out, size_t  bytesize)
@@ -1039,7 +806,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
 	out = out.append(start_cmd,3);
   memcpy(value_cmd, (char*)&mem_address, 4);
   out = out.append(value_cmd,5);
-  return out;
+  return string(out);
   }
 
 /*****************************************************************************
@@ -1051,15 +818,17 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingNumber)
+string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingNumber, bool with_bw_analysis)
 {
 	char addr_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char fault_cntr_cmd [bytes_per_line];
 	char fault_addr_cmd [bytes_per_line];
 	char filler_cmd [bytes_per_line];
+	char clock_cycles_cmd [bytes_per_line];
 	char end_of_tests_cmd [bytes_per_line];
 	char stop_cmd [bytes_per_line];
   unsigned int fault_addr = 0;
+  unsigned int clock_cycles = 0;
   const unsigned int first_faultTests = 3;
   string out;
 
@@ -1069,6 +838,9 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
 // computations the first faulty address and the the fault counter
     unsigned int mem_addr_per_word = mem_word_size / 8; // byte size of this word
     unsigned int fault_cntr = 0;
+//precomputing the cc
+ clock_cycles = mem_address % mem_addr_per_word == 0 ? mem_address / mem_addr_per_word : (unsigned int) mem_address / mem_addr_per_word + 1;
+
 
 //simulating the fault injection
     for (unsigned int j = 0; j < mem_address; j+=mem_addr_per_word)
@@ -1101,11 +873,11 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
             stop_cmd[k]          = (char)0;
             stop_cmd[k]          = (char)0;
             end_of_tests_cmd[k]  = (char)0;
+            clock_cycles_cmd[k]  = (char)0;   
         }
         stop_cmd[0]    = (char)2;
         end_of_tests_cmd[0]    = (char)3;
         memcpy(end_of_tests_cmd+1, (char*)&testingNumber, 2);
-
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out = out.append(addr_cmd,bytes_per_line);
         //if not yet in the fault injection point just let em empty as expected from good tests
@@ -1119,10 +891,13 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
             memcpy(fault_addr_cmd, (char*)&mem_addr_per_word, sizeof(unsigned int));
             out = out.append(fault_addr_cmd,bytes_per_line);
         }
+        memcpy(clock_cycles_cmd, (char*)&clock_cycles, sizeof(unsigned int));
+        memcpy(clock_cycles_cmd+sizeof(unsigned int), (char*)&clock_cycles, sizeof(unsigned int));
+        out = out.append(clock_cycles_cmd,bytes_per_line);
     }
     out = out.append(end_of_tests_cmd,bytes_per_line);
   //  out.append(stop_cmd,bytes_per_line);
-  return out;
+  return string(out);
 }
 
 
@@ -1175,10 +950,21 @@ struct MemoryTestResult {
   unsigned int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
+  unsigned int    clock_cycles_read;
+  unsigned int    clock_cycles_write;
 
   MemoryTestResult()      {}
-  MemoryTestResult(unsigned int target_address, unsigned int fault_cntr, unsigned int  first_fault_address) :
-    target_address(target_address), fault_cntr(fault_cntr), first_fault_address(first_fault_address) {}
+  MemoryTestResult(
+    unsigned int target_address,
+    unsigned int fault_cntr,
+    unsigned int  first_fault_address,
+    unsigned int clock_cycles_write,
+    unsigned int clock_cycles_read) :
+    target_address(target_address), 
+    fault_cntr(fault_cntr), 
+    first_fault_address(first_fault_address),  
+    clock_cycles_write(clock_cycles_write),
+    clock_cycles_read(clock_cycles_read) {}
 };
 
 template<unsigned int bytes_per_line=8>
@@ -1187,54 +973,81 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
   std::vector<MemoryTestResult> testResults_vector;
 
   int rawiterations = charOutputSize / 8;
-  //cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
+  unsigned int mem_word_size = 512;
+  unsigned int mem_word_byte_size = mem_word_size/8;
+  cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
-  string tmp_outbuff;
   char myTmpOutBuff [bytes_per_line+1];
-  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
+  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
-    tmp_outbuff.clear();
+    string tmp_outbuff;
     tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
-    if(is_stop_present && k==5){
+    if(is_stop_present && k==6){
       cout << "DEBUG the stop is present and is here" << endl;
-    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==5){ //check it is either the last or one before the last
       //substr extraction and parsing
-      tmp_outbuff.erase(tmp_outbuff.begin());
+      //tmp_outbuff.erase(tmp_outbuff.begin());
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       //cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
 
-    } else  if(k==3){ //first faut addres
-      //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out);
+    } else  if(k==4){ //clock cycless
+      char mySecondTmpOutBuff[bytes_per_line/2];
+      string additional_string;
+      for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
+      //printBits(bytes_per_line, tmp_outbuff.c_str());
+      additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
+      //printBits(bytes_per_line/2, additional_string.c_str());
+
+      tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
+      clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
+
+      strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
+      clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
+
+      cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
+
+      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_read,clock_cycles_write);
       testResults_vector.push_back(tmpResult);
-      //cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
       //cout << "DEBUG reinit the counter" << endl;
       }
+      unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
+      cout << "Written " << written_words << " words" << endl;
+      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
+      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+
       cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
-      cout << " fault counter: " << tmpResult.fault_cntr << " ";
-      cout << "first fault at address: " << tmpResult.first_fault_address << " "  << endl;
+      cout << "Fault counter: " << tmpResult.fault_cntr << " ";
+      cout << "First fault at address: " << tmpResult.first_fault_address << " "  << endl;
+      cout << " RD BW " << rd_bndwdth  << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_read << " "  << endl;
+      cout << " WR BW " << wr_bndwdth << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_write << " "  << endl;
+    }else if(k==3){ // first fault address
+      //substr extraction and parsing
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
     }else if(k==2){ // fault cntr
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      //cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
+      cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     }else { //max addrss
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      //cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
+      cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
 
     }
     k++;
+    tmp_outbuff.clear();
   }
-  tmp_outbuff.clear();
+  //tmp_outbuff.clear();
   return testResults_vector;
 }
 static inline ssize_t
