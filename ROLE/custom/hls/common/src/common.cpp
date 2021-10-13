@@ -68,6 +68,7 @@ bool setInputDataStream(stream<UdpWord> &sDataStream, const string dataStreamNam
 
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
+    strLine.clear();
 
     return(OK);
 }
@@ -301,7 +302,7 @@ bool dumpStringToFileWithCommands(string s, const string   outFileName, int simC
  ******************************************************************************/
 bool dumpStringToFile(string s, const string   outFileName, int simCnt)
 {
-    string      strLine;
+    //string      strLine;
     ofstream    outFileStream;
     string      datFile = "../../../../test/" + outFileName;
     UdpWord     udpWord=NetworkWord(0,0,0);
@@ -363,11 +364,11 @@ bool dumpStringToFile(string s, const string   outFileName, int simCnt)
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
  ******************************************************************************/
-bool dumpStringToFileOnlyRawData(string s, const string   outFileName, int simCnt, size_t out_size)
+bool dumpStringToFileOnlyRawData(const string s, const string   outFileName, int simCnt, size_t out_size)
 {
-    printStringHex(s, out_size);
+    //printStringHex(s, out_size);
 
-    string      strLine;
+    //string      strLine;
     ofstream    outFileStream;
     string      datFile = outFileName; //"../../../../test/" + outFileName;
     bool        rc = OK;
@@ -379,7 +380,7 @@ bool dumpStringToFileOnlyRawData(string s, const string   outFileName, int simCn
         cout << "### ERROR : Could not open the output data file " << datFile << endl;
         return(KO);
     }
-    printf("came to dumpStringToFile: s.length()=%u\n", out_size);
+    printf("came to dumpStringToFileOnlyRawData: s.length()=%u\n", out_size);
     
     ap_uint<8> value[bytes_per_line];
     unsigned int total_bytes = 0;
@@ -392,7 +393,7 @@ bool dumpStringToFileOnlyRawData(string s, const string   outFileName, int simCn
           else {
         value[k] = 0;
           }
-          printf("DEBUG: In dumpStringToFile: value[%u]=%c\n", k, (char)value[k]);
+          printf("DEBUG: In dumpStringToFileOnlyRawData: value[%u]=%c\n", k, (char)value[k]);
         }
         ap_uint<64> tdata = pack_ap_uint_64_(value);
 
@@ -594,6 +595,7 @@ bool dumpFileToString(const string inpFileName, char* charOutput, int simCnt) {
 
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
+    strLine.clear();
 
     return(OK);
 }
@@ -676,16 +678,16 @@ string dumpFileToStringRawDataString(const string inpFileName, int * rawdataline
     ifstream    inpFileStream;
     string      datFile = inpFileName;
     string charOutput;
-    charOutput.reserve(outputSize);
-    strLine.reserve(outputSize);
-    tmp_Out.reserve(bytes_per_line);
+    //charOutput.reserve(outputSize);
+    //strLine.reserve(outputSize);
+    //tmp_Out.reserve(bytes_per_line);
     unsigned long long int  mylongunsigned;
     unsigned long long int  zero_byte=0;
     unsigned int i = 0;
     char my_tmp_buf [bytes_per_line];
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
-cout<<endl<<endl;
+//cout<<endl<<endl;
 
     if ( !inpFileStream ) {
         cout << "### ERROR : Could not open the input data file " << datFile << endl;
@@ -714,11 +716,12 @@ cout<<endl<<endl;
       charOutput.append(my_tmp_buf, bytes_per_line);
       i++;
         }
-        strLine.clear();
-cout<<endl<<endl;
+       // strLine.clear();
+//cout<<endl<<endl;
     }
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
+    //tmp_Out.clear();
 
     return(charOutput);
 }
@@ -1015,6 +1018,7 @@ template<unsigned int bytes_per_line = 8>
 string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
 {
   string out;
+  //out.reserve(bytes_per_line);
 	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char stop_cmd [bytes_per_line];
 	//char filler_cmd [bytes_per_line];
@@ -1047,7 +1051,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned int testingNumber)
+string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingNumber)
 {
 	char addr_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char fault_cntr_cmd [bytes_per_line];
@@ -1055,8 +1059,9 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned i
 	char filler_cmd [bytes_per_line];
 	char end_of_tests_cmd [bytes_per_line];
 	char stop_cmd [bytes_per_line];
-    unsigned int fault_addr = 0;
-    unsigned int first_faultTests = 3;
+  unsigned int fault_addr = 0;
+  const unsigned int first_faultTests = 3;
+  string out;
 
 //given parameters
     unsigned int mem_word_size = 512;
@@ -1066,7 +1071,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned i
     unsigned int fault_cntr = 0;
 
 //simulating the fault injection
-    for (unsigned int j = 0; j < mem_address; j++)
+    for (unsigned int j = 0; j < mem_address; j+=mem_addr_per_word)
     {
         ap_uint<32> currentNumber = j;
         ap_uint<32> nextNumber = (currentNumber+1) xor 1;
@@ -1104,7 +1109,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned i
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out.append(addr_cmd,bytes_per_line);
         //if not yet in the fault injection point just let em empty as expected from good tests
-        if(i < first_faultTests-1 )
+        if(i < first_faultTests-1 || mem_address < mem_addr_per_word)
         {
           out.append(filler_cmd,bytes_per_line);
           out.append(filler_cmd,bytes_per_line);
@@ -1117,6 +1122,7 @@ void createMemTestGoldenOutput(unsigned int mem_address, string& out, unsigned i
     }
     out.append(end_of_tests_cmd,bytes_per_line);
   //  out.append(stop_cmd,bytes_per_line);
+  return out;
 }
 
 
@@ -1176,7 +1182,7 @@ struct MemoryTestResult {
 };
 
 template<unsigned int bytes_per_line=8>
-std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charOutputSize, int rawdatalines)
+std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t charOutputSize, int rawdatalines)
 {
   std::vector<MemoryTestResult> testResults_vector;
 
@@ -1199,7 +1205,7 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
       tmp_outbuff.erase(tmp_outbuff.begin());
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
+      //cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
 
     } else  if(k==3){ //first faut addres
       //substr extraction and parsing
@@ -1207,7 +1213,7 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
       fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
       MemoryTestResult tmp(max_memory_addr_out,fault_cntr_out,fault_addr_out);
       testResults_vector.push_back(tmp);
-      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
+      //cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
       //cout << "DEBUG reinit the counter" << endl;
@@ -1219,12 +1225,12 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
     }else if(k==2){ // fault cntr
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
+      //cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     }else { //max addrss
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
+      //cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
 
     }
     k++;
