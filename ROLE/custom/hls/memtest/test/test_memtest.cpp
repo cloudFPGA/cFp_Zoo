@@ -182,7 +182,9 @@ int main(int argc, char** argv) {
     unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
     unsigned int tot_output_transfers =  1;// (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
     if(charOutputSize>PACK_SIZE){
-      tot_output_transfers = ceil((unsigned int)(charOutputSize/PACK_SIZE));
+      tot_output_transfers = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
+
+      //tot_output_transfers = ceil(charOutputSize/PACK_SIZE);
     }
     cout << tot_output_transfers << " tx, outsize " << charOutputSize <<endl;
 
@@ -394,7 +396,8 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     }
     //__file_write("./hls_out.txt", charOutput, charOutputSize);
     //charOutput[charOutputSize+1]='\0';
-    out_string.append(charOutput,charOutputSize);
+    string tmpToDebug = string(charOutput,charOutputSize);
+    out_string.append(tmpToDebug,0, charOutputSize);
 		//printStringHex(out_string, charOutputSize);
     dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
     printf("Output string: ");
