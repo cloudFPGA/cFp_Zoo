@@ -34,7 +34,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 5
+#define TB_MULTI_RUNS_ITERATIONS 1
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -175,7 +175,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test+2)) + 4) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
+    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 4) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
     size_t charInputSize = 8; //a single tdata
     size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //stop, 4 for each test, potential stop?
 
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
     }
     //return 0;
     //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
-    if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
+    if (!dumpStringToFileWithLastSetEveryGnoPackets(strGold, "verify_UAF_Shl_Data.dat", simCnt, PACK_SIZE/8)){ 
       //, 3)) {
       nrErr++;
     }

@@ -535,8 +535,8 @@ string dumpFileToStringRawDataString(const string inpFileName, int * rawdataline
      // printf("my long long %llx\n", mylongunsigned);
       //printf("my long long non hex %llu\n", mylongunsigned);
       memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
-      printBits(sizeof(unsigned long long int), my_tmp_buf);
-      cout << endl;
+      //printBits(sizeof(unsigned long long int), my_tmp_buf);
+      //cout << endl;
       // printBits(sizeof(unsigned long long int), tmp_Out.c_str());
       charOutput.append(my_tmp_buf, bytes_per_line);
       i++;
@@ -881,7 +881,7 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
         memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
         out = out.append(addr_cmd,bytes_per_line);
         //if not yet in the fault injection point just let em empty as expected from good tests
-        if(i < first_faultTests-1 || mem_address < mem_addr_per_word)
+        if(i < first_faultTests-1 || mem_address <= mem_addr_per_word)
         {
           out = out.append(filler_cmd,bytes_per_line);
           out = out.append(filler_cmd,bytes_per_line);
