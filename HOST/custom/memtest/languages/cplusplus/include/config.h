@@ -23,6 +23,12 @@
 
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
+#define TRACE_OFF     0x0000
+#define TRACE_URIF   1 <<  1
+#define TRACE_UAF    1 <<  2
+#define TRACE_MMIO   1 <<  3
+#define TRACE_ALL     0xFFFF
+#define DEBUG_LEVEL (TRACE_OFF)
 
 /** This is our custom MTU. We must use a multiple of 8 (Bytes per transaction)! 1450 4086 udp pack 
  * size; note that OSX limits < 8100 bytes                                                        */

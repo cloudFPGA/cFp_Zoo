@@ -5,7 +5,7 @@
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
- * @details      This application implements a UDP/TCP-oriented Vitis function.
+ * @details      This application implements a UDP/TCP-oriented Memory test function.
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
@@ -19,7 +19,7 @@
 
 #include "../include/memtest.hpp"
 #include "../include/memtest_pattern.hpp"
-#include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
+#include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h" //debug level define
 
 #ifdef USE_HLSLIB_DATAFLOW
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
@@ -77,8 +77,10 @@ void pRXPath(
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
+    #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
        *processed_word_rx, *processed_bytes_rx);
+    #endif
       if ( !siNrc_meta.empty() && !sRxtoProc_Meta.full() )
       {
         meta_tmp = siNrc_meta.read();//not sure if I have to continue to test or not, hence sending the meta or not is different
@@ -86,13 +88,13 @@ void pRXPath(
         sRxtoProc_Meta.write(meta_tmp); //valid destination
         enqueueFSM = PROCESSING_PACKET;
       }
-     // *start_stop = start_stop_local;
       break;
 
     case PROCESSING_PACKET:
+    #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
        *processed_word_rx, *processed_bytes_rx);
-      //*start_stop = start_stop_local;
+    #endif
       
       if ( !siSHL_This_Data.empty() && !sRxpToProcp_Data.full() )
       {
@@ -104,25 +106,20 @@ void pRXPath(
           case(TEST_START_CMD):
             start_stop_local=true;
             *start_stop=true;
-            //max_iterations= netWord.tdata.range(MEMTEST_ITERATIONS_HIGH_BIT,MEMTEST_ITERATIONS_LOW_BIT);
-            //printf("%d %d gne \n", MEMTEST_ADDRESS_HIGH_BIT, MEMTEST_ADDRESS_LOW_BIT);
-      //std::cout << "DEBUG PROCESSING_PACKET before is " << netWord.tdata << std::endl;
-      //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
-           // netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,0) = netWord.tdata.range(MEMTEST_ADDRESS_HIGH_BIT,MEMTEST_ADDRESS_LOW_BIT);
-            //netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,MEMTEST_ADDRESS_HIGH_BIT) = max_iterations;
-
-      //std::cout << std::bitset<64>(netWord.tdata).to_string() << std::endl;
-      //std::cout << "DEBUG PROCESSING_PACKET I have to test " << netWord.tdata << std::endl;
             sRxpToProcp_Data.write(netWord);
+      #if DEBUG_LEVEL == TRACE_ALL
 	    printf("Hallo, I received a start command :D\n");
+      #endif
             break;
           case(TEST_STOP_CMD):
             start_stop_local=false;
             *start_stop=false;
-            netWord.tdata=TEST_STOP_CMD;//358080398155;//"S_ACK" string
+            netWord.tdata=TEST_STOP_CMD;
             netWord.tlast = 1;
             sRxpToProcp_Data.write(netWord);
+      #if DEBUG_LEVEL == TRACE_ALL
 	    printf("Hallo, I received a stop command D:\n");
+      #endif
             break;
           default:
             if (start_stop_local)
@@ -191,18 +188,13 @@ void pTXPath(
       }
       break;
     case WAIT_FOR_STREAM_PAIR:
+    #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
+    #endif
       //-- Forward incoming chunk to SHELL
       *processed_word_tx = 0;
-      
-      /*
-      printf("!sRxpToProcp_Data.empty()=%d\n", !sRxpToProcp_Data.empty());
-      printf("!sRxtoTx_Meta.empty()=%d\n", !sRxtoTx_Meta.empty());
-      printf("!soTHIS_Shl_Data.full()=%d\n", !soTHIS_Shl_Data.full());
-      printf("!soNrc_meta.full()=%d\n", !soNrc_meta.full());
-      */
-      
+
       if (( !sProcpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
@@ -221,18 +213,13 @@ void pTXPath(
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
         meta_out_stream.tdata.dst_rank = dst_rank;
-        //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
-        //meta_out_stream.tdata.src_port = DEFAULT_RX_PORT;
-        //printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
-        //printf("meat_out.dst_rank: %d\n", (int) meta_out_stream.tdata.dst_rank);
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
-  
-  //meta_out_stream.tdata.len = meta_in.len; 
+
         soNrc_meta.write(meta_out_stream);
 
-  (*processed_word_tx)++;
+        (*processed_word_tx)++;
   
         if(netWordTx.tlast != 1)
         {
@@ -242,8 +229,10 @@ void pTXPath(
       break;
 
     case PROCESSING_PACKET: 
+    #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
+    #endif
       if( !sProcpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         netWordTx = sProcpToTxp_Data.read();
@@ -307,7 +296,6 @@ void memtest(
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
   //-- LOCAL VARIABLES ------------------------------------------------------
-  // static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkMetaStream> sRxtoProc_Meta("sRxtoProc_Meta");
   static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
@@ -338,7 +326,7 @@ void memtest(
 
   
 
-#ifdef USE_HLSLIB_DATAFLOW
+#ifdef USE_HLSLIB_DATAFLOW //TODO: this is not used currently and not updated, consider to cut out
   /*! @copybrief uppercase()
    *  Uppercase is eanbled with hlslib support
    */
@@ -378,13 +366,21 @@ void memtest(
   HLSLIB_DATAFLOW_FINALIZE();
   
 #else // !USE_HLSLIB_DATAFLOW
-
+//////////////////////////////////////////////////
+//STEP 0: setup the port and the dst of the cluster
+// CHANGE THE CLUSTER CONNECTIONS HERE
+//////////////////////////////////////////////////
  pPortAndDestionation(
   pi_rank,
   pi_size, 
   sDstNode_sig,
   po_rx_ports);
 
+//////////////////////////////////////////////////
+//STEP 1: received the input data, small parse on 
+// the command and fwd to the following step
+// CHANGE THE COMMAND PARSING HERE
+//////////////////////////////////////////////////
  pRXPath(
   siSHL_This_Data,
   siNrc_meta,
@@ -395,6 +391,10 @@ void memtest(
   &processed_word_rx,
   &processed_bytes_rx);
 
+//////////////////////////////////////////////////
+//STEP 2.a: processing the data. 
+// INSERT THE CUSTOM PROCESSING LOGIC HERE
+//////////////////////////////////////////////////
  pTHISProcessingData<bool,32>(
   sRxpToProcp_Data,
   sProcpToTxp_Data,
@@ -406,12 +406,21 @@ void memtest(
   sOfGetTheCounter,
   sClockCounter);
 
+//////////////////////////////////////////////////
+// STEP 2.b: Hardware Performance Counter
+// it runs in parallel/coordinated with STEP 2.a
+//////////////////////////////////////////////////
   pCountClockCycles<bool,32,4000000>(
     sOfEnableCCIncrement,
     sOfResetCounter,
     sOfGetTheCounter,
     sClockCounter);
   
+//////////////////////////////////////////////////
+// STEP 3: transmit back the data
+// currently steup the tlast once reached max size
+// WARNING: it needs a new meta if filled up the MTU
+//////////////////////////////////////////////////
   pTXPath(
   soTHIS_Shl_Data,
   soNrc_meta,

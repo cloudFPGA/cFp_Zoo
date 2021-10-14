@@ -35,7 +35,7 @@ using namespace std;
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
 #define TB_MULTI_RUNS_ITERATIONS 1
-#define DEBUG_LEVEL (TRACE_ALL)
+#define DEBUG_LEVEL (TRACE_OFF)
 
 
 //------------------------------------------------------
@@ -89,7 +89,9 @@ void stepDut() {
       siUdp_meta, soUdp_meta,
       &s_udp_rx_ports);
     simCnt++;
+    #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
+    #endif
 }
 
 
@@ -109,39 +111,26 @@ int main(int argc, char** argv) {
     printf("#####################################################\n");
     printf("## TESTBENCH STARTS HERE                           ##\n");
     printf("#####################################################\n");
-
+// consider to execute : ulimit -s unlimited
+// if any stack/memory related issue before executing
 
     if (argc < 3 || argc > 4) {
         printf("Usage : %s <number of address to test> , <testing times> , <command string ready2go> ;provided %d\n", argv[0], argc);
         return -1;
     }
 
+    //------------------------------------------------------
+    //-- TESTBENCH Input parsing
+    //------------------------------------------------------
     string strInput_memaddrUT = argv[1];
     string strInput_nmbrTest = argv[2];
     string strInput_commandstring= "";
-    cout << argc << " argc was, and argv "<< argv << endl;
     if(argc > 3)
     {
       strInput_commandstring.assign(argv[3]);
     }
-    //printStringHex(strInput_commandstring, strInput_commandstring.length());
     unsigned int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
-    // string tmp_string= argv[1];
-    // string strInput;
-
-    // //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
-    // if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
-	  //   tmp_string = tmp_string.substr(1,tmp_string.length()-2);
-    // }
-    // cout << hex << tmp_string << dec << endl;
-    // //perform hex2ascii conversion so that we can codify our command as we wish, no restriction to null ascii characters
-    // hex2ascii(tmp_string, strInput);
-    // if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
-	  //   strInput = strInput.substr(1,strInput.length()-2);
-    // }
-     //cout << hex << strInput_memaddrUT << dec << endl;
-     //cout << hex << strInput_nmbrTest << dec << endl;
     if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -172,31 +161,24 @@ int main(int argc, char** argv) {
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
     }
+
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 4) + 2 + 10; // # of tests*((2*(rd/wr addresses + 1 state update))+start+out) + 10 random cycles
-    size_t charInputSize = 8; //a single tdata
-    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //stop, 4 for each test, potential stop?
+    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 4) + 2 + 10; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
+    size_t charInputSize = 8; //a single tdata is the current command dimension for this test
+    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
 
-    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);//(CEIL( ((testingNumber * (2 * (memory_addr_under_test+1)) + 2) + 2 )* 8, PACK_SIZE)); // only a single tx
-    unsigned int tot_output_transfers =  1;// (CEIL(8 * (2 + 1 + 1) * testingNumber, PACK_SIZE)); //  only 3 rx packets of 8 bytes each
-    if(charOutputSize>PACK_SIZE){
-      tot_output_transfers = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
+    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);// only a single tx
+    unsigned int tot_output_transfers =  charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1; // check if bigger output than mtu
+    // if(charOutputSize>PACK_SIZE){
+    //   tot_output_transfers = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
+    // }
 
-      //tot_output_transfers = ceil(charOutputSize/PACK_SIZE);
-    }
-    cout << tot_output_transfers << " tx, outsize " << charOutputSize <<endl;
-
-
-    //char *charOutput = (char*)malloc((charOutputSize+1)* sizeof(char)); // reading two 32 ints + others?
-    char * charOutput = new char[(charOutputSize)* sizeof(char)]; // reading two 32 ints + others?
-    //char *charInput = (char*)malloc(charInputSize* sizeof(char)); // at least print the inputs
-    char * charInput = new char[(charInputSize)* sizeof(char)]; // at least print the inputs
-    //char * longbuf= new char[PACK_SIZE+1];
-    char tmp_char_cmd [1];
-    tmp_char_cmd[1] = (char)0;
-    unsigned int tmp_int_cmd = 0;
+    char *charOutput = (char*)malloc((charOutputSize)* sizeof(char)); // 
+     //char * charOutput = new char[(charOutputSize)* sizeof(char)];
+    char *charInput = (char*)malloc(charInputSize* sizeof(char)); // 
+    //char * charInput = new char[(charInputSize)* sizeof(char)]; //
 
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
@@ -209,13 +191,9 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
   unsigned int bytes_per_line = 8;
   string strInput;
-  strInput.reserve(charInputSize+1);//="";
-  string strGold;//="";
+  strInput.reserve(charInputSize+1);
+  string strGold;
   strGold.reserve(charOutputSize+1);
-  //="";
-  //string longbuf_string;//="";
-  //out_string.reserve(charOutputSize+1);
-
   
 #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
   
@@ -235,16 +213,20 @@ int main(int argc, char** argv) {
 
     simCnt = 0;
     nrErr  = 0;
-// Assumption: if the user knows how to format the command stream she/he does by itself (or it is because of the emulation flow :D)
+// Assumption: if the user knows how to format the command stream she/he does by itself (
 // otheriwse the TB takes care and create the commands based on the inputs
     if(!strInput_commandstring.length()){
       strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
     }else{
       ////////////////////////////////////////////////////////////
-      //////TODO: this parsing is not working
+      //////TODO: command string ready2go is not working at the current status
       ////////////////////////////////////////////////////////////
-      char * char_command = new char[strInput_commandstring.length()+1];
+      //char * char_command = new char[strInput_commandstring.length()+1];
+      char * char_command = (char*)malloc((strInput_commandstring.length()+1)* sizeof(char));
       char_command[0]='\0';//initi just for the sake
+      char tmp_char_cmd [1];
+      tmp_char_cmd[1] = (char)0;
+      unsigned int tmp_int_cmd = 0;
       //char_command = new char[strInput_commandstring.length()];
     //  cout << strInput_commandstring << endl;
     //   for (int i = 0; i < strInput_commandstring.length(); i++)
@@ -266,91 +248,82 @@ int main(int argc, char** argv) {
           char_command = NULL;
         }
     }
-    //strInput[strInput.length()]='\0';
+    //Create the expected result
     strGold = createMemTestGoldenOutput(memory_addr_under_test, testingNumber, true);
 
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
-    //return 0;
-    //the three is for setting the tlast to 1 every 3 commands to respect the current memtest pattern
+    //Set the tlast every PACK_SIZE/8 commands if big output tests
     if (!dumpStringToFileWithLastSetEveryGnoPackets(strGold, "verify_UAF_Shl_Data.dat", simCnt, PACK_SIZE/8)){ 
-      //, 3)) {
       nrErr++;
     }
-#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
 
+#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
     if (!dumpStringToFile(strStop, "ifsSHL_Uaf_STOPData.dat", simCnt)){ 
       nrErr++;
     }
 #endif // SIM_STOP_COMPUTATION
-#ifdef DEBUG_MULTI_RUNS
+
+
+#ifdef DEBUG_MULTI_RUNS // test if the HLS kernel has reinit issues with streams leftovers or other stuffs
 for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #endif //DEBUG_MULTI_RUNS
-    //------------------------------------------------------
-    //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
-    //------------------------------------------------------
-    if (nrErr == 0) {
-        if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat", simCnt)) { 
-            printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
-            nrErr++;
-        }
-
-        //there are tot_input_transfers streams from the the App to the Role
-        NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-	for (unsigned int i=0; i<tot_input_transfers; i++) {
-	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
-	}        
-	//set correct node_rank and cluster_size
-        node_rank = 1;
-        cluster_size = 2;
+  //------------------------------------------------------
+  //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
+  //------------------------------------------------------
+  if (nrErr == 0) {
+    if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_Data.dat", simCnt)) { 
+        printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
+        nrErr++;
     }
+    //there are tot_input_transfers streams from the the App to the Role
+    NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
+    for (unsigned int i=0; i<tot_input_transfers; i++) {
+      siUdp_meta.write(NetworkMetaStream(tmp_meta));
+    } 
+
+	  //set correct node_rank and cluster_size
+    node_rank = 1;
+    cluster_size = 2;
+  }
     //------------------------------------------------------
     //-- STEP-3 : MAIN TRAFFIC LOOP
     //------------------------------------------------------
     while (!nrErr) {
-	
-        // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions 
-        // (Rx-Tx)
-        if (simCnt < sim_time) 
-        {
-            stepDut();
+      // Keep enough simulation time for sequntially executing the FSMs of the main  functions 
+      // (Rx-Tx)
+      if (simCnt < sim_time) 
+      {
+        //+1
+          stepDut();
+          if(simCnt > 2)
+          {
+            assert(s_udp_rx_ports == 0x1);
+          }
 
-            if(simCnt > 2)
-            {
-              //cout << "Verifying the assert, curr value of udp port: " << s_udp_rx_ports << endl;
-              assert(s_udp_rx_ports == 0x1);
+  #ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs manual insertion with define
+          if(simCnt == testingNumber * ((2 * (memory_addr_under_test+1))) + 2){
+            if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_STOPData.dat", simCnt)) { 
+            printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
+            nrErr++;
             }
-#ifdef SIM_STOP_COMPUTATION // stop the comptuation with a stop command after some CCs
-            if(simCnt == testingNumber * ((2 * (memory_addr_under_test+1))) + 2){
-              if (!setInputDataStream(sSHL_Uaf_Data, "sSHL_Uaf_Data", "ifsSHL_Uaf_STOPData.dat", simCnt)) { 
-              printf("### ERROR : Failed to set input data stream \"sSHL_Uaf_Data\". \n");
-              nrErr++;
-              }
-              //there are tot_input_transfers streams from the the App to the Role
-              NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
-              for (unsigned int i=0; i<tot_input_transfers; i++) {
-                siUdp_meta.write(NetworkMetaStream(tmp_meta));
-              }        
-              //set correct node_rank and cluster_size
-                    node_rank = 1;
-                    cluster_size = 2;
-              }
-#endif //SIM_STOP_COMPUTATION
-              
-            //if( !soUdp_meta.empty())
-            //{
-            //  NetworkMetaStream tmp_meta = soUdp_meta.read();
-            //  printf("NRC received NRCmeta stream from node_rank %d.\n", (int) tmp_meta.tdata.src_rank);
-            //}
+            //there are tot_input_transfers streams from the the App to the Role
+            NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
+            for (unsigned int i=0; i<tot_input_transfers; i++) {
+              siUdp_meta.write(NetworkMetaStream(tmp_meta));
+            }        
+            //set correct node_rank and cluster_size
+                  node_rank = 1;
+                  cluster_size = 2;
+            }
+  #endif //SIM_STOP_COMPUTATION
+    } else {
+        printf("## End of simulation at cycle=%3d. \n", simCnt);
+        break;
+    }
 
-
-        } else {
-            printf("## End of simulation at cycle=%3d. \n", simCnt);
-            break;
-        }
-
-    }  // End: while()
+  }  // End: while()
 
     //-------------------------------------------------------
     //-- STEP-4 : DRAIN AND WRITE OUTPUT FILE STREAMS
@@ -373,7 +346,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
         //ensure forwarding behavior
         assert(tmp_meta.tdata.dst_rank == ((tmp_meta.tdata.src_rank + 1) % cluster_size));
       }
-      //printf("DEBUG %d received against %d predicted\n", i, tot_output_transfers);
+      //verify the output prediction
       assert(i == tot_output_transfers);
     }
     else {
@@ -390,27 +363,27 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     }
     printf("Input string : ");
     for (unsigned int i = 0; i <  charInputSize; i++)
-       printf("%x", charInput[i]); 
+       printf("%x", charInput[i]); //hex print since not real chars
     printf("\n");    
     if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
+    
     //__file_write("./hls_out.txt", charOutput, charOutputSize);
-    //charOutput[charOutputSize+1]='\0';
     string out_string;
     out_string.reserve(charOutputSize);
     string tmpToDebug = string(charOutput,charOutputSize);
     out_string.append(tmpToDebug,0, charOutputSize);
-		//printStringHex(out_string, charOutputSize);
     dumpStringToFileOnlyRawData(out_string, "./hls_out.txt", simCnt, charOutputSize);
     printf("Output string: ");
     for (unsigned int i = 0; i < charOutputSize; i++)
-       printf("%x", charOutput[i]); 
+       printf("%x", charOutput[i]); //hex print since not real chars 
     printf("\n");
   out_string.clear();
+
     //------------------------------------------------------
-    //-- STEP-6 : COMPARE INPUT AND OUTPUT FILE STREAMS
+    //-- STEP-6 : COMPARE GOLD AND OUTPUT FILE STREAMS
     //------------------------------------------------------
     int rc1 = system("diff --brief -w -i -y ../../../../test/ofsUAF_Shl_Data.dat \
                                             ../../../../test/verify_UAF_Shl_Data.dat");
@@ -421,27 +394,23 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     } else {
       printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
     }
-///////////////////////
-////TODO: create an output parsing stuff
-///////////////////////
 
-  //longbuf = new char[PACK_SIZE];
-  string ouf_file ="./hls_out.txt";
+    //------------------------------------------------------
+    //-- STEP-7 [OPTIONAL] : Parse the output stream
+    //------------------------------------------------------
+  const string ouf_file ="./hls_out.txt";
   int rawdatalines=0;
   string longbuf_string;
   longbuf_string.reserve(charOutputSize);
   longbuf_string = dumpFileToStringRawDataString(ouf_file, &rawdatalines, charOutputSize);
-  //printCharBuffHex(longbuf, charOutputSize);
-  //
-  //printStringHex(longbuf_string, charOutputSize);
-  //
-  //cout << longbuf << endl;
-  //longbuf[charOutputSize+1]='\0';
-  //string longbuf_string(longbuf);
+
   testResults_vector=parseMemoryTestOutput(longbuf_string,charOutputSize,rawdatalines);
+  //------------------------------------------------------
+  //-- STEP-8 : Clear everything
+  //------------------------------------------------------
   longbuf_string.clear();
   testResults_vector.clear();
-  cout<< endl << "  Going to close the TB with iteration " << iterations << endl << endl;
+  cout<< endl << "  End the TB with iteration " << iterations << endl << endl;
 
   nrErr += rc1;
 
@@ -453,30 +422,21 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
       printf("## SUCCESSFULL END OF TESTBENCH (RC=0)             ##\n");
   }
   printf("#####################################################\n");
-  //strGold="";
-  //strInput="";
-  simCnt = 0;
+
+  simCnt = 0;//reset sim counter
 
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS
-//strInput.clear();
-//strGold.clear();
- //safe deletion
-// if(longbuf != NULL){
-//  cout << "Clearing the longbuf" << endl;
-//  delete[] longbuf;
-//  longbuf = NULL;
-// }
 
+
+//free dynamic memory
 if(charOutput != NULL){
- cout << "Clearing the char output" << endl;
- delete[] charOutput;
+ free(charOutput);
  charOutput = NULL;
 }
 if(charInput != NULL){
- cout << "Clearing the char input" << endl;
-  delete[] charInput;
+  free(charInput);
   charInput = NULL;
 }
   return(nrErr);

@@ -48,15 +48,6 @@ enum EchoCtrl {
 };
 
 /********************************************
- * Internal uppercase accelerator command
- ********************************************/
-enum UppercaseCmd {
-    STOP_CMD  =0000000000000000,
-    START_CMD  =0000000000000001
-};
-
-
-/********************************************
  * Internal MemTest accelerator command
  ********************************************/
 enum MemTestCmd {
@@ -65,7 +56,7 @@ enum MemTestCmd {
     TEST_START_CMD = 1,
     TEST_INVLD_CMD = 0
 };
-
+//CMD 8 bitwdith up to 255 commands (0 is invalid)
 #define MEMTEST_COMMANDS_HIGH_BIT 8-1
 #define MEMTEST_COMMANDS_LOW_BIT 0
 
