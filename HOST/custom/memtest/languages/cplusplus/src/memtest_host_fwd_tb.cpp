@@ -55,10 +55,12 @@ int main(int argc, char * argv[]) {
 		testingNumber = stoul(strInput_nmbrTest);
 	}
 	
-	
+//Infinite Loop Logic
+bool endOfLooping=false;    
+while(!endOfLooping){
 
     try {
-      	#if NET_TYPE == udp
+    #if NET_TYPE == udp
         UDPSocket sock(servPort);
 	#else
 	TCPServerSocket servSock(servPort);     // Server Socket object
@@ -84,13 +86,10 @@ int main(int argc, char * argv[]) {
 	  }
 	cout << endl;
 	#endif
-	    
-
+	
         // RX Step
         clock_t last_cycle_rx = clock();
-
 	// Block until receive message from a client
-    
 	int input_string_total_len = 0;
 	//int receiving_now = PACK_SIZE;
 	int total_pack = 1;
@@ -139,41 +138,94 @@ int main(int argc, char * argv[]) {
             return -1;
 	}
 
-	//DECODING LOGIC for output size determination
+	//DECODING LOGIC for output size determination and end of looping
 	unsigned int memory_addr_under_test = 0;
 	testingNumber = 0;
+	cout << "Begin the decoding step" << endl;
 	printStringHex(input_string,input_string.length());
+	printBits(input_string.length(),input_string.c_str());
 	// revert the input string and extract substring
 	reverse(input_string.begin(), input_string.end());
 
 	string substr_tmp, to_translate_String;
-	substr_tmp = input_string.substr(5,2);
-	ascii2hexWithSize(substr_tmp,to_translate_String,2);
+	substr_tmp = input_string.substr(7,1);
+	ascii2hexWithSize(substr_tmp,to_translate_String,1);//this is working bad. consider to solve in a different way...
 
-	try{
-	testingNumber = stoul(to_translate_String,nullptr,16);
-	}catch(const std::exception& e){
-	std::cerr << e.what() << '\n';
-	testingNumber=0;
+	
+	if(to_translate_String.compare("2")==0){
+		endOfLooping=true;
+		string cmd_string = createMemTestStopCommand();
+		char cmd_stop [8];
+		strncpy(cmd_stop,cmd_string.c_str(),8);
+		unsigned int sending_bytes=8;
+	    #if NET_TYPE == udp
+	    sock.sendTo( cmd_stop, sending_bytes, sourceAddress, sourcePort);
+	    #else
+	    servsock->send(cmd_stop, sending_bytes);
+	    #endif
+		cout << "A stop received, going to sleep the EMU :)" << endl;
+        cout << "\\___________________________________________________________________/" << endl;
+        #if NET_TYPE == tcp
+        delete servsock;
+		#endif
+		continue;
 	}
-	substr_tmp.clear();
-	to_translate_String.clear();
+	reverse(input_string.begin(), input_string.end());
+	printStringHex(input_string,input_string.length());
+	printBits(input_string.length(),input_string.c_str());
 
-	substr_tmp=input_string.substr(0,5);
-	ascii2hexWithSize(substr_tmp,to_translate_String,5);
-	try{
-	memory_addr_under_test = stoul(to_translate_String,nullptr,16);
-	}catch(const std::exception& e){
-	std::cerr << e.what() << '\n';
-	memory_addr_under_test=0;
-	}
+	char myTmpOutBuff[8];
+	substr_tmp = input_string.substr(1,2);
+	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
+	strncpy(myTmpOutBuff,substr_tmp.c_str(),2);
+    testingNumber = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+
 	substr_tmp.clear();
-	to_translate_String.clear();
+	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
+	substr_tmp=input_string.substr(3,5);
+	strncpy(myTmpOutBuff,substr_tmp.c_str(),5);
+	memory_addr_under_test = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+	substr_tmp.clear();
+	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
+
+	// try{
+	// testingNumber = stoul(substr_tmp,nullptr,10);
+	// }catch(const std::exception& e){
+	// std::cerr << e.what() << '\n';
+	// testingNumber=0;
+	// }
+	// cout << testingNumber << " gni "<<endl;
+	// substr_tmp.clear();
+	// to_translate_String.clear();
+	// reverse(input_string.begin(), input_string.end());
+
+	// substr_tmp = input_string.substr(5,2);
+	// ascii2hexWithSize(substr_tmp,to_translate_String,2);
+
+	// try{
+	// testingNumber = stoul(to_translate_String,nullptr,16);
+	// }catch(const std::exception& e){
+	// std::cerr << e.what() << '\n';
+	// testingNumber=0;
+	// }
+	// substr_tmp.clear();
+	// to_translate_String.clear();
+
+	// substr_tmp=input_string.substr(0,5);
+	// ascii2hexWithSize(substr_tmp,to_translate_String,5);
+	// try{
+	// memory_addr_under_test = stoul(to_translate_String,nullptr,16);
+	// }catch(const std::exception& e){
+	// std::cerr << e.what() << '\n';
+	// memory_addr_under_test=0;
+	// }
+	// substr_tmp.clear();
+	// to_translate_String.clear();
 	reverse(input_string.begin(), input_string.end());
 	//
 	// Select simulation mode, default fcsim
 	synth_cmd = " ";
-	string exec_cmd = "make fcsim -j 4";
+	string exec_cmd = "make fcsim ";
 	string ouf_file = "../../../../../../ROLE/custom/hls/memtest/memtest_prj/solution1/fcsim/build/hls_out.txt";
 	if (argc >= 3) {
 	    if (atoi(argv[2]) == 2) {
@@ -200,11 +252,11 @@ int main(int argc, char * argv[]) {
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
     str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd);//+" COMMAND_STRING=\"");
 	size_t str_command_size = str_command.length();
-	string hexInputString;
-	ascii2hexWithSize(input_string, hexInputString, total_size);
+	//string hexInputString;
+	//ascii2hexWithSize(input_string, hexInputString, total_size);
 	//str_command = str_command.append(hexInputString.c_str(),total_size);
 	//str_command_size+=total_size;
-	printStringHex(str_command,str_command_size);
+	//printStringHex(str_command,str_command_size);
 	//string final_cmd = "\" TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	string final_cmd = " TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	str_command = str_command.append(final_cmd);
@@ -219,16 +271,26 @@ int main(int argc, char * argv[]) {
   	cout << "Calling TB with command:" << command << endl; 
 //return 0;
 	system(command); 
+	//clean dynamic memory
+	input_string.clear();
+	str_command.clear();
+	final_cmd.clear();
+	free(command);
 ////////////////////////////////////////////////////////
 //////////////TODO: need to check the proper emulation
 ////////////////////////////////////////////////////////
 	ssize_t size = __file_size(ouf_file.c_str());
-	size_t charOutputSize = 8*1+((8 * (2 + 1)) * testingNumber); //stop, 3 for each test, potential stop?
+	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1)) * testingNumber); //stop, 3 for each test, potential stop?
 
 	//int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
 	int rawdatalines=0;
   	int rc = 0;
-	string out_string =  dumpFileToStringRawDataString(ouf_file.c_str(), &rawdatalines, charOutputSize);
+	string out_string;
+    delete [] longbuf;
+
+	longbuf =  new char[charOutputSize+1] ;
+	out_string.reserve(charOutputSize);
+	out_string =  dumpFileToStringRawDataString(ouf_file.c_str(), &rawdatalines, charOutputSize);
 	memcpy(longbuf,out_string.data(),charOutputSize);
 	//strncpy(longbuf, out_string.c_str(), charOutputSize);
 	if (rc < 0) {
@@ -246,10 +308,11 @@ int main(int argc, char * argv[]) {
 	// TX step
 	
 	unsigned int total_retx_pack = 1;
-	if (charOutputSize / PACK_SIZE > 1)
-	{
-		total_retx_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
-	}
+	// if (charOutputSize / PACK_SIZE > 1)
+	// {
+	// 	total_retx_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
+	// }
+	total_retx_pack = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
 	if (out_string.length() == 0) {
 	      cerr << "ERROR: Received empty string!" << endl; 
 	      return -1;
@@ -258,7 +321,7 @@ int main(int argc, char * argv[]) {
 	    cout << "INFO: Succesfully received string from TB : " << out_string << endl; 
 		printStringHex(out_string, charOutputSize);
 	    cout << "INFO: Will forward it back to host app ... total_pack=" << total_retx_pack << endl; 
-		printCharBuffHexSafe(longbuf, charOutputSize);
+		//printCharBuffHexSafe(longbuf, charOutputSize);
 	}
 
 	// TX Loop
@@ -280,16 +343,17 @@ int main(int argc, char * argv[]) {
         cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
                total_retx_pack / duration_tx / 1024 * 8) << endl;
         last_cycle_tx = next_cycle_tx; 
-        free(longbuf);
+        delete [] longbuf;
         cout << "\\___________________________________________________________________/" << endl;
-        
 	#if NET_TYPE == tcp
         delete servsock;
 	#endif
+	out_string.clear();
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);
     }
+	}//while
     return 0;
 }
 

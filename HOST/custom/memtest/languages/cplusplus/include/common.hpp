@@ -20,7 +20,7 @@
 #include <cmath>
 
 using namespace std;
-#define MAX_TESTABLE_ADDRESS 20
+#define MAX_TESTABLE_ADDRESS ((int)(512/8 * 20)) //byte addressable!!!
 #define MAX_TEST_REPETITION_BITWIDTH 16
 
 
@@ -53,7 +53,21 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-
+// Assumes little endian
+void printBits(size_t const size, void const * const ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}
 
 void ascii2hex(const string& in, string& out)
 {
@@ -144,6 +158,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
 	out.append(start_cmd,3);
   memcpy(value_cmd, (char*)&mem_address, 4);
   out.append(value_cmd,5);
+  printBits(bytes_per_line, out.c_str());
   return out;
   }
 
@@ -227,6 +242,11 @@ void hex2ascii(const string& in, string& out)
        c = (c << 4) + hexval(*p); // + takes precedence over <<
        out.push_back(c);
     }
+}
+template<typename T> 
+void number2hexString(const T in, char * out, size_t byteSize)
+{
+	std::sprintf(out,byteSize, "%x", (char*)&in);
 }
 
 template<unsigned int bytes_per_line = 8>
@@ -347,58 +367,93 @@ void string2hexnumerics(const string& in, char * out, size_t byteSize)
 	}
 }
 
-
 struct MemoryTestResult {
   unsigned int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
+  unsigned int    clock_cycles_read;
+  unsigned int    clock_cycles_write;
 
   MemoryTestResult()      {}
-  MemoryTestResult(unsigned int target_address, unsigned int fault_cntr, unsigned int  first_fault_address) :
-    target_address(target_address), fault_cntr(fault_cntr), first_fault_address(first_fault_address) {}
+  MemoryTestResult(
+    unsigned int target_address,
+    unsigned int fault_cntr,
+    unsigned int  first_fault_address,
+    unsigned int clock_cycles_write,
+    unsigned int clock_cycles_read) :
+    target_address(target_address), 
+    fault_cntr(fault_cntr), 
+    first_fault_address(first_fault_address),  
+    clock_cycles_write(clock_cycles_write),
+    clock_cycles_read(clock_cycles_read) {}
 };
 
 template<unsigned int bytes_per_line=8>
-std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charOutputSize, int rawdatalines)
+std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t charOutputSize, int rawdatalines)
 {
   std::vector<MemoryTestResult> testResults_vector;
 
   int rawiterations = charOutputSize / 8;
-  //cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
+  unsigned int mem_word_size = 512;
+  unsigned int mem_word_byte_size = mem_word_size/8;
+  cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
-  string tmp_outbuff;
   char myTmpOutBuff [bytes_per_line+1];
-  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0;
+  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
-    tmp_outbuff.clear();
+    string tmp_outbuff;
     tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
-    if(is_stop_present && k==5){
+    if(is_stop_present && k==6){
       cout << "DEBUG the stop is present and is here" << endl;
-    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==4){ //check it is either the last or one before the last
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==5){ //check it is either the last or one before the last
       //substr extraction and parsing
-      tmp_outbuff.erase(tmp_outbuff.begin());
+      //tmp_outbuff.erase(tmp_outbuff.begin());
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
+      //cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
 
-    } else  if(k==3){ //first faut addres
-      //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      MemoryTestResult tmp(max_memory_addr_out,fault_cntr_out,fault_addr_out);
-      testResults_vector.push_back(tmp);
-      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
+    } else  if(k==4){ //clock cycless
+      char mySecondTmpOutBuff[bytes_per_line/2];
+      string additional_string;
+      for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
+      //printBits(bytes_per_line, tmp_outbuff.c_str());
+      additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
+      //printBits(bytes_per_line/2, additional_string.c_str());
+
+      tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
+      clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
+
+      strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
+      clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
+
+      cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
+
+      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_read,clock_cycles_write);
+      testResults_vector.push_back(tmpResult);
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
       //cout << "DEBUG reinit the counter" << endl;
       }
-      cout << "DEBUG overall test results: target address " << tmp.target_address << " ";
-      cout << " fault counter: " << tmp.fault_cntr << " ";
-      cout << "first fault at address: " << tmp.first_fault_address << " "  << endl;
+      unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
+      cout << "Written " << written_words << " words" << endl;
+      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
+      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
 
+      cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
+      cout << "Fault counter: " << tmpResult.fault_cntr << " ";
+      cout << "First fault at address: " << tmpResult.first_fault_address << " "  << endl;
+      cout << " RD BW " << rd_bndwdth  << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_read << " "  << endl;
+      cout << " WR BW " << wr_bndwdth << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_write << " "  << endl;
+    }else if(k==3){ // first fault address
+      //substr extraction and parsing
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
     }else if(k==2){ // fault cntr
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
@@ -411,7 +466,8 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(string longbuf, size_t charO
 
     }
     k++;
+    tmp_outbuff.clear();
   }
-  tmp_outbuff.clear();
+  //tmp_outbuff.clear();
   return testResults_vector;
 }

@@ -117,10 +117,11 @@ int main(int argc, char *argv[])
 	{
 	
 		unsigned int test_pack = 1;
-		size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1)) * testingNumber);
-		if( charOutputSizeRoughBytes / PACK_SIZE > 1){
-			test_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
-		}
+		size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1 + 1)) * testingNumber);
+		// if( charOutputSizeRoughBytes / PACK_SIZE > 1){
+		// 	test_pack = (unsigned int)(charOutputSizeRoughBytes / PACK_SIZE);
+		// }
+		test_pack = charOutputSizeRoughBytes%PACK_SIZE==0 ? charOutputSizeRoughBytes/PACK_SIZE : charOutputSizeRoughBytes/PACK_SIZE + 1;
 		size_t charOutputSize = PACK_SIZE*(test_pack); 
 		//size_t charOutputSizeRoughBytes= = (8 * (2 + 3 * testingNumber) ); 
 		//8 * (2 + 1) * testingNumber; this should be the real number but seems to send everything
@@ -179,7 +180,8 @@ int main(int argc, char *argv[])
 			sending_now = bytes_in_last_pack_out;
 			}
 			#if NET_TYPE == udp
-			//printStringHex(input_string,charInputSize*sizeof(char));
+			printStringHex(input_string,charInputSize*sizeof(char));
+			printBits(charInputSize,input_string.c_str());
 			udpsock.sendTo( & input_string[i * PACK_SIZE], sending_now, servAddress, servPort);
 			#else
 				tcpsock.send( & input_string[i * PACK_SIZE], sending_now);
@@ -279,10 +281,19 @@ int main(int argc, char *argv[])
 		cout << "/                                                                   \\" << endl;
 		cout << "INFO: Test Results appearing" << endl;
 		cout << " The Memory test run for  " << testResults_vector.size() << " iterations " << endl;
+		unsigned int mem_word_size = 512;
+  		unsigned int mem_word_byte_size = mem_word_size/8;
+		double rd_bndwdth=0.0;
+		double wr_bndwdth=0.0;
 		for(auto it = std::begin(testResults_vector); it != std::end(testResults_vector); ++it) {
 			cout << " Test number " << it - testResults_vector.begin() << " stress " << 	it->target_address << " addresses "  << endl;
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
 			cout << " and the first faulty address (if any) was " << it->first_fault_address << endl;
+			unsigned int written_words = it->target_address %mem_word_byte_size == 0 ? it->target_address/mem_word_byte_size  : it->target_address/mem_word_byte_size + 1;
+			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
+			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+			cout << " RD BW " << rd_bndwdth  << "[GBit/s] "  << endl;
+      		cout << " WR BW " << wr_bndwdth << "[GBit/s] "  << endl;
 			cout << endl << endl;
 		}
 		////////////////
@@ -307,8 +318,9 @@ int main(int argc, char *argv[])
 			char stop_char_buff [8];
 			memcpy(stop_char_buff, cmd_string.data(), 8);
 			sending_now = 8;
+			printCharBuffHex(stop_char_buff,8);
 			#if NET_TYPE == udp
-			udpsock.sendTo( stop_char_buff, sending_now, servAddress, servPort);
+				udpsock.sendTo(stop_char_buff, sending_now, servAddress, servPort);
 			#else
 				tcpsock.send(stop_char_buff, sending_now);
 			#endif
@@ -325,6 +337,7 @@ int main(int argc, char *argv[])
 				cout << "INFO: Accelerator answered ok" << endl;
 			}else{
 				cout << "INFO: Bad answer received, take care "<< endl;
+				printStringHex(output_stop,8);
 			}
 			cout << "INFO: IBM ZRL Memtest is closing." << endl<< "Goodbye :D" << endl;
 			break;
@@ -385,6 +398,34 @@ int main(int argc, char *argv[])
 		if (user_choice.compare("q")==0)
 		{
 			cout << "INFO: IBM ZRL Memtest is closing." << endl<< "Goodbye :D" << endl;
+			user_choice.clear();
+			string cmd_string = createMemTestStopCommand();
+			char stop_char_buff [8];
+			memcpy(stop_char_buff, cmd_string.data(), 8);
+			sending_now = 8;
+			printCharBuffHex(stop_char_buff,8);
+			#if NET_TYPE == udp
+				udpsock.sendTo(stop_char_buff, sending_now, servAddress, servPort);
+			#else
+				tcpsock.send(stop_char_buff, sending_now);
+			#endif
+			delay(1000); 
+			#if NET_TYPE == udp               
+			recvMsgSize = udpsock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
+			#else
+			recvMsgSize = tcpsock.recv(buffer, BUF_LEN);
+			#endif
+			delay(1000); 
+			char output_stop [8];
+			memcpy(output_stop,buffer,8);
+			if(strcmp(output_stop,stop_char_buff)==0){
+				cout << "INFO: Accelerator answered ok" << endl;
+			}else{
+				cout << "INFO: Bad answer received, take care "<< endl;
+				printStringHex(output_stop,8);
+			}
+			cout << "INFO: IBM ZRL Memtest is closing." << endl<< "Goodbye :D" << endl;
+			break;
 		}
 		
 
