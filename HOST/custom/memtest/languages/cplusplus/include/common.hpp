@@ -53,7 +53,13 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-// Assumes little endian
+/*****************************************************************************
+ * @brief print the binary representation of a target pointer buffer of a given size.
+ *      Assumes little endian.
+ * @param[in]  size the bytesize to print from ptr.
+ * @param[in] ptr the buffer pointer.
+ * @return nothing, print to stdout.
+ ******************************************************************************/
 void printBits(size_t const size, void const * const ptr)
 {
     unsigned char *b = (unsigned char*) ptr;
@@ -69,6 +75,12 @@ void printBits(size_t const size, void const * const ptr)
     puts("");
 }
 
+/*****************************************************************************
+ * @brief Convert a ascii string to a hexadecimal string
+ *
+ * @param[in]  in the input ascii string
+ * @param[out] out the output hexadecimal string
+ ******************************************************************************/
 void ascii2hex(const string& in, string& out)
 {
  std::stringstream sstream;
@@ -78,69 +90,20 @@ void ascii2hex(const string& in, string& out)
     out=sstream.str(); 
 }
 
-void attachCommand(const string& in, string& out)
-{
-	//string start_cmd = "0F0F0F0F0F0F0F0F";
-	string start_cmd = "0100000000000000";
-	//string stop_cmd = "0E0E0E0E0E0E0E0E";
-	string stop_cmd = "0000000000000000";
-	out = start_cmd;
-	unsigned int bytes_per_line = 8;
-	char value[bytes_per_line];
-        unsigned int total_bytes = 0;
-	for (unsigned int i = 0; i < in.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
-	    for (unsigned int k = 0; k < bytes_per_line; k++) {
-	      if (i+k < in.length()) {
-		value[k] = in[i+k];
-	      }
-	      else {
-		value[k] = '0';
-	      }
-	    }
-	   out.append(value,bytes_per_line);
-	}
-	out.append(stop_cmd);
-}
-void attachBitsCommandAndRefill(const string& in, string& out)
-{
-	unsigned int bytes_per_line = 8;
-	char start_cmd [bytes_per_line];
-	char stop_cmd [bytes_per_line];
-	for (unsigned int k = 0; k < bytes_per_line; k++) {
-		if (k != 0) {
-			start_cmd[k] = (char)0;
-			stop_cmd[k] = (char)0;
-	      	}
-	      	else {
-			start_cmd[k] = (char)1;
-			stop_cmd[k] = (char)0;
-	      	}
-	 }
-	out = start_cmd;
-	char value[bytes_per_line];
-        unsigned int total_bytes = 0;
-	for (unsigned int i = 0; i < in.length(); i+=bytes_per_line, total_bytes+=bytes_per_line) {
-	    for (unsigned int k = 0; k < bytes_per_line; k++) {
-	      if (i+k < in.length()) {
-		value[k] = in[i+k];
-	      }
-	      else {
-		value[k] = '0';
-	      }
-	    }
-	   out.append(value,bytes_per_line);
-	}
-	out.append(stop_cmd);
-}
-
-
+/*****************************************************************************
+ * @brief Create the commands for a memory test with start/max address to test-nop to execute-stop
+ *
+ * @param[in]  mem_address max target address to test
+ * @param[out] out the output string with start/max address-nops4trgtCCsNeeded-stop
+ * @param[in]  testingNumber the number of tests to perform on the memory
+ * 
+ ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
 string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
 {
   string out;
-	char start_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
+	char start_cmd [bytes_per_line];
 	char stop_cmd [bytes_per_line];
-	//char filler_cmd [bytes_per_line];
 	char value_cmd[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
@@ -155,30 +118,28 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
 	    }
 	 }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
-	out.append(start_cmd,3);
+	out = out.append(start_cmd,3);
   memcpy(value_cmd, (char*)&mem_address, 4);
-  out.append(value_cmd,5);
-  printBits(bytes_per_line, out.c_str());
-  return out;
+  out = out.append(value_cmd,5);
+  return string(out);
   }
 
 template<unsigned int bytes_per_line = 8>
 string createMemTestStopCommand()
 {
   string out;
-	char stop_cmd [bytes_per_line];
-	for (unsigned int k = 0; k < bytes_per_line; k++) {
-		if (k != 0) {
-			stop_cmd[k] = (char)0;
-	    }
-	    else {
-			stop_cmd[k] = (char)2;
-	    }
-	 }
+  char stop_cmd [bytes_per_line];
+  for (unsigned int k = 0; k < bytes_per_line; k++) {
+    if (k != 0) {
+      stop_cmd[k] = (char)0;
+    } 
+    else {
+      stop_cmd[k] = (char)2;
+    }
+  }
   out.append(stop_cmd,bytes_per_line);
   return out;
-  }
-
+}
 static inline ssize_t
 __file_size(const char *fname)
 {
@@ -219,6 +180,17 @@ __file_read(const char *fname, char *buff, size_t len)
 	return rc;
 }
 
+/*****************************************************************************
+ * @brief convert a char to its hexadecimal representation.
+ *
+ * @param[in]  c the standard char value to convert to hex
+ * @return     the hexadecimal value of the input
+ ******************************************************************************/
+// C++98 guarantees that '0', '1', ... '9' are consecutive.
+// It only guarantees that 'a' ... 'f' and 'A' ... 'F' are
+// in increasing order, but the only two alternative encodings
+// of the basic source character set that are still used by
+// anyone today (ASCII and EBCDIC) make them consecutive.
 unsigned char hexval(unsigned char c)
 {
     if ('0' <= c && c <= '9')
@@ -230,6 +202,12 @@ unsigned char hexval(unsigned char c)
     else abort();
 }
 
+/*****************************************************************************
+ * @brief Convert a hexadecimal string to a ascii string
+ *
+ * @param[in]  in the input hexadecimal string
+ * @param[out] out the output ascii string
+ ******************************************************************************/
 void hex2ascii(const string& in, string& out)
 {
     out.clear();
@@ -243,12 +221,20 @@ void hex2ascii(const string& in, string& out)
        out.push_back(c);
     }
 }
+
 template<typename T> 
 void number2hexString(const T in, char * out, size_t byteSize)
 {
 	std::sprintf(out,byteSize, "%x", (char*)&in);
 }
 
+/*****************************************************************************
+ * @brief Initialize an input data stream from a file with only data
+ *
+ * @param[in]  inpFileName the name of the input file to read from.
+ * @param[out] strOutput the output string to set.
+ * @return OK if successful otherwise KO.
+ ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
 string dumpFileToStringRawDataString(const string inpFileName, int * rawdatalines, size_t outputSize) {
     string      strLine;
@@ -256,16 +242,15 @@ string dumpFileToStringRawDataString(const string inpFileName, int * rawdataline
     ifstream    inpFileStream;
     string      datFile = inpFileName;
     string charOutput;
-    charOutput.reserve(outputSize);
-    strLine.reserve(outputSize);
-    tmp_Out.reserve(bytes_per_line);
+    //charOutput.reserve(outputSize);
+    //strLine.reserve(outputSize);
+    //tmp_Out.reserve(bytes_per_line);
     unsigned long long int  mylongunsigned;
     unsigned long long int  zero_byte=0;
     unsigned int i = 0;
     char my_tmp_buf [bytes_per_line];
     //-- STEP-1 : OPEN FILE
     inpFileStream.open(datFile.c_str());
-cout<<endl<<endl;
 
     if ( !inpFileStream ) {
         cout << "### ERROR : Could not open the input data file " << datFile << endl;
@@ -279,30 +264,30 @@ cout<<endl<<endl;
 
             getline(inpFileStream, strLine);
             memcpy(my_tmp_buf,&zero_byte, bytes_per_line);
-            //cout << strLine << endl;
             if (strLine.empty()) continue;
             *rawdatalines+=1;
-            //sscanf(strLine.c_str(), "%llx", &mylongunsigned);
             mylongunsigned=stoul(strLine,nullptr,16);
             hex2ascii(strLine, tmp_Out);
             // Write to strOutput
-     //	printf("my long long %llx\n", mylongunsigned);
-     // printf("my long long non hex %llu\n", mylongunsigned);
       memcpy(my_tmp_buf,(char *)&mylongunsigned, sizeof(unsigned long long int));
-     // printBits(sizeof(unsigned long long int), my_tmp_buf);
-      // printBits(sizeof(unsigned long long int), tmp_Out.c_str());
       charOutput.append(my_tmp_buf, bytes_per_line);
       i++;
         }
-        strLine.clear();
-//cout<<endl<<endl;
     }
     //-- STEP-3: CLOSE FILE
     inpFileStream.close();
+    //tmp_Out.clear();
 
-    return(charOutput);
+    return string(charOutput);
 }
 
+/*****************************************************************************
+ * @brief Convert a ascii string to a hexadecimal string
+ *
+ * @param[in]  in the input ascii string
+ * @param[out] out the output hexadecimal string
+ * @param[in]  bytesize the input ascii string size
+ ******************************************************************************/
 void ascii2hexWithSize(const string& in, string& out, size_t  bytesize)
 {
  std::stringstream sstream;
@@ -328,8 +313,17 @@ bool findCharNullPos (char * str) {
 }
 
 
+/*****************************************************************************
+ * @brief print byte-per-byte a given string in hexadecimal format
+ *
+ * @param[in]  inStr string to print
+ * @param[in]  strSize bytsize to print (can be even less, NOT more )
+ * 
+ ******************************************************************************/
 void printStringHex(const string inStr, size_t strSize){
-	printf("Going to prit a hex string :D\n");
+    #if DEBUG_LEVEL == TRACE_ALL
+	printf("Going to print a hex string :D\n");
+  #endif
 	for (size_t i = 0; i < strSize; i++)
 	{
 		printf("%x",inStr[i]);
@@ -338,8 +332,17 @@ void printStringHex(const string inStr, size_t strSize){
 	
 }
 
+/*****************************************************************************
+ * @brief print byte-per-byte a given char buff in hexadecimal format
+ *
+ * @param[in]  inStr char buff to print
+ * @param[in]  strSize bytsize to print (can be even less, NOT more )
+ * 
+ ******************************************************************************/
 void printCharBuffHex(const char * inStr, size_t strSize){
+    #if DEBUG_LEVEL == TRACE_ALL
 	printf("Going to prit a hex char buff :D\n");
+  #endif
 	for (size_t i = 0; i < strSize; i++)
 	{
 		printf("%x",inStr[i]);
@@ -388,15 +391,22 @@ struct MemoryTestResult {
     clock_cycles_read(clock_cycles_read) {}
 };
 
+/*****************************************************************************
+ * @brief Parse the memory test output contained in astring with a given size
+ * 
+ * @param[in]  longbuf the buffer containing the output
+ * @param[in] charOutputSize the bytesize of the buffer
+ * @param[in] rawdatalines the number of lines in the given outbuf
+ * @return vectpr of MemoryTestResult data strcuture
+ ******************************************************************************/
 template<unsigned int bytes_per_line=8>
 std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t charOutputSize, int rawdatalines)
 {
   std::vector<MemoryTestResult> testResults_vector;
 
-  int rawiterations = charOutputSize / 8;
+  int rawiterations = charOutputSize / 8; //should be equivalent to rawdatalines
   unsigned int mem_word_size = 512;
   unsigned int mem_word_byte_size = mem_word_size/8;
-  cout << "my calculations " << rawiterations << " the function iterations " << rawdatalines << endl;
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
@@ -410,64 +420,71 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << "DEBUG the stop is present and is here" << endl;
     } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==5){ //check it is either the last or one before the last
       //substr extraction and parsing
-      //tmp_outbuff.erase(tmp_outbuff.begin());
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-      //cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
-
+    #if DEBUG_LEVEL == TRACE_ALL
+      cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
+    #endif
     } else  if(k==4){ //clock cycless
       char mySecondTmpOutBuff[bytes_per_line/2];
       string additional_string;
+      //init the buffer
       for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
-      //printBits(bytes_per_line, tmp_outbuff.c_str());
       additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
-      //printBits(bytes_per_line/2, additional_string.c_str());
 
       tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
       clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
-      cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
+
 
       strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
       clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
-
+    #if DEBUG_LEVEL == TRACE_ALL
+      cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
       cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
-
+    #endif
       MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_read,clock_cycles_write);
       testResults_vector.push_back(tmpResult);
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
-      //cout << "DEBUG reinit the counter" << endl;
+    #if DEBUG_LEVEL == TRACE_ALL
+      cout << "DEBUG reinit the counter" << endl;
+    #endif
       }
       unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
-      cout << "Written " << written_words << " words" << endl;
       double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
       double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
-
+    #if DEBUG_LEVEL == TRACE_ALL
+      cout << "Written " << written_words << " words" << endl;
       cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
       cout << "Fault counter: " << tmpResult.fault_cntr << " ";
       cout << "First fault at address: " << tmpResult.first_fault_address << " "  << endl;
       cout << " RD BW " << rd_bndwdth  << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_read << " "  << endl;
       cout << " WR BW " << wr_bndwdth << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_write << " "  << endl;
+    #endif
     }else if(k==3){ // first fault address
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+    #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
+    #endif
     }else if(k==2){ // fault cntr
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+    #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
+    #endif
     }else { //max addrss
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+    #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
-
+    #endif
     }
     k++;
     tmp_outbuff.clear();
   }
-  //tmp_outbuff.clear();
   return testResults_vector;
 }

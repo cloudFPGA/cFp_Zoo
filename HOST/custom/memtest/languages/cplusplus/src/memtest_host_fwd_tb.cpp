@@ -2,8 +2,8 @@
  * @file       memtest_host_fwd_tb.cpp
  * @brief      Testbench for Memtest userspace application for cF (x86, ppc64).
  *
- * @date       May 2020
- * @author     DID
+ * @date       Sept 2021
+ * @author     DID, DCO
  * 
  * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
@@ -45,8 +45,14 @@ int main(int argc, char * argv[]) {
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_batch = 0;
     string clean_cmd, synth_cmd;
-    string strInput_nmbrTest = argv[3];
     unsigned int testingNumber;
+	string strInput_nmbrTest;
+	if(argc == 4){
+    	strInput_nmbrTest = argv[3];
+	}else{
+		strInput_nmbrTest="";
+	}
+
     
 	if (!strInput_nmbrTest.length())
 	{
@@ -59,6 +65,9 @@ int main(int argc, char * argv[]) {
 bool endOfLooping=false;    
 while(!endOfLooping){
 
+    //------------------------------------------------------
+    //-- Setup the RX
+    //------------------------------------------------------
     try {
     #if NET_TYPE == udp
         UDPSocket sock(servPort);
@@ -87,8 +96,10 @@ while(!endOfLooping){
 	cout << endl;
 	#endif
 	
-        // RX Step
-        clock_t last_cycle_rx = clock();
+    //------------------------------------------------------
+    //-- RX Step
+    //------------------------------------------------------
+    clock_t last_cycle_rx = clock();
 	// Block until receive message from a client
 	int input_string_total_len = 0;
 	//int receiving_now = PACK_SIZE;
@@ -96,8 +107,8 @@ while(!endOfLooping){
 	int bytes_in_last_pack;
 	size_t total_size =0;
 	bool msg_received = false;
-        cout << " ___________________________________________________________________ " << endl;
-        cout << "/                                                                   \\" << endl;
+	cout << " ___________________________________________________________________ " << endl;
+	cout << "/                                                                   \\" << endl;
 	cout << "INFO: Proxy tb batch # " << ++num_batch << endl;	    
         char * longbuf = new char[PACK_SIZE * (total_pack+1)];
 	// RX Loop
@@ -110,15 +121,10 @@ while(!endOfLooping){
 	    input_string_total_len += recvMsgSize;
 	    bytes_in_last_pack = recvMsgSize;
 	    bool nullcharfound = findCharNullPos(buffer);
-		//printCharBuffHex(buffer, recvMsgSize);
-
 	    memcpy(longbuf+(i*PACK_SIZE), buffer, recvMsgSize);
-		//printCharBuffHex(longbuf, recvMsgSize);
 		total_size += recvMsgSize;
 		longbuf[total_size+1]='\0';
 
-		
-	    //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
 	    if (nullcharfound != true) {
 		cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
 	    }
@@ -130,28 +136,30 @@ while(!endOfLooping){
         cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
  
 	string input_string;
-	//printCharBuffHex(longbuf, total_size);
 	input_string.append(longbuf,total_size);
-	//printStringHex(input_string,input_string.length());
 	if (input_string.length() == 0) {
 	    cerr << "ERROR: received an empty string! Aborting..." << endl;
             return -1;
 	}
-
-	//DECODING LOGIC for output size determination and end of looping
+    //------------------------------------------------------
+    //-- DECODING LOGIC for output size determination and end of looping
+    //------------------------------------------------------
 	unsigned int memory_addr_under_test = 0;
 	testingNumber = 0;
 	cout << "Begin the decoding step" << endl;
-	printStringHex(input_string,input_string.length());
-	printBits(input_string.length(),input_string.c_str());
+	//printStringHex(input_string,input_string.length());
+	//printBits(input_string.length(),input_string.c_str());
+
 	// revert the input string and extract substring
 	reverse(input_string.begin(), input_string.end());
 
+   	//------------------------------------------------------
+    //-- DECODING LOGIC check which command was
+    //------------------------------------------------------
 	string substr_tmp, to_translate_String;
 	substr_tmp = input_string.substr(7,1);
-	ascii2hexWithSize(substr_tmp,to_translate_String,1);//this is working bad. consider to solve in a different way...
-
-	
+	ascii2hexWithSize(substr_tmp,to_translate_String,1);
+	////TODO: this function is working bad (cannot handle greater than 0x0F). consider to solve in a different way...
 	if(to_translate_String.compare("2")==0){
 		endOfLooping=true;
 		string cmd_string = createMemTestStopCommand();
@@ -171,9 +179,12 @@ while(!endOfLooping){
 		continue;
 	}
 	reverse(input_string.begin(), input_string.end());
-	printStringHex(input_string,input_string.length());
-	printBits(input_string.length(),input_string.c_str());
+	//printStringHex(input_string,input_string.length());
+	//printBits(input_string.length(),input_string.c_str());
 
+   	//------------------------------------------------------
+	//-- DECODING LOGIC for output and TB setup
+    //------------------------------------------------------
 	char myTmpOutBuff[8];
 	substr_tmp = input_string.substr(1,2);
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
@@ -187,43 +198,10 @@ while(!endOfLooping){
 	memory_addr_under_test = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
 	substr_tmp.clear();
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
-
-	// try{
-	// testingNumber = stoul(substr_tmp,nullptr,10);
-	// }catch(const std::exception& e){
-	// std::cerr << e.what() << '\n';
-	// testingNumber=0;
-	// }
-	// cout << testingNumber << " gni "<<endl;
-	// substr_tmp.clear();
-	// to_translate_String.clear();
-	// reverse(input_string.begin(), input_string.end());
-
-	// substr_tmp = input_string.substr(5,2);
-	// ascii2hexWithSize(substr_tmp,to_translate_String,2);
-
-	// try{
-	// testingNumber = stoul(to_translate_String,nullptr,16);
-	// }catch(const std::exception& e){
-	// std::cerr << e.what() << '\n';
-	// testingNumber=0;
-	// }
-	// substr_tmp.clear();
-	// to_translate_String.clear();
-
-	// substr_tmp=input_string.substr(0,5);
-	// ascii2hexWithSize(substr_tmp,to_translate_String,5);
-	// try{
-	// memory_addr_under_test = stoul(to_translate_String,nullptr,16);
-	// }catch(const std::exception& e){
-	// std::cerr << e.what() << '\n';
-	// memory_addr_under_test=0;
-	// }
-	// substr_tmp.clear();
-	// to_translate_String.clear();
 	reverse(input_string.begin(), input_string.end());
-	//
-	// Select simulation mode, default fcsim
+	//------------------------------------------------------
+    //-- EMULATION preparing the emulation mode, default is fcsim
+    //------------------------------------------------------
 	synth_cmd = " ";
 	string exec_cmd = "make fcsim ";
 	string ouf_file = "../../../../../../ROLE/custom/hls/memtest/memtest_prj/solution1/fcsim/build/hls_out.txt";
@@ -250,49 +228,42 @@ while(!endOfLooping){
 	    clean_cmd = "make clean && ";
 	}
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
-    str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd);//+" COMMAND_STRING=\"");
+    str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd);
 	size_t str_command_size = str_command.length();
-	//string hexInputString;
-	//ascii2hexWithSize(input_string, hexInputString, total_size);
-	//str_command = str_command.append(hexInputString.c_str(),total_size);
-	//str_command_size+=total_size;
-	//printStringHex(str_command,str_command_size);
-	//string final_cmd = "\" TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	string final_cmd = " TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	str_command = str_command.append(final_cmd);
 	str_command_size+=final_cmd.length();
-
-  	//cout << "Calling TB with command:" << str_command << endl; 
 
 	char *command =(char*)malloc((str_command_size+1)* sizeof(char));
 	for(int i=0; i < (str_command_size+1); i++){
 		command[i]=str_command[i];
 	}
   	cout << "Calling TB with command:" << command << endl; 
-//return 0;
+
 	system(command); 
+
 	//clean dynamic memory
 	input_string.clear();
 	str_command.clear();
 	final_cmd.clear();
 	free(command);
-////////////////////////////////////////////////////////
-//////////////TODO: need to check the proper emulation
-////////////////////////////////////////////////////////
-	ssize_t size = __file_size(ouf_file.c_str());
-	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1)) * testingNumber); //stop, 3 for each test, potential stop?
 
-	//int rc = __file_read_hex(ouf_file.c_str(), longbuf, charOutputSize*2+1);
+   	//------------------------------------------------------
+    //-- TB output parsing
+    //------------------------------------------------------
+	ssize_t size = __file_size(ouf_file.c_str());
+	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1)) * testingNumber); //stop, 4 for each test, potential stop?
+
 	int rawdatalines=0;
   	int rc = 0;
 	string out_string;
     delete [] longbuf;
 
-	longbuf =  new char[charOutputSize+1] ;
+	longbuf =  new char[charOutputSize+1];
 	out_string.reserve(charOutputSize);
 	out_string =  dumpFileToStringRawDataString(ouf_file.c_str(), &rawdatalines, charOutputSize);
 	memcpy(longbuf,out_string.data(),charOutputSize);
-	//strncpy(longbuf, out_string.c_str(), charOutputSize);
+
 	if (rc < 0) {
 	    cerr << "ERROR: Cannot read file " << ouf_file << " . Aborting..."<< endl;
 	    return -1;
@@ -305,13 +276,11 @@ while(!endOfLooping){
         last_cycle_rx = next_cycle_rx;
     
 
-	// TX step
+   	//------------------------------------------------------
+    //--  TX step
+    //------------------------------------------------------
 	
 	unsigned int total_retx_pack = 1;
-	// if (charOutputSize / PACK_SIZE > 1)
-	// {
-	// 	total_retx_pack = (unsigned int)(8 * (2 + 3 * testingNumber) / PACK_SIZE);
-	// }
 	total_retx_pack = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
 	if (out_string.length() == 0) {
 	      cerr << "ERROR: Received empty string!" << endl; 
@@ -319,9 +288,8 @@ while(!endOfLooping){
 	}
 	else {
 	    cout << "INFO: Succesfully received string from TB : " << out_string << endl; 
-		printStringHex(out_string, charOutputSize);
+		//printStringHex(out_string, charOutputSize);
 	    cout << "INFO: Will forward it back to host app ... total_pack=" << total_retx_pack << endl; 
-		//printCharBuffHexSafe(longbuf, charOutputSize);
 	}
 
 	// TX Loop
@@ -353,6 +321,10 @@ while(!endOfLooping){
         cerr << e.what() << endl;
         exit(1);
     }
+	
+   	//------------------------------------------------------
+    //--  Now loop until stop or crash :D
+    //------------------------------------------------------
 	}//while
     return 0;
 }

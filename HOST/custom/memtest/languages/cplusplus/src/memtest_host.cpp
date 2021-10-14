@@ -4,7 +4,7 @@
  * @brief      Memtest userspace application for cF (x86, ppc64).
  *
  * @date       Sept 2021
- * @author     DCO
+ * @author     DID, DCO
  * 
  * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
@@ -110,27 +110,22 @@ int main(int argc, char *argv[])
 	memory_addr_under_test = stoul(strInput_memaddrUT);
 	testingNumber = stoul(strInput_nmbrTest);
 
-	//
+	//------------------------------------------------------------------------------------
+	//-- STEP-4 : Infinite Loop for reexecutinge the application! :D
+	//------------------------------------------------------------------------------------
 	string user_choice = "r";
 	//Iterating and interactive loop
-	while (user_choice.compare("q") != 0 ) //quit and run && quit
+	while (user_choice.compare("q") != 0 ) // quit
 	{
 	
 		unsigned int test_pack = 1;
 		size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1 + 1)) * testingNumber);
-		// if( charOutputSizeRoughBytes / PACK_SIZE > 1){
-		// 	test_pack = (unsigned int)(charOutputSizeRoughBytes / PACK_SIZE);
-		// }
 		test_pack = charOutputSizeRoughBytes%PACK_SIZE==0 ? charOutputSizeRoughBytes/PACK_SIZE : charOutputSizeRoughBytes/PACK_SIZE + 1;
 		size_t charOutputSize = PACK_SIZE*(test_pack); 
-		//size_t charOutputSizeRoughBytes= = (8 * (2 + 3 * testingNumber) ); 
-		//8 * (2 + 1) * testingNumber; this should be the real number but seems to send everything
-
 		string initial_input_string(input_string);
 
 		input_string=createMemTestCommands(memory_addr_under_test, testingNumber);
 		size_t charInputSize = 8; //a single tdata
-		//printStringHex(input_string,charInputSize*sizeof(char));
 
 		if (input_string.length() == 0) {
 				cerr << "Empty string provided. Aborting...\n\n" << endl;
@@ -148,7 +143,7 @@ int main(int argc, char *argv[])
 		//packt host2FPGA
 		unsigned int total_out_pack  =  1 + (input_string.length() - 1) / PACK_SIZE;// only a single tx
 		unsigned int total_out_bytes = charInputSize;
-		unsigned int bytes_in_last_pack_out = input_string.length() - (total_out_pack-1) * PACK_SIZE;
+		unsigned int bytes_out_last_pack = input_string.length() - (total_out_pack-1) * PACK_SIZE;
 
 		//packt FPGA2host
 		unsigned int total_in_pack  = test_pack;
@@ -161,27 +156,27 @@ int main(int argc, char *argv[])
 		cout << "INFO: Total bytes to send   = " << total_out_bytes << endl;
 		cout << "INFO: Total bytes to receive   = " << total_in_bytes << endl;
 		cout << "INFO: Total bytes rx " << total_in_bytes << " packets = "  << total_in_pack << endl;
-		cout << "INFO: Bytes in last packet tx          = " << bytes_in_last_pack_out << endl;
+		cout << "INFO: Bytes in last packet tx          = " << bytes_out_last_pack << endl;
 		cout << "INFO: Bytes in last packet  rx         = " << bytes_in_last_pack_in << endl;
 		cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 			
 		//------------------------------------------------------
-			//-- STEP-4 : RUN MEMTEST FROM cF (HW)
-			//------------------------------------------------------
+		//-- STEP-5 : RUN MEMTEST FROM cF (HW)
+		//------------------------------------------------------
 		clock_t start_cycle_memtest_hw = clock();
 			
 		//------------------------------------------------------
-			//-- STEP-5.1 : TX Loop
-			//------------------------------------------------------
+		//-- STEP-5.1 : TX Loop
+		//------------------------------------------------------
 		clock_t last_cycle_tx = clock();
 		unsigned int sending_now = PACK_SIZE;
 		for (unsigned int i = 0; i < total_out_pack; i++) {
 			if ( i == total_out_pack - 1 ) {
-			sending_now = bytes_in_last_pack_out;
+			sending_now = bytes_out_last_pack;
 			}
 			#if NET_TYPE == udp
-			printStringHex(input_string,charInputSize*sizeof(char));
-			printBits(charInputSize,input_string.c_str());
+			//printStringHex(input_string,charInputSize*sizeof(char));
+			//printBits(charInputSize,input_string.c_str());
 			udpsock.sendTo( & input_string[i * PACK_SIZE], sending_now, servAddress, servPort);
 			#else
 				tcpsock.send( & input_string[i * PACK_SIZE], sending_now);
@@ -196,19 +191,14 @@ int main(int argc, char *argv[])
 	
 			
 		//------------------------------------------------------
-			//-- STEP-5.2 : RX Loop
-			//------------------------------------------------------    
+		//-- STEP-5.2 : RX Loop
+		//------------------------------------------------------    
 		clock_t last_cycle_rx = clock();
 		unsigned int bytes_received = 0;
 		unsigned int receiving_now = PACK_SIZE;
 		cout << "INFO: Expecting length of packs:" << total_in_pack << endl;
 		char * longbuf = new char[PACK_SIZE * total_in_pack+1];
 		for (unsigned int i = 0; i < total_in_pack; ) {
-			////////////////////////
-			//TODO: check the receiving loop
-			////////////////////////
-
-			//cout << "DEBUG: " << i << endl;
 				if ( i == total_in_pack - 1 ) {
 					receiving_now = bytes_in_last_pack_in;
 				}
@@ -223,7 +213,6 @@ int main(int argc, char *argv[])
 				}
 				memcpy( longbuf+(i*bytes_received), buffer, recvMsgSize);
 			cout << "DEBUG: recvMsgSize=" << recvMsgSize << endl;
-			//i += recvMsgSize;
 			bytes_received  += recvMsgSize;
 			i ++;
 		}
@@ -233,23 +222,17 @@ int main(int argc, char *argv[])
 		#ifdef PY_WRAP
 		char *output_string = output_str;
 		#else
-		//char *output_string = (char*)malloc(PACK_SIZE * total_in_pack*sizeof(char));
 		char *output_string = new char [(PACK_SIZE * total_in_pack*sizeof(char))];
 		#endif
 		memcpy( output_string, longbuf, bytes_received*sizeof(char));
-		//output_string = strncpy(output_string, longbuf, PACK_SIZE * total_in_pack*sizeof(char));
 		output_string[PACK_SIZE * total_in_pack]='\0';
 		cout << "INFO: Received string : " << output_string << endl;
-		//for(int i=0; i<total_in_pack; i++){
-			//printCharBuffHex(output_string+(i*PACK_SIZE),PACK_SIZE);
-		printCharBuffHex(output_string,bytes_received);
-		//}
+		//printCharBuffHex(output_string,bytes_received);
 
 		clock_t next_cycle_rx = clock();
 		double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
 		cout << "INFO: Effective SPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
 					total_in_pack / duration_rx / 1024 * 8) << endl;
-		//TODO: Check this number :D
 		last_cycle_rx = next_cycle_rx;
 		
 		clock_t end_cycle_memtest_hw = next_cycle_rx;
@@ -258,14 +241,16 @@ int main(int argc, char *argv[])
 										(double) CLOCKS_PER_SEC;
 		cout << "INFO: HW exec. time:" << duration_memtest_hw << " seconds" << endl;
 		cout << "INFO: Effective SPS HW:" << (1 / duration_memtest_hw) << " \tkbps:" << 
-					(PACK_SIZE * total_in_pack / duration_memtest_hw / 1024 * 8) << endl;	
-					//TODO: CHECK THIS OUT    
+					(PACK_SIZE * total_in_pack / duration_memtest_hw / 1024 * 8) << endl;	  
 			
 		double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
 		cout << "INFO: Effective SPS E2E:" << (1 / duration_main) << endl;
 		cout << "\\___________________________________________________________________/" << endl
 		<< endl;
 
+		//------------------------------------------------------
+		//-- STEP-5.3 : Parsing and displaying
+		//------------------------------------------------------ 
 		cout << " ___________________________________________________________________ " << endl;
 		cout << "/                                                                   \\" << endl;
 		cout <<"INFO: Entering in the output parsing section  "<< endl;
@@ -274,11 +259,7 @@ int main(int argc, char *argv[])
 		output_to_parse_string.append(output_string,charOutputSizeRoughBytes);
 		int rawdatalines = charOutputSizeRoughBytes / 8;;
 		testResults_vector=parseMemoryTestOutput(output_to_parse_string,charOutputSizeRoughBytes,rawdatalines);
-		cout << "\\___________________________________________________________________/" << endl
-		<< endl;
 		//otuput showing
-		cout << " ___________________________________________________________________ " << endl;
-		cout << "/                                                                   \\" << endl;
 		cout << "INFO: Test Results appearing" << endl;
 		cout << " The Memory test run for  " << testResults_vector.size() << " iterations " << endl;
 		unsigned int mem_word_size = 512;
@@ -296,10 +277,6 @@ int main(int argc, char *argv[])
       		cout << " WR BW " << wr_bndwdth << "[GBit/s] "  << endl;
 			cout << endl << endl;
 		}
-		////////////////
-		///// TODO:
-		// from here interaction cycle
-		////////////////
 		//clear dynamic memory
 		delete [] longbuf;
 		delete [] output_string;
@@ -309,6 +286,10 @@ int main(int argc, char *argv[])
 		initial_input_string.clear();
 		strInput_memaddrUT.clear();
     	strInput_nmbrTest.clear();
+
+		//------------------------------------------------------
+		//-- STEP-5.4 : Interaction part
+		//------------------------------------------------------ 
 		//Need to close the application and send to the accelerator a stop for signaling a termination
 		if (user_choice.compare("rq")==0)
 		{
@@ -318,7 +299,7 @@ int main(int argc, char *argv[])
 			char stop_char_buff [8];
 			memcpy(stop_char_buff, cmd_string.data(), 8);
 			sending_now = 8;
-			printCharBuffHex(stop_char_buff,8);
+			//printCharBuffHex(stop_char_buff,8);
 			#if NET_TYPE == udp
 				udpsock.sendTo(stop_char_buff, sending_now, servAddress, servPort);
 			#else
@@ -337,7 +318,7 @@ int main(int argc, char *argv[])
 				cout << "INFO: Accelerator answered ok" << endl;
 			}else{
 				cout << "INFO: Bad answer received, take care "<< endl;
-				printStringHex(output_stop,8);
+				//printStringHex(output_stop,8);
 			}
 			cout << "INFO: IBM ZRL Memtest is closing." << endl<< "Goodbye :D" << endl;
 			break;
@@ -347,7 +328,7 @@ int main(int argc, char *argv[])
 		string confirmation="";
 
 		cout << "That is all from this application." << endl;
-		while (user_choice.empty() && (confirmation.compare("y")!=0))
+		while (user_choice.empty() || (confirmation.compare("y")!=0))
 		{
 			cout << "What do you want to do now?" << endl;
 			cout << " <r>: run a new test, <q>: quit, <rq>: run a new test and quit "<<endl;
@@ -360,7 +341,7 @@ int main(int argc, char *argv[])
 		{
 			confirmation.clear();
 			const unsigned int max_testable_address = MAX_TESTABLE_ADDRESS;
-			while (	strInput_memaddrUT.empty() && strInput_nmbrTest.empty() && (confirmation.compare("y")!=0))
+			while (	strInput_memaddrUT.empty() || strInput_nmbrTest.empty() && (confirmation.compare("y")!=0))
 			{
 				cout << "Please type in the maximum address to test (no more than "<< to_string(max_testable_address) << ")"<< endl;
 				cin >> strInput_memaddrUT;
@@ -403,7 +384,7 @@ int main(int argc, char *argv[])
 			char stop_char_buff [8];
 			memcpy(stop_char_buff, cmd_string.data(), 8);
 			sending_now = 8;
-			printCharBuffHex(stop_char_buff,8);
+			//printCharBuffHex(stop_char_buff,8);
 			#if NET_TYPE == udp
 				udpsock.sendTo(stop_char_buff, sending_now, servAddress, servPort);
 			#else
@@ -422,14 +403,15 @@ int main(int argc, char *argv[])
 				cout << "INFO: Accelerator answered ok" << endl;
 			}else{
 				cout << "INFO: Bad answer received, take care "<< endl;
-				printStringHex(output_stop,8);
+				//printStringHex(output_stop,8);
 			}
 			cout << "INFO: IBM ZRL Memtest is closing." << endl<< "Goodbye :D" << endl;
 			break;
 		}
 		
-
 	}//end of while loop
+
+
 // Destructor closes the socket
 }catch (SocketException & e) {
 	cerr << e.what() << endl;
