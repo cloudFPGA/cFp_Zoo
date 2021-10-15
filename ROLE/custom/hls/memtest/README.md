@@ -246,6 +246,11 @@ pip3 install -r ../requirements.txt # to be improved : some errors might occur d
 - Docker:
   `docker exec -it distracted_ishizaka /bin/bash`
 
+- Possible resources/stack limitation on Linux-based systems:
+  ` ulimit -a` to see the current limitations
+  ` ulimit -c unlimited` to unlimit  "The maximum size of core files created" 
+  ` ulimit -s unlimited` to unlimit "The maximum stack size."
+
 ##### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
