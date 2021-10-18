@@ -278,6 +278,15 @@ void memtest(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
+    #ifdef ENABLE_DDR
+                                            ,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------    
+    membus_t                    *lcl_mem0,
+    membus_t                    *lcl_mem1
+    #endif
+    
     )
 {
   //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
@@ -295,6 +304,24 @@ void memtest(
 #pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
+
+#ifdef ENABLE_DDR
+    
+const unsigned int ddr_mem_depth = TOTMEMDW_512;
+const unsigned int ddr_latency = DDR_LATENCY;
+
+// Mapping LCL_MEM0 interface to moMEM_Mp1 channel
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
+  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+
+// Mapping LCL_MEM1 interface to moMEM_Mp1 channel
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
+  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+
+#endif
+
   //-- LOCAL VARIABLES ------------------------------------------------------
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkMetaStream> sRxtoProc_Meta("sRxtoProc_Meta");
@@ -307,10 +334,16 @@ void memtest(
  #pragma HLS STREAM variable=sOfResetCounter depth=20 dim=1
   static hls::stream<bool> sOfGetTheCounter("sOfGetTheCounter");
  #pragma HLS STREAM variable=sOfGetTheCounter depth=20 dim=1
-  static hls::stream<ap_uint<32>> sClockCounter("sClockCounter");
+  static hls::stream<ap_uint<64>> sClockCounter("sClockCounter");
  #pragma HLS STREAM variable=sClockCounter depth=20 dim=1
 
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
+
+static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
+#pragma HLS STREAM variable=sPerfCounter_cmd depth=1 dim=1
+static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results"); 
+#pragma HLS STREAM variable=sPerfCounter_results depth=2 dim=1 //contain  ALL the output of this process
+
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
@@ -395,7 +428,7 @@ void memtest(
 //STEP 2.a: processing the data. 
 // INSERT THE CUSTOM PROCESSING LOGIC HERE
 //////////////////////////////////////////////////
- pTHISProcessingData<bool,32>(
+ pTHISProcessingData<bool,64>(
   sRxpToProcp_Data,
   sProcpToTxp_Data,
   sRxtoProc_Meta,
@@ -404,18 +437,32 @@ void memtest(
   sOfEnableCCIncrement,
   sOfResetCounter,
   sOfGetTheCounter,
-  sClockCounter);
+  sClockCounter,
+  sPerfCounter_cmd,
+  sPerfCounter_results
+  #ifdef ENABLE_DDR
+              ,
+    lcl_mem0,
+    lcl_mem1
+  #endif
+  );
 
 //////////////////////////////////////////////////
 // STEP 2.b: Hardware Performance Counter
 // it runs in parallel/coordinated with STEP 2.a
 //////////////////////////////////////////////////
-  pCountClockCycles<bool,32,4000000>(
+  pCountClockCycles<bool,64,4000000>(
     sOfEnableCCIncrement,
     sOfResetCounter,
     sOfGetTheCounter,
     sClockCounter);
-  
+
+perfCounterProc<ap_uint<64>,ap_uint<64>,64 >(
+  sPerfCounter_cmd,
+  sPerfCounter_results, 
+  0,
+  256,
+  16);
 //////////////////////////////////////////////////
 // STEP 3: transmit back the data
 // currently steup the tlast once reached max size

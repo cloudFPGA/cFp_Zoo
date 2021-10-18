@@ -35,7 +35,7 @@ using namespace std;
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
 #define TB_MULTI_RUNS_ITERATIONS 1
-#define DEBUG_LEVEL (TRACE_OFF)
+#define DEBUG_LEVEL (TRACE_ALL)
 
 
 //------------------------------------------------------
@@ -78,16 +78,30 @@ ap_uint<32>                 cluster_size;
 unsigned int         simCnt;
 
 
+//------------------------------------------------------
+//-- SHELL / Role / Mem / Mp1 Interface
+//------------------------------------------------------
+#ifdef ENABLE_DDR;
+#define MEMORY_LINES_512 TOTMEMDW_512 /* 64 KiB */
+membus_t   lcl_mem0[MEMORY_LINES_512];
+membus_t   lcl_mem1[MEMORY_LINES_512];
+#endif
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
     memtest(
-        &node_rank, &cluster_size,
+      &node_rank, &cluster_size,
       sSHL_Uaf_Data, sUAF_Shl_Data,
       siUdp_meta, soUdp_meta,
-      &s_udp_rx_ports);
+      &s_udp_rx_ports
+      #ifdef ENABLE_DDR
+                      ,
+        lcl_mem0,
+        lcl_mem1
+      #endif
+      );
     simCnt++;
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);

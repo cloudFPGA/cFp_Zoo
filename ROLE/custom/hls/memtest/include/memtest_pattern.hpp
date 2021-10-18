@@ -53,6 +53,80 @@ typedef ap_uint<LOCAL_MEM_ADDR_SIZE_NON_BYTE_ADDRESSABLE>  local_mem_addr_non_by
 #define MAX_ITERATION_COUNT 10
 const unsigned int max_proc_fifo_depth = MAX_ITERATION_COUNT;
 
+
+////TODO: parametrize the width?
+template<typename Tin, typename Tout, unsigned int arraysize>
+void pMyMemtestMemCpy(Tin* in, Tout* out){
+#pragma HLS INLINE
+  for (unsigned int i = 0; i < arraysize; i++)
+  {
+#pragma HLS PIPELINE II=1
+    *out = *in;
+  }
+  
+}
+
+template<typename T>
+void pPingPongBufferingSingleData(T* in, T* out, bool end_of_transmission){
+  static bool first_fifo_writing = true;
+  static bool init = true;
+  static T ping_pong_buffer [2];
+#pragma HLS reset variable=first_fifo_writing
+#pragma HLS reset variable=init
+#pragma HLS reset variable=ping_pong_buffer
+
+//reset emulation
+  if(end_of_transmission){
+    init = true;
+    first_fifo_writing=true;
+  }
+
+//buffering
+  if(first_fifo_writing){
+    ping_pong_buffer[0]=*in;
+    if(!init){
+      *out = ping_pong_buffer[1];
+      init = false;
+    }
+    first_fifo_writing = false;
+  }else{
+    *out = ping_pong_buffer[0];
+    ping_pong_buffer[1]=*in;
+  }
+
+
+}
+//from Xilinx Vitis Accel examples, tempalte from DCO
+//https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc(hls::stream<Tin>& cmd, hls::stream<Tout>& out, int direction, int burst_length, int nmbr_outstanding) {
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+        cnt++;
+        #if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+
+    // // write out kernel statistics to global memory
+     Tout tmp[1];//was 4
+     tmp[0] = cnt;
+    // tmp[1] = input_cmd;
+     //tmp[1] = burst_length;
+    // tmp[3] = nmbr_outstanding;
+    //memcpy(out, tmp, 4 * sizeof(Tout));
+    out.write(tmp[0]);
+    //out.write(tmp[1]);
+    //out.write(nmbr_outstanding); this
+    //out.write(input_cmd); Xilinx use this to count the errors but we are already counting so...
+}
+
 /*
 */
 template<typename Tevent=bool, const unsigned int counter_width=32, const unsigned int maximum_counter_value_before_reset=4000000>
@@ -202,9 +276,24 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-//////This function represent the main custom logic. it receives data form  //
-///// the RX and transmit what needed to the TX
-///// CUSTOM LOGIC INSERTION HERE
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////This function represent the main custom logic. it receives data form ///
+///// the RX and transmit what needed to the TX //////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+///////////////////// CUSTOM LOGIC INSERTION HERE ////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 /*****************************************************************************
@@ -226,7 +315,17 @@ void genXoredSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
   hls::stream<Tevent>                              &sOutEnableCCIncrement,
   hls::stream<Tevent>                              &sOutResetCounter, 
   hls::stream<Tevent>                              &sOutGetTheCounter,
-  hls::stream<ap_uint<counter_width>>              &sInClockCounter
+  hls::stream<ap_uint<counter_width>>              &sInClockCounter,
+  hls::stream<ap_uint<counter_width>>              &sOCMDPerfCounter,
+  hls::stream<ap_uint<counter_width>>              &sIResPerfCounter
+  #ifdef ENABLE_DDR
+                                                                    ,
+  //------------------------------------------------------
+  //-- SHELL / Role / Mem / Mp1 Interface
+  //------------------------------------------------------    
+  membus_t                    *lcl_mem0,
+  membus_t                    *lcl_mem1
+  #endif
 ){
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma  HLS INLINE off
@@ -283,7 +382,9 @@ static size_t bytes_sent_for_tx =0;
       max_address_under_test = 0;
       max_iterations=0;
       bytes_sent_for_tx = 0;
-
+      sOCMDPerfCounter.write(0);//init the performance counter to not stuck everything at the beginning
+      sOCMDPerfCounter.write(0);//stop the performance counter to not stuck everything at the beginning
+      sIResPerfCounter.read();//pop
       if ( !sRxtoProc_Meta.empty()  && !sProctoTx_Meta.full())
       {
         outNetMeta = sRxtoProc_Meta.read();
@@ -297,6 +398,7 @@ static size_t bytes_sent_for_tx =0;
       printf("DEBUG proc FSM, I am in the PROCESSING_PCKT_PROC state\n");
     #endif
 //parse the received data
+      sOCMDPerfCounter.write(0);//init the performance counter to not stuck everything at the beginning
       if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full())
       {
         netWord = sRxpToProcp_Data.read();
@@ -333,6 +435,8 @@ static size_t bytes_sent_for_tx =0;
          printf("DEBUG processing the packet with the address %s within cmd %s\n", max_address_under_test.to_string().c_str(), max_iterations.to_string().c_str());
     #endif //__SYNTHESIS__
     #endif
+      sOCMDPerfCounter.write(0);//stop the performance counter to not stuck everything at the beginning
+      sIResPerfCounter.read();//pop
           processingFSM = FSM_PROCESSING_START;
           break;
         }
@@ -341,6 +445,7 @@ static size_t bytes_sent_for_tx =0;
 
 //The hw can begin to do something
       case FSM_PROCESSING_START:
+      sOCMDPerfCounter.write(0);//init the counter
     #if DEBUG_LEVEL == TRACE_ALL
         printf("DEBUG proc FSM, I am in the START state\n");
     #endif
@@ -352,11 +457,14 @@ static size_t bytes_sent_for_tx =0;
         readingCounter=0;
         writingCounter=0;
         testCounter = 0;
+        sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+        sIResPerfCounter.read();//pop the useless value
         processingFSM = FSM_PROCESSING_WRITE;
         break;
 
   //run continuously, hence more than once
       case FSM_PROCESSING_CONTINUOUS_RUN:
+      sOCMDPerfCounter.write(0);//init the counter
         testCounter += 1;
         curr_address_under_test = 0; 
         local_mem_addr_non_byteaddressable = 0;
@@ -380,7 +488,8 @@ static size_t bytes_sent_for_tx =0;
     #endif
             bytes_sent_for_tx = 0;
           }
-        
+        sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+        sIResPerfCounter.read();//pop the two useless values
         processingFSM = FSM_PROCESSING_WRITE;
 
           break;
@@ -396,13 +505,15 @@ static size_t bytes_sent_for_tx =0;
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 1;
           sProcpToTxp_Data.write(outNetWord);
+        sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+        sIResPerfCounter.read();//pop the two useless values
           processingFSM = FSM_PROCESSING_WAIT_FOR_META;
           break;
         }
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-//////////////////////Custom User Logic here//////////////////////////////////
+//////////////////////Custom User Processing Logic here///////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //Begin to process
@@ -414,6 +525,7 @@ static size_t bytes_sent_for_tx =0;
      std::cout << "DEBUG current addr " << local_mem_addr_non_byteaddressable<< std::endl;
     #endif //__SYNTHESIS__
     #endif
+    sOCMDPerfCounter.write(0);//start
 
     //if not written all the needed memory cells write
       if (curr_address_under_test < max_address_under_test)// max is byte addressable!
@@ -421,26 +533,31 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
         printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
     #endif
-
-    //custom function for sequence generation and writing to the trgt memory
-        genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+    // //custom function for sequence generation and writing to the trgt memory
+         genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
        
-       
-       //emulating on purpose fault injection
-        #ifdef FAULT_INJECTION
-        //TODO:  place for control fault injection with a function?
-        if(testCounter >= 2 && local_mem_addr_non_byteaddressable > 0){
-            local_under_test_memory[local_mem_addr_non_byteaddressable] &= static_cast<local_mem_word_t>(0);
-        }
-        #endif // FAULT_INJECTION
+        //emulating on purpose fault injection
+         #ifdef FAULT_INJECTION
+         //TODO:  place for control fault injection with a function?
+         if(testCounter >= 2 && local_mem_addr_non_byteaddressable > 0){
+             local_under_test_memory[local_mem_addr_non_byteaddressable] &= static_cast<local_mem_word_t>(0);
+         }
+         #endif // FAULT_INJECTION
+        local_mem_addr_t tmpLclAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
+        bool last_write = (tmpLclAddress >= max_address_under_test);
 
-        local_mem_addr_non_byteaddressable += 1;
-        curr_address_under_test += LOCAL_MEM_ADDR_OFFSET;
-        writingCounter += 1;
+        pPingPongBufferingSingleData<membus_t>(local_under_test_memory+local_mem_addr_non_byteaddressable, lcl_mem0+curr_address_under_test,last_write);
+        sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+        writing_cntr += sIResPerfCounter.read();//pop the two useless values
+        
         //cc count
         if(!sOutEnableCCIncrement.full()){
           sOutEnableCCIncrement.write(true);
         }
+        local_mem_addr_non_byteaddressable += 1;
+        curr_address_under_test = tmpLclAddress;
+        writingCounter += 1;
+
         processingFSM = FSM_PROCESSING_WRITE;
         break;
 
@@ -456,6 +573,8 @@ static size_t bytes_sent_for_tx =0;
         if(!sOutResetCounter.full()){
           sOutResetCounter.write(true);
         }
+        sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+        sIResPerfCounter.read();//pop the two useless values
         processingFSM = FSM_PROCESSING_READ;
         break;
       }
@@ -464,10 +583,13 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG proc FSM, I am in the READ state\n");
     #endif
+      sOCMDPerfCounter.write(0);
+
       //if not read all the needed memory cells read
         if (!sInClockCounter.empty())
         {
-          writing_cntr = sInClockCounter.read();
+          // writing_cntr = sInClockCounter.read();
+          sInClockCounter.read();
         }
       
         if (curr_address_under_test < max_address_under_test) 
@@ -476,7 +598,14 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
          printf("DEBUG READ FSM, reading the memory\n");
     #endif
+
     //gold generation and comparison with current memory content
+          local_mem_addr_t tmpLclRDAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
+          bool last_read = (tmpLclRDAddress >= max_address_under_test);
+          pPingPongBufferingSingleData<membus_t>(lcl_mem1+curr_address_under_test, local_under_test_memory+local_mem_addr_non_byteaddressable, last_read);
+          sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+          reading_cntr += sIResPerfCounter.read();//pop the two useless values
+
           genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
           testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
           golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
@@ -491,7 +620,7 @@ static size_t bytes_sent_for_tx =0;
               faulty_addresses_cntr += 1; //increment the fault counter
             } 
           }
-          curr_address_under_test += LOCAL_MEM_ADDR_OFFSET; //next test
+          curr_address_under_test = tmpLclRDAddress; //next test
           local_mem_addr_non_byteaddressable += 1;
           readingCounter += 1;
           if(!sOutEnableCCIncrement.full()){
@@ -503,6 +632,8 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
           printf("DEBUG READ FSM, done with the read\n");
     #endif
+        sOCMDPerfCounter.write(0);
+        sIResPerfCounter.read();
           if(!sOutGetTheCounter.full()){
             sOutGetTheCounter.write(true);
           }
@@ -523,10 +654,11 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG processing the output of a run\n");
     #endif
-
+    sOCMDPerfCounter.write(0);
       if (!sInClockCounter.empty())
       {
-          reading_cntr = sInClockCounter.read();
+          sInClockCounter.read();
+          // reading_cntr = sInClockCounter.read();
       }
       
       if(!sProcpToTxp_Data.full()){
@@ -537,12 +669,17 @@ static size_t bytes_sent_for_tx =0;
           bytes_sent_for_tx += 8;
           processingFSM = FSM_PROCESSING_OUTPUT_2;
       }
+      sOCMDPerfCounter.write(0);
+      sIResPerfCounter.read();
       break;
 
       case FSM_PROCESSING_OUTPUT_2:
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG processing the output of a run part 2\n");
     #endif
+        sOCMDPerfCounter.write(0);
+        sOCMDPerfCounter.write(0);
+        sIResPerfCounter.read();
       
       if(!sProcpToTxp_Data.full()){
           outNetWord.tdata=faulty_addresses_cntr;
@@ -557,7 +694,9 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG processing the output of a run part 3\n");
     #endif
-      
+        sOCMDPerfCounter.write(0);
+        sOCMDPerfCounter.write(0);
+        sIResPerfCounter.read();
       if(!sProcpToTxp_Data.full()){
           outNetWord.tdata=first_faulty_address;
           outNetWord.tkeep = 0xFF;
@@ -571,7 +710,9 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG processing the output of a run part 4\n");
     #endif
-      
+        sOCMDPerfCounter.write(0);
+        sOCMDPerfCounter.write(0);
+        sIResPerfCounter.read();
       if(!sProcpToTxp_Data.full()){
           outNetWord.tdata.range(64-1,64-32) = writing_cntr;
           outNetWord.tdata.range(32-1,0) = reading_cntr;

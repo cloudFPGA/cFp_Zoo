@@ -38,6 +38,9 @@
 using namespace hls;
 
 
+// Define this option to load data from network to DDR memory before calling the kernel.
+#define ENABLE_DDR
+
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
  ********************************************/
@@ -71,20 +74,40 @@ enum MemTestCmd {
 #define FSM_DONE 1
 #define PortFsmType uint8_t
 
-//#define DEBUG_MULTI_RUNS
-
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
 
-#define MEMDW 64          // 512 or 128 or 64 // Bus width in bits for Host memory
-#define BPERDW (MEMDW/8)   // Bytes per Data Word    if MEMDW=512 => BPERDW = 64, if MEMDW=64 => BPERDW = 16
+//------------------------------------ Declarations for DDR ----------------------------------------
 
-#define MAX_NB_OF_ELMT_READ  16
-typedef uint8_t  mat_elmt_t; 	// change to float or double depending on your needs
+/* General memory Data Width is set as a parameter*/
+/* 512-bit host AXI data width*/
+#define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
+#define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
+#define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
+typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
+typedef membus_512_t membus_t;
+#define TOTMEMDW_512 125
 
-#define MAX_NB_OF_WORDS_READ	(MAX_NB_OF_ELMT_READ*sizeof(mat_elmt_t)/BPERDW) // =2 if double =1 if float
-#define MAX_NB_OF_ELMT_PERDW	(BPERDW/sizeof(mat_elmt_t)) // =8 if double =16 if float
+#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
+#define BYTE_PER_MEM_WORD BPERMDW_512 // 64
+#define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
+
+//typedef enum fsmStateDDRenum {
+//    FSM_WR_PAT_CMD	= 0,
+//    FSM_WR_PAT_DATA	= 1,
+//    FSM_WR_PAT_STS  = 2
+//} fsmStateDDRdef;
+//typedef enum fsmStateDDRenum fsmStateDDRdef;
+
+#define fsmStateDDRdef uint8_t
+
+// The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
+#define CYCLES_UNTIL_TIMEOUT 0x0100
+#define TYPICAL_DDR_LATENCY 4
+#define DDR_LATENCY 52 // The latency cycles of cF DDR
+#define EXTRA_DDR_LATENCY_DUE_II (64 + 8) // 8 is the write from input stream to local stream, 64 is read from local stream to DDR
+
 
 
 void memtest(
@@ -99,6 +122,14 @@ void memtest(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
+        #ifdef ENABLE_DDR
+                                            ,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------             
+    membus_t   *lcl_mem0,
+    membus_t   *lcl_mem1
+    #endif
 );
 
 
