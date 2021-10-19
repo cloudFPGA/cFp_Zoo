@@ -34,7 +34,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 1
+#define TB_MULTI_RUNS_ITERATIONS 5
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -103,6 +103,7 @@ void stepDut() {
       #endif
       );
     simCnt++;
+    memcpy(lcl_mem1,lcl_mem0,sizeof(membus_t)*MEMORY_LINES_512);
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
     #endif

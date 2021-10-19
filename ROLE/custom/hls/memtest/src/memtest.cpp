@@ -307,7 +307,7 @@ void memtest(
 
 #ifdef ENABLE_DDR
     
-const unsigned int ddr_mem_depth = TOTMEMDW_512;
+const unsigned int ddr_mem_depth = TOTMEMDW_512*2;
 const unsigned int ddr_latency = DDR_LATENCY;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
@@ -339,10 +339,10 @@ const unsigned int ddr_latency = DDR_LATENCY;
 
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
 
-static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
-#pragma HLS STREAM variable=sPerfCounter_cmd depth=1 dim=1
-static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results"); 
-#pragma HLS STREAM variable=sPerfCounter_results depth=2 dim=1 //contain  ALL the output of this process
+ static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
+ #pragma HLS STREAM variable=sPerfCounter_cmd depth=1 dim=1
+ static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results"); 
+ #pragma HLS STREAM variable=sPerfCounter_results depth=2 dim=1 //contain  ALL the output of this process
 
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
@@ -351,7 +351,7 @@ static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results");
   static stream<NodeId>            sDstNode_sig   ("sDstNode_sig");
   bool                              start_stop;
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS DATAFLOW 
+#pragma HLS DATAFLOW
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=processed_word_rx
@@ -433,13 +433,13 @@ static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results");
   sProcpToTxp_Data,
   sRxtoProc_Meta,
   sProctoTx_Meta,
-  &start_stop,
-  sOfEnableCCIncrement,
-  sOfResetCounter,
-  sOfGetTheCounter,
-  sClockCounter,
-  sPerfCounter_cmd,
-  sPerfCounter_results
+  &start_stop//,
+  //sOfEnableCCIncrement,
+  //sOfResetCounter,
+  //sOfGetTheCounter,
+  //sClockCounter,
+  //sPerfCounter_cmd,
+  //sPerfCounter_results
   #ifdef ENABLE_DDR
               ,
     lcl_mem0,
@@ -451,18 +451,18 @@ static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results");
 // STEP 2.b: Hardware Performance Counter
 // it runs in parallel/coordinated with STEP 2.a
 //////////////////////////////////////////////////
-  pCountClockCycles<bool,64,4000000>(
-    sOfEnableCCIncrement,
-    sOfResetCounter,
-    sOfGetTheCounter,
-    sClockCounter);
+  // pCountClockCycles<bool,64,4000000>(
+  //   sOfEnableCCIncrement,
+  //   sOfResetCounter,
+  //   sOfGetTheCounter,
+  //   sClockCounter);
 
-perfCounterProc<ap_uint<64>,ap_uint<64>,64 >(
-  sPerfCounter_cmd,
-  sPerfCounter_results, 
-  0,
-  256,
-  16);
+// perfCounterProc<ap_uint<64>,ap_uint<64>,64 >(
+//   sPerfCounter_cmd,
+//   sPerfCounter_results, 
+//   0,
+//   256,
+//   16);
 //////////////////////////////////////////////////
 // STEP 3: transmit back the data
 // currently steup the tlast once reached max size
