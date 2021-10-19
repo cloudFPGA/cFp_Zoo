@@ -44,7 +44,7 @@ sys.path.append(trieres_lib)
 import _trieres_harris_numpi
 
 # size of image to be processed on fpga (the bitstream should be already fixed to this)
-height = width = 256
+height = width = 512
 total_size = height * width
 
 # import the necessary packages
@@ -96,13 +96,11 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
-    video_name = fn+"_out.avi"
+    video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
     
-    fpgas = deque([ ["10.12.200.37" , "2718"],
-                    ["10.12.200.131", "2719"],
-                    ["10.12.200.75" , "2720"],
-                    ["10.12.200.143", "2721"]])
+    fpgas = deque([ ["10.12.200.3"   , "2718"],
+                    ["10.12.200.165" , "2719"]])
 
     
     def process_frame(frame, t0, accel_mode, fpga):
@@ -130,7 +128,7 @@ def main():
             frame = cv.medianBlur(frame, 19)
         return frame, t0
 
-    threadn = 4 #cv.getNumberOfCPUs()
+    threadn = cv.getNumberOfCPUs()
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
@@ -149,7 +147,7 @@ def main():
             draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-            #cv.imshow('threaded video', res)
+            cv.imshow('threaded video', res)
         if len(pending) < threadn and len(fpgas) != 0:
             _ret, frame = cap.read()
             if _ret is False:
@@ -162,6 +160,8 @@ def main():
             t = clock()
             frame_interval.update(t - last_frame_time)
             last_frame_time = t
+            # update the FPS counter
+            fps.update()            
             if accel_mode:
                 fpga = fpgas.popleft()
             else:
@@ -182,8 +182,7 @@ def main():
             accel_mode = not accel_mode
         if ch == 27:
             break
-        # update the FPS counter
-        fps.update()
+
 
     print('Done')
  
@@ -195,4 +194,4 @@ def main():
 if __name__ == '__main__':
     print(__doc__)
     main()
-    #cv.destroyAllWindows()
+    cv.destroyAllWindows()
