@@ -452,8 +452,8 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
     #endif
       }
       unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
-      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
-      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 156.25 ) ) ) / 1000.0; // Gbit/T
+      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 156.25 ) ) ) / 1000.0;
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "Written " << written_words << " words" << endl;
       cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
