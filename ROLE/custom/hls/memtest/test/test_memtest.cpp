@@ -34,7 +34,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 5
+#define TB_MULTI_RUNS_ITERATIONS 1
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -103,7 +103,7 @@ void stepDut() {
       #endif
       );
     simCnt++;
-    memcpy(lcl_mem1,lcl_mem0,sizeof(membus_t)*MEMORY_LINES_512);
+    memcpy(lcl_mem1,lcl_mem0, sizeof(membus_t)*MEMORY_LINES_512);
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
     #endif
@@ -284,6 +284,13 @@ int main(int argc, char** argv) {
 #ifdef DEBUG_MULTI_RUNS // test if the HLS kernel has reinit issues with streams leftovers or other stuffs
 for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #endif //DEBUG_MULTI_RUNS
+
+#ifdef ENABLE_DDR
+for(int i=0; i < MEMORY_LINES_512; i++){
+  lcl_mem0[i]=0;
+  lcl_mem1[i]=0;
+}
+#endif//ENABLE_DDR
   //------------------------------------------------------
   //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
   //------------------------------------------------------
@@ -409,6 +416,16 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     } else {
       printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
     }
+    
+// #ifdef ENABLE_DDR
+// for(int i=0; i < MEMORY_LINES_512; i++){
+//   if(lcl_mem0[i]!=lcl_mem1[i]){
+//       cout << "Main mem difference :" << lcl_mem0[i] << " " << lcl_mem1[i] << endl;
+//   }else{
+//     cout << "ok ";
+//   }
+// }
+// #endif//ENABLE_DDR
 
     //------------------------------------------------------
     //-- STEP-7 [OPTIONAL] : Parse the output stream

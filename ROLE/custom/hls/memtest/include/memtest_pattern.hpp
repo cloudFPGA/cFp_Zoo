@@ -99,7 +99,7 @@ void pPingPongBufferingSingleData(T* in, T* out, bool end_of_transmission){
   }
 
 }
-const unsigned long long int  max_counter_cc = 1.844674407*10000000000000000000;
+const unsigned long long int  max_counter_cc = 18446744070000000000;
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
@@ -324,6 +324,19 @@ void genXoredSequentialNumbersSecondVersion(ADDR_T curr, BIGWORD_T * outBigWord)
   }
 }
 
+
+template<typename ADDR_T, const unsigned int sequenceDim, typename BIGWORD_T, typename SMALLWORD_T, unsigned int smallWordDim>
+void genSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
+#pragma HLS INLINE 
+  SMALLWORD_T currentNumber = static_cast<SMALLWORD_T>(curr);
+  gen_sequence_loop: for (unsigned int i = 0; i < sequenceDim; i++)
+  {
+#pragma HLS UNROLL factor=sequenceDim
+    (*outBigWord).range(smallWordDim*(i+1)-1,smallWordDim*i)=i;
+  }
+}
+
+
 template<const unsigned int max_iterations=4000000>
 void pGenerateData2StreamWrite(
   hls::stream<local_mem_word_t>& generatedData,
@@ -384,8 +397,9 @@ local_mem_addr_t max_addr_ut)
     #ifndef __SYNTHESIS__
    checking_loop: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
           {
-            std::cout << "Writing " << tmp_out.range((i+1)*8-1,i*8) << " ";
+            std::cout << tmp_out.range((i+1)*8-1,i*8) << " ";
           }
+          std::cout << std::endl;
     #endif
     tmp_out = generatedData.read();
     memcpy(lcl_mem+curr_address_ut, &tmp_out, sizeof(local_mem_word_t));
@@ -411,6 +425,7 @@ void pMainMemoryRead2StreamData(
   read_data_from_main_mem:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
+#pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     memcpy(&tmp_out, lcl_mem+curr_address_ut, sizeof(local_mem_word_t));
     readData.write(tmp_out);
@@ -435,7 +450,7 @@ void pReadDataStreamAndProduceGold(
   generate_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
-#pragma HLS PIPELINE
+#pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     testingVector = readData.read(); 
 
@@ -458,7 +473,7 @@ void pCompareDataStreams(
   local_mem_addr_t * first_faulty_address)
 {
 //#pragma HLS INLINE off
-
+    const unsigned int unrolling_factor= LOCAL_MEM_ADDR_OFFSET;//inability of using define in pragmas solved in 2021.1
     local_mem_addr_t curr_address_ut;
     local_mem_word_t testingVector;
     local_mem_word_t goldenVector;
@@ -468,14 +483,14 @@ void pCompareDataStreams(
   reading_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
-#pragma HLS PIPELINE
+#pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     testingVector = sInReadData.read(); 
     goldenVector = sInGoldData.read(); 
    
     golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
           {
-    #pragma HLS UNROLL
+    #pragma HLS UNROLL factor=unrolling_factor
     #ifndef __SYNTHESIS__
             std::cout << "Comparing test: " << testingVector.range((i+1)*8-1,i*8) << " and  gold: " << goldenVector.range((i+1)*8-1,i*8) << std::endl;
     #endif
@@ -791,145 +806,145 @@ static size_t bytes_sent_for_tx =0;
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 //Begin to process
-      case FSM_PROCESSING_WRITE:
-    #if DEBUG_LEVEL == TRACE_ALL
-     printf("DEBUG proc FSM, I am in the WRITE state\n");
-    #ifndef __SYNTHESIS__
-      std::cout << "DEBUG I have to test " << max_address_under_test<< std::endl;
-     std::cout << "DEBUG current addr " << local_mem_addr_non_byteaddressable<< std::endl;
-    #endif //__SYNTHESIS__
-    #endif
-    // sOCMDPerfCounter.write(0);//start
+    //   case FSM_PROCESSING_WRITE:
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //  printf("DEBUG proc FSM, I am in the WRITE state\n");
+    // #ifndef __SYNTHESIS__
+    //   std::cout << "DEBUG I have to test " << max_address_under_test<< std::endl;
+    //  std::cout << "DEBUG current addr " << local_mem_addr_non_byteaddressable<< std::endl;
+    // #endif //__SYNTHESIS__
+    // #endif
+    // // sOCMDPerfCounter.write(0);//start
 
-    //if not written all the needed memory cells write
-      if (curr_address_under_test < max_address_under_test)// max is byte addressable!
-      {
-    #if DEBUG_LEVEL == TRACE_ALL
-        printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
-    #endif
-    // //custom function for sequence generation and writing to the trgt memory
-         genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
+    // //if not written all the needed memory cells write
+    //   if (curr_address_under_test < max_address_under_test)// max is byte addressable!
+    //   {
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //     printf("DEBUG WRITE FSM, writing the memory with counter %d\n",writingCounter);
+    // #endif
+    // // //custom function for sequence generation and writing to the trgt memory
+    //      genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, local_under_test_memory+local_mem_addr_non_byteaddressable);
        
-        //emulating on purpose fault injection
-         #ifdef FAULT_INJECTION
-         //TODO:  place for control fault injection with a function?
-         if(testCounter >= 2 && local_mem_addr_non_byteaddressable > 0){
-             local_under_test_memory[local_mem_addr_non_byteaddressable] &= static_cast<local_mem_word_t>(0);
-         }
-         #endif // FAULT_INJECTION
-        local_mem_addr_t tmpLclAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
-        bool last_write = (tmpLclAddress >= max_address_under_test);
+    //     //emulating on purpose fault injection
+    //      #ifdef FAULT_INJECTION
+    //      //TODO:  place for control fault injection with a function?
+    //      if(testCounter >= 2 && local_mem_addr_non_byteaddressable > 0){
+    //          local_under_test_memory[local_mem_addr_non_byteaddressable] &= static_cast<local_mem_word_t>(0);
+    //      }
+    //      #endif // FAULT_INJECTION
+    //     local_mem_addr_t tmpLclAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
+    //     bool last_write = (tmpLclAddress >= max_address_under_test);
 
-        //pPingPongBufferingSingleData<membus_t>(local_under_test_memory+local_mem_addr_non_byteaddressable, lcl_mem0+curr_address_under_test,last_write);
-        memcpy(lcl_mem0+curr_address_under_test,local_under_test_memory+local_mem_addr_non_byteaddressable,sizeof(local_mem_word_t));
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-        std::cout << "Writing: " << *(local_under_test_memory+local_mem_addr_non_byteaddressable) << std::endl;
-        std::cout << " and  mem: " << *(lcl_mem0+curr_address_under_test) << std::endl;
-    #endif
-    #endif
-        // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
-        //writing_cntr += sIResPerfCounter.read();//pop the two useless values
+    //     //pPingPongBufferingSingleData<membus_t>(local_under_test_memory+local_mem_addr_non_byteaddressable, lcl_mem0+curr_address_under_test,last_write);
+    //     memcpy(lcl_mem0+curr_address_under_test,local_under_test_memory+local_mem_addr_non_byteaddressable,sizeof(local_mem_word_t));
+    // #if DEBUG_LEVEL == TRACE_ALL
+    // #ifndef __SYNTHESIS__
+    //     std::cout << "Writing: " << *(local_under_test_memory+local_mem_addr_non_byteaddressable) << std::endl;
+    //     std::cout << " and  mem: " << *(lcl_mem0+curr_address_under_test) << std::endl;
+    // #endif
+    // #endif
+    //     // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+    //     //writing_cntr += sIResPerfCounter.read();//pop the two useless values
         
-        //cc count
-        // if(!sOutEnableCCIncrement.full()){
-        //   sOutEnableCCIncrement.write(true);
-        // }
-        local_mem_addr_non_byteaddressable += 1;
-        curr_address_under_test = tmpLclAddress;
-        writingCounter += 1;
+    //     //cc count
+    //     // if(!sOutEnableCCIncrement.full()){
+    //     //   sOutEnableCCIncrement.write(true);
+    //     // }
+    //     local_mem_addr_non_byteaddressable += 1;
+    //     curr_address_under_test = tmpLclAddress;
+    //     writingCounter += 1;
 
-        processingFSM = FSM_PROCESSING_WRITE;
-        break;
+    //     processingFSM = FSM_PROCESSING_WRITE;
+    //     break;
 
-      } else{
-    #if DEBUG_LEVEL == TRACE_ALL
-        printf("DEBUG WRITE FSM, done with the write\n");
-    #endif
-        local_mem_addr_non_byteaddressable = 0;
-        curr_address_under_test = 0;
-        // if(!sOutGetTheCounter.full()){
-        //   sOutGetTheCounter.write(true);
-        // }
-        // if(!sOutResetCounter.full()){
-        //   sOutResetCounter.write(true);
-        // }
-        // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
-        // sIResPerfCounter.read();//pop the two useless values
-        processingFSM = FSM_PROCESSING_READ;
-        break;
-      }
+    //   } else{
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //     printf("DEBUG WRITE FSM, done with the write\n");
+    // #endif
+    //     local_mem_addr_non_byteaddressable = 0;
+    //     curr_address_under_test = 0;
+    //     // if(!sOutGetTheCounter.full()){
+    //     //   sOutGetTheCounter.write(true);
+    //     // }
+    //     // if(!sOutResetCounter.full()){
+    //     //   sOutResetCounter.write(true);
+    //     // }
+    //     // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+    //     // sIResPerfCounter.read();//pop the two useless values
+    //     processingFSM = FSM_PROCESSING_READ;
+    //     break;
+    //   }
 
-    case FSM_PROCESSING_READ:
-    #if DEBUG_LEVEL == TRACE_ALL
-      printf("DEBUG proc FSM, I am in the READ state\n");
-    #endif
-      // sOCMDPerfCounter.write(0);
+    // case FSM_PROCESSING_READ:
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //   printf("DEBUG proc FSM, I am in the READ state\n");
+    // #endif
+    //   // sOCMDPerfCounter.write(0);
 
-      //if not read all the needed memory cells read
-        // if (!sInClockCounter.empty())
-        // {
-        //   writing_cntr = sInClockCounter.read();
-        //   //sInClockCounter.read();
-        // }
+    //   //if not read all the needed memory cells read
+    //     // if (!sInClockCounter.empty())
+    //     // {
+    //     //   writing_cntr = sInClockCounter.read();
+    //     //   //sInClockCounter.read();
+    //     // }
       
-        if (curr_address_under_test < max_address_under_test) 
-        // max is byte addressable!
-        {
-    #if DEBUG_LEVEL == TRACE_ALL
-         printf("DEBUG READ FSM, reading the memory\n");
-    #endif
+    //     if (curr_address_under_test < max_address_under_test) 
+    //     // max is byte addressable!
+    //     {
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //      printf("DEBUG READ FSM, reading the memory\n");
+    // #endif
 
-    //gold generation and comparison with current memory content
-          local_mem_addr_t tmpLclRDAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
-          bool last_read = (tmpLclRDAddress >= max_address_under_test);
-          //pPingPongBufferingSingleData<membus_t>(lcl_mem1+curr_address_under_test, local_under_test_memory+local_mem_addr_non_byteaddressable, last_read);
-         memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable,lcl_mem1+curr_address_under_test,sizeof(local_mem_word_t));
+    // //gold generation and comparison with current memory content
+    //       local_mem_addr_t tmpLclRDAddress = curr_address_under_test + LOCAL_MEM_ADDR_OFFSET;
+    //       bool last_read = (tmpLclRDAddress >= max_address_under_test);
+    //       //pPingPongBufferingSingleData<membus_t>(lcl_mem1+curr_address_under_test, local_under_test_memory+local_mem_addr_non_byteaddressable, last_read);
+    //      memcpy(local_under_test_memory+local_mem_addr_non_byteaddressable,lcl_mem1+curr_address_under_test,sizeof(local_mem_word_t));
 
-          // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
-          //reading_cntr += sIResPerfCounter.read();//pop the two useless values
+    //       // sOCMDPerfCounter.write(0);//stop the counter before beginnign the real test
+    //       //reading_cntr += sIResPerfCounter.read();//pop the two useless values
 
-          genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
-          testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
+    //       genXoredSequentialNumbers<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
+    //       testingVector=local_under_test_memory[local_mem_addr_non_byteaddressable];
 
-          golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
-          {
-    #pragma HLS UNROLL
-    #ifndef __SYNTHESIS__
-            std::cout << "Comparing test: " << testingVector.range((i+1)*8-1,i*8) << " and  gold: " << goldenVector.range((i+1)*8-1,i*8) << std::endl;
-    #endif
-            if (testingVector.range((i+1)*8-1,i*8) != goldenVector.range((i+1)*8-1,i*8))
-            {
-              if (faulty_addresses_cntr == 0) //first fault
-              {
-                first_faulty_address = i+curr_address_under_test; //save the fault address
-              }
-              faulty_addresses_cntr += 1; //increment the fault counter
-            } 
-          }
-          curr_address_under_test = tmpLclRDAddress; //next test
-          local_mem_addr_non_byteaddressable += 1;
-          readingCounter += 1;
-          // if(!sOutEnableCCIncrement.full()){
-          //   sOutEnableCCIncrement.write(true);
-          // }
-          processingFSM = FSM_PROCESSING_READ;
-          break;
-        } else{ //done with the reads
-    #if DEBUG_LEVEL == TRACE_ALL
-          printf("DEBUG READ FSM, done with the read\n");
-    #endif
-        // sOCMDPerfCounter.write(0);
-        // sIResPerfCounter.read();
-        //   if(!sOutGetTheCounter.full()){
-        //     sOutGetTheCounter.write(true);
-        //   }
-        //   if(!sOutResetCounter.full()){
-        //     sOutResetCounter.write(true);
-        //   }
-          processingFSM = FSM_PROCESSING_OUTPUT;
-          break;
-        }
+    //       golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; ++i)
+    //       {
+    // #pragma HLS UNROLL
+    // #ifndef __SYNTHESIS__
+    //         std::cout << "Comparing test: " << testingVector.range((i+1)*8-1,i*8) << " and  gold: " << goldenVector.range((i+1)*8-1,i*8) << std::endl;
+    // #endif
+    //         if (testingVector.range((i+1)*8-1,i*8) != goldenVector.range((i+1)*8-1,i*8))
+    //         {
+    //           if (faulty_addresses_cntr == 0) //first fault
+    //           {
+    //             first_faulty_address = i+curr_address_under_test; //save the fault address
+    //           }
+    //           faulty_addresses_cntr += 1; //increment the fault counter
+    //         } 
+    //       }
+    //       curr_address_under_test = tmpLclRDAddress; //next test
+    //       local_mem_addr_non_byteaddressable += 1;
+    //       readingCounter += 1;
+    //       // if(!sOutEnableCCIncrement.full()){
+    //       //   sOutEnableCCIncrement.write(true);
+    //       // }
+    //       processingFSM = FSM_PROCESSING_READ;
+    //       break;
+    //     } else{ //done with the reads
+    // #if DEBUG_LEVEL == TRACE_ALL
+    //       printf("DEBUG READ FSM, done with the read\n");
+    // #endif
+    //     // sOCMDPerfCounter.write(0);
+    //     // sIResPerfCounter.read();
+    //     //   if(!sOutGetTheCounter.full()){
+    //     //     sOutGetTheCounter.write(true);
+    //     //   }
+    //     //   if(!sOutResetCounter.full()){
+    //     //     sOutResetCounter.write(true);
+    //     //   }
+    //       processingFSM = FSM_PROCESSING_OUTPUT;
+    //       break;
+    //     }
 
 
 //////////////////////////////////////////////////////////////////////////////

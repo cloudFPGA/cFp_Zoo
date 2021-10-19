@@ -102,7 +102,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${SimString} ${SimNumberTests} ${CommandString}"
+    cosim_design -trace_level all -argv "${SimString} ${SimNumberTests} ${CommandString}"
   } else {
 
   # Export RTL

@@ -87,7 +87,7 @@ enum MemTestCmd {
 #define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
-#define TOTMEMDW_512 125
+#define TOTMEMDW_512 1000
 
 #define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64
