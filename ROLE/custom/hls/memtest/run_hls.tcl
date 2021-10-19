@@ -88,6 +88,8 @@ open_solution ${solutionName}
 
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default
+# Enable an 64-bit address interface for axi master. We need it for the FPGA DRAM I/F
+config_interface -m_axi_addr64
 
 # Run C Simulation and Synthesis
 #-------------------------------------------------

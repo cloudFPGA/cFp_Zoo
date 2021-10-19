@@ -99,6 +99,7 @@ void pPingPongBufferingSingleData(T* in, T* out, bool end_of_transmission){
   }
 
 }
+const unsigned long long int  max_counter_cc = 1.844674407*10000000000000000000;
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
@@ -110,8 +111,10 @@ void perfCounterProc2Mem(hls::stream<Tin>& cmd, Tout * out, int direction, int b
 // keep counting until a value is available
 count:
     while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
         cnt++;
-        #if DEBUG_LEVEL == TRACE_ALL
+
+#if DEBUG_LEVEL == TRACE_ALL
 #ifndef __SYNTHESIS__
   printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
 #endif //__SYNTHESIS__
@@ -337,6 +340,7 @@ void pGenerateData2StreamWrite(
   generate_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
+#pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     
     genXoredSequentialNumbersSecondVersion<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32, local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &tmp_out);
@@ -375,6 +379,7 @@ local_mem_addr_t max_addr_ut)
   read_and_write:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
+#pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     #ifndef __SYNTHESIS__
    checking_loop: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
@@ -430,6 +435,7 @@ void pReadDataStreamAndProduceGold(
   generate_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
+#pragma HLS PIPELINE
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     testingVector = readData.read(); 
 
@@ -451,7 +457,7 @@ void pCompareDataStreams(
   ap_uint<32> * faulty_addresses_cntr,
   local_mem_addr_t * first_faulty_address)
 {
-#pragma HLS INLINE off
+//#pragma HLS INLINE off
 
     local_mem_addr_t curr_address_ut;
     local_mem_word_t testingVector;
@@ -462,6 +468,7 @@ void pCompareDataStreams(
   reading_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
+#pragma HLS PIPELINE
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     testingVector = sInReadData.read(); 
     goldenVector = sInGoldData.read(); 

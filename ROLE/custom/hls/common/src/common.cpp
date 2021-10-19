@@ -762,9 +762,10 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
             memcpy(fault_addr_cmd, (char*)&mem_addr_per_word, sizeof(unsigned int));
             out = out.append(fault_addr_cmd,bytes_per_line);
         }
-        memcpy(clock_cycles_cmd, (char*)&clock_cycles, sizeof(unsigned int));
-        memcpy(clock_cycles_cmd+sizeof(unsigned int), (char*)&clock_cycles, sizeof(unsigned int));
-        out = out.append(clock_cycles_cmd,bytes_per_line);
+        // memcpy(clock_cycles_cmd, (char*)&clock_cycles, sizeof(unsigned int));
+        // memcpy(clock_cycles_cmd+sizeof(unsigned int), (char*)&clock_cycles, sizeof(unsigned int));
+        // out = out.append(clock_cycles_cmd,bytes_per_line);
+          out = out.append(filler_cmd,bytes_per_line);
     }
     out = out.append(end_of_tests_cmd,bytes_per_line);
   //  out.append(stop_cmd,bytes_per_line);
