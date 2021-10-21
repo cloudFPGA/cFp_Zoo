@@ -384,17 +384,20 @@ void pWRGenerateData2StreamWrite(
 
 
 template <typename Tcntr, const unsigned int max_iterations=4000000,
-const unsigned int buff_dim=16>
+const unsigned int buff_dim=64*2>
 void pWRReadStream2WriteMainMemory(
   hls::stream<Tcntr>& cmd,
 hls::stream<local_mem_word_t>& generatedData,
 membus_t * lcl_mem,
-local_mem_addr_t max_addr_ut)
+local_mem_addr_t max_addr_ut,
+unsigned int burst_size)
 {
 #pragma HLS INLINE off
     local_mem_addr_t curr_address_ut;
     static local_mem_word_t tmp_out[buff_dim];
-#pragma HLS array_partition variable=tmp_out cyclic factor=2 dim=1
+    static local_mem_addr_t end_distance=0;
+    static bool last_iteration = false;
+#pragma HLS array_partition variable=tmp_out block factor=2 dim=1
 
     cmd.write(0);
   read_and_write:
@@ -410,10 +413,25 @@ local_mem_addr_t max_addr_ut)
    //        std::cout << std::endl;
    //  #endif
     tmp_out[curr_address_ut%buff_dim] = generatedData.read();
-    memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
+    //if stored enough data to begin the bursting OR this is last iteration
+    end_distance = max_addr_ut-curr_address_ut;
+    last_iteration = LOCAL_MEM_ADDR_OFFSET>=curr_address_ut;
+    
+    if (curr_address_ut%buff_dim==(burst_size-1)  || last_iteration)
+
+   // std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
+   // std::cout << "test addr " << curr_address_ut%buff_dim << std::endl;
+    {
+      if (last_iteration)
+      {
+        memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t)*(end_distance));
+      }else{
+        memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t)*burst_size);
+      }
+    }
+   // memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
   }
     cmd.write(0);
-
 }
 
 
@@ -483,7 +501,7 @@ void pRDCompareDataStreams(
   hls::stream<local_mem_word_t>& sInReadData,
   hls::stream<local_mem_word_t>& sInGoldData,
   hls::stream<ap_uint<64>>& sInCmpRes,
-  hls::stream<local_mem_addr_t>& sInFaultyAddresses, 
+ // hls::stream<local_mem_addr_t>& sInFaultyAddresses, 
   local_mem_addr_t * first_faulty_address)
 {
 //#pragma HLS INLINE off
@@ -510,10 +528,10 @@ void pRDCompareDataStreams(
 
 
     static local_mem_addr_t first_faulty_address_local=0;
-    static local_mem_addr_t faulty_addresses_support_array [LOCAL_MEM_ADDR_OFFSET];
+    static local_mem_addr_t faulty_addresses_support_array [support_dim];
 
    // static ap_uint<32> faulty_addresses_cntr_local=0;
-    static bool first_fault_found = false;
+    static bool first_fault_found  = false;
     static ap_uint<LOCAL_MEM_ADDR_OFFSET> faults_founds[2];
     ap_uint<LOCAL_MEM_ADDR_OFFSET> iteration_faults_founds;
 
@@ -535,7 +553,7 @@ void pRDCompareDataStreams(
    //#pragma HLS dependence variable=faulty_addresses_cntr_support_array inter RAW false
       golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
    {
-#pragma HLS UNROLL factor=unrolling_factor skip_exit_check
+//#pragma HLS UNROLL factor=unrolling_factor skip_exit_check
         //int idx = (i + curr_address_ut )% support_dim;
         int idx = (i + k*LOCAL_MEM_ADDR_OFFSET);
         testingVector_bytes[idx]=testingVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
@@ -544,51 +562,30 @@ void pRDCompareDataStreams(
       cmp_ok[idx] = testingVector_bytes[idx] == goldenVector_bytes[idx];
       tmpOut[i] = !cmp_ok[idx];
 
-      if (!cmp_ok[idx]) //fault
-      {
-        sInFaultyAddresses.write(i+curr_address_ut);
-        // if (!first_fault_found) 
-        // {
-        //   faulty_addresses_support_array[i] = curr_address_ut;
-        //   faults_founds[k][idx] = true;
-        //   first_fault_found = true;
-        // }
-      }
+      // if (!cmp_ok[idx]) //fault
+      // {
+        if (!cmp_ok[idx] && !first_fault_found)
+        {
+          *first_faulty_address=i+curr_address_ut;
+          first_fault_found = true;
+        }else{
+          first_fault_found = first_fault_found;
+        }
+//        sInFaultyAddresses.write(faulty_addresses_support_array[idx]);
+      // }
    }
 
-   // bool enabler = faults_founds[k].or_reduce();
-
-   // iteration_faults_founds = faults_founds[k];
-   // if (!first_fault_found)
+   // for (int i = 0; i < support_dim; i++)
    // {
-   //  first_fault_found = enabler; 
-   // }else{
-   //  first_fault_found = first_fault_found;
+   //   faulty_addresses_support_array[i]=0;
    // }
 
    sInCmpRes.write(tmpOut);
     maddr_non_byte++;
   }
 
+  first_fault_found=false;
 
-// bool first_detected = false;
-// first_addr_loop: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET && first_fault_found; i++)
-// {
-// #pragma HLS PIPELINE
-// #pragma HLS LOOP_TRIPCOUNT min = 1 max = unrolling_factor
-
-//   if (iteration_faults_founds[i] && !first_detected)
-//   {
-//     first_detected = true;
-//     first_faulty_address_local = faulty_addresses_support_array[i];
-//   }else{
-//     first_faulty_address_local=first_faulty_address_local;
-//   }
-// }
-
-//   *first_faulty_address = first_faulty_address_local;
-//   first_fault_found = false;
-//   first_faulty_address_local=0; 
 }
 
 
@@ -602,7 +599,7 @@ void pRDExtractComparisonResults(
 
   local_mem_addr_t curr_address_ut;
   static ap_uint<32> popcount_array  [buff_dim];
-  ap_uint<32> reduction_variable = 0;
+  static ap_uint<32> reduction_variable = 0;
   static ap_uint <3> tmp_sum[magic_reduction];//64/2
   #pragma HLS array_partition variable=tmp_sum complete
 
@@ -633,36 +630,9 @@ void pRDExtractComparisonResults(
   }
 
    *faulty_addresses_cntr=reduction_variable;
+   reduction_variable=0;
 }
 
-
-
-template<const unsigned int max_iterations=4000000>
-void pRDExtractFirstFaultyAddress(
-  local_mem_addr_t max_addr_ut,
-  hls::stream<local_mem_addr_t>& sFaultyAddresses,
-  local_mem_addr_t * first_faulty_address)
-{
-  bool first_fault_found = false;
-  local_mem_addr_t faulty_address=0;
-  local_mem_addr_t first_faulty_address_local=0;
-
-
-  faulty_addr_consuming_loop:
-  for (local_mem_addr_t curr_address_ut = 0; curr_address_ut < max_addr_ut && !sFaultyAddresses.empty(); curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
-  {
-#pragma HLS PIPELINE
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-    faulty_address=sFaultyAddresses.read();
-    if (!first_fault_found)
-    {
-      first_faulty_address_local=faulty_address;
-      first_fault_found=true;
-    }
-  }
-    *first_faulty_address = first_faulty_address_local;
-    first_faulty_address_local=0;
-}
 
 void pWriteDataflowMemTest(
   membus_t * lcl_mem0,
@@ -677,9 +647,9 @@ void pWriteDataflowMemTest(
      #pragma HLS STREAM variable=generatedWriteData depth=2 dim=1
     #pragma HLS DATAFLOW disable_start_propagation
           //Step 1: Generate the data
-          pWRGenerateData2StreamWrite<4000000>(generatedWriteData,testCounter,max_address_under_test);//, local_under_test_memory);
+          pWRGenerateData2StreamWrite<4000000>(generatedWriteData,testCounter,max_address_under_test);
           //Step 2: write 
-          pWRReadStream2WriteMainMemory<ap_uint<64>,4000000>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test);
+          pWRReadStream2WriteMainMemory<ap_uint<64>,4000000>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, 16);
           //Step 2.b: count 
           perfCounterProc2Mem<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr, 0, 256,  16);
       
@@ -705,8 +675,8 @@ void pReadDataflowMemTest(
 
   static hls::stream<ap_uint<64>> sComparisonData("sComparisonData"); 
  #pragma HLS STREAM variable=sComparisonData depth=2 dim=1
-  static hls::stream<local_mem_addr_t> sFaultyAddresses("sFaultyAddresses"); 
- #pragma HLS STREAM variable=sFaultyAddresses depth=64 dim=1
+ //  static hls::stream<local_mem_addr_t> sFaultyAddresses("sFaultyAddresses"); 
+ // #pragma HLS STREAM variable=sFaultyAddresses depth=64 dim=1
 
 #pragma HLS DATAFLOW
       //Step 1: Generate the data
@@ -716,9 +686,8 @@ void pReadDataflowMemTest(
       //Step 2.b: count 
       perfCounterProc2Mem<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr, 0, 256,  16);
       //Step 3: compare
-      pRDCompareDataStreams<4000000>(max_address_under_test,sReadData, sGoldData, sComparisonData, sFaultyAddresses, first_faulty_address);
+      pRDCompareDataStreams<4000000>(max_address_under_test,sReadData, sGoldData, sComparisonData, first_faulty_address);
       //Step 4.a: extract the first faulty address and consume the others
-      pRDExtractFirstFaultyAddress<4000000>(max_address_under_test,sFaultyAddresses, first_faulty_address);
       //Step 4.b: extract the comparison numbers
       pRDExtractComparisonResults<4000000>(max_address_under_test, sComparisonData, faulty_addresses_cntr);
 }
