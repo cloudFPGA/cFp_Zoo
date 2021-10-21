@@ -309,15 +309,16 @@ void memtest(
     
 const unsigned int ddr_mem_depth = TOTMEMDW_512*2;
 const unsigned int ddr_latency = DDR_LATENCY;
+const unsigned int MAX_BURST_LENGTH_512=64;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
-  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
 
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
-  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
 
 #endif
