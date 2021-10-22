@@ -54,4 +54,3 @@ for i in range(10):
 
 cv2.imwrite(image_out_filename, output_array_2d)
 print("INFO: the output file is saved at : " + image_out_filename)
-

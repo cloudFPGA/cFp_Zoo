@@ -35,6 +35,13 @@ PacketFsmType  dequeueFSM  = WAIT_FOR_META;
 PacketFsmType  HarrisFSM   = WAIT_FOR_META;
 fsmStateDDRdef fsmStateDDR = FSM_IDLE; //FSM_WR_PAT_CMD;
 
+#ifdef ENABLE_DDR
+#if TRANSFERS_PER_CHUNK_DIVEND == 0
+#define TRANSFERS_PER_CHUNK_LAST_BURST TRANSFERS_PER_CHUNK
+#else
+#define TRANSFERS_PER_CHUNK_LAST_BURST TRANSFERS_PER_CHUNK_DIVEND
+#endif
+#endif
 
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
@@ -55,6 +62,7 @@ void pPortAndDestionation(
   {
     default:
     case FSM_WRITE_NEW_DATA:
+        printf("DEBUG in pPortAndDestionation: port_fsm - FSM_WRITE_NEW_DATA\n");       
         //Triangle app needs to be reset to process new rank
         if(!sDstNode_sig.full())
         {
@@ -65,7 +73,8 @@ void pPortAndDestionation(
         }
         break;
     case FSM_DONE:
-        *po_rx_ports = 0x1; //currently work only with default ports...
+        printf("DEBUG in pPortAndDestionation: port_fsm - FSM_DONE\n");        
+        *po_rx_ports = PORTS_OPENED;
         break;
   }
 }
@@ -404,6 +413,7 @@ void storeWordToMem(
 }
 
 
+#ifdef ENABLE_DDR
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -443,35 +453,31 @@ void pRXPathDDR(
     //-- LOCAL VARIABLES ------------------------------------------------------
     static NetworkWord    netWord;
 
-    ap_uint<INPUT_PTR_WIDTH> v = 0;
+    static ap_uint<MEMDW_512> v = 0;
     //v.data = 0;
     //v.keep = 0;
     //v.last = 0;
-    const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
-    const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
-    static unsigned int bytes_with_keep;
-    static unsigned int cnt_rd_stream, cnt_wr_stream, cnt_wr_img_loaded;
+    const unsigned int loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
+    const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
+    static unsigned int cur_transfers_per_chunk;
+    static unsigned int cnt_wr_stream, cnt_wr_img_loaded;
     //static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
-    static stream<ap_uint<INPUT_PTR_WIDTH>> img_in_axi_stream ("img_in_axi_stream");
-    #pragma HLS stream variable=img_in_axi_stream depth=65
-    // reuse the unused register 'processed_word_rx' for 'ddr_addr_in'
-    static unsigned int ddr_addr_in; //= processed_word_rx;
-    static membus_t tmp;
+    static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
+    #pragma HLS stream variable=img_in_axi_stream depth=10
+    static unsigned int ddr_addr_in; 
   
     // FIXME: Initialize to zero
     static ap_uint<32> patternWriteNum;
     static ap_uint<32> timeoutCnt;
     
-    Axis<MEMDW_512>   memP0;
+    static Axis<MEMDW_512>   memP0;
     DmSts             memRdStsP0;
     DmSts             memWrStsP0;    
    
-    #pragma HLS reset variable=bytes_with_keep
-    #pragma HLS reset variable=cnt_rd_stream
+    #pragma HLS reset variable=cur_transfers_per_chunk
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_img_loaded    
     #pragma HLS reset variable=ddr_addr_in
-    #pragma HLS reset variable=tmp
     #pragma HLS reset variable=patternWriteNum
     #pragma HLS reset variable=timeoutCnt
     #pragma HLS reset variable=memP0
@@ -483,6 +489,13 @@ void pRXPathDDR(
     case WAIT_FOR_META:
         printf("DEBUG in pRXPathDDR: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
                *processed_word_rx, *processed_bytes_rx);
+        
+        printf("TOTMEMDW_512=%u\n", TOTMEMDW_512);
+        printf("TRANSFERS_PER_CHUNK=%u\n", TRANSFERS_PER_CHUNK);
+        printf("TRANSFERS_PER_CHUNK_DIVEND=%u\n", TRANSFERS_PER_CHUNK_DIVEND);
+        printf("TRANSFERS_PER_CHUNK_LAST_BURST=%u\n", TRANSFERS_PER_CHUNK_LAST_BURST);
+        //exit(-1);
+        
         if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
         {
             meta_tmp = siNrc_meta.read();
@@ -494,14 +507,13 @@ void pRXPathDDR(
                 memP0.tkeep = 0;
                 patternWriteNum = 0;
                 timeoutCnt = 0;
-                tmp = 0;
-                bytes_with_keep = 0;                
+                cur_transfers_per_chunk = 0;                
                 netWord.tlast = 0;
                 netWord.tkeep = 0x0;
                 netWord.tdata = 0x0;
                 ddr_addr_in = 0;
-                cnt_rd_stream = 0;
                 cnt_wr_stream = 0;
+                v = 0;
             }
             enqueueFSM = PROCESSING_PACKET;
         }
@@ -518,12 +530,26 @@ void pRXPathDDR(
         {
             //-- Read incoming data chunk
             netWord = siSHL_This_Data.read();
-            cnt_wr_stream = 0;
-            enqueueFSM = LOAD_IN_STREAM;
+            printf("DEBUG in pRXPathDDR: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+               netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());            
+            //enqueueFSM = LOAD_IN_STREAM;
+            if ((netWord.tkeep >> cnt_wr_stream) == 0) {
+                printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
+                //continue;
+            }
+            v(cnt_wr_stream*64, (cnt_wr_stream+1)*64-1) = netWord.tdata(0,63);
+            if ((cnt_wr_stream++ == loop_cnt-1) || (netWord.tlast == 1)) {
+                if ( !img_in_axi_stream.full() ) {
+                    // std::cout << std::hex << v << std::endl; // print hexadecimal value
+                    img_in_axi_stream.write(v);
+                }
+                enqueueFSM = FSM_CHK_PROC_BYTES;
+                cnt_wr_stream = 0;
+            }
         }
         break;
 
-
+/*
     case LOAD_IN_STREAM:
         printf("DEBUG in pRXPathDDR: enqueueFSM - LOAD_IN_STREAM\n");
         printf("DEBUG in pRXPathDDR: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
@@ -533,33 +559,39 @@ void pRXPathDDR(
             printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
             //continue;
         }
-        v = (ap_uint<INPUT_PTR_WIDTH>)(netWord.tdata >> cnt_wr_stream*8);
-        //v.keep = netWord.tkeep;
-        //v.last = netWord.tlast;
-        if ( !img_in_axi_stream.full() ) {
-            img_in_axi_stream.write(v);
-        }
-        bytes_with_keep += bytes_per_loop;
+        v(cnt_wr_stream*64, (cnt_wr_stream+1)*64-1) = netWord.tdata(0,63);
 
-        if (cnt_wr_stream++ == loop_cnt-1) {
+        if ((cnt_wr_stream++ == loop_cnt-1) || (netWord.tlast == 1)) {
+            if ( !img_in_axi_stream.full() ) {
+                // std::cout << std::hex << v << std::endl; // print hexadecimal value
+                img_in_axi_stream.write(v);
+            }
             enqueueFSM = FSM_CHK_PROC_BYTES;
+            cnt_wr_stream = 0;
+        }
+        else {
+            if(netWord.tlast == 1) {
+                enqueueFSM = WAIT_FOR_META;
+            }
+            else {
+                enqueueFSM = PROCESSING_PACKET;
+            }                  
         }
     break;
-    
+  */  
 
     case FSM_CHK_PROC_BYTES:
         printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_CHK_PROC_BYTES, processed_bytes_rx=%u\n", *processed_bytes_rx);
-        if (*processed_bytes_rx < IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {
-            (*processed_bytes_rx) += bytes_with_keep;
+        if (*processed_bytes_rx < IMGSIZE-bytes_per_loop) {
+            (*processed_bytes_rx) += bytes_per_loop;
         }
         else {
             printf("DEBUG in storeWordToMem: WARNING - you've reached the max depth of img. Will put *processed_bytes_rx = 0.\n");
             *processed_bytes_rx = 0;
         }
-        bytes_with_keep = 0;
-        enqueueFSM = FSM_CHK_WRT_CHNK_TO_DDR_PND;
+        enqueueFSM = FSM_WR_PAT_CMD;
     break;
-
+/*
     case FSM_CHK_WRT_CHNK_TO_DDR_PND :
         printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_CHK_WRT_CHNK_TO_DDR_PND\n");
 
@@ -570,6 +602,8 @@ void pRXPathDDR(
             enqueueFSM = FSM_WR_PAT_CMD;
         }
         else {
+            printf("ERROR: Should never be here.\n");
+            exit(-1);
             if(netWord.tlast == 1) {
                 enqueueFSM = WAIT_FOR_META;
             }
@@ -578,16 +612,21 @@ void pRXPathDDR(
             }            
         }
     break;
-
+*/
 case FSM_WR_PAT_CMD:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_CMD\n");
     if ( !soMemWrCmdP0.full() ) {
         //-- Post a memory write command to SHELL/Mem/Mp0
-        soMemWrCmdP0.write(DmCmd(ddr_addr_in * BPERMDW_512, CHECK_CHUNK_SIZE)); // Byte-addresable
-        patternWriteNum = 0;
+        if (*processed_bytes_rx == 0){
+            cur_transfers_per_chunk = TRANSFERS_PER_CHUNK_LAST_BURST;
+        }
+        else {
+            cur_transfers_per_chunk = TRANSFERS_PER_CHUNK;
+        }
+        if (patternWriteNum == 0) { // Write cmd only the fitst time of every burst
+            soMemWrCmdP0.write(DmCmd(ddr_addr_in * BPERMDW_512, cur_transfers_per_chunk*BPERMDW_512)); // Byte-addresable
+        }
         ddr_addr_in++;
-        cnt_rd_stream = 0;
-        tmp = 0;
         enqueueFSM = FSM_WR_PAT_LOAD;
     }
     break;
@@ -595,13 +634,17 @@ case FSM_WR_PAT_CMD:
 case FSM_WR_PAT_LOAD:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_LOAD\n");
     // -- Assemble a 512-bit memory word with input values from stream
-    if ( !img_in_axi_stream.empty() ) {
-        v = img_in_axi_stream.read();
-    }
-    tmp((cnt_rd_stream+1)*INPUT_PTR_WIDTH-1, cnt_rd_stream*INPUT_PTR_WIDTH ) = v;
-
-    if (cnt_rd_stream++ == BPERMDW_512-1) {
+    if (patternWriteNum++ == cur_transfers_per_chunk - 1) {
+        patternWriteNum = 0;
         enqueueFSM = FSM_WR_PAT_DATA;
+    }
+    else {
+        if(netWord.tlast == 1) {
+            enqueueFSM = WAIT_FOR_META;
+        }
+        else {
+            enqueueFSM = PROCESSING_PACKET;
+        }
     }
     break;
     
@@ -609,20 +652,23 @@ case FSM_WR_PAT_DATA:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_DATA\n");
     if (!soMemWriteP0.full()) {
         //-- Write a memory word to DRAM
-        memP0.tdata = tmp; // (ap_uint<512>) (currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern);
+        if (!img_in_axi_stream.empty()) {
+            memP0.tdata = img_in_axi_stream.read(); // (ap_uint<512>) (currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern);
+        }
         ap_uint<8> keepVal = 0xFF;
         memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
-        if(patternWriteNum == TRANSFERS_PER_CHUNK -1) {
-            printf("DEBUG: (patternWriteNum == TRANSFERS_PER_CHUNK -1) \n");
+        if (patternWriteNum++ == cur_transfers_per_chunk - 1) {
+            printf("DEBUG: (patternWriteNum == cur_transfers_per_chunk -1) \n");
             memP0.tlast = 1;
             cnt_wr_img_loaded = 0;
+            timeoutCnt = 0;
+            patternWriteNum = 0;
             enqueueFSM = FSM_WR_PAT_STS_A;
         }
         else {
             memP0.tlast = 0;
         }
         soMemWriteP0.write(memP0);
-        patternWriteNum++;
     }
     break;
 
@@ -692,7 +738,7 @@ case WAIT_FOR_TX:
 }
 
 }
-
+#endif // ENABLE_DDR
 
 
 /*****************************************************************************
@@ -1221,8 +1267,11 @@ void harris(
     exit(-1);
 #endif
     
-const unsigned int ddr_mem_depth = 1;//TOTMEMDW_512;
+const unsigned int ddr_mem_depth = TOTMEMDW_512;
 const unsigned int ddr_latency = DDR_LATENCY;
+
+
+// Max burst size is 1KB, thus with 512bit bus we get 16 burst transactions
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\

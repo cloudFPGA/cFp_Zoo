@@ -44,7 +44,7 @@ sys.path.append(trieres_lib)
 import _trieres_harris_numpi
 
 # size of image to be processed on fpga (the bitstream should be already fixed to this)
-height = width = 256
+height = width = 512
 total_size = height * width
 
 # import the necessary packages
@@ -96,6 +96,7 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
+<<<<<<< HEAD
     video_name = fn+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
     
@@ -103,6 +104,13 @@ def main():
                     ["10.12.200.131", "2719"],
                     ["10.12.200.75" , "2720"],
                     ["10.12.200.143", "2721"]])
+=======
+    video_name = str(fn)+"_out.avi"
+    video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
+    
+    fpgas = deque([ ["10.12.200.3"   , "2718"],
+                    ["10.12.200.165" , "2719"]])
+>>>>>>> 2c3af2bd8009356ab0d69d192e8dc081b1980acf
 
     
     def process_frame(frame, t0, accel_mode, fpga):
@@ -162,6 +170,8 @@ def main():
             t = clock()
             frame_interval.update(t - last_frame_time)
             last_frame_time = t
+            # update the FPS counter
+            fps.update()            
             if accel_mode:
                 fpga = fpgas.popleft()
             else:
@@ -182,8 +192,7 @@ def main():
             accel_mode = not accel_mode
         if ch == 27:
             break
-        # update the FPS counter
-        fps.update()
+
 
     print('Done')
  
