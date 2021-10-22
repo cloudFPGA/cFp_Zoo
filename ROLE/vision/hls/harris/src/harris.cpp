@@ -35,6 +35,13 @@ PacketFsmType  dequeueFSM  = WAIT_FOR_META;
 PacketFsmType  HarrisFSM   = WAIT_FOR_META;
 fsmStateDDRdef fsmStateDDR = FSM_IDLE; //FSM_WR_PAT_CMD;
 
+#ifdef ENABLE_DDR
+#if TRANSFERS_PER_CHUNK_DIVEND == 0
+#define TRANSFERS_PER_CHUNK_LAST_BURST TRANSFERS_PER_CHUNK
+#else
+#define TRANSFERS_PER_CHUNK_LAST_BURST TRANSFERS_PER_CHUNK_DIVEND
+#endif
+#endif
 
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
@@ -406,6 +413,7 @@ void storeWordToMem(
 }
 
 
+#ifdef ENABLE_DDR
 
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
@@ -484,8 +492,9 @@ void pRXPathDDR(
         
         printf("TOTMEMDW_512=%u\n", TOTMEMDW_512);
         printf("TRANSFERS_PER_CHUNK=%u\n", TRANSFERS_PER_CHUNK);
+        printf("TRANSFERS_PER_CHUNK_DIVEND=%u\n", TRANSFERS_PER_CHUNK_DIVEND);
         printf("TRANSFERS_PER_CHUNK_LAST_BURST=%u\n", TRANSFERS_PER_CHUNK_LAST_BURST);
-        exit(-1);
+        //exit(-1);
         
         if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
         {
@@ -608,16 +617,16 @@ case FSM_WR_PAT_CMD:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_CMD\n");
     if ( !soMemWrCmdP0.full() ) {
         //-- Post a memory write command to SHELL/Mem/Mp0
-        if (patternWriteNum == 0) { // Write cmd only the fitst time of every burst
-            soMemWrCmdP0.write(DmCmd(ddr_addr_in * BPERMDW_512, CHECK_CHUNK_SIZE)); // Byte-addresable
-        }
-        ddr_addr_in++;
         if (*processed_bytes_rx == 0){
             cur_transfers_per_chunk = TRANSFERS_PER_CHUNK_LAST_BURST;
         }
         else {
             cur_transfers_per_chunk = TRANSFERS_PER_CHUNK;
         }
+        if (patternWriteNum == 0) { // Write cmd only the fitst time of every burst
+            soMemWrCmdP0.write(DmCmd(ddr_addr_in * BPERMDW_512, cur_transfers_per_chunk*BPERMDW_512)); // Byte-addresable
+        }
+        ddr_addr_in++;
         enqueueFSM = FSM_WR_PAT_LOAD;
     }
     break;
@@ -648,8 +657,8 @@ case FSM_WR_PAT_DATA:
         }
         ap_uint<8> keepVal = 0xFF;
         memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
-        if (patternWriteNum++ == TRANSFERS_PER_CHUNK - 1) {
-            printf("DEBUG: (patternWriteNum == TRANSFERS_PER_CHUNK -1) \n");
+        if (patternWriteNum++ == cur_transfers_per_chunk - 1) {
+            printf("DEBUG: (patternWriteNum == cur_transfers_per_chunk -1) \n");
             memP0.tlast = 1;
             cnt_wr_img_loaded = 0;
             timeoutCnt = 0;
@@ -729,7 +738,7 @@ case WAIT_FOR_TX:
 }
 
 }
-
+#endif // ENABLE_DDR
 
 
 /*****************************************************************************

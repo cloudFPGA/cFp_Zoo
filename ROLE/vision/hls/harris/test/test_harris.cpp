@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   1
+#define TB_TRIALS   2
 
 // Enable delay in the response channel of DDR AXI controller
 #define ENABLE_DDR_EMULATE_DELAY_IN_TB
@@ -319,10 +319,10 @@ if (simCnt < 0)
                     printf ( "DEBUG tb: Read a memory write command from SHELL/Mem/Mp0 \n" );
                     //-- Read a memory write command from SHELL/Mem/Mp0
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
-                    assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
+                    //assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
                     assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
                     ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512; // Convert the byte-aligned address to local mem of stack tb.
-                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, ddr_write_req_iter);
+                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) an amount of %u bytes (%u memory lines), ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, (unsigned int)dmCmd_MemCmdP0.btt, (unsigned int)(1 + (dmCmd_MemCmdP0.btt - 1) / BPERMDW_512), ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                     //ddr_write_req_iter++;
                     //printf ( "DEBUG tb: (ddr_write_req_iter)%(MEMORY_LINES_512-1)=%u\n", (ddr_write_req_iter)%(MEMORY_LINES_512-1));
@@ -367,8 +367,9 @@ if (simCnt < 0)
                      * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI
                      * Datamover, being instantiated in VHDL.
                      * */
-                    printf ( "DEBUG tb: Writting to address 0x%x : %u\n", ddr_addr_in, memP0.tdata.to_long());
-                    lcl_mem0[ddr_addr_in++] = memP0.tdata;
+                    printf ( "DEBUG tb: Writting to address 0x%x : %u an amount of %u bytes\n", ddr_addr_in, memP0.tdata.to_long(), BPERMDW_512);
+                    //lcl_mem0[ddr_addr_in++] = memP0.tdata;
+                    memcpy(&lcl_mem0[ddr_addr_in++], &memP0.tdata, BPERMDW_512);
                     ddr_write_sts_req = true;
                 }
                 // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
