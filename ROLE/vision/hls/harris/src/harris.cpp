@@ -463,7 +463,7 @@ void pRXPathDDR(
     static unsigned int cnt_wr_stream, cnt_wr_img_loaded;
     //static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
     static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
-    #pragma HLS stream variable=img_in_axi_stream depth=65
+    #pragma HLS stream variable=img_in_axi_stream depth=10
     static unsigned int ddr_addr_in; 
   
     // FIXME: Initialize to zero
