@@ -96,21 +96,11 @@ def main():
     cap = video.create_capture(fn)
     fps = FPS().start()
 
-<<<<<<< HEAD
-    video_name = fn+"_out.avi"
-    video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
-    
-    fpgas = deque([ ["10.12.200.37" , "2718"],
-                    ["10.12.200.131", "2719"],
-                    ["10.12.200.75" , "2720"],
-                    ["10.12.200.143", "2721"]])
-=======
     video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
     
     fpgas = deque([ ["10.12.200.3"   , "2718"],
                     ["10.12.200.165" , "2719"]])
->>>>>>> 2c3af2bd8009356ab0d69d192e8dc081b1980acf
 
     
     def process_frame(frame, t0, accel_mode, fpga):
