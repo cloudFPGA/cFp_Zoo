@@ -34,7 +34,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 1
+#define TB_MULTI_RUNS_ITERATIONS 5
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -84,7 +84,7 @@ unsigned int         simCnt;
 #ifdef ENABLE_DDR;
 #define MEMORY_LINES_512 TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
-//membus_t   lcl_mem1[MEMORY_LINES_512];
+membus_t   lcl_mem1[MEMORY_LINES_512];
 #endif
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
@@ -103,7 +103,12 @@ void stepDut() {
       #endif
       );
     simCnt++;
-   // memcpy(lcl_mem1,lcl_mem0, sizeof(membus_t)*MEMORY_LINES_512);
+    // for(int i=0;i<MEMORY_LINES_512; i++){
+    //   if(lcl_mem1[i]!=lcl_mem0[i]){
+    //     printf("Difference at %d of %s and %s\n", i, lcl_mem1[i].to_string(), lcl_mem0[i].to_string());
+    //   }
+    // }
+   //memcpy(lcl_mem1,lcl_mem0, sizeof(membus_t)*MEMORY_LINES_512);
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
     #endif
@@ -288,7 +293,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #ifdef ENABLE_DDR
 for(int i=0; i < MEMORY_LINES_512; i++){
   lcl_mem0[i]=0;
- // lcl_mem1[i]=0;
+  lcl_mem1[i]=0;
 }
 #endif//ENABLE_DDR
   //------------------------------------------------------
