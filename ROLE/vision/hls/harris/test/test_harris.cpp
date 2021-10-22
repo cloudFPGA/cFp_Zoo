@@ -47,7 +47,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   2
+#define TB_TRIALS   1
 
 // Enable delay in the response channel of DDR AXI controller
 #define ENABLE_DDR_EMULATE_DELAY_IN_TB
@@ -308,7 +308,7 @@ int main(int argc, char** argv) {
                 stepDut();
 
                 if ( simCnt > 2 ) {
-                    assert ( s_udp_rx_ports == 0x1 );
+                    assert ( s_udp_rx_ports == PORTS_OPENED );
                 }
 
 if (simCnt < 0)
@@ -368,11 +368,11 @@ if (simCnt < 0)
                      * Datamover, being instantiated in VHDL.
                      * */
                     printf ( "DEBUG tb: Writting to address 0x%x : %u\n", ddr_addr_in, memP0.tdata.to_long());
-                    lcl_mem0[ddr_addr_in] = memP0.tdata;
+                    lcl_mem0[ddr_addr_in++] = memP0.tdata;
                     ddr_write_sts_req = true;
                 }
                 // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
-                if ((ddr_write_sts_req == true) && !sSHL_Rol_Mem_WrStsP0.full() ) {
+                if ((ddr_write_sts_req == true) && !sSHL_Rol_Mem_WrStsP0.full() && (memP0.tlast == true)) {
                     if (count_cycles_to_ack_ddr_status++ == wait_cycles_to_ack_ddr_status) {
                         dmSts_MemWrStsP0.tag = 7;
                         dmSts_MemWrStsP0.okay = 1;

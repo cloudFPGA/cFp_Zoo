@@ -79,6 +79,11 @@ enum EchoCtrl {
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
+// Starting with 2718, this number corresponds to the extra opened ports of this role. Every bit set
+// corresponds to one port.
+// e.g. 0x1->2718, 0x2->2719, 0x3->[2718,2719], 0x7->[2718,2719,2720], etc.
+#define PORTS_OPENED 0x3
+
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
@@ -101,9 +106,11 @@ typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
 
-#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
+#define CHECK_CHUNK_SIZE 0x80 // 0x40 -> 64, 0x1000 -> 4 KiB
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64
 #define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
+#define TOT_CHECK_CHUNK_SIZE_MEMDW_512 (1 + CHECK_CHUNK_SIZE / BPERMDW_512)
+#define TRANSFERS_PER_CHUNK_LAST_BURST TRANSFERS_PER_CHUNK - (TOT_CHECK_CHUNK_SIZE_MEMDW_512/TOTMEMDW_512)
 
 //typedef enum fsmStateDDRenum {
 //    FSM_WR_PAT_CMD	= 0,
