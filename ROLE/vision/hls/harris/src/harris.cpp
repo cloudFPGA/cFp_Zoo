@@ -463,7 +463,8 @@ void pRXPathDDR(
     static unsigned int cnt_wr_stream, cnt_wr_img_loaded;
     //static stream<Data_t_in> img_in_axi_stream ("img_in_axi_stream");
     static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
-    #pragma HLS stream variable=img_in_axi_stream depth=10
+    const unsigned int img_in_axi_stream_depth = TRANSFERS_PER_CHUNK; // the AXI burst size
+    #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
     static unsigned int ddr_addr_in; 
   
     // FIXME: Initialize to zero
@@ -653,7 +654,7 @@ case FSM_WR_PAT_DATA:
     if (!soMemWriteP0.full()) {
         //-- Write a memory word to DRAM
         if (!img_in_axi_stream.empty()) {
-            memP0.tdata = img_in_axi_stream.read(); // (ap_uint<512>) (currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern,currentMemPattern);
+            memP0.tdata = img_in_axi_stream.read();
         }
         ap_uint<8> keepVal = 0xFF;
         memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
@@ -864,9 +865,8 @@ void pProcPath(
     ap_uint<OUTPUT_PTR_WIDTH> raw64;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
-    //static stream<Data_t_out> img_out_axi_stream ("img_out_axi_stream");
-    static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
-    #pragma HLS stream variable=img_out_axi_stream depth=9
+    //static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
+    //#pragma HLS stream variable=img_out_axi_stream depth=9
     static unsigned int ddr_addr_out;
     #pragma HLS reset variable=ddr_addr_out
     #endif
@@ -933,39 +933,26 @@ void pProcPath(
 	
         printf("DEBUG in pProcPath: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	       KWPERMDW_512, BPERMDW_512);
-        if ( img_out_axi_stream.empty() ) {
             tmp = lcl_mem1[ddr_addr_out];
             ddr_addr_out++;
             HarrisFSM = HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT;
             timeoutCntAbs = 0;
-        }
       }
     break;
     
     case HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT [%u out of %u]\n", timeoutCntAbs, DDR_LATENCY);        
         if (timeoutCntAbs++ == DDR_LATENCY) {
-            HarrisFSM = HARRIS_RETURN_RESULTS_UNPACK;
+            HarrisFSM = HARRIS_RETURN_RESULTS_FWD; //HARRIS_RETURN_RESULTS_UNPACK;
             cnt_i = 0;
         }
     break;
-    
+    /*
     case HARRIS_RETURN_RESULTS_UNPACK:
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_UNPACK, cnt_i=%u\n", cnt_i);        
-        temp.keep = 0;
-        temp.last = 0;
-        //for (unsigned int i=0; i<(MEMDW_512/OUTPUT_PTR_WIDTH); i++) {
+        //for (unsigned int cnt_i=0; cnt_i<(MEMDW_512/OUTPUT_PTR_WIDTH); cnt_i++) {
             #if OUTPUT_PTR_WIDTH == 64
-            //raw64 = tmp(i*OUTPUT_PTR_WIDTH, (i+1)*OUTPUT_PTR_WIDTH-1);
-            raw64(56,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH+56, cnt_i*OUTPUT_PTR_WIDTH+63);
-            raw64(48,55) = tmp(cnt_i*OUTPUT_PTR_WIDTH+48, cnt_i*OUTPUT_PTR_WIDTH+55);
-            raw64(40,47) = tmp(cnt_i*OUTPUT_PTR_WIDTH+40, cnt_i*OUTPUT_PTR_WIDTH+47);
-            raw64(32,39) = tmp(cnt_i*OUTPUT_PTR_WIDTH+32, cnt_i*OUTPUT_PTR_WIDTH+39);
-            raw64(24,31) = tmp(cnt_i*OUTPUT_PTR_WIDTH+24, cnt_i*OUTPUT_PTR_WIDTH+31);
-            raw64(16,23) = tmp(cnt_i*OUTPUT_PTR_WIDTH+16, cnt_i*OUTPUT_PTR_WIDTH+23);
-            raw64(8 ,15) = tmp(cnt_i*OUTPUT_PTR_WIDTH+8 , cnt_i*OUTPUT_PTR_WIDTH+15);
-            raw64(0 ,7 ) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+7);
-            temp.data = raw64; 
+            raw64(0 ,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+63);
             #endif
             if ( !img_out_axi_stream.full() ) {
                 img_out_axi_stream.write(raw64);
@@ -975,17 +962,18 @@ void pProcPath(
             }
             cnt_i++;
         //}
-      //}
     break;
-    
+    */
     case HARRIS_RETURN_RESULTS_FWD: 
       printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
-      if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() ) {
-        temp.data = img_out_axi_stream.read();
+      //if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() ) {
+      if ( (cnt_i <= (MEMDW_512/OUTPUT_PTR_WIDTH) - 1) && !sRxpToTxp_Data.full() ) {
+          
+        //temp.data = img_out_axi_stream.read();
+        temp.data(0 ,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+63);
         if (processed_word_proc++ == MIN_TX_LOOPS-1) {
             temp.last = 1;
             HarrisFSM = WAIT_FOR_META;
-            //accel_called = false;
         }
         else {
             temp.last = 0;
@@ -994,6 +982,7 @@ void pProcPath(
         temp.keep = 255;
         newWord = NetworkWord(temp.data, temp.keep, temp.last); 
         sRxpToTxp_Data.write(newWord);
+        cnt_i++;
       }
       else {
         HarrisFSM = HARRIS_RETURN_RESULTS;
@@ -1273,14 +1262,16 @@ const unsigned int ddr_latency = DDR_LATENCY;
 
 // Max burst size is 1KB, thus with 512bit bus we get 16 burst transactions
 
+const unsigned int max_axi_rw_burst_length = TRANSFERS_PER_CHUNK + 1; // the AXI burst size. TODO: check if it has to be power of 2
+
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
-  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  max_read_burst_length=max_axi_rw_burst_length  max_write_burst_length=max_axi_rw_burst_length offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
 
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
-  max_read_burst_length=256  max_write_burst_length=256 offset=direct \
+  max_read_burst_length=max_axi_rw_burst_length  max_write_burst_length=max_axi_rw_burst_length offset=direct \
   num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
 
 #endif

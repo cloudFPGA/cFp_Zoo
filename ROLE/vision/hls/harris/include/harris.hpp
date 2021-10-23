@@ -105,7 +105,7 @@ typedef uint8_t  mat_elmt_t;    // change to float or double depending on your n
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
-#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
+#define CHECK_CHUNK_SIZE 0x100 // 0x40 -> 64, 0x1000 -> 4 KiB
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64
 #define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
 #define TRANSFERS_PER_CHUNK_DIVEND (TOTMEMDW_512-(TOTMEMDW_512/TRANSFERS_PER_CHUNK)*TRANSFERS_PER_CHUNK)
@@ -123,7 +123,9 @@ typedef membus_512_t membus_t;
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100
 #define TYPICAL_DDR_LATENCY 4
-#define DDR_LATENCY 52 // The latency cycles of cF DDR
+// The latency cycles of cF DDR. We've measured 52, but experimentally we take it if we divide by 
+// 4.769230769, taking into account the II=2 and the latency of the FSM
+#define DDR_LATENCY (52/4)
 #define EXTRA_DDR_LATENCY_DUE_II (64 + 8) // 8 is the write from input stream to local stream, 64 is read from local stream to DDR
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
