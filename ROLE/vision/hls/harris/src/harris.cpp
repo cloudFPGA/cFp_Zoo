@@ -193,8 +193,6 @@ void pRXPathDDR(
     //---- P1 Memory mapped ---------------
     membus_t                            *lcl_mem0,
     NetworkMetaStream                   meta_tmp,
-    unsigned int                        *processed_word_rx,
-    unsigned int                        *processed_word_tx,
     unsigned int                        *processed_bytes_rx,
     stream<bool>                        &sImageLoaded
     )
@@ -241,8 +239,8 @@ void pRXPathDDR(
     switch(enqueueFSM)
     {
     case WAIT_FOR_META:
-        printf("DEBUG in pRXPathDDR: enqueueFSM - WAIT_FOR_META, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-               *processed_word_rx, *processed_bytes_rx);
+        printf("DEBUG in pRXPathDDR: enqueueFSM - WAIT_FOR_META, *processed_bytes_rx=%u\n",
+               *processed_bytes_rx);
         
         printf("TOTMEMDW_512=%u\n", TOTMEMDW_512);
         printf("TRANSFERS_PER_CHUNK=%u\n", TRANSFERS_PER_CHUNK);
@@ -274,8 +272,8 @@ void pRXPathDDR(
         break;
 
     case PROCESSING_PACKET:
-        printf("DEBUG in pRXPathDDR: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-               *processed_word_rx, *processed_bytes_rx);
+        printf("DEBUG in pRXPathDDR: enqueueFSM - PROCESSING_PACKET, *processed_bytes_rx=%u\n",
+               *processed_bytes_rx);
         if ( !siSHL_This_Data.empty() )
         {
             //-- Read incoming data chunk
@@ -474,16 +472,6 @@ case FSM_WR_PAT_STS_C:
             enqueueFSM = PROCESSING_PACKET;
         }
     break;
-/*
-case WAIT_FOR_TX:
-    printf("DEBUG in pRXPathDDR: enqueueFSM - WAIT_FOR_TX, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
-           *processed_word_rx, *processed_bytes_rx);
-    //printf("DEBUG: MIN_TX_LOOPS-1=%u", MIN_TX_LOOPS-1); exit(0);
-    if (*processed_word_tx == MIN_TX_LOOPS) {
-        enqueueFSM = WAIT_FOR_META;
-    }
-    break;
- */
 }
 
 }
@@ -581,16 +569,12 @@ void pProcPath(
         Stream<Data_t_in, MIN_RX_LOOPS>         &img_in_axi_stream,
         Stream<Data_t_out, MIN_TX_LOOPS>        &img_out_axi_stream,
         #else // !USE_HLSLIB_STREAM
-        //stream<Data_t_in>                       &img_in_axi_stream,
         stream<ap_uint<INPUT_PTR_WIDTH>>        &img_in_axi_stream,
-        //stream<Data_t_out>                      &img_out_axi_stream,
         stream<ap_uint<OUTPUT_PTR_WIDTH>>       &img_out_axi_stream,
         #endif // USE_HLSLIB_STREAM
         #endif // ENABLE_DDR	       
         
         
-        unsigned int                            *processed_word_rx,
-        unsigned int                            *processed_bytes_rx, 
         stream<bool>                            &sImageLoaded
         )
 {
@@ -633,8 +617,6 @@ void pProcPath(
         {
             if (sImageLoaded.read() == true) {
                 HarrisFSM = PROCESSING_PACKET;
-                //	*processed_word_rx = 0;
-                //	*processed_bytes_rx = 0;
                 accel_called = false;
                 processed_word_proc = 0;
                 #ifdef ENABLE_DDR
@@ -1116,8 +1098,6 @@ const unsigned int max_axi_rw_burst_length = 16;
                 img_in_axi_stream,
                 img_out_axi_stream,
 #endif
-                &processed_word_rx,
-                &processed_bytes_rx,
                 &image_loaded
                 ); 
 
@@ -1154,8 +1134,6 @@ const unsigned int max_axi_rw_burst_length = 16;
         // ---- P1 Memory mapped --------------
         lcl_mem0,
         meta_tmp,
-        &processed_word_rx,
-        &processed_word_tx,
         &processed_bytes_rx,
         sImageLoaded  
         );
@@ -1184,8 +1162,6 @@ const unsigned int max_axi_rw_burst_length = 16;
         img_in_axi_stream,
         img_out_axi_stream,
 #endif
-        &processed_word_rx,
-        &processed_bytes_rx,
         sImageLoaded
         );
 
