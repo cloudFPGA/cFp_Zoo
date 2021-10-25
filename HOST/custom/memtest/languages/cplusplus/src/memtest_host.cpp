@@ -271,8 +271,8 @@ int main(int argc, char *argv[])
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
 			cout << " and the first faulty address (if any) was " << it->first_fault_address << endl;
 			unsigned int written_words = it->target_address %mem_word_byte_size == 0 ? it->target_address/mem_word_byte_size  : it->target_address/mem_word_byte_size + 1;
-			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
-			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 156.25 ) ) ) / 1000.0; // Gbit/T
+			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 156.25 ) ) ) / 1000.0;
 			cout << " RD BW " << rd_bndwdth  << "[GBit/s] "  << endl;
       		cout << " WR BW " << wr_bndwdth << "[GBit/s] "  << endl;
 			cout << endl << endl;
