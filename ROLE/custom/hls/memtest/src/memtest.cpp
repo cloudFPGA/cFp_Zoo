@@ -35,7 +35,7 @@ using hls::stream;
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
 PacketFsmType enqueueFSM = WAIT_FOR_META;
-PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
+PacketFsmType dequeueFSM = WAIT_FOR_META;
 
 typedef char word_t[8];
 

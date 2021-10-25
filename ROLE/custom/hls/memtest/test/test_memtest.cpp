@@ -185,9 +185,9 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5) + 2 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
+    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5 + 1) + 2 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
     size_t charInputSize = 8; //a single tdata is the current command dimension for this test
-    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
+    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
 
     unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);// only a single tx
     unsigned int tot_output_transfers =  charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1; // check if bigger output than mtu

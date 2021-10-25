@@ -67,38 +67,6 @@ void pMyMemtestMemCpy(Tin* in, Tout* out){
   }
   
 }
-
-template<typename T>
-void pPingPongBufferingSingleData(T* in, T* out, bool end_of_transmission){
-#pragma HLS INLINE
-
-  static bool first_fifo_writing = true;
-  static bool init = true;
-  static T ping_pong_buffer [2];
-#pragma HLS reset variable=first_fifo_writing
-#pragma HLS reset variable=init
-#pragma HLS reset variable=ping_pong_buffer
-
-//reset emulation
-  if(end_of_transmission){
-    init = true;
-    first_fifo_writing=true;
-  }
-
-//buffering
-  if(first_fifo_writing){
-    ping_pong_buffer[0]=*in;
-    if(!init){
-      *out = ping_pong_buffer[1];
-      init = false;
-    }
-    first_fifo_writing = false;
-  }else{
-    *out = ping_pong_buffer[0];
-    ping_pong_buffer[1]=*in;
-  }
-
-}
 const unsigned long int  max_counter_cc = 4000000;
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
@@ -325,15 +293,10 @@ void genXoredSequentialNumbersSecondVersion(ADDR_T curr, BIGWORD_T * outBigWord)
 }
 
 
-template<typename ADDR_T, const unsigned int sequenceDim, typename BIGWORD_T, typename SMALLWORD_T, unsigned int smallWordDim>
+template<typename ADDR_T, typename BIGWORD_T>
 void genSequentialNumbers(ADDR_T curr, BIGWORD_T * outBigWord){
 #pragma HLS INLINE 
-  SMALLWORD_T currentNumber = static_cast<SMALLWORD_T>(curr);
-  gen_sequence_loop: for (unsigned int i = 0; i < sequenceDim; i++)
-  {
-#pragma HLS UNROLL factor=sequenceDim
-    (*outBigWord).range(smallWordDim*(i+1)-1,smallWordDim*i)=i;
-  }
+  *outBigWord = curr+1;
 }
 
 
@@ -352,7 +315,7 @@ void pWRGenerateData2StreamWrite(
 
 
   generate_loop:
-  for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
+  for (curr_address_ut = 0, maddr_non_byte=0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
@@ -407,13 +370,13 @@ unsigned int burst_size)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-   //  #ifndef __SYNTHESIS__
-   // checking_loop: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
-   //        {
-   //          std::cout << tmp_out[i].range((i+1)*8-1,i*8) << " ";
-   //        }
-   //        std::cout << std::endl;
-   //  #endif
+    //#ifndef __SYNTHESIS__
+    //checking_loop: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
+    //       {
+    //        std::cout << tmp_out[i].range((i+1)*8-1,i*8) << " ";
+    //       }
+    //       std::cout << std::endl;
+    // #endif
    unsigned int idx = i;
     tmp_out[idx] = generatedData.read();
     //if stored enough data to begin the bursting OR this is last iteration
@@ -442,7 +405,7 @@ unsigned int burst_size)
     }else{
       i++;
     }
-    std::cout << std::endl;
+   // std::cout << std::endl;
    // memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
   }
     cmd.write(0);
@@ -463,21 +426,17 @@ unsigned int burst_size)
 #pragma HLS INLINE off
 
     local_mem_addr_t curr_address_ut;
-    local_mem_addr_t curr_reading_addr;
+    static local_mem_addr_t curr_reading_addr;
     static local_mem_word_t tmp_out[buff_dim];
-    static unsigned int end_distance=0;
-    static bool last_iteration = false;
 #pragma HLS array_partition variable=tmp_out block factor=2 dim=1
 
-    cmd.write(0);
-
+  cmd.write(0);
   int i, reading_i;
   read_data_from_main_mem:
   for (i = 0, curr_address_ut = 0, curr_reading_addr=0, reading_i=0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET, i++)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-
 
     memcpy(tmp_out+reading_i, lcl_mem+curr_address_ut, sizeof(local_mem_word_t));
     if(reading_i > curr_reading_addr+1){
@@ -492,16 +451,33 @@ unsigned int burst_size)
     }
 
   }
-    cmd.write(0);
+  cmd.write(0);
   reading_i=i%buff_dim;
-  while (i != curr_reading_addr)
+  sent_out_remaining_buff: 
+  for (int j = 0; j < buff_dim; j++)
   {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = buff_dim
-   // std::cout << "sent for evaluation " << curr_reading_addr <<std::endl;
-
-    readData.write(tmp_out[curr_reading_addr]);
-    curr_reading_addr++;
+#pragma HLS PIPELINE II=1
+    if(j==curr_reading_addr && i != curr_reading_addr){
+      //std::cout << " writing a memory word" << std::endl;
+      readData.write(tmp_out[curr_reading_addr]);
+      curr_reading_addr++;
+      tmp_out[j]=0;
+    }else{
+      tmp_out[j]=0;
+    }
   }
+  curr_reading_addr=0;
+
+//   while (i != curr_reading_addr)
+//   {
+// #pragma HLS PIPELINE II=1
+// #pragma HLS LOOP_TRIPCOUNT min = 1 max = buff_dim
+//    // std::cout << "sent for evaluation " << curr_reading_addr <<std::endl;
+
+//     readData.write(tmp_out[curr_reading_addr]);
+//     tmp_out[curr_reading_addr]=0;
+//     curr_reading_addr++;
+//   }
 
 }
 
@@ -516,7 +492,7 @@ void pRDReadDataStreamAndProduceGold(
     local_mem_addr_t curr_address_ut;
     local_mem_word_t testingVector;
     local_mem_word_t goldenVector;
-    local_mem_addr_non_byteaddressable_t local_mem_addr_non_byteaddressable=0;
+    static local_mem_addr_non_byteaddressable_t local_mem_addr_non_byteaddressable=0;
 
   generate_loop:
   for (curr_address_ut = 0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
@@ -532,6 +508,7 @@ void pRDReadDataStreamAndProduceGold(
     outGoldData.write(goldenVector);
     local_mem_addr_non_byteaddressable++;
   }
+  local_mem_addr_non_byteaddressable=0;
   
 }
 
@@ -571,14 +548,9 @@ void pRDCompareDataStreams(
 
     static local_mem_addr_t first_faulty_address_local=0;
     static local_mem_addr_t faulty_addresses_support_array [support_dim];
-
-   // static ap_uint<32> faulty_addresses_cntr_local=0;
     static bool first_fault_found  = false;
-    static ap_uint<LOCAL_MEM_ADDR_OFFSET> faults_founds[2];
-    ap_uint<LOCAL_MEM_ADDR_OFFSET> iteration_faults_founds;
 
     ap_uint<1> k;
-
       reading_loop:
   for (curr_address_ut = 0, k=0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET, k++)
   {
@@ -614,9 +586,95 @@ void pRDCompareDataStreams(
   }
 
   first_fault_found=false;
+  maddr_non_byte=0;
+  first_faulty_address_local=0;
 
 }
 
+
+template<const unsigned int max_iterations=4000000, const unsigned int unrolling_factor= LOCAL_MEM_ADDR_OFFSET, //inability of using define in pragmas solved in 2021.1
+ const unsigned int buff_dim=16>
+void pRDCompareDataStreamsCount(
+  local_mem_addr_t max_addr_ut,
+  hls::stream<local_mem_word_t>& sInReadData,
+  hls::stream<local_mem_word_t>& sInGoldData,
+  ap_uint<32> * faulty_addresses_cntr,
+  local_mem_addr_t * first_faulty_address)
+{
+//#pragma HLS INLINE off
+    const unsigned int dble_wrd_dim =  LOCAL_MEM_ADDR_OFFSET * 2;
+    const unsigned int support_dim  =  LOCAL_MEM_ADDR_OFFSET  * 2;
+
+
+    local_mem_addr_t curr_address_ut;
+    static local_mem_word_t testingVector[buff_dim];
+    static local_mem_word_t goldenVector[buff_dim];
+    local_mem_addr_non_byteaddressable_t maddr_non_byte=0;
+
+
+    static ap_uint<8> testingVector_bytes [support_dim];
+    static ap_uint<8> goldenVector_bytes [support_dim];
+    static bool cmp_ok [support_dim];
+    static ap_uint<32> faulty_addresses_cntr_support_array [support_dim];
+
+#pragma HLS array_partition variable=faulty_addresses_cntr_support_array cyclic factor=2 dim=1
+#pragma HLS array_partition variable=testingVector_bytes cyclic factor=2 dim=1
+#pragma HLS array_partition variable=goldenVector_bytes cyclic factor=2 dim=1
+#pragma HLS array_partition variable=cmp_ok cyclic factor=2 dim=1
+
+    static bool first_fault_found  = false;
+    static ap_uint<32> faulty_addresses_cntr_local;
+
+    ap_uint<1> k;
+      reading_loop:
+  for (curr_address_ut = 0, k=0, faulty_addresses_cntr_local=0; curr_address_ut < max_addr_ut; curr_address_ut+=LOCAL_MEM_ADDR_OFFSET, k++)
+  {
+#pragma HLS PIPELINE
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
+  testingVector[maddr_non_byte%buff_dim] = sInReadData.read(); 
+  goldenVector[maddr_non_byte%buff_dim] = sInGoldData.read(); 
+
+      //ap_uint<64> tmpOut = 0; 
+
+   //#pragma HLS dependence variable=faulty_addresses_cntr_support_array inter RAW false
+      golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
+   {
+//#pragma HLS UNROLL factor=unrolling_factor skip_exit_check
+        //int idx = (i + curr_address_ut )% support_dim;
+        int idx = (i + k*LOCAL_MEM_ADDR_OFFSET);
+        testingVector_bytes[idx]=testingVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
+        goldenVector_bytes[idx]=goldenVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
+        //std::cout << " tst=" << testingVector_bytes[idx] << " vs gld=" << goldenVector_bytes[idx] ;
+
+      cmp_ok[idx] = testingVector_bytes[idx] == goldenVector_bytes[idx];
+     // tmpOut[i] = !cmp_ok[idx];
+      if(!cmp_ok[idx] ){
+        faulty_addresses_cntr_support_array[i+k]++;
+        if (!first_fault_found)
+        {
+          *first_faulty_address=i+curr_address_ut;
+          first_fault_found = true;
+        }else{
+          first_fault_found = first_fault_found;
+        }
+      }
+   }
+   //std::cout << std::endl;
+   //sInCmpRes.write(tmpOut);
+    maddr_non_byte++;
+  }
+
+  for (int i = 0; i < support_dim; i++)
+  {
+#pragma HLS PIPELINE
+    faulty_addresses_cntr_local += faulty_addresses_cntr_support_array[i];
+    faulty_addresses_cntr_support_array[i]=0;
+  }
+  
+  first_fault_found=false;
+*faulty_addresses_cntr=faulty_addresses_cntr_local;
+
+}
 
 template<const unsigned int max_iterations=4000000, const unsigned int buff_dim=16,
 const unsigned int magic_reduction = 32>
@@ -669,12 +727,12 @@ void pWriteDataflowMemTest(
   ap_uint<64> * writing_cntr,
   ap_uint<32> * testCounter)
 {
-  //#pragma HLS INLINE
+  #pragma HLS INLINE off
      static hls::stream<ap_uint<64>> sWritePrfCntr_cmd("sWritePrfCntr_cmd"); 
      #pragma HLS STREAM variable=sWritePrfCntr_cmd depth=64 dim=1
      static hls::stream<local_mem_word_t> generatedWriteData("generatedWriteData"); 
      #pragma HLS STREAM variable=generatedWriteData depth=64 dim=1
-    #pragma HLS DATAFLOW disable_start_propagation
+    #pragma HLS DATAFLOW
           //Step 1: Generate the data
           pWRGenerateData2StreamWrite<4000000>(generatedWriteData,testCounter,max_address_under_test);
           //Step 2: write 
@@ -693,6 +751,8 @@ void pReadDataflowMemTest(
   ap_uint<32> * faulty_addresses_cntr,
   local_mem_addr_t * first_faulty_address)
   {
+  #pragma HLS INLINE off
+
  static hls::stream<ap_uint<64>> sReadPrfCntr_cmd("sReadPrfCntr_cmd"); 
  #pragma HLS STREAM variable=sReadPrfCntr_cmd depth=2 dim=1
  static hls::stream<local_mem_word_t> generatedReadData("generatedReadData"); 
@@ -715,10 +775,11 @@ void pReadDataflowMemTest(
       //Step 2.b: count 
       perfCounterProc2Mem<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr, 0, 256,  16);
       //Step 3: compare
-      pRDCompareDataStreams<4000000>(max_address_under_test,sReadData, sGoldData, sComparisonData, first_faulty_address);
+      pRDCompareDataStreamsCount<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
+      //pRDCompareDataStreams<4000000>(max_address_under_test,sReadData, sGoldData, sComparisonData, first_faulty_address, faulty_addresses_cntr);
       //Step 4.a: extract the first faulty address and consume the others
       //Step 4.b: extract the comparison numbers
-      pRDExtractComparisonResults<4000000>(max_address_under_test, sComparisonData, faulty_addresses_cntr);
+      //pRDExtractComparisonResults<4000000>(max_address_under_test, sComparisonData, faulty_addresses_cntr);
 }
 //////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
@@ -751,7 +812,7 @@ void pReadDataflowMemTest(
  *
  * @return Nothing.
  ******************************************************************************/
- template<typename Tevent=bool, const unsigned int counter_width=32>
+ template<typename Tevent=bool, const unsigned int counter_width=64>
  void pTHISProcessingData(
   stream<NetworkWord>                              &sRxpToProcp_Data,
   stream<NetworkWord>                              &sProcpToTxp_Data,
@@ -1177,8 +1238,25 @@ static size_t bytes_sent_for_tx =0;
         // sOCMDPerfCounter.write(0);
         // sIResPerfCounter.read();
       if(!sProcpToTxp_Data.full()){
-          outNetWord.tdata.range(64-1,64-32) = writing_cntr;
-          outNetWord.tdata.range(32-1,0) = reading_cntr;
+          // outNetWord.tdata.range(64-1,64-32) = writing_cntr;
+          // outNetWord.tdata.range(32-1,0) = reading_cntr;
+          outNetWord.tdata = writing_cntr;
+          outNetWord.tkeep = 0xFF;
+          outNetWord.tlast = 0;
+          sProcpToTxp_Data.write(outNetWord);
+          bytes_sent_for_tx += 8;
+          processingFSM = FSM_PROCESSING_OUTPUT_5;
+      }
+      break;
+      case FSM_PROCESSING_OUTPUT_5:
+    #if DEBUG_LEVEL == TRACE_ALL
+      printf("DEBUG processing the output of a run part 4\n");
+    #endif
+        // sOCMDPerfCounter.write(0);
+        // sOCMDPerfCounter.write(0);
+        // sIResPerfCounter.read();
+      if(!sProcpToTxp_Data.full()){
+          outNetWord.tdata= reading_cntr; 
           outNetWord.tkeep = 0xFF;
           outNetWord.tlast = 0;
           sProcpToTxp_Data.write(outNetWord);
@@ -1186,7 +1264,6 @@ static size_t bytes_sent_for_tx =0;
           processingFSM = FSM_PROCESSING_CONTINUOUS_RUN;
       }
       break;
-
 
       //Begin to process
       case FSM_PROCESSING_DATAFLOW_WRITE:
