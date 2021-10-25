@@ -20,7 +20,7 @@
 #include <cmath>
 
 using namespace std;
-#define MAX_TESTABLE_ADDRESS ((int)(512/8 * 20)) //byte addressable!!!
+#define MAX_TESTABLE_ADDRESS ((int)(512/8 * 125000000)) //byte addressable!!!
 #define MAX_TEST_REPETITION_BITWIDTH 16
 
 

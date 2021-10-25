@@ -274,11 +274,11 @@ int main(int argc, char *argv[])
 			cout << " Test number " << it - testResults_vector.begin() << " stress " << 	it->target_address << " addresses "  << endl;
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
 			cout << " and the first faulty address (if any) was " << it->first_fault_address << endl;
-			unsigned int written_words = it->target_address %mem_word_byte_size == 0 ? it->target_address/mem_word_byte_size  : it->target_address/mem_word_byte_size + 1;
+			unsigned int written_words = ((it->target_address) %mem_word_byte_size) == 0 ? ((it->target_address)/mem_word_byte_size)  : (((it->target_address)/mem_word_byte_size) + 1);
 			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 156.25 ) ) ) / 1000.0; // Gbit/T
 			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 156.25 ) ) ) / 1000.0;
 			cout << " RD BW " << rd_bndwdth  << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
-      		cout << " WR BW " << wr_bndwdth << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
+      		cout << " WR BW " << wr_bndwdth << "[GBit/s], with  " << it->clock_cycles_write << " ccs" <<  endl;
 			cout << endl << endl;
 			avg_rd_bndwdth += rd_bndwdth;
 			avg_wr_bndwdth += wr_bndwdth;
