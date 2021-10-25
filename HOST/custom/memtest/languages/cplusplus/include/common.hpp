@@ -416,30 +416,19 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
   {
     string tmp_outbuff;
     tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
-    if(is_stop_present && k==6){
+    if(is_stop_present && k==7){
       cout << "DEBUG the stop is present and is here" << endl;
-    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==5){ //check it is either the last or one before the last
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==6){ //check it is either the last or one before the last
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
     #endif
-    } else  if(k==4){ //clock cycless
-      char mySecondTmpOutBuff[bytes_per_line/2];
-      string additional_string;
-      //init the buffer
-      for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
-      additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
-
-      tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
+    }else if(k==5){
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
-
-
-      strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
-      clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
-    #if DEBUG_LEVEL == TRACE_ALL
+      #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
       cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
     #endif
@@ -462,6 +451,21 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << " RD BW " << rd_bndwdth  << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_read << " "  << endl;
       cout << " WR BW " << wr_bndwdth << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_write << " "  << endl;
     #endif
+    } else  if(k==4){ //clock cycless
+      //char mySecondTmpOutBuff[bytes_per_line/2];
+      //string additional_string;
+      //init the buffer
+      //for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
+      // additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
+      //
+      // tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
+      // strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
+      // clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      //
+      // strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
+      // clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      clock_cycles_write = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
     }else if(k==3){ // first fault address
       //substr extraction and parsing
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
