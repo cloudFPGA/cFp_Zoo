@@ -119,7 +119,7 @@ int main(int argc, char *argv[])
 	{
 	
 		unsigned int test_pack = 1;
-		size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1 + 1)) * testingNumber);
+		size_t charOutputSizeRoughBytes=8*1+((8 * (2 + 1 + 1 + 1)) * testingNumber);
 		test_pack = charOutputSizeRoughBytes%PACK_SIZE==0 ? charOutputSizeRoughBytes/PACK_SIZE : charOutputSizeRoughBytes/PACK_SIZE + 1;
 		size_t charOutputSize = PACK_SIZE*(test_pack); 
 		string initial_input_string(input_string);
@@ -266,6 +266,10 @@ int main(int argc, char *argv[])
   		unsigned int mem_word_byte_size = mem_word_size/8;
 		double rd_bndwdth=0.0;
 		double wr_bndwdth=0.0;
+		double avg_rd_bndwdth=0.0;
+		double avg_wr_bndwdth=0.0;
+		int avg_fault_cnt = 0;
+		int iterations=0;
 		for(auto it = std::begin(testResults_vector); it != std::end(testResults_vector); ++it) {
 			cout << " Test number " << it - testResults_vector.begin() << " stress " << 	it->target_address << " addresses "  << endl;
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
@@ -273,10 +277,19 @@ int main(int argc, char *argv[])
 			unsigned int written_words = it->target_address %mem_word_byte_size == 0 ? it->target_address/mem_word_byte_size  : it->target_address/mem_word_byte_size + 1;
 			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 156.25 ) ) ) / 1000.0; // Gbit/T
 			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 156.25 ) ) ) / 1000.0;
-			cout << " RD BW " << rd_bndwdth  << "[GBit/s] "  << endl;
-      		cout << " WR BW " << wr_bndwdth << "[GBit/s] "  << endl;
+			cout << " RD BW " << rd_bndwdth  << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
+      		cout << " WR BW " << wr_bndwdth << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
 			cout << endl << endl;
+			avg_rd_bndwdth += rd_bndwdth;
+			avg_wr_bndwdth += wr_bndwdth;
+			avg_fault_cnt += it->fault_cntr;
+			iterations++;
 		}
+		avg_rd_bndwdth = avg_rd_bndwdth / iterations;
+		avg_wr_bndwdth = avg_wr_bndwdth / iterations;
+		avg_fault_cnt = avg_fault_cnt / iterations;
+		cout << "Based on " << iterations << " iterations, AVG WR " << avg_wr_bndwdth << " AVG RD " << avg_rd_bndwdth << " AVG faults " << avg_fault_cnt << endl;
+		
 		//clear dynamic memory
 		delete [] longbuf;
 		delete [] output_string;

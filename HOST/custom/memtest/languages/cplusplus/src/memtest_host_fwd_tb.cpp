@@ -252,7 +252,7 @@ while(!endOfLooping){
     //-- TB output parsing
     //------------------------------------------------------
 	ssize_t size = __file_size(ouf_file.c_str());
-	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1)) * testingNumber); //stop, 4 for each test, potential stop?
+	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1 + 1)) * testingNumber); //stop, 4 for each test, potential stop?
 
 	int rawdatalines=0;
   	int rc = 0;
