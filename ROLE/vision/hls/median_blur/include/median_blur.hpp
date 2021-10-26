@@ -1,6 +1,6 @@
 /*****************************************************************************
- * @file       harris.hpp
- * @brief      The Role for a Harris Example application (UDP or TCP)
+ * @file       median_blur.hpp
+ * @brief      The Role for a MedianBlur Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
  *----------------------------------------------------------------------------
@@ -13,14 +13,14 @@
  * 
  *----------------------------------------------------------------------------
  * 
- * @ingroup HarrisHLS
- * @addtogroup HarrisHLS
+ * @ingroup MedianBlurHLS
+ * @addtogroup MedianBlurHLS
  * \{
  *****************************************************************************/
 
 
-#ifndef _ROLE_HARRIS_H_
-#define _ROLE_HARRIS_H_
+#ifndef _ROLE_MEDIANBLUR_H_
+#define _ROLE_MEDIANBLUR_H_
 
 #include <stdio.h>
 #include <iostream>
@@ -30,8 +30,8 @@
 #include <hls_stream.h>
 #include "ap_int.h"
 #include <stdint.h>
+
 #include "network.hpp"
-#include "memory_utils.hpp"
 
 using namespace hls;
 
@@ -47,18 +47,16 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
-
-#define ROLE_IS_HARRIS
-
+#define ROLE_IS_MEDIANBLUR
 
 #define WAIT_FOR_META             0
 #define WAIT_FOR_STREAM_PAIR      1
 #define PROCESSING_PACKET         2
 #define LOAD_IN_STREAM            3
-#define HARRIS_RETURN_RESULTS     4
-#define HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT 5
-#define HARRIS_RETURN_RESULTS_UNPACK 6
-#define HARRIS_RETURN_RESULTS_FWD 7
+#define MEDIANBLUR_RETURN_RESULTS     4
+#define MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT 5
+#define MEDIANBLUR_RETURN_RESULTS_UNPACK 6
+#define MEDIANBLUR_RETURN_RESULTS_FWD 7
 #define WAIT_FOR_TX               8
 #define FSM_IDLE                    9
 #define FSM_CHK_SKIP                10
@@ -102,7 +100,7 @@ typedef uint8_t  mat_elmt_t;    // change to float or double depending on your n
 /* 52-bit host AXI data width*/
 #define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
 #define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
-#define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
+#define KWPERMDW_512 (BPERMDW_512/sizeof(TYPE)) // Number of MedianBlur kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
@@ -146,8 +144,34 @@ struct Axis {
   Axis(ap_uint<D> single_data) : tdata((ap_uint<D>)single_data), tkeep(1), tlast(1) {}
 };
 
+// AXI DataMover - Format of the command word (c.f PG022)
+struct DmCmd
+{
+  ap_uint<23>   btt;
+  ap_uint<1>    type;
+  ap_uint<6>    dsa;
+  ap_uint<1>    eof;
+  ap_uint<1>    drr;
+  ap_uint<40>   saddr;
+  ap_uint<4>    tag;
+  ap_uint<4>    rsvd;
+  DmCmd() {}
+  DmCmd(ap_uint<40> addr, ap_uint<16> len) :
+    btt(len), type(1), dsa(0), eof(1), drr(0), saddr(addr), tag(0x7), rsvd(0) {}
+};
 
-void harris(
+// AXI DataMover - Format of the status word (c.f PG022)
+struct DmSts
+{
+  ap_uint<4>    tag;
+  ap_uint<1>    interr;
+  ap_uint<1>    decerr;
+  ap_uint<1>    slverr;
+  ap_uint<1>    okay;
+  DmSts() {}
+};
+
+void median_blur(
 
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,

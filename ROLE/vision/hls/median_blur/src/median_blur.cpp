@@ -1,6 +1,6 @@
 /*****************************************************************************
- * @file       harris.cpp
- * @brief      The Role for a Harris Example application (UDP or TCP)
+ * @file       median_blur.cpp
+ * @brief      The Role for a MedianBlur Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
  * @date       May 2020
  *----------------------------------------------------------------------------
@@ -12,13 +12,13 @@
  * 
  *----------------------------------------------------------------------------
  * 
- * @ingroup HarrisHLS
- * @addtogroup HarrisHLS
+ * @ingroup MedianBlurHLS
+ * @addtogroup MedianBlurHLS
  * \{
  *****************************************************************************/
  
-#include "../include/harris.hpp"
-#include "../include/xf_harris_config.h"
+#include "../include/median_blur.hpp"
+#include "../include/xf_median_blur_config.h"
 
 #ifdef USE_HLSLIB_DATAFLOW
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
@@ -32,7 +32,7 @@ using hls::stream;
 
 PacketFsmType  enqueueFSM  = WAIT_FOR_META;
 PacketFsmType  dequeueFSM  = WAIT_FOR_META;
-PacketFsmType  HarrisFSM   = WAIT_FOR_META;
+PacketFsmType  MedianBlurFSM   = WAIT_FOR_META;
 fsmStateDDRdef fsmStateDDR = FSM_IDLE; //FSM_WR_PAT_CMD;
 
 #ifdef ENABLE_DDR
@@ -608,14 +608,14 @@ void pProcPath(
     #pragma HLS reset variable=raw64  
     #pragma HLS reset variable=temp  
     
-  switch(HarrisFSM)
+  switch(MedianBlurFSM)
   {
     case WAIT_FOR_META: 
       printf("DEBUG in pProcPath: WAIT_FOR_META\n");
       if (!sImageLoaded.empty())
         {
             if (sImageLoaded.read() == true) {
-                HarrisFSM = PROCESSING_PACKET;
+                MedianBlurFSM = PROCESSING_PACKET;
                 accel_called = false;
                 processed_word_proc = 0;
                 #ifdef ENABLE_DDR
@@ -635,16 +635,16 @@ void pProcPath(
         #endif
         if (accel_called == false) {
 	    #ifdef ENABLE_DDR 
-            cornerHarrisAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT, Thresh, k);
+            medianBlurAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT);
 	    #else // ! ENABLE_DDR
-	    #ifdef FAKE_Harris
-            fakeCornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
-	    #else // !FAKE_Harris
-            cornerHarrisAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT, Thresh, k);
-	    #endif // FAKE_Harris
+	    #ifdef FAKE_MedianBlur
+            fakeMedianBlurAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
+	    #else // !FAKE_MedianBlur
+            medianBlurAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT);
+	    #endif // FAKE_MedianBlur
 	    #endif // ENABLE_DDR
             accel_called = true;
-            HarrisFSM = HARRIS_RETURN_RESULTS;
+            MedianBlurFSM = MEDIANBLUR_RETURN_RESULTS;
         }
         #ifndef ENABLE_DDR
         }
@@ -652,29 +652,29 @@ void pProcPath(
     break;
       
     #ifdef ENABLE_DDR 
-    case HARRIS_RETURN_RESULTS:
-      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS, ddr_addr_out=%u\n", ddr_addr_out);      
+    case MEDIANBLUR_RETURN_RESULTS:
+      printf("DEBUG in pProcPath: MEDIANBLUR_RETURN_RESULTS, ddr_addr_out=%u\n", ddr_addr_out);      
       if (accel_called == true) {
 	
         printf("DEBUG in pProcPath: Accumulated %u net words (%u B) to complete a single DDR word\n", 
 	       KWPERMDW_512, BPERMDW_512);
             tmp = lcl_mem1[ddr_addr_out];
             ddr_addr_out++;
-            HarrisFSM = HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT;
+            MedianBlurFSM = MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT;
             timeoutCntAbs = 0;
       }
     break;
     
-    case HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT:
-      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_ABSORB_DDR_LAT [%u out of %u]\n", timeoutCntAbs, DDR_LATENCY);        
+    case MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT:
+      printf("DEBUG in pProcPath: MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT [%u out of %u]\n", timeoutCntAbs, DDR_LATENCY);        
         if (timeoutCntAbs++ == DDR_LATENCY) {
-            HarrisFSM = HARRIS_RETURN_RESULTS_FWD; //HARRIS_RETURN_RESULTS_UNPACK;
+            MedianBlurFSM = MEDIANBLUR_RETURN_RESULTS_FWD; //MEDIANBLUR_RETURN_RESULTS_UNPACK;
             cnt_i = 0;
         }
     break;
     /*
-    case HARRIS_RETURN_RESULTS_UNPACK:
-      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_UNPACK, cnt_i=%u\n", cnt_i);        
+    case MEDIANBLUR_RETURN_RESULTS_UNPACK:
+      printf("DEBUG in pProcPath: MEDIANBLUR_RETURN_RESULTS_UNPACK, cnt_i=%u\n", cnt_i);        
         //for (unsigned int cnt_i=0; cnt_i<(MEMDW_512/OUTPUT_PTR_WIDTH); cnt_i++) {
             #if OUTPUT_PTR_WIDTH == 64
             raw64(0 ,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+63);
@@ -683,14 +683,14 @@ void pProcPath(
                 img_out_axi_stream.write(raw64);
             }
             if (cnt_i == (MEMDW_512/OUTPUT_PTR_WIDTH) - 1) {
-                HarrisFSM = HARRIS_RETURN_RESULTS_FWD;
+                MedianBlurFSM = MEDIANBLUR_RETURN_RESULTS_FWD;
             }
             cnt_i++;
         //}
     break;
     */
-    case HARRIS_RETURN_RESULTS_FWD: 
-      printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS_FWD\n");
+    case MEDIANBLUR_RETURN_RESULTS_FWD: 
+      printf("DEBUG in pProcPath: MEDIANBLUR_RETURN_RESULTS_FWD\n");
       //if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() ) {
       if ( (cnt_i <= (MEMDW_512/OUTPUT_PTR_WIDTH) - 1) && !sRxpToTxp_Data.full() ) {
           
@@ -698,7 +698,7 @@ void pProcPath(
         temp.data(0 ,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+63);
         if (processed_word_proc++ == MIN_TX_LOOPS-1) {
             temp.last = 1;
-            HarrisFSM = WAIT_FOR_META;
+            MedianBlurFSM = WAIT_FOR_META;
         }
         else {
             temp.last = 0;
@@ -710,14 +710,14 @@ void pProcPath(
         cnt_i++;
       }
       else {
-        HarrisFSM = HARRIS_RETURN_RESULTS;
+        MedianBlurFSM = MEDIANBLUR_RETURN_RESULTS;
       }
     
     break;
 
     #else // ! ENABLE_DDR
-    case HARRIS_RETURN_RESULTS:
-        printf("DEBUG in pProcPath: HARRIS_RETURN_RESULTS\n");
+    case MEDIANBLUR_RETURN_RESULTS:
+        printf("DEBUG in pProcPath: MEDIANBLUR_RETURN_RESULTS\n");
         if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() )
         {
 	
@@ -726,7 +726,7 @@ void pProcPath(
             //if (processed_word_proc++ == MIN_TX_LOOPS-1)
             {
                 temp.last = 1;
-                HarrisFSM = WAIT_FOR_META;
+                MedianBlurFSM = WAIT_FOR_META;
                 accel_called = false;
             }
             else
@@ -793,7 +793,7 @@ void pTXPath(
       {
         dst_rank = sDstNode_sig.read();
         dequeueFSM = WAIT_FOR_STREAM_PAIR;
-        //Harris app needs to be reset to process new rank
+        //MedianBlur app needs to be reset to process new rank
       }
       break;      
       
@@ -890,12 +890,12 @@ void pTXPath(
 
 
 /*****************************************************************************
- * @brief   Main process of the Harris Application 
+ * @brief   Main process of the MedianBlur Application 
  * directives.
  * @deprecated  This functions is using deprecated AXI stream interface 
  * @return Nothing.
  *****************************************************************************/
-void harris(
+void median_blur(
 
     ap_uint<32>                 *pi_rank,
     ap_uint<32>                 *pi_size,
@@ -1034,7 +1034,7 @@ const unsigned int max_axi_rw_burst_length = 16;
 #pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
-#pragma HLS reset variable=HarrisFSM
+#pragma HLS reset variable=MedianBlurFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=processed_bytes_rx
@@ -1058,10 +1058,10 @@ const unsigned int max_axi_rw_burst_length = 16;
 
 
 #ifdef USE_HLSLIB_DATAFLOW
-  /*! @copybrief harris()
-   *  Harris is enabled with hlslib support
+  /*! @copybrief median_blur()
+   *  MedianBlur is enabled with hlslib support
    */
-  /*! @copydoc harris()
+  /*! @copydoc median_blur()
    * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
    * and full) during simulation. It can also be both synthesized and used in co-simulation.
    * Practically we use hlslib when we want to run simulation as close as possible to the HW, by 
@@ -1069,7 +1069,7 @@ const unsigned int max_axi_rw_burst_length = 16;
    * HLSLIB_DATAFLOW_FINALIZE() acts as a barrier for the threads spawned to serve every function 
    * called in HLSLIB_DATAFLOW_FUNCTION(func, args...).
    */
-   /*! @copydetails harris()
+   /*! @copydetails median_blur()
    * hlslib is a collection of C++ headers, CMake files, and examples, aimed at improving the 
    * quality of life of HLS developers. More info at: https://github.com/definelicht/hlslib
    */

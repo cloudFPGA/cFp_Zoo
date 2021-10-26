@@ -1,6 +1,6 @@
 /*****************************************************************************
- * @file       : test_harris.cpp
- * @brief      : Testbench for Harris.
+ * @file       : test_median_blur.cpp
+ * @brief      : Testbench for MedianBlur.
  *
  * System:     : cloudFPGA
  * Component   : Role
@@ -12,12 +12,12 @@
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
  *
- * @ingroup HarrisTB
- * @addtogroup HarrisTB
+ * @ingroup MedianBlurTB
+ * @addtogroup MedianBlurTB
  * \{
  *****************************************************************************/
 
-#include "../include/harris.hpp"
+#include "../include/median_blur.hpp"
 #include "../../common/src/common.cpp"
 
 using namespace std;
@@ -68,7 +68,7 @@ ap_uint<1>                  piSHL_This_MmioCaptPktEn;
 //-- SHELL / Uaf / Udp Interfaces
 stream<UdpWord>             sSHL_Uaf_Data ("sSHL_Uaf_Data");
 stream<UdpWord>             sUAF_Shl_Data ("sUAF_Shl_Data");
-stream<UdpWord>             image_stream_from_harris ("image_stream_from_harris");
+stream<UdpWord>             image_stream_from_median_blur ("image_stream_from_median_blur");
 
 ap_uint<32>                 s_udp_rx_ports = 0x0;
 stream<NetworkMetaStream>   siUdp_meta          ("siUdp_meta");
@@ -109,7 +109,7 @@ int         simCnt;
  * @return Nothing.
  ******************************************************************************/
 void stepDut() {
-    harris(
+    median_blur(
         &node_rank, &cluster_size,
         sSHL_Uaf_Data, sUAF_Shl_Data,
         siUdp_meta, soUdp_meta,
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
 
     
     //------------------------------------------------------
-    //-- TESTBENCH LOCAL VARIABLES FOR HARRIS
+    //-- TESTBENCH LOCAL VARIABLES FOR MEDIANBLUR
     //------------------------------------------------------
     cv::Mat in_img, img_gray;
     cv::Mat hls_out_img, ocv_out_img;
@@ -217,21 +217,20 @@ int main(int argc, char** argv) {
     ocv_out_img.create(in_img.rows, in_img.cols, CV_8U); // create memory for opencv output image
 
     #if NO
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
     imgInput.copyTo(in_img.data);
-    //	imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1>(argv[1], 0);
     ap_uint<INPUT_PTR_WIDTH>  *imgInputArray    = (ap_uint<INPUT_PTR_WIDTH>*)  malloc(in_img.rows * in_img.cols * sizeof(ap_uint<INPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArrayTb = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArray   = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
-    xf::cv::xfMat2Array<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
+    xf::cv::xfMat2Array<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
     #endif
 
     #if RO
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
-    static xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC8> imgInput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
     #endif
     
     while (tb_trials++ < TB_TRIALS) {
@@ -253,13 +252,13 @@ int main(int argc, char** argv) {
 
 #if RO
         // imgInput.copyTo(img_gray.data);
-        imgInput = xf::cv::imread<IN_TYPE, HEIGHT, WIDTH, XF_NPPC8> ( argv[1], 0 );
+        imgInput = xf::cv::imread<TYPE, HEIGHT, WIDTH, XF_NPPC8> ( argv[1], 0 );
 #endif
 
 
 
         //------------------------------------------------------
-        //-- STEP-1.2 : RUN HARRIS DETECTOR FROM OpenCV LIBRARY
+        //-- STEP-1.2 : RUN MEDIANBLUR DETECTOR FROM OpenCV LIBRARY
         //------------------------------------------------------
         ocv_ref ( in_img, ocv_out_img, Th );
 
@@ -319,10 +318,10 @@ if (simCnt < 0)
                     printf ( "DEBUG tb: Read a memory write command from SHELL/Mem/Mp0 \n" );
                     //-- Read a memory write command from SHELL/Mem/Mp0
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
-                    //assert ( dmCmd_MemCmdP0.bbt == CHECK_CHUNK_SIZE );
-                    assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 1 && dmCmd_MemCmdP0.tag == 0x0 );
+                    //assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
+                    assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
                     ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512; // Convert the byte-aligned address to local mem of stack tb.
-                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) an amount of %u bytes (%u memory lines), ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, (unsigned int)dmCmd_MemCmdP0.bbt, (unsigned int)(1 + (dmCmd_MemCmdP0.bbt - 1) / BPERMDW_512), ddr_write_req_iter);
+                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) an amount of %u bytes (%u memory lines), ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, (unsigned int)dmCmd_MemCmdP0.btt, (unsigned int)(1 + (dmCmd_MemCmdP0.btt - 1) / BPERMDW_512), ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                     //ddr_write_req_iter++;
                     //printf ( "DEBUG tb: (ddr_write_req_iter)%(MEMORY_LINES_512-1)=%u\n", (ddr_write_req_iter)%(MEMORY_LINES_512-1));
@@ -446,7 +445,7 @@ if (simCnt < 0)
             printf ( "### ERROR : Failed to set input array from file \"ofsUAF_Shl_Data.dat\". \n" );
             nrErr++;
         }
-        xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX> ( imgOutputArray, imgOutput );
+        xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX> ( imgOutputArray, imgOutput );
 
 
         //------------------------------------------------------
@@ -488,18 +487,18 @@ if (simCnt < 0)
 
     #if NO
 
-    // L2 Vitis Harris
-    cornerHarrisAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols, Thresh, k);
-    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    // L2 Vitis MedianBlur
+    medianBlurAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols);
+    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
-    // L1 Vitis Harris 
-    //harris_accel(imgInput, imgOutput, Thresh, k);
+    // L1 Vitis MedianBlur 
+    //median_blur_accel(imgInput, imgOutput, Thresh, k);
 	
     #endif
 
     #if RO
 
-    harris_accel(imgInput, imgOutputTb, Thresh, k);
+    median_blur_accel(imgInput, imgOutputTb);
 
     #endif
 
@@ -517,11 +516,11 @@ if (simCnt < 0)
     std::vector<cv::Point> ocv_points;
     std::vector<cv::Point> common_pts;
 
-    xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>* select_imgOutput;
+    xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX>* select_imgOutput;
 
     // Select which output you want to process for image outputs and corners comparisons:
-    // &imgOutput   : The processed image by Harris IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
-    // &imgOutputTb : The processed image by Harris IP in this testbench (i.e. I/O traffic is done in testbench)
+    // &imgOutput   : The processed image by MedianBlur IP inside the ROLE (i.e. I/O traffic is passing through SHELL)
+    // &imgOutputTb : The processed image by MedianBlur IP in this testbench (i.e. I/O traffic is done in testbench)
     select_imgOutput = &imgOutput;
  
     // Mark HLS points on the image 
