@@ -54,40 +54,6 @@ void print_cFpVitis(void)
 }
 
 
-#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
-
-/*****************************************************************************
- * @brief Mark the points found by MedianBlur into the image.
- * 
- * @return Nothing
- ******************************************************************************/
-void markPointsOnImage(Mat& imgOutput, 
-		       Mat& in_img, 
-		       Mat& out_img, 
-		       vector<Point>& hw_points) 
-{
-
-   for (int j = 0; j < imgOutput.rows; j++) {
-      for (int i = 0; i < (imgOutput.cols); i++) {
-	  //for CV_8UC1
-          unsigned char pix = imgOutput.at<unsigned char>(j,i);  //.read(j * (imgOutput.cols) + i);
-          if (pix != 0) {
-	      Point tmp;
-              tmp.x = i;
-              tmp.y = j;
-              if ((tmp.x < in_img.cols) && (tmp.y < in_img.rows) && (j > 0)) {
-		  hw_points.push_back(tmp);
-	      }
-              short int y, x;
-              y = j;
-              x = i;
-              if (j > 0) circle(out_img, Point(x, y), 2, Scalar(0, 0, 255, 255), 1, 8, 0);
-	  }
-      }
-   }
-}
-
-#endif
 
 #ifdef PY_WRAP
 #if PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME
@@ -170,31 +136,21 @@ int main(int argc, char * argv[]) {
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
    
-    float Th;
-    if (FILTER_WIDTH == 3) {
-        Th = 30532960.00;
-    } else if (FILTER_WIDTH == 5) {
-        Th = 902753878016.0;
-    } else if (FILTER_WIDTH == 7) {
-        Th = 41151168289701888.000000;
-    }
-    string out_img_file, out_points_file;
-    string out_video_file, out_video_points_file;
+    // ksize: aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
+    int ksize = WINDOW_SIZE ;
+    string out_img_file;
+    string out_video_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
     //#ifdef PY_WRAP
     //out_video_file.assign(output_str);
     //#else // !PY_WRAP
     out_video_file.assign(input_string);
     out_video_file += "_fpga_video_out.avi";
-    out_video_points_file.assign(input_string);
-    out_video_points_file += "_fpga_video_points_out.avi";
     //#endif // PY_WRAP
 #if CV_MAJOR_VERSION < 4
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
-    VideoWriter videop(out_video_points_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
 #else
     VideoWriter video(out_video_file,cv::VideoWriter::fourcc('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
-    VideoWriter videop(out_video_points_file,cv::VideoWriter::fourcc('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));
 #endif
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME) 
@@ -313,7 +269,7 @@ int main(int argc, char * argv[]) {
             //--------------------------------------------------------
             clock_t start_cycle_median_blur_sw = clock();
 	    ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
-	    ocv_ref(send, ocv_out_img, Th);
+	    ocv_ref(send, ocv_out_img, ksize);
 	    clock_t end_cycle_median_blur_sw = clock();
 	    double duration_median_blur_sw = (end_cycle_median_blur_sw - start_cycle_median_blur_sw) / 
 	                                (double) CLOCKS_PER_SEC;
@@ -424,10 +380,7 @@ int main(int argc, char * argv[]) {
             Mat out_img;
             out_img = send.clone();
             vector<Point> hw_points;
-	    
-	    /* Mark HLS points on the image */
-	    markPointsOnImage(frame, send, out_img, hw_points);
-	    
+
 	    ostringstream oss;
             oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << 
                    " \tkbps:" << (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8);
@@ -454,23 +407,16 @@ int main(int argc, char * argv[]) {
 #ifdef WRITE_OUTPUT_FILE
 	    if (num_frame == 1) {
 	      out_img_file.assign(input_string);
-	      out_img_file += "_fpga_img_out_frame_" + to_string(num_frame) + ".png";
-	      out_points_file.assign(input_string);
-	      out_points_file += "_fpga_points_out_frame_" + to_string(num_frame) + ".png";
+	      out_img_file += "_fpga_image_out_frame_" + to_string(num_frame) + ".png";
 #if defined(PY_WRAP) && (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
 	      if (!strcpy(output_img_str, &out_img_file[0])) {
 		  cerr << "ERROR: Cannot write to output image string." << endl;
 	      }
-	      if (!strcpy(output_points_str, &out_points_file[0])) {
-		  cerr << "ERROR: Cannot write to output points string." << endl;
-	      }
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
-	      cout << "INFO: The output image file is stored at  : " << out_img_file << endl; 
-	      cout << "INFO: The output points file is stored at : " << out_points_file << endl; 
+	      cout << "INFO: The output image file is stored at : " << out_img_file << endl; 
 	      // We save the image received from network after being processed by MedianBlur HW or HOST TB
-	      imwrite(out_img_file, out_img);
-	      imwrite(out_points_file, frame);
+	      imwrite(out_img_file, frame);
 	    }
 	    else if (num_frame > 1) {
 	      // If the frame is empty, break immediately
@@ -478,18 +424,14 @@ int main(int argc, char * argv[]) {
 		break;
 	      }
 	      cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
-	      cout << "INFO: The output video -only points- file is stored at  : " << out_video_points_file << endl;
-	      Mat tovideo, tovideop;
+	      Mat tovideo;
 	      if (frame.channels() != 1) {
-		tovideo  = out_img;
-		tovideop = frame;
+            tovideo = frame;
 	      }
 	      else {
-		cvtColor(out_img, tovideo, COLOR_GRAY2BGR);
-		cvtColor(frame, tovideop, COLOR_GRAY2BGR);        
+		cvtColor(frame, tovideo, COLOR_GRAY2BGR);        
 	      }
 	      video.write(tovideo);
-	      videop.write(tovideop);
 	    }
 #endif // WRITE_OUTPUT_FILE
 	    waitKey(FRAME_INTERVAL);
@@ -502,7 +444,6 @@ int main(int argc, char * argv[]) {
 	// When everything done, release the video capture and write object
 	cap.release();
 	video.release();
-    	videop.release();
 
         // Closes all the windows
 	destroyAllWindows();
