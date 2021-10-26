@@ -19,6 +19,7 @@
 
 #include "../include/memtest.hpp"
 #include "../include/memtest_pattern.hpp"
+#include "../include/memtest_library.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h" //debug level define
 
 #ifdef USE_HLSLIB_DATAFLOW
@@ -84,17 +85,18 @@ void memtest(
     
 const unsigned int ddr_mem_depth = TOTMEMDW_512*2;
 const unsigned int ddr_latency = DDR_LATENCY;
-const unsigned int MAX_BURST_LENGTH_512=64;
+const unsigned int num_outstanding_transactions = 1; //16
+const unsigned int MAX_BURST_LENGTH_512=16;//Theoretically is  64, 64*512bit = 4096KBytes;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
   max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
-  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
 
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
   max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
-  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
 
 #endif
 

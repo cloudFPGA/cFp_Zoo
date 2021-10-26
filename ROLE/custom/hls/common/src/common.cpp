@@ -820,11 +820,11 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << "DEBUG the stop is present and is here" << endl;
     } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==6){ //check it is either the last or one before the last
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
+      strncpy(myTmpOutBuff,tmp_outbuff.c_str()+1,bytes_per_line-1);
       testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-    #if DEBUG_LEVEL == TRACE_ALL
+    //#if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
-    #endif
+    //#endif
     }else if(k==5){
       strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
       clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
