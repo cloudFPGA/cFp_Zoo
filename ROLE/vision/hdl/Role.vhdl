@@ -267,7 +267,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component HarrisApplication is
+  component Median_BlurApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -437,7 +437,7 @@ architecture Flash of Role_Themisto is
     --------------------------------------------------------
     
          );
-  end component HarrisApplication;
+  end component Median_BlurApplication;
 
 
 
@@ -498,7 +498,7 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: HarrisApplication
+  UAF: Median_BlurApplication
   port map (
 
              ------------------------------------------------------
@@ -705,7 +705,7 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
--- auto excluding TAF             TAF: HarrisApplication
+-- auto excluding TAF             TAF: Median_BlurApplication
 -- auto excluding TAF             port map (
 -- auto excluding TAF           
 -- auto excluding TAF                        ------------------------------------------------------

@@ -27,14 +27,17 @@
 #ifdef ROLE_IS_MEDIANBLUR
 #include "../../median_blur/include/median_blur.hpp"
 #endif
+
 #include "common/xf_headers.hpp"
+
 #ifdef ROLE_IS_HARRIS
 #include "../../harris/include/xf_harris_config.h"
+#include "../../harris/include/xf_ocv_ref.hpp"
 #endif
 #ifdef ROLE_IS_MEDIANBLUR
 #include "../../median_blur/include/xf_median_blur_config.h"
+#include "../../median_blur/include/xf_ocv_ref.hpp"
 #endif
-#include "../../harris/include/xf_ocv_ref.hpp"
 
 
 //---------------------------------------------------------

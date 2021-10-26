@@ -10,9 +10,9 @@
 # *
 # ******************************************************************************
 
-.PHONY: all clean mem_test_flash harris
+.PHONY: all clean mem_test_flash median_blur
 
-all: mem_test_flash harris
+all: mem_test_flash median_blur
 
 
 *:

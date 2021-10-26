@@ -194,19 +194,6 @@ int main(int argc, char** argv) {
     bool ddr_write_sts_req = false;
     #endif
     
-    uint16_t Thresh; // Threshold for HLS
-    float Th;
-    if (FILTER_WIDTH == 3) {
-        Th = 30532960.00;
-        Thresh = 442;
-    } else if (FILTER_WIDTH == 5) {
-        Th = 902753878016.0;
-        Thresh = 3109;
-    } else if (FILTER_WIDTH == 7) {
-        Th = 41151168289701888.000000;
-        Thresh = 566;
-    }
-
 
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
@@ -260,7 +247,9 @@ int main(int argc, char** argv) {
         //------------------------------------------------------
         //-- STEP-1.2 : RUN MEDIANBLUR DETECTOR FROM OpenCV LIBRARY
         //------------------------------------------------------
-        ocv_ref ( in_img, ocv_out_img, Th );
+        // ksize: aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
+        int ksize = WINDOW_SIZE ;
+        ocv_ref ( in_img, ocv_out_img, ksize);
 
 
 
@@ -482,8 +471,6 @@ if (simCnt < 0)
 
 
     /**************		HLS Function	  *****************/
-    float K = 0.04;
-    uint16_t k = K * (1 << 16); // Convert to Q0.16 format
 
     #if NO
 
@@ -505,6 +492,7 @@ if (simCnt < 0)
     /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
     xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
     xf::cv::imwrite("hls_out.jpg", imgOutput);
+    cv::imwrite("ocv_ref_out.jpg", ocv_out_img);
 
     unsigned int val;
     unsigned short int row, col;
@@ -523,13 +511,6 @@ if (simCnt < 0)
     // &imgOutputTb : The processed image by MedianBlur IP in this testbench (i.e. I/O traffic is done in testbench)
     select_imgOutput = &imgOutput;
  
-    // Mark HLS points on the image 
-    markPointsOnImage(*select_imgOutput, in_img, out_img, hls_points);
- 
-    // Write HLS and Opencv corners into a file 
-    //nrErr += 
-    writeCornersIntoFile(in_img, ocv_out_img, out_img, hls_points, ocv_points, common_pts);
-
     // Clear memory
     free(imgOutputArrayTb);
     free(imgOutputArray);
