@@ -29,7 +29,7 @@
 #include <bitset>
 //#include "../../uppercase/include/uppercase.hpp"
 #include "../../memtest/include/memtest.hpp"
-#include "../../../../../HOST/custom/uppercase/languages/cplusplus/include/config.h"
+#include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
 #include <bits/stdc++.h>
 #include <typeinfo>
 
