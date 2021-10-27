@@ -222,8 +222,7 @@ void pRXPathDDR(
     static ap_uint<32> timeoutCnt;
     
     static Axis<MEMDW_512>   memP0;
-    DmSts             memRdStsP0;
-    DmSts             memWrStsP0;    
+    static DmSts             memWrStsP0;    
    
     #pragma HLS reset variable=cur_transfers_per_chunk
     #pragma HLS reset variable=cnt_wr_stream
@@ -232,7 +231,6 @@ void pRXPathDDR(
     #pragma HLS reset variable=patternWriteNum
     #pragma HLS reset variable=timeoutCnt
     #pragma HLS reset variable=memP0
-    #pragma HLS reset variable=memRdStsP0
     #pragma HLS reset variable=memWrStsP0    
     
     switch(enqueueFSM)
@@ -265,6 +263,11 @@ void pRXPathDDR(
                 ddr_addr_in = 0;
                 cnt_wr_stream = 0;
                 v = 0;
+                memWrStsP0.tag = 0;
+                memWrStsP0.interr = 0;
+                memWrStsP0.decerr = 0;
+                memWrStsP0.slverr = 0;
+                memWrStsP0.okay = 0;                
             }
             enqueueFSM = PROCESSING_PACKET;
         }
@@ -441,7 +444,7 @@ case FSM_WR_PAT_STS_A:
 
 case FSM_WR_PAT_STS_B:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_B\n");
-    if ((memWrStsP0.tag == 0x0) && (memWrStsP0.okay == true)) {
+    if ((memWrStsP0.tag = 0x0) && (memWrStsP0.okay == 1)) {
         if ((*processed_bytes_rx) == 0) {
             if (!sImageLoaded.full()) {
                 if (cnt_wr_img_loaded++ >= 1) {
