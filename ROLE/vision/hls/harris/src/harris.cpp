@@ -441,7 +441,7 @@ case FSM_WR_PAT_STS_A:
 
 case FSM_WR_PAT_STS_B:
     printf("DEBUG in pRXPathDDR: enqueueFSM - FSM_WR_PAT_STS_B\n");
-    if ((memWrStsP0.tag = 7) && (memWrStsP0.okay = 1)) {
+    if ((memWrStsP0.tag == 0x0) && (memWrStsP0.okay == true)) {
         if ((*processed_bytes_rx) == 0) {
             if (!sImageLoaded.full()) {
                 if (cnt_wr_img_loaded++ >= 1) {

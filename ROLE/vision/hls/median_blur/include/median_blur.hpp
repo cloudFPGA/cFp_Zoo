@@ -30,8 +30,8 @@
 #include <hls_stream.h>
 #include "ap_int.h"
 #include <stdint.h>
-
 #include "network.hpp"
+#include "memory_utils.hpp"
 
 using namespace hls;
 
@@ -142,33 +142,6 @@ struct Axis {
   ap_uint<1>       tlast;
   Axis() {}
   Axis(ap_uint<D> single_data) : tdata((ap_uint<D>)single_data), tkeep(1), tlast(1) {}
-};
-
-// AXI DataMover - Format of the command word (c.f PG022)
-struct DmCmd
-{
-  ap_uint<23>   btt;
-  ap_uint<1>    type;
-  ap_uint<6>    dsa;
-  ap_uint<1>    eof;
-  ap_uint<1>    drr;
-  ap_uint<40>   saddr;
-  ap_uint<4>    tag;
-  ap_uint<4>    rsvd;
-  DmCmd() {}
-  DmCmd(ap_uint<40> addr, ap_uint<16> len) :
-    btt(len), type(1), dsa(0), eof(1), drr(0), saddr(addr), tag(0x7), rsvd(0) {}
-};
-
-// AXI DataMover - Format of the status word (c.f PG022)
-struct DmSts
-{
-  ap_uint<4>    tag;
-  ap_uint<1>    interr;
-  ap_uint<1>    decerr;
-  ap_uint<1>    slverr;
-  ap_uint<1>    okay;
-  DmSts() {}
 };
 
 void median_blur(

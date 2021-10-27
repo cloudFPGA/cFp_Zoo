@@ -307,10 +307,10 @@ if (simCnt < 0)
                     printf ( "DEBUG tb: Read a memory write command from SHELL/Mem/Mp0 \n" );
                     //-- Read a memory write command from SHELL/Mem/Mp0
                     sROL_Shl_Mem_WrCmdP0.read ( dmCmd_MemCmdP0 );
-                    //assert ( dmCmd_MemCmdP0.btt == CHECK_CHUNK_SIZE );
-                    assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 0 && dmCmd_MemCmdP0.tag == 0x7 );
+                    //assert ( dmCmd_MemCmdP0.bbt == CHECK_CHUNK_SIZE );
+                    assert ( dmCmd_MemCmdP0.type == 1 && dmCmd_MemCmdP0.dsa == 0 && dmCmd_MemCmdP0.eof == 1 && dmCmd_MemCmdP0.drr == 1 && dmCmd_MemCmdP0.tag == 0x0 );
                     ddr_addr_in = (unsigned int)dmCmd_MemCmdP0.saddr / BPERMDW_512; // Convert the byte-aligned address to local mem of stack tb.
-                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) an amount of %u bytes (%u memory lines), ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, (unsigned int)dmCmd_MemCmdP0.btt, (unsigned int)(1 + (dmCmd_MemCmdP0.btt - 1) / BPERMDW_512), ddr_write_req_iter);
+                    printf ( "DEBUG tb: Requesting writting to address %u (max depth = %u) an amount of %u bytes (%u memory lines), ddr_write_req_iter=%u\n", ddr_addr_in,  MEMORY_LINES_512-1, (unsigned int)dmCmd_MemCmdP0.bbt, (unsigned int)(1 + (dmCmd_MemCmdP0.bbt - 1) / BPERMDW_512), ddr_write_req_iter);
                     assert (ddr_addr_in <= MEMORY_LINES_512-1);
                     //ddr_write_req_iter++;
                     //printf ( "DEBUG tb: (ddr_write_req_iter)%(MEMORY_LINES_512-1)=%u\n", (ddr_write_req_iter)%(MEMORY_LINES_512-1));
@@ -363,7 +363,7 @@ if (simCnt < 0)
                 // When we have emulated the writting to lcl_mem0, we acknowledge with a P0 status
                 if ((ddr_write_sts_req == true) && !sSHL_Rol_Mem_WrStsP0.full() && (memP0.tlast == true)) {
                     if (count_cycles_to_ack_ddr_status++ == wait_cycles_to_ack_ddr_status) {
-                        dmSts_MemWrStsP0.tag = 7;
+                        dmSts_MemWrStsP0.tag = 0;
                         dmSts_MemWrStsP0.okay = 1;
                         dmSts_MemWrStsP0.interr = 0;
                         dmSts_MemWrStsP0.slverr = 0;
