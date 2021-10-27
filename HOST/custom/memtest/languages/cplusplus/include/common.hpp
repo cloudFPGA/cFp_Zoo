@@ -432,7 +432,7 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
       cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
     #endif
-      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_read,clock_cycles_write);
+      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_write ,clock_cycles_read);
       testResults_vector.push_back(tmpResult);
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
