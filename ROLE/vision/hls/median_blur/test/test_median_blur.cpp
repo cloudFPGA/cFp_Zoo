@@ -355,7 +355,8 @@ if (simCnt < 0)
                      * DDR channel P0. In the real HW, this is enabled by the AXI interconnect and AXI
                      * Datamover, being instantiated in VHDL.
                      * */
-                    printf ( "DEBUG tb: Writting to address 0x%x : %u an amount of %u bytes\n", ddr_addr_in, memP0.tdata.to_long(), BPERMDW_512);
+                    // printf ( "DEBUG tb: Writting to address 0x%x : %u an amount of %u bytes\n", ddr_addr_in, memP0.tdata.to_long(), BPERMDW_512);
+                    std::cout << "DEBUG tb: Writting to address 0x" << std::hex << ddr_addr_in << " : " << memP0.tdata << " an amount of " << std::dec << BPERMDW_512 << " bytes" << std::endl;
                     //lcl_mem0[ddr_addr_in++] = memP0.tdata;
                     memcpy(&lcl_mem0[ddr_addr_in++], &memP0.tdata, BPERMDW_512);
                     ddr_write_sts_req = true;
