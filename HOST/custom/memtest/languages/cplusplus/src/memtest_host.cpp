@@ -37,8 +37,8 @@ int memtest(char *s_servAddress, char *s_servPort, char *input_str, char *output
    */
 int main(int argc, char *argv[])
 {
-    if ((argc < 3) || (argc > 5)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <number of address to test> <testing times>\n";
+    if ((argc < 3) || (argc > 6)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <number of address to test> <testing times> <burst size>\n";
         exit(1);
     }
 #endif
@@ -73,8 +73,10 @@ int main(int argc, char *argv[])
 	std::string input_string;
 	std::string strInput_memaddrUT;
     std::string strInput_nmbrTest;
+    std::string strInput_burstSize;
 	unsigned int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
+    unsigned int burst_size = 1;
     //UDPSocket *udpsock_p;
     //TCPSocket *tcpsock_p;
   
@@ -106,9 +108,11 @@ int main(int argc, char *argv[])
 	#else
     strInput_memaddrUT.assign(argv[3]);
     strInput_nmbrTest.assign(argv[4]);
+    strInput_burstSize.assign(argv[5]);
 	#endif
 	memory_addr_under_test = stoul(strInput_memaddrUT);
 	testingNumber = stoul(strInput_nmbrTest);
+	burst_size = stoul(strInput_burstSize);
 
 	//------------------------------------------------------------------------------------
 	//-- STEP-4 : Infinite Loop for reexecutinge the application! :D
@@ -124,8 +128,8 @@ int main(int argc, char *argv[])
 		size_t charOutputSize = PACK_SIZE*(test_pack); 
 		string initial_input_string(input_string);
 
-		input_string=createMemTestCommands(memory_addr_under_test, testingNumber);
-		size_t charInputSize = 8; //a single tdata
+		input_string=createMemTestCommands(memory_addr_under_test, testingNumber,burst_size);
+		size_t charInputSize = 8*2; //a single tdata*burst
 
 		if (input_string.length() == 0) {
 				cerr << "Empty string provided. Aborting...\n\n" << endl;
@@ -275,8 +279,8 @@ int main(int argc, char *argv[])
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
 			cout << " and the first faulty address (if any) was " << it->first_fault_address << endl;
 			unsigned int written_words = ((it->target_address) %mem_word_byte_size) == 0 ? ((it->target_address)/mem_word_byte_size)  : (((it->target_address)/mem_word_byte_size) + 1);
-			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * ( 1.0 / 156.25 ) ) ) / 1000.0; // Gbit/T
-			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * ( 1.0 / 156.25 ) ) ) / 1000.0;
+			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * 6.4 ) ); // Gbit/T
+			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * 6.4 ) );
 			cout << " RD BW " << rd_bndwdth  << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
       		cout << " WR BW " << wr_bndwdth << "[GBit/s], with  " << it->clock_cycles_write << " ccs" <<  endl;
 			cout << endl << endl;
