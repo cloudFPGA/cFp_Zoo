@@ -10,14 +10,15 @@
 #define FSM_PROCESSING_PCKT_PROC 1
 #define FSM_PROCESSING_STOP 2
 #define FSM_PROCESSING_START 3
-#define FSM_PROCESSING_DATAFLOW_WRITE 4
-#define FSM_PROCESSING_DATAFLOW_READ 5
-#define FSM_PROCESSING_OUTPUT 6
-#define FSM_PROCESSING_OUTPUT_2 7
-#define FSM_PROCESSING_OUTPUT_3 8
-#define FSM_PROCESSING_OUTPUT_4 9
-#define FSM_PROCESSING_OUTPUT_5 10
-#define FSM_PROCESSING_CONTINUOUS_RUN 11
+#define FSM_PROCESSING_BURST_READING 4
+#define FSM_PROCESSING_DATAFLOW_WRITE 5
+#define FSM_PROCESSING_DATAFLOW_READ 6
+#define FSM_PROCESSING_OUTPUT 7
+#define FSM_PROCESSING_OUTPUT_2 8
+#define FSM_PROCESSING_OUTPUT_3 9
+#define FSM_PROCESSING_OUTPUT_4 10
+#define FSM_PROCESSING_OUTPUT_5 11
+#define FSM_PROCESSING_CONTINUOUS_RUN 12
 
 #define ProcessingFsmType uint8_t
 
@@ -26,6 +27,7 @@
 #define LOCAL_MEM_ADDR_SIZE 20
 #define MEMTEST_ADDRESS_BITWIDTH 40
 #define MEMTEST_ITERATION_BITWIDTH 16
+#define MEMTEST_BURST_BITWIDTH 8
 
 
 typedef ap_uint<LOCAL_MEM_WORD_SIZE>  local_mem_word_t;
@@ -39,7 +41,12 @@ typedef ap_uint<LOCAL_MEM_ADDR_SIZE_NON_BYTE_ADDRESSABLE>  local_mem_addr_non_by
 #define MEMTEST_ADDRESS_LOW_BIT NETWORK_WORD_BIT_WIDTH-MEMTEST_ADDRESS_BITWIDTH //64-40 = 24
 
 #define MEMTEST_ITERATIONS_HIGH_BIT MEMTEST_ADDRESS_LOW_BIT-1 // 23
-#define MEMTEST_ITERATIONS_LOW_BIT  MEMTEST_ITERATIONS_HIGH_BIT+1-MEMTEST_ITERATION_BITWIDTH // 
+#define MEMTEST_ITERATIONS_LOW_BIT  MEMTEST_ITERATIONS_HIGH_BIT+1-MEMTEST_ITERATION_BITWIDTH //
+
+
+
+#define MEMTEST_BURST_HIGH_BIT 16-1 // 15
+#define MEMTEST_BURST_LOW_BIT  MEMTEST_BURST_HIGH_BIT+1-MEMTEST_BURST_BITWIDTH // 8
 
 #define MAX_ITERATION_COUNT 10
 const unsigned int max_proc_fifo_depth = MAX_ITERATION_COUNT;
@@ -162,7 +169,6 @@ void pWRGenerateData2WriteOnStream(
       ap_uint<32>,32>(maddr_non_byte, 
        tmp_out+(maddr_non_byte));
     //genSequentialNumbers<local_mem_addr_non_byteaddressable_t,local_mem_word_t>(curr_address_ut*64, tmp_out+(maddr_non_byte));
-
     local_mem_word_t tmp_out_scalar;
     #ifdef FAULT_INJECTION
          //TODO:  place for control fault injection with a function?
@@ -175,8 +181,15 @@ void pWRGenerateData2WriteOnStream(
       tmp_out_scalar = tmp_out[maddr_non_byte%buff_dim];
     #endif // FAULT_INJECTION
 
-    generatedData.write(tmp_out_scalar);
-    maddr_non_byte++;
+    if (!generatedData.full())
+    {
+      generatedData.write(tmp_out_scalar);
+      maddr_non_byte++;
+    }else{
+      curr_address_ut--;
+    }
+    
+    
   }
   
 
@@ -207,64 +220,69 @@ unsigned int burst_size)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-   unsigned int idx = i;
-    tmp_out[idx] = generatedData.read();
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-    checking_loop: for (int j = 0; j < LOCAL_MEM_ADDR_OFFSET; j++)
-           {
-            std::cout << tmp_out[idx].range((j+1)*8-1,j*8) << " ";
-           }
-           std::cout << std::endl;
-    #endif//synth
-    #endif//debug lvl
-    //if stored enough data to begin the bursting OR this is last iteration
-    end_distance = max_addr_ut-curr_address_ut;
-    //last_iteration = LOCAL_MEM_ADDR_OFFSET>=end_distance;
-    last_iteration = 1>=end_distance;
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-    std::cout << "test addr " << idx << " current address " << curr_address_ut <<std::endl;
-    #endif
-    #endif
-
-    if (idx-written_i>=burst_size-1 || last_iteration)
+    if (!generatedData.empty())
     {
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-    std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
-    #endif
-    #endif
-      if (!last_iteration)
+     unsigned int idx = i;
+      tmp_out[idx] = generatedData.read();
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+      checking_loop: for (int j = 0; j < LOCAL_MEM_ADDR_OFFSET; j++)
+             {
+              std::cout << tmp_out[idx].range((j+1)*8-1,j*8) << " ";
+             }
+             std::cout << std::endl;
+      #endif//synth
+      #endif//debug lvl
+      //if stored enough data to begin the bursting OR this is last iteration
+      end_distance = max_addr_ut-curr_address_ut;
+      //last_iteration = LOCAL_MEM_ADDR_OFFSET>=end_distance;
+      last_iteration = 1>=end_distance;
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+      std::cout << "test addr " << idx << " current address " << curr_address_ut <<std::endl;
+      #endif
+      #endif
+
+      if (idx-written_i>=burst_size-1 || last_iteration)
       {
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-        std::cout << "BURST transferring " << burst_size << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
-    #endif
-    #endif
-        memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*burst_size);
-        //curr_writing_addr+=burst_size*LOCAL_MEM_ADDR_OFFSET;
-        curr_writing_addr+=burst_size;
-        written_i= (written_i+burst_size)%buff_dim;
-      }else{
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-        std::cout << "LAST transferring " << idx%burst_size+1 << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
-    #endif
-    #endif
-        memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(idx%burst_size+1));
-        // curr_writing_addr+=(idx%burst_size+1)*LOCAL_MEM_ADDR_OFFSET;
-        curr_writing_addr+=(idx%burst_size+1);
-        written_i=(written_i+idx%burst_size+1)%buff_dim;
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+      std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
+      #endif
+      #endif
+        if (!last_iteration)
+        {
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "BURST transferring " << burst_size << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
+      #endif
+      #endif
+          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*burst_size);
+          //curr_writing_addr+=burst_size*LOCAL_MEM_ADDR_OFFSET;
+          curr_writing_addr+=burst_size;
+          written_i= (written_i+burst_size)%buff_dim;
+        }else{
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "LAST transferring " << idx%burst_size+1 << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
+      #endif
+      #endif
+          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(idx%burst_size+1));
+          // curr_writing_addr+=(idx%burst_size+1)*LOCAL_MEM_ADDR_OFFSET;
+          curr_writing_addr+=(idx%burst_size+1);
+          written_i=(written_i+idx%burst_size+1)%buff_dim;
+        }
       }
-    }
-    if(i==buff_dim-1){
-      i=0;
+      if(i==buff_dim-1){
+        i=0;
+      }else{
+        i++;
+      }
+     // std::cout << std::endl;
+     // memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
     }else{
-      i++;
+      curr_address_ut--;
     }
-   // std::cout << std::endl;
-   // memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
   }
     cmd.write(0);
     end_distance=0;
@@ -347,31 +365,38 @@ unsigned int burst_size)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
+    if (!readData.full())
+    {
 
-    memcpy(tmp_out+reading_i, lcl_mem+curr_address_ut, sizeof(local_mem_word_t));
-    if(reading_i > curr_reading_addr+1){
-      readData.write(tmp_out[curr_reading_addr]);
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-      std::cout << " writing a memory word " << curr_reading_addr << " I have to reach " << i << std::endl;
-    #endif
-    #endif
-      curr_reading_addr++;
+      memcpy(tmp_out+reading_i, lcl_mem+curr_address_ut, sizeof(local_mem_word_t));
+      if(reading_i > curr_reading_addr+1){
+        readData.write(tmp_out[curr_reading_addr]);
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+        std::cout << " writing a memory word " << curr_reading_addr << " I have to reach " << i << std::endl;
+      #endif
+      #endif
+        curr_reading_addr++;
 
-    }
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-    std::cout << "read the " << reading_i << " memory word, outputreading at  " << curr_reading_addr << " i at " << i << std::endl;
-    #endif
-    #endif
+      }
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+      std::cout << "read the " << reading_i << " memory word, outputreading at  " << curr_reading_addr << " i at " << i << std::endl;
+      #endif
+      #endif
 
-    if(reading_i==buff_dim-1){
-      reading_i=0;
+      if(reading_i==buff_dim-1){
+        reading_i=0;
+      }else{
+        reading_i++;
+      }
     }else{
-      reading_i++;
+      curr_address_ut--;
+      i--;
     }
 
   }
+
   cmd.write(0);
   i--;
   reading_i=i%buff_dim;
@@ -379,17 +404,22 @@ unsigned int burst_size)
   for (int j = 0; j < buff_dim; j++)
   {
 #pragma HLS PIPELINE II=1
-    if(j==curr_reading_addr && i >= curr_reading_addr){
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-      std::cout << " writing a memory word " << curr_reading_addr << " I have to reach " << i << std::endl;
-    #endif
-    #endif
-      readData.write(tmp_out[curr_reading_addr]);
-      curr_reading_addr++;
-      tmp_out[j]=0;
+    if (!readData.full())
+    {
+      if(j==curr_reading_addr && i >= curr_reading_addr){
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+        std::cout << " writing a memory word " << curr_reading_addr << " I have to reach " << i << std::endl;
+      #endif
+      #endif
+        readData.write(tmp_out[curr_reading_addr]);
+        curr_reading_addr++;
+        tmp_out[j]=0;
+      }else{
+        tmp_out[j]=0;
+      }
     }else{
-      tmp_out[j]=0;
+      j--;
     }
   }
   curr_reading_addr=0;
@@ -414,15 +444,20 @@ void pRDReadDataStreamAndProduceGold(
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-    testingVector = readData.read(); 
+    if (!readData.empty() && !outReadData.full() &&  !outGoldData.full())
+    {
+      testingVector = readData.read(); 
 
-    genXoredSequentialNumbersSecondVersion<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32,
-     local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
+      genXoredSequentialNumbersSecondVersion<local_mem_addr_non_byteaddressable_t, LOCAL_MEM_WORD_SIZE/32,
+       local_mem_word_t, ap_uint<32>,32>(local_mem_addr_non_byteaddressable, &goldenVector);
 
-    //genSequentialNumbers<local_mem_addr_non_byteaddressable_t,local_mem_word_t>(curr_address_ut*64, &goldenVector);
-    outReadData.write(testingVector);
-    outGoldData.write(goldenVector);
-    local_mem_addr_non_byteaddressable++;
+      //genSequentialNumbers<local_mem_addr_non_byteaddressable_t,local_mem_word_t>(curr_address_ut*64, &goldenVector);
+      outReadData.write(testingVector);
+      outGoldData.write(goldenVector);
+      local_mem_addr_non_byteaddressable++;
+    }else{
+      curr_address_ut--;
+    }
   }
   local_mem_addr_non_byteaddressable=0;
   
@@ -467,45 +502,51 @@ void pRDCompareDataStreamsCount(
   {
 #pragma HLS PIPELINE
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
-  testingVector[maddr_non_byte%buff_dim] = sInReadData.read(); 
-  goldenVector[maddr_non_byte%buff_dim] = sInGoldData.read(); 
+    if (!sInReadData.empty() && !sInGoldData.empty())
+    {
+      testingVector[maddr_non_byte%buff_dim] = sInReadData.read(); 
+      goldenVector[maddr_non_byte%buff_dim] = sInGoldData.read(); 
 
-      //ap_uint<64> tmpOut = 0; 
+          //ap_uint<64> tmpOut = 0; 
 
-   //#pragma HLS dependence variable=faulty_addresses_cntr_support_array inter RAW false
-      golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
-   {
-//#pragma HLS UNROLL factor=unrolling_factor skip_exit_check
-        //int idx = (i + curr_address_ut )% support_dim;
-        int idx = (i + k*LOCAL_MEM_ADDR_OFFSET);
-        testingVector_bytes[idx]=testingVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
-        goldenVector_bytes[idx]=goldenVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-        std::cout << " tst=" << testingVector_bytes[idx] << " vs gld=" << goldenVector_bytes[idx] ;
-    #endif
-    #endif
+       //#pragma HLS dependence variable=faulty_addresses_cntr_support_array inter RAW false
+          golden_comparison: for (int i = 0; i < LOCAL_MEM_ADDR_OFFSET; i++)
+       {
+    //#pragma HLS UNROLL factor=unrolling_factor skip_exit_check
+            //int idx = (i + curr_address_ut )% support_dim;
+            int idx = (i + k*LOCAL_MEM_ADDR_OFFSET);
+            testingVector_bytes[idx]=testingVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
+            goldenVector_bytes[idx]=goldenVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
+        #if DEBUG_LEVEL == TRACE_ALL
+        #ifndef __SYNTHESIS__
+            std::cout << " tst=" << testingVector_bytes[idx] << " vs gld=" << goldenVector_bytes[idx] ;
+        #endif
+        #endif
 
-      cmp_ok[idx] = testingVector_bytes[idx] == goldenVector_bytes[idx];
-     // tmpOut[i] = !cmp_ok[idx];
-      if(!cmp_ok[idx] ){
-        faulty_addresses_cntr_support_array[i+k]++;
-        if (!first_fault_found)
-        {
-          *first_faulty_address=i+curr_address_ut*64;
-          first_fault_found = true;
-        }else{
-          first_fault_found = first_fault_found;
-        }
-      }
-   }
-    #if DEBUG_LEVEL == TRACE_ALL
-    #ifndef __SYNTHESIS__
-   std::cout << std::endl;
-   #endif
-   #endif
-   //sInCmpRes.write(tmpOut);
-    maddr_non_byte++;
+          cmp_ok[idx] = testingVector_bytes[idx] == goldenVector_bytes[idx];
+         // tmpOut[i] = !cmp_ok[idx];
+          if(!cmp_ok[idx] ){
+            faulty_addresses_cntr_support_array[i+k]++;
+            if (!first_fault_found)
+            {
+              *first_faulty_address=i+curr_address_ut*64;
+              first_fault_found = true;
+            }else{
+              first_fault_found = first_fault_found;
+            }
+          }
+       }
+        #if DEBUG_LEVEL == TRACE_ALL
+        #ifndef __SYNTHESIS__
+       std::cout << std::endl;
+       #endif
+       #endif
+       //sInCmpRes.write(tmpOut);
+        maddr_non_byte++;
+    }else{
+      k--;
+      curr_address_ut--;
+    }
   }
 
   for (int i = 0; i < support_dim; i++)
@@ -532,7 +573,8 @@ void pWriteDataflowMemTest(
   membus_t * lcl_mem0,
   local_mem_addr_t max_address_under_test,
   ap_uint<64> * writing_cntr,
-  ap_uint<32> * testCounter)
+  ap_uint<32> * testCounter,
+  unsigned int burst_size)
 {
   #pragma HLS INLINE off
      static hls::stream<ap_uint<64>> sWritePrfCntr_cmd("sWritePrfCntr_cmd"); 
@@ -545,9 +587,9 @@ void pWriteDataflowMemTest(
           //Step 1: Generate the data
           pWRGenerateData2WriteOnStream<4000000>(generatedWriteData,testCounter,max_address_under_test);
           //Step 2: write 
-          pWRStream2WriteMainMemory<ap_uint<64>,4000000>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, 16);
+          pWRStream2WriteMainMemory<ap_uint<64>,4000000>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, burst_size);
           //Step 2.b: count 
-          perfCounterProc2Mem<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr, 0, 256,  16);
+          perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr);
 }
 
 
@@ -556,7 +598,8 @@ void pReadDataflowMemTest(
   local_mem_addr_t max_address_under_test,
   ap_uint<64> * reading_cntr,
   ap_uint<32> * faulty_addresses_cntr,
-  local_mem_addr_t * first_faulty_address)
+  local_mem_addr_t * first_faulty_address,
+  unsigned int burst_size)
   {
   #pragma HLS INLINE off
 
@@ -579,11 +622,11 @@ void pReadDataflowMemTest(
       //pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, 1, faulty_addresses_cntr, first_faulty_address);
 
       //Step 1: Generate the data
-      pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,1);
+      pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       //Step 2: write 
       pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
       //Step 2.b: count 
-      perfCounterProc2Mem<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr, 0, 256,  16);
+      perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
       //Step 3: compare
       pRDCompareDataStreamsCount<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
 }
@@ -664,6 +707,7 @@ static size_t bytes_sent_for_tx =0;
     static ap_uint<32> testCounter;
     static ap_uint<counter_width> reading_cntr = 0;
     static ap_uint<counter_width> writing_cntr = 0;
+    static unsigned int burst_size=1;
     
     static local_mem_addr_t tmp_wordaligned_address = 0;
 
@@ -678,6 +722,7 @@ static size_t bytes_sent_for_tx =0;
 #pragma HLS reset variable=readingCounter
 #pragma HLS reset variable=testCounter
 #pragma HLS reset variable=tmp_wordaligned_address
+#pragma HLS reset variable=burst_size
 //#pragma HLS reset variable=testingVector
 
 //assuming that whnever I send a start I must complete the run and then restart unless a stop
@@ -692,6 +737,7 @@ static size_t bytes_sent_for_tx =0;
       max_address_under_test = 0;
       max_iterations=0;
       bytes_sent_for_tx = 0;
+      burst_size=1;
       if ( !sRxtoProc_Meta.empty()  && !sProctoTx_Meta.full())
       {
         outNetMeta = sRxtoProc_Meta.read();
@@ -742,6 +788,41 @@ static size_t bytes_sent_for_tx =0;
          printf("DEBUG processing the packet with the address %s within cmd %s\n", max_address_under_test.to_string().c_str(), max_iterations.to_string().c_str());
     #endif //__SYNTHESIS__
     #endif
+          processingFSM = FSM_PROCESSING_BURST_READING;
+          break;
+        }
+      }
+      break;
+
+      case FSM_PROCESSING_BURST_READING:
+        #if DEBUG_LEVEL == TRACE_ALL
+        printf("DEBUG proc FSM, I am in the FSM_PROCESSING_BURST_READING state\n");
+       #endif
+//parse the received data
+      if ( !sRxpToProcp_Data.empty())
+      {
+        netWord = sRxpToProcp_Data.read();
+        std::cout << netWord.tdata.to_string() << std::endl;
+        switch (netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT))
+        {
+        case TEST_BURSTSIZE_CMD:
+          /* extract the busrt size*/
+          burst_size = netWord.tdata.range(MEMTEST_BURST_HIGH_BIT,MEMTEST_BURST_LOW_BIT);
+
+    #if DEBUG_LEVEL == TRACE_ALL
+          printf("DEBUG processing the packet with burst cmd, and burst size=%u\n",burst_size);
+    #endif
+          processingFSM = FSM_PROCESSING_START;
+          break;
+
+
+        default:
+          /*unkown stuff hence using a burst with 1 beat*/
+    #if DEBUG_LEVEL == TRACE_ALL
+          printf("DEBUG processing the packet with smth bad within cmd: %s\n",netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT).to_string().c_str());
+    #endif
+          burst_size=1;
+          sProcpToTxp_Data.write(netWord);
           processingFSM = FSM_PROCESSING_START;
           break;
         }
@@ -767,7 +848,7 @@ static size_t bytes_sent_for_tx =0;
         //local_mem_addr_non_byteaddressable = tmp_wordaligned_address;//word align
     #if DEBUG_LEVEL == TRACE_ALL
     #ifndef __SYNTHESIS__
-        std::cout << " testing the address " << tmp_wordaligned_address.to_string() << std::endl;
+        std::cout << " testing the address word aligned" << tmp_wordaligned_address.to_string() << std::endl;
     #endif
     #endif
         readingCounter=0;
@@ -830,7 +911,7 @@ static size_t bytes_sent_for_tx =0;
     #if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG processing write dataflow\n");
     #endif
-    pWriteDataflowMemTest( lcl_mem0, tmp_wordaligned_address , &writing_cntr,&testCounter);
+    pWriteDataflowMemTest( lcl_mem0, tmp_wordaligned_address , &writing_cntr,&testCounter,burst_size);
       processingFSM = FSM_PROCESSING_DATAFLOW_READ;
       break;
 
@@ -838,7 +919,7 @@ static size_t bytes_sent_for_tx =0;
 #if DEBUG_LEVEL == TRACE_ALL 
       printf("DEBUG processing read dataflow\n");
 #endif
-      pReadDataflowMemTest(lcl_mem1, tmp_wordaligned_address ,&reading_cntr,&faulty_addresses_cntr, &first_faulty_address);
+      pReadDataflowMemTest(lcl_mem1, tmp_wordaligned_address ,&reading_cntr,&faulty_addresses_cntr, &first_faulty_address,burst_size);
       processingFSM = FSM_PROCESSING_OUTPUT;
       break;
 

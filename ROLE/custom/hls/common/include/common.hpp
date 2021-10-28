@@ -71,11 +71,11 @@ struct MemoryTestResult {
 
   MemoryTestResult()      {}
   MemoryTestResult(
-    unsigned int target_address,
+    unsigned long long int target_address,
     unsigned int fault_cntr,
     unsigned int  first_fault_address,
-    unsigned int clock_cycles_write,
-    unsigned int clock_cycles_read) :
+    unsigned long long int clock_cycles_write,
+    unsigned long long int clock_cycles_read) :
     target_address(target_address), 
     fault_cntr(fault_cntr), 
     first_fault_address(first_fault_address),  
@@ -250,7 +250,7 @@ void string2hexnumerics(const std::string& in, char * out, size_t byteSize);
  * 
  * @return out the output string with start/max address-nops4trgtCCsNeeded-stop
  ******************************************************************************/
-std::string createMemTestCommands(unsigned int mem_address, int testingNumber);
+std::string createMemTestCommands(unsigned int mem_address, int testingNumber, unsigned int burst_size);
 
 /*****************************************************************************
  * @brief Create the expected output results for the memory test (with FAULT INJECTION)

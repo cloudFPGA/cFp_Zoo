@@ -54,11 +54,13 @@ enum EchoCtrl {
  * Internal MemTest accelerator command
  ********************************************/
 enum MemTestCmd {
+    TEST_BURSTSIZE_CMD  = 4,
     TEST_ENDOFTESTS_CMD  = 3,
     TEST_STOP_CMD  = 2,
     TEST_START_CMD = 1,
     TEST_INVLD_CMD = 0
 };
+
 //CMD 8 bitwdith up to 255 commands (0 is invalid)
 #define MEMTEST_COMMANDS_HIGH_BIT 8-1
 #define MEMTEST_COMMANDS_LOW_BIT 0
@@ -87,7 +89,7 @@ enum MemTestCmd {
 #define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
-#define TOTMEMDW_512 100
+#define TOTMEMDW_512 5000
 
 #define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64

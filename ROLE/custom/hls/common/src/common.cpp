@@ -655,28 +655,33 @@ void string2hexnumericsString(const string& in, string &out, size_t byteSize)
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
+string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber, unsigned int burst_size)
 {
   string out;
 	char start_cmd [bytes_per_line];
 	char stop_cmd [bytes_per_line];
-	char value_cmd[bytes_per_line];
+    char value_cmd[bytes_per_line];
+	char burst_cmd[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
 	for (unsigned int k = 0; k < bytes_per_line; k++) {
        value_cmd[k]    = (char)0;
 		if (k != 0) {
 			stop_cmd[k] = (char)0;
 			start_cmd[k] = (char)0;
+            burst_cmd[k] = (char)0;
 	    }
 	    else {
 			start_cmd[k] = (char)1; 
-			stop_cmd[k] = (char)2;
+            stop_cmd[k] = (char)2;
+			burst_cmd[k] = (char)4;
 	    }
 	 }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out = out.append(start_cmd,3);
   memcpy(value_cmd, (char*)&mem_address, 4);
   out = out.append(value_cmd,5);
+  memcpy(burst_cmd+1,(char*)&burst_size,2);
+  out = out.append(burst_cmd,8);  
   return string(out);
   }
 
@@ -810,8 +815,13 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
-  char myTmpOutBuff [bytes_per_line+1];
-  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
+  char myTmpOutBuff [bytes_per_line];
+  for (int i = 0; i < bytes_per_line; ++i)
+  {
+      myTmpOutBuff[i]=(char)0;
+  }
+  unsigned int testingNumber_out=0, fault_cntr_out=0, fault_addr_out=0;
+  unsigned long long int max_memory_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
     string tmp_outbuff;
@@ -820,14 +830,17 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << "DEBUG the stop is present and is here" << endl;
     } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==6){ //check it is either the last or one before the last
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str()+1,bytes_per_line-1);
-      testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-    //#if DEBUG_LEVEL == TRACE_ALL
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str()+1,bytes_per_line-1);
+      //testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      memcpy(&testingNumber_out,tmp_outbuff.c_str()+1,bytes_per_line/2);
+
+    #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
-    //#endif
+    #endif
     }else if(k==5){
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //clock_cycles_read = *reinterpret_cast<unsigned long long int*>(myTmpOutBuff);
+      memcpy(&clock_cycles_read,tmp_outbuff.c_str(),bytes_per_line);
 
           #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
@@ -842,8 +855,8 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
     #endif
       }
       unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
-      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
-      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 6.4 ) ) ); // Gbit/T
+      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 6.4 ) ) );
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "Written " << written_words << " words" << endl;
       cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
@@ -865,26 +878,33 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       //
       // strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
       // clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      clock_cycles_write = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //clock_cycles_write = *reinterpret_cast<unsigned long long int*>(myTmpOutBuff);
+      memcpy(&clock_cycles_write,tmp_outbuff.c_str(),bytes_per_line);
+
     }else if(k==3){ // first fault address
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //fault_addr_out = *reinterpret_cast<unsigned long long int *>(myTmpOutBuff);
+      memcpy(&fault_addr_out,tmp_outbuff.c_str(),bytes_per_line/2);
+
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
     #endif
     }else if(k==2){ // fault cntr
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //fault_cntr_out = *reinterpret_cast<unsigned long long int *>(myTmpOutBuff);
+      memcpy(&fault_cntr_out,tmp_outbuff.c_str(),bytes_per_line/2);
+
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     #endif
     }else { //max addrss
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-    #if DEBUG_LEVEL == TRACE_ALL
+      // strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      // max_memory_addr_out = *reinterpret_cast<unsigned long long *>(myTmpOutBuff);
+      memcpy(&max_memory_addr_out,tmp_outbuff.c_str(),bytes_per_line);
+      #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
     #endif
     }

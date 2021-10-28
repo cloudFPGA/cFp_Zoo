@@ -96,6 +96,7 @@ static PacketFsmType enqueueFSM = WAIT_FOR_META;
     NetworkWord    netWord;
     ap_uint<16> max_iterations;
     static bool start_stop_local = false;
+    static bool prev_was_start = false;
 #pragma HLS reset variable=start_stop_local
 
     *start_stop = start_stop_local;
@@ -132,6 +133,7 @@ static PacketFsmType enqueueFSM = WAIT_FOR_META;
             start_stop_local=true;
             *start_stop=true;
             sRxpToProcp_Data.write(netWord);
+            prev_was_start=true;
       #if DEBUG_LEVEL == TRACE_ALL
 	    printf("Hallo, I received a start command :D\n");
       #endif
@@ -142,9 +144,25 @@ static PacketFsmType enqueueFSM = WAIT_FOR_META;
             netWord.tdata=TEST_STOP_CMD;
             netWord.tlast = 1;
             sRxpToProcp_Data.write(netWord);
+            prev_was_start=false;
       #if DEBUG_LEVEL == TRACE_ALL
 	    printf("Hallo, I received a stop command D:\n");
       #endif
+            break;
+
+          case(TEST_BURSTSIZE_CMD):
+      #if DEBUG_LEVEL == TRACE_ALL
+      printf("Hallo, I received a burst size command :), and prev_was_start=%u\n",prev_was_start);
+      #endif
+            if (prev_was_start)
+            {
+              sRxpToProcp_Data.write(netWord);
+
+            }else{
+              netWord.tdata=TEST_INVLD_CMD;
+              sRxpToProcp_Data.write(netWord);
+            }
+            prev_was_start=false;
             break;
           default:
             if (start_stop_local)
@@ -153,6 +171,7 @@ static PacketFsmType enqueueFSM = WAIT_FOR_META;
               // everything is running and should no sending anything back
             } else {
               netWord.tdata=TEST_INVLD_CMD;
+              prev_was_start=false;
               sRxpToProcp_Data.write(netWord);
             }
             break;
@@ -317,6 +336,27 @@ const unsigned long int  max_counter_cc = 4000000;
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
 void perfCounterProc2Mem(hls::stream<Tin>& cmd, Tout * out, int direction, int burst_length, int nmbr_outstanding) {
+  
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;
+
+#if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    *out =cnt;
+}
+
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc2MemCountOnly(hls::stream<Tin>& cmd, Tout * out) {
   
     Tin input_cmd;
     // wait to receive a value to start counting
