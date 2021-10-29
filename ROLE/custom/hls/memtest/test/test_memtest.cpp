@@ -35,7 +35,7 @@ using namespace std;
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
 #define TB_MULTI_RUNS_ITERATIONS 2
-#define DEBUG_LEVEL (TRACE_OFF)
+#define DEBUG_LEVEL (TRACE_ALL)
 
 
 //------------------------------------------------------
@@ -209,8 +209,8 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5 + 1) + 2 + 1 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
-    //unsigned int sim_time = testingNumber * ((2 * 2) + 5 + 1) + 2 + 1 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
+    //unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5 + 1) + 2 + 1 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
+    unsigned int sim_time = 1 + 3 + testingNumber * (1 + 2 + 5) + 1 + 2 + 10;     // meta-pckt-brst testnmbr*(strt-wr-rd-out1-out2-out3-out4-out5) + final cntstart + 2 tx + 10 rand
     size_t charInputSize = 8*2; //a single tdata is the current command dimension for this test, plus the burst cmd
     size_t charOutputSize = 8*1+((8 * (2 + 1 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
 

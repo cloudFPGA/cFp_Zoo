@@ -719,25 +719,36 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
 
 
 //simulating the fault injection
-    for (unsigned int j = 0; j < mem_address; j+=mem_addr_per_word)
+    for (unsigned int j = 1; j < mem_address/64; j++)
     {
-        ap_uint<32> currentNumber = j;
-        ap_uint<32> nextNumber = (currentNumber+1) xor 1;
-        ap_uint<32> prevNumber = currentNumber;
-        ap_uint<32> tmpNumber = nextNumber;
-        ap_uint<32> mask = 0;
-
-        for (unsigned int i = 0; i < mem_word_size/32 && j > 0; i++){
-            tmpNumber = nextNumber & 0;
-
+        ap_uint<512> currentNumber = j;
+        ap_uint<512> nextNumber = (currentNumber+1) xor 1;
+        ap_uint<512> tmpNumber = nextNumber;
+        tmpNumber = nextNumber & 0;
         if( nextNumber != (tmpNumber)){
             fault_cntr+=1;
         }
-        prevNumber = currentNumber;
-        currentNumber = nextNumber;
-        nextNumber = (nextNumber + 1 ) xor i;
-        }
     }
+    // for (unsigned int j = 0; j < mem_address; j+=mem_addr_per_word)
+    // {
+    //     ap_uint<32> currentNumber = j;
+    //     ap_uint<32> nextNumber = (currentNumber+1) xor 1;
+    //     ap_uint<32> prevNumber = currentNumber;
+    //     ap_uint<32> tmpNumber = nextNumber;
+    //     ap_uint<32> mask = 0;
+
+    //     for (unsigned int i = 0; i < mem_word_size/32 && j > 0; i++){
+    //         tmpNumber = nextNumber & 0;
+
+    //     if( nextNumber != (tmpNumber)){
+    //         fault_cntr+=1;
+    //     }
+    //     prevNumber = currentNumber;
+    //     currentNumber = nextNumber;
+    //     nextNumber = (nextNumber + 1 ) xor i;
+    //     }
+    // }
+    
 
 //init the commands and fill em out of the fault simulation before
     for(unsigned int i = 0; i < testingNumber; i++){

@@ -376,6 +376,58 @@ count:
     *out =cnt;
 }
 
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc2MemCountIncremental(hls::stream<Tin>& cmd, Tout * out) {
+  
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;
+#if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    *out +=cnt;
+}
+
+
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
+  
+    Tin input_cmd=1;
+
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+    reset:
+    while (input_cmd != 0)//an zero will 
+    {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+ #ifndef __SYNTHESIS__
+  printf("DEBUG begin to count :D input_cmd value = %s\n", input_cmd.to_string().c_str());
+#endif //__SYNTHESIS__
+
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;       
+// #if DEBUG_LEVEL == TRACE_ALL
+ #ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+// #endif     
+    }
+    input_cmd=cmd.read();
+  }
+  *out +=cnt;
+}
+
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
