@@ -405,7 +405,7 @@ void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
     // wait to receive a value to start counting
     ap_uint<counter_precision> cnt = cmd.read();
     reset:
-    while (input_cmd != 0)//an zero will 
+    while (input_cmd != 0)//a zero will stop the counter
     {
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
  #ifndef __SYNTHESIS__
@@ -416,6 +416,7 @@ void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
 count:
     while (cmd.read_nb(input_cmd) == false) {
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+#pragma HLS PIPELINE II=1
         cnt++;       
 // #if DEBUG_LEVEL == TRACE_ALL
  #ifndef __SYNTHESIS__

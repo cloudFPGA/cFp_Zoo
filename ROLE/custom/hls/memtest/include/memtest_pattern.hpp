@@ -509,11 +509,10 @@ unsigned int burst_size)
     static local_mem_addr_t curr_reading_addr;
     static unsigned int end_distance=0;
     static int ptrs_distance=0;
-    static bool last_iteration = false;
+    static bool transfer_less_than_burst = false;
     static bool activated_cntr = false;
+    static bool can_read_data = false;
 
-
-  cmd.write(0);;
   read_data_from_main_mem:
   int reading_mm_i = 0;//how much filled the buff
   int consumed_fifo_i = 0;//how much already outputed
@@ -526,10 +525,16 @@ unsigned int burst_size)
 
       end_distance = max_addr_ut-curr_reading_addr;
       ptrs_distance = reading_mm_i-consumed_fifo_i;
-      last_iteration = burst_size>end_distance;
+      transfer_less_than_burst = burst_size>end_distance;
+      can_read_data=(ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst;
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "End dst " << end_distance << " ptrs dst " << ptrs_distance << " is last? " << transfer_less_than_burst << std::endl;
+      #endif
+      #endif
       //if more than a burst size to available or the last iteration
-      if(ptrs_distance>=burst_size || -1*ptrs_distance>=burst_size || last_iteration){
-        if (!last_iteration)
+      if(can_read_data){
+        if (!transfer_less_than_burst)
         {
           //read a burst
           if(!activated_cntr){
@@ -538,6 +543,11 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "BURST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+      #endif
+      #endif
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*burst_size);
           curr_reading_addr+=burst_size;
           reading_mm_i=(reading_mm_i+burst_size)%buff_dim;
@@ -550,6 +560,7 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
+          std::cout << "LAST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*(consumed_fifo_i%burst_size+1));
           curr_reading_addr+=(consumed_fifo_i%burst_size+1);
           reading_mm_i=(reading_mm_i+consumed_fifo_i%burst_size+1)%buff_dim;
@@ -557,7 +568,7 @@ unsigned int burst_size)
         }
       }
 
-      if(ptrs_distance > 0 || -1*ptrs_distance>0){
+      if(ptrs_distance > 0 || -1*ptrs_distance>0 || can_read_data){
         readData.write(tmp_out[consumed_fifo_i]);
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
@@ -577,7 +588,9 @@ unsigned int burst_size)
   cmd.write(0);
   //reset
   end_distance=0;
-  last_iteration = false;
+  transfer_less_than_burst = false;
+  activated_cntr=false;
+  can_read_data=false;
   ptrs_distance=0;
 }
 
