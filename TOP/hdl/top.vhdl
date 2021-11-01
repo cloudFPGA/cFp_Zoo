@@ -280,7 +280,7 @@ architecture structural of topFMKU60 is
   signal smROL_SHL_Mem_Mp1_WLAST            : std_ulogic;
   signal smROL_SHL_Mem_Mp1_WVALID           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_WREADY           : std_ulogic;
-  signal smROL_SHL_Mem_Mp1_BID              : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_BID              : std_ulogic_vector(7 downto 0);
   signal smROL_SHL_Mem_Mp1_BRESP            : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_BVALID           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_BREADY           : std_ulogic;
@@ -291,7 +291,7 @@ architecture structural of topFMKU60 is
   signal smROL_SHL_Mem_Mp1_ARBURST          : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_ARVALID          : std_ulogic;
   signal smROL_SHL_Mem_Mp1_ARREADY          : std_ulogic;
-  signal smROL_SHL_Mem_Mp1_RID              : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_RID              : std_ulogic_vector(7 downto 0);
   signal smROL_SHL_Mem_Mp1_RDATA            : std_ulogic_vector(511 downto 0);
   signal smROL_SHL_Mem_Mp1_RRESP            : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_RLAST            : std_ulogic;
@@ -538,7 +538,7 @@ architecture structural of topFMKU60 is
       miROL_Mem_Mp1_WLAST               : in    std_ulogic;
       miROL_Mem_Mp1_WVALID              : in    std_ulogic;
       miROL_Mem_Mp1_WREADY              : out   std_ulogic;
-      miROL_Mem_Mp1_BID                 : out   std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_BID                 : out   std_ulogic_vector(7 downto 0);
       miROL_Mem_Mp1_BRESP               : out   std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_BVALID              : out   std_ulogic;
       miROL_Mem_Mp1_BREADY              : in    std_ulogic;
@@ -549,7 +549,7 @@ architecture structural of topFMKU60 is
       miROL_Mem_Mp1_ARBURST             : in    std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_ARVALID             : in    std_ulogic;
       miROL_Mem_Mp1_ARREADY             : out   std_ulogic;
-      miROL_Mem_Mp1_RID                 : out   std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_RID                 : out   std_ulogic_vector(7 downto 0);
       miROL_Mem_Mp1_RDATA               : out   std_ulogic_vector(511 downto 0);
       miROL_Mem_Mp1_RRESP               : out   std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_RLAST               : out   std_ulogic;
