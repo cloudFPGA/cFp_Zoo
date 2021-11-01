@@ -19,7 +19,7 @@
 #define FSM_PROCESSING_OUTPUT_4 10
 #define FSM_PROCESSING_OUTPUT_5 11
 #define FSM_PROCESSING_CONTINUOUS_RUN 12
-
+#define FSM_PROCESSING_WAIT_FOR_DDR_CONTROLLER_EMPTYNESS 13
 #define ProcessingFsmType uint8_t
 
 
@@ -257,18 +257,18 @@ unsigned int burst_size)
 //accumulated a burst or last iteration
       if (idx-written_i>=burst_size-1 || last_iteration)
       {
-      #if DEBUG_LEVEL == TRACE_ALL
+      //#if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
       std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
       #endif
-      #endif
+      //#endif
         if (!last_iteration)
         {
-      #if DEBUG_LEVEL == TRACE_ALL
+      //#if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
           std::cout << "BURST transferring " << burst_size << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
       #endif
-      #endif
+      //#endif
           if(!activated_cntr){
             cmd.write(0);
             activated_cntr = true;
@@ -276,14 +276,14 @@ unsigned int burst_size)
             cmd.write(1);
           }
           memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*burst_size);
+          cmd.write(1);
           curr_writing_addr+=burst_size;
           written_i= (written_i+burst_size)%buff_dim;
-          cmd.write(1);
         }else{
       #if DEBUG_LEVEL == TRACE_ALL
-      #ifndef __SYNTHESIS__
+      //#ifndef __SYNTHESIS__
           std::cout << "LAST transferring " << idx%burst_size+1 << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
-      #endif
+      //#endif
       #endif
           if(!activated_cntr){
             cmd.write(0);
@@ -292,9 +292,9 @@ unsigned int burst_size)
             cmd.write(1);
           }
           memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(idx%burst_size+1));
+          cmd.write(1);
           curr_writing_addr+=(idx%burst_size+1);
           written_i=(written_i+idx%burst_size+1)%buff_dim;
-          cmd.write(1);
         }
       }
       if(i==buff_dim-1){
@@ -526,9 +526,10 @@ unsigned int burst_size)
       end_distance = max_addr_ut-curr_reading_addr;
       ptrs_distance = reading_mm_i-consumed_fifo_i;
       transfer_less_than_burst = burst_size>end_distance;
-      can_read_data=(ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst;
+      can_read_data=(end_distance > 0) && ((ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst);
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
+          std::cout << "Max " << max_addr_ut << " reading at " << curr_reading_addr << " reading fifo at " << reading_mm_i <<  " consumed at " << consumed_fifo_i << std::endl;
           std::cout << "End dst " << end_distance << " ptrs dst " << ptrs_distance << " is last? " << transfer_less_than_burst << std::endl;
       #endif
       #endif
@@ -543,15 +544,15 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-      #if DEBUG_LEVEL == TRACE_ALL
+      //#if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
           std::cout << "BURST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
       #endif
-      #endif
+      //#endif
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*burst_size);
+          cmd.write(1);
           curr_reading_addr+=burst_size;
           reading_mm_i=(reading_mm_i+burst_size)%buff_dim;
-          cmd.write(1);
         }else{
           //read the missing words
           if(!activated_cntr){
@@ -560,11 +561,11 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-          std::cout << "LAST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+          std::cout << "LAST reading " << consumed_fifo_i%burst_size+1 << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*(consumed_fifo_i%burst_size+1));
+          cmd.write(1);
           curr_reading_addr+=(consumed_fifo_i%burst_size+1);
           reading_mm_i=(reading_mm_i+consumed_fifo_i%burst_size+1)%buff_dim;
-          cmd.write(1);
         }
       }
 
@@ -693,7 +694,7 @@ void pRDCompareDataStreamsCount(
 }
 
 template<const unsigned int max_iterations=4000000, const unsigned int buff_dim=16>
-void pRDCompareDataStreamsCountWordAligned(
+void pRDCmpStreamsCntWordAligned(
   local_mem_addr_t max_addr_ut,
   hls::stream<local_mem_word_t>& sInReadData,
   hls::stream<local_mem_word_t>& sInGoldData,
@@ -720,6 +721,8 @@ void pRDCompareDataStreamsCountWordAligned(
   {
 #pragma HLS PIPELINE
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
+#pragma HLS dependence variable=faulty_addresses_cntr_support_array inter RAW distance=16 true
+
     if (!sInReadData.empty() && !sInGoldData.empty())
     {
       testingVector[maddr_non_byte%buff_dim] = sInReadData.read(); 
@@ -731,8 +734,9 @@ void pRDCompareDataStreamsCountWordAligned(
           std::cout << " tst=" << testingVector[idx] << " vs gld=" << goldenVector[idx] << std::endl;
       #endif
       #endif
-      cmp_ok[idx]=testingVector[idx] == goldenVector[idx];
-      if(!cmp_ok[idx] ){
+      bool cmp_results = testingVector[idx] == goldenVector[idx];
+      cmp_ok[idx]=cmp_results;
+      if(!cmp_results ){
         faulty_addresses_cntr_support_array[idx]++;
         if (!first_fault_found)
         {
@@ -748,7 +752,7 @@ void pRDCompareDataStreamsCountWordAligned(
       curr_address_ut--;
     }
   }
-  std::cout << std::endl;
+ // std::cout << std::endl;
 
   for (int i = 0; i < buff_dim; i++)
   {
@@ -833,7 +837,7 @@ void pReadDataflowMemTest(
       perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
       //Step 3: compare
       //pRDCompareDataStreamsCount<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
-      pRDCompareDataStreamsCountWordAligned<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
+      pRDCmpStreamsCntWordAligned<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
 }
 
 
@@ -919,6 +923,7 @@ static size_t bytes_sent_for_tx =0;
     local_mem_word_t testingVector;
     local_mem_word_t goldenVector;
 
+static int emptycntr=0;
 
 #pragma HLS reset variable=local_mem_addr_non_byteaddressable
 #pragma HLS reset variable=curr_address_under_test
@@ -1124,6 +1129,17 @@ static size_t bytes_sent_for_tx =0;
     #endif
     pWriteDataflowMemTest( lcl_mem0, tmp_wordaligned_address , &writing_cntr,&testCounter,burst_size);
       processingFSM = FSM_PROCESSING_DATAFLOW_READ;
+      break;
+
+      case FSM_PROCESSING_WAIT_FOR_DDR_CONTROLLER_EMPTYNESS:
+      #if DEBUG_LEVEL == TRACE_ALL
+        printf("DEBUG processing the output of a run\n");
+      #endif
+        emptycntr++;
+        if(emptycntr==53){
+          processingFSM = FSM_PROCESSING_DATAFLOW_READ;
+          emptycntr=0;
+        }
       break;
 
       case FSM_PROCESSING_DATAFLOW_READ:
