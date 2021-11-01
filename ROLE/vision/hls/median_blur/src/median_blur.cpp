@@ -2,7 +2,7 @@
  * @file       median_blur.cpp
  * @brief      The Role for a MedianBlur Example application (UDP or TCP)
  * @author     FAB, WEI, NGL, DID
- * @date       May 2020
+ * @date       Oct 2021
  *----------------------------------------------------------------------------
  *
  * @details      This application implements a UDP/TCP-oriented Vitis function.
@@ -35,7 +35,6 @@ PacketFsmType  enqueueStrToDdrFSM  = WAIT_FOR_META;
 PacketFsmType  enqueueFSM  = WAIT_FOR_META;
 PacketFsmType  dequeueFSM  = WAIT_FOR_META;
 PacketFsmType  MedianBlurFSM   = WAIT_FOR_META;
-fsmStateDDRdef fsmStateDDR = FSM_IDLE; //FSM_WR_PAT_CMD;
 
 #ifdef ENABLE_DDR
 #if TRANSFERS_PER_CHUNK_DIVEND == 0
@@ -456,7 +455,7 @@ void pRXPathNetToStream(
     const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
     NetworkMetaStream   meta_tmp;
     static ap_uint<MEMDW_512> v = 0;
-    static unsigned int cnt_wr_stream, cnt_wr_burst;
+    static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;
 //    static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
 //    const unsigned int img_in_axi_stream_depth = TRANSFERS_PER_CHUNK; // the AXI burst size
 //    #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
@@ -535,7 +534,6 @@ void pRXPathStreamToDDR(
     stream<DmSts>                       &siMemWrStsP0,
     stream<Axis<MEMDW_512> >            &soMemWriteP0,
     //---- P1 Memory mapped ---------------
-    //unsigned int                        *processed_bytes_rx,
     stream<bool>                        &sImageLoaded
     )
 {
@@ -731,30 +729,6 @@ case FSM_WR_PAT_STS_C:
 }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 #endif // ENABLE_DDR
@@ -1318,7 +1292,7 @@ const unsigned int max_axi_rw_burst_length = 16;
   static stream<NodeId>            sDstNode_sig("sDstNode_sig");
 
 
-  //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+//-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
@@ -1338,7 +1312,6 @@ const unsigned int max_axi_rw_burst_length = 16;
 #ifdef ENABLE_DDR
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth  
 #pragma HLS stream variable=sProcessed_bytes_rx depth=img_in_axi_stream_depth
-#pragma HLS reset variable=fsmStateDDR
 #else
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
