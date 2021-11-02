@@ -99,7 +99,7 @@ def main():
     video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
     
-    fpgas = deque([["10.12.200.95" , "2719"]])
+    fpgas = deque([["10.12.200.181" , "2718"]])
 
 
     def crop_square_roi(img, size, interpolation=cv.INTER_AREA):

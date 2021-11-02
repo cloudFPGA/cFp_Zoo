@@ -329,7 +329,7 @@ int main(int argc, char * argv[]) {
 		#else
 		sock.send( & sendarr[i * PACK_SIZE], sending_now);
 		#endif
-		//delay(1);  
+		delay(300);
 	    }
             
             clock_t next_cycle_tx = clock();

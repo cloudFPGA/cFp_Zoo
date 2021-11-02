@@ -388,7 +388,8 @@ set ipName "median_blur"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
-set ipCfgList  [ list ]
+set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
+                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {8} ]
 
 set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
 
@@ -403,7 +404,8 @@ set ipName "median_blur"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
-set ipCfgList  [ list ]
+set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
+                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {8} ]
 
 set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
 
