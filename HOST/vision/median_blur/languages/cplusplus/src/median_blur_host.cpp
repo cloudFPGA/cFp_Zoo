@@ -24,7 +24,7 @@
 #include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 
-#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME) || (PY_WRAP == PY_WRAP_MEDIANBLUR_NUMPI)
 #include "opencv2/opencv.hpp"
 #include "../../../../../../ROLE/vision/hls/median_blur/include/xf_ocv_ref.hpp"  // For SW reference MedianBlur from OpenCV
 using namespace cv;

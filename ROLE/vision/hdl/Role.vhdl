@@ -189,7 +189,7 @@ entity Role_Themisto is
     moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
     moMEM_Mp1_BVALID                : in    std_ulogic;
     moMEM_Mp1_BREADY                : out   std_ulogic;
-    moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_ARID                  : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_ARADDR                : out   std_ulogic_vector(32 downto 0);
     moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
@@ -410,7 +410,7 @@ architecture Flash of Role_Themisto is
     m_axi_moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
     m_axi_moMEM_Mp1_BVALID                : in    std_ulogic;
     m_axi_moMEM_Mp1_BREADY                : out   std_ulogic;
-    --m_axi_moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
+    --m_axi_moMEM_Mp1_ARID                  : out   std_ulogic_vector(7 downto 0);
     m_axi_moMEM_Mp1_ARADDR                : out   std_ulogic_vector(63 downto 0);
     m_axi_moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
     m_axi_moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
@@ -632,7 +632,7 @@ begin
              m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
              m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
              m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
-             --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+             --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
              m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
              m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
              m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
@@ -760,7 +760,7 @@ begin
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding TAF                        --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
