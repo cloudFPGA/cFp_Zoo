@@ -170,6 +170,7 @@ elif [ $option2 = 'utils' ]; then
 elif [ $option2 = 'vision' ]; then
   option3=$($DIALOG --radiolist "Select Vision kernel" 0 0 0 \
   Harris "Harris Corner Detector" on \
+  Median_Blur "Median Blur Filter" off \
   Gammacorrection "Gamma Correction Filter" off)
 elif [ $option2 = 'custom' ]; then
   option3=$($DIALOG --radiolist "Select Custom kernel" 0 0 0 \
@@ -247,7 +248,7 @@ ${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
 python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4 $option5 $option6 &&\
 echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5', option6:'$option6'." &&\
 echo -e "$option1\n$option2\n$option3\n$option4\n$option5\n$option6" > $CONF_FILE && echo -e "Configuration saved in $CONF_FILE\n\n";;
-${DIALOG_CANCEL-1})  die "Aborting without selecting a domain";;
+${DIALOG_CANCEL-1})  die "Aborting upon user selection";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;
 ${DIALOG_ERROR-255}) die "Dialog error";;
 *) echo "Unknown error $retval"

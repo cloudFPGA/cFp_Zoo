@@ -32,11 +32,13 @@ assert_env:
 
 ## Either vivado_hls or vitis_hls
 hlstool=vivado_hls
-	
+
+HLS_VERSION := $(shell echo `$(hlstool) -version | head -n 1 | awk '{ print $$11}' | tr -d 'v' | tr -d '.'` | cut -c1-5)
+
 ${ipName}_prj/solution1/impl/ip: $(DEPS)
 	@#rm -rf $@
 	rm -rf ${ipName}_prj
-	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; $(hlstool) -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; export hlsVersion=$(HLS_VERSION); $(hlstool) -f run_hls.tcl
 	@#touch ${ipName}_prj
 	@touch $@
 	@touch ../../.ip_guard
@@ -58,6 +60,7 @@ obj = $(src:.cpp=.o)
 
 CXXFLAGS = -g -Wall -fstack-check -Wno-reorder -Wno-unknown-pragmas -Wno-attributes \
 					 -D__SDSVHLS__ -std=c++0x -std=c++11 \
+					 -DHLS_VERSION=${HLS_VERSION} \
 					 `pkg-config --libs opencv` `xml2-config --cflags --libs` \
 					 -I$(VIVADOBINDIR)/../include -I$(cFpRootDir)cFDK/SRA/LIB/hls \
 					 -I$(cFpRootDir)Vitis_Libraries/vision/L1/include
@@ -67,12 +70,14 @@ LDFLAGS = -lpthread
 ## Runs fast HLS C simulation using g++ toolchain
 fcompile: $(obj)
 ifdef CHECK_VIVADO
-	@echo "Found version $(CHECK_VIVADO)"
+	@echo "Found vivado in $(CHECK_VIVADO)"
+	@echo "Found hls version $(HLS_VERSION)"
 else
 	@echo Vivado was not found in PATH
 endif
 ifdef CHECK_VITIS
-	@echo "Found version $(CHECK_VITIS)"
+	@echo "Found vitis in $(CHECK_VITIS)"
+	@echo "Found hls version $(HLS_VERSION)"
 else
 	@echo Vitis was not found in PATH
 endif
@@ -96,13 +101,13 @@ kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
 
 csynth: assert_env
-	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; $(hlstool) -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=0; export hlsSyn=1; export hlsVersion=$(HLS_VERSION); $(hlstool) -f run_hls.tcl
 
 csim: assert_env
-	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimFile=../../../../$(INPUT_IMAGE); $(hlstool) -f run_hls.tcl
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export hlsVersion=$(HLS_VERSION); export SimFile=../../../../$(INPUT_IMAGE); $(hlstool) -f run_hls.tcl
 
 cosim: assert_env
-	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimFile=../../../../$(INPUT_IMAGE); $(hlstool) -f run_hls.tcl
+	export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export hlsVersion=$(HLS_VERSION); export SimFile=../../../../$(INPUT_IMAGE); $(hlstool) -f run_hls.tcl
 	#@#rm -rf ${ipName}_prj
 
 cosim_view:

@@ -46,6 +46,7 @@ set incDir       ${currDir}/include
 set testDir      ${currDir}/test
 set implDir      ${currDir}/${projectName}_prj/${solutionName}/impl/ip
 set repoDir      ${currDir}/../../ip
+set hlsVersion   $env(hlsVersion)
 
 # ------------------------------------------------------------------------------
 # Get targets out of env
@@ -83,7 +84,7 @@ set OPENCV_LIB_REF   "-lopencv_imgcodecs -lopencv_imgproc -lopencv_core -lopencv
 # ------------------------------------------------------------------------------
 open_project  ${projectName}_prj
 set_top       ${projectName}
-#set_top cornerHarris_accel
+#set_top cornerHarrisAccelMem
 #set_top harris_accel
 
 set vitis_flags  "-D__SDSVHLS__ -std=c++0x"
@@ -92,7 +93,7 @@ if { $hlsSim} {
   set hlslib_flags "-std=c++11 "
 }
 if { $hlsSyn || $hlsCoSim}  {
-  set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS"
+  set hlslib_flags "-std=c++11 -DHLSLIB_SYNTHESIS -DHLS_VERSION=${hlsVersion}"
 }
 # the -I flag without trailing '/'!!
 add_files     ${srcDir}/${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${VISION_INC_FLAGS} ${vitis_flags} ${hlslib_flags}" -csimflags "-I$env(cFpRootDir)/cFDK/SRA/LIB/hls ${VISION_INC_FLAGS} ${vitis_flags} ${hlslib_flags}"
@@ -102,7 +103,7 @@ add_files -tb ${testDir}/test_${projectName}.cpp -cflags "-I$env(cFpRootDir)/cFD
 # ------------------------------------------------------------------------------
 # Create a solution
 # ------------------------------------------------------------------------------
-open_solution ${solutionName}
+open_solution ${solutionName} 
 
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default

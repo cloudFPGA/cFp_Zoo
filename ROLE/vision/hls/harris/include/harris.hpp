@@ -30,13 +30,13 @@
 #include <hls_stream.h>
 #include "ap_int.h"
 #include <stdint.h>
-
 #include "network.hpp"
+#include "memory_utils.hpp"
 
 using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
-#define ENABLE_DDR
+// #define ENABLE_DDR
 
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
@@ -48,6 +48,7 @@ enum EchoCtrl {
 };
 
 
+#define ROLE_IS_HARRIS
 
 
 #define WAIT_FOR_META             0
@@ -79,6 +80,11 @@ enum EchoCtrl {
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
 
+// Starting with 2718, this number corresponds to the extra opened ports of this role. Every bit set
+// corresponds to one port.
+// e.g. 0x1->2718, 0x2->2719, 0x3->[2718,2719], 0x7->[2718,2719,2720], 0x17->[2718-2722], etc.
+#define PORTS_OPENED 0x1F
+
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
@@ -101,9 +107,16 @@ typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 (1 + (IMGSIZE - 1) / BPERMDW_512)
 
-#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
+/***************************************************************************************************
+ * @brief This define configures tha AXI burst size of DDRM memory-mapped interfaces 
+ * AXI4 allows 4KiB, but Role's AXI interconnect is configured at max 1KiB
+ * 0x40->64, 0x400->1024B(1KiB), 0x1000->4KiB
+ **************************************************************************************************/
+#define CHECK_CHUNK_SIZE 0x400 
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64
 #define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
+#define TRANSFERS_PER_CHUNK_DIVEND (TOTMEMDW_512-(TOTMEMDW_512/TRANSFERS_PER_CHUNK)*TRANSFERS_PER_CHUNK)
+
 
 //typedef enum fsmStateDDRenum {
 //    FSM_WR_PAT_CMD	= 0,
@@ -117,7 +130,9 @@ typedef membus_512_t membus_t;
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100
 #define TYPICAL_DDR_LATENCY 4
-#define DDR_LATENCY 52 // The latency cycles of cF DDR
+// The latency cycles of cF DDR. We've measured 52, but experimentally we take it if we divide by 
+// 4.769230769, taking into account the II=2 and the latency of the FSM
+#define DDR_LATENCY (52/4)
 #define EXTRA_DDR_LATENCY_DUE_II (64 + 8) // 8 is the write from input stream to local stream, 64 is read from local stream to DDR
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
@@ -131,32 +146,6 @@ struct Axis {
   Axis(ap_uint<D> single_data) : tdata((ap_uint<D>)single_data), tkeep(1), tlast(1) {}
 };
 
-// AXI DataMover - Format of the command word (c.f PG022)
-struct DmCmd
-{
-  ap_uint<23>   btt;
-  ap_uint<1>    type;
-  ap_uint<6>    dsa;
-  ap_uint<1>    eof;
-  ap_uint<1>    drr;
-  ap_uint<40>   saddr;
-  ap_uint<4>    tag;
-  ap_uint<4>    rsvd;
-  DmCmd() {}
-  DmCmd(ap_uint<40> addr, ap_uint<16> len) :
-    btt(len), type(1), dsa(0), eof(1), drr(0), saddr(addr), tag(0x7), rsvd(0) {}
-};
-
-// AXI DataMover - Format of the status word (c.f PG022)
-struct DmSts
-{
-  ap_uint<4>    tag;
-  ap_uint<1>    interr;
-  ap_uint<1>    decerr;
-  ap_uint<1>    slverr;
-  ap_uint<1>    okay;
-  DmSts() {}
-};
 
 void harris(
 

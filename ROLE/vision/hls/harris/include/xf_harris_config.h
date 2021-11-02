@@ -105,8 +105,10 @@ void cornerHarrisAccelArray(ap_uint<INPUT_PTR_WIDTH>* img_inp,
                             int rows, int cols, int threshold, int k);
 
 void cornerHarrisAccelStream(
-    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
-    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    //hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
+    //hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
     int rows, int cols, int threshold, int k);
 
 void fakeCornerHarrisAccelStream(

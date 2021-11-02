@@ -104,8 +104,10 @@ void cornerHarrisAccelArray(
  *****************************************************************************/
 //extern "C" {
 void cornerHarrisAccelStream(
-    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
-    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
+    //hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
+    //hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     int rows, int cols, int threshold, int k) {
     // clang-format on
     #pragma  HLS INLINE off
@@ -128,14 +130,25 @@ void cornerHarrisAccelStream(
     #pragma HLS DATAFLOW
     // clang-format on
 
-    xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(
-      img_in_axi_stream, in_mat);  
+    accel_utils accel_utils_obj;
+    
+    int dstMat_cols_align_npc = ((in_mat.cols + (NPIX - 1)) >> XF_BITSHIFT(NPIX)) << XF_BITSHIFT(NPIX);
+
+    accel_utils_obj.hlsStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX, (HEIGHT * WIDTH) / NPIX>(img_in_axi_stream, in_mat, dstMat_cols_align_npc);
+    
+    //xf::cv::axiStrm2xfMat<INPUT_PTR_WIDTH, IN_TYPE, HEIGHT, WIDTH, NPIX>(
+    //  img_in_axi_stream, in_mat);  
+
     xf::cv::cornerHarris<FILTER_WIDTH, BLOCK_WIDTH, NMS_RADIUS, IN_TYPE, HEIGHT, WIDTH, NPIX, XF_USE_URAM>(
       in_mat, out_mat, threshold, k);
-    //float gammaval = 0.2;
-    //xf::cv::gammacorrection<IN_TYPE, OUT_TYPE, HEIGHT, WIDTH, NPC1>(in_mat, out_mat, gammaval);    
-    xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(
-      out_mat, img_out_axi_stream);
+
+    //xf::cv::xfMat2axiStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX>(
+    //  out_mat, img_out_axi_stream);
+    
+    int srcMat_cols_align_npc = ((out_mat.cols + (NPIX - 1)) >> XF_BITSHIFT(NPIX)) << XF_BITSHIFT(NPIX);
+    
+    accel_utils_obj.xfMat2hlsStrm<OUTPUT_PTR_WIDTH, OUT_TYPE, HEIGHT, WIDTH, NPIX, HEIGHT*((WIDTH + NPIX - 1) / NPIX)>(out_mat, img_out_axi_stream,
+                                                                                        srcMat_cols_align_npc);
     
     
 }

@@ -11,9 +11,9 @@ template_kernel2="Harris"
 template_kernel3="HARRIS"
 
 # Choose the name of the new kernel/files/dirs
-new_kernel="newharrisfortest"
-new_kernel2="Newharrisfortest"
-new_kernel3="NEWHARRISFORTEST"
+new_kernel="median_blur"
+new_kernel2="MedianBlur"
+new_kernel3="MEDIANBLUR"
 
 function replace() {
     files="$(find -L "$1" -type f)";
@@ -24,7 +24,7 @@ function replace() {
     file_count=$(echo "$files" | wc -l)
     echo "Count: $file_count"
     echo "$files" | while read filen; do
-        if [[ $filen =~ "hls_reports" ]] || [[ $filen =~ "build" ]] || [[ $filen =~ "Vitis_Libraries" ]]  || [[ $filen =~ "cFDK" ]] || [[ $filen =~ "hlslib" ]] 
+        if [[ $filen =~ "hls_reports" ]] || [[ $filen =~ "build" ]] || [[ $filen =~ "Vitis_Libraries" ]]  || [[ $filen =~ "cFDK" ]] || [[ $filen =~ "hlslib" ]] || [[ $filen =~ ".git" ]] || [[ $filen =~ ".log" ]]
         then
            echo "Skipping auxililiary file " ${filen}
            continue
@@ -40,7 +40,7 @@ function replace() {
 
 find ./ -type d -name ${template_kernel} -print 2>/dev/null | while read dir_src_kernel; do
     echo  "#####################################"
-    if [[ $dir_src_kernel =~ "Vitis_Libraries" ]] || [[ $filen =~ "build" ]]
+    if [[ $dir_src_kernel =~ "Vitis_Libraries" ]] || [[ $dir_src_kernel =~ "build" ]] || [[ $dir_src_kernel =~ ".git" ]] || [[ $dir_src_kernel =~ "cFDK" ]] || [[ $dir_src_kernel =~ "hlslib" ]]
     then
        echo "Skipping auxililiary dir " ${dir_src_kernel}
        continue

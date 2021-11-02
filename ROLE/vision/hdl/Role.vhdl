@@ -168,7 +168,7 @@ entity Role_Themisto is
     --------------------------------------------------------
     -- SHELL / Mem / Mp1 Interface
     --------------------------------------------------------
-    moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_AWID                  : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_AWADDR                : out   std_ulogic_vector(32 downto 0);
     moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
@@ -185,7 +185,7 @@ entity Role_Themisto is
     moMEM_Mp1_WLAST                 : out   std_ulogic;
     moMEM_Mp1_WVALID                : out   std_ulogic;
     moMEM_Mp1_WREADY                : in    std_ulogic;
-    moMEM_Mp1_BID                   : in    std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_BID                   : in    std_ulogic_vector(7 downto 0);
     moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
     moMEM_Mp1_BVALID                : in    std_ulogic;
     moMEM_Mp1_BREADY                : out   std_ulogic;
@@ -201,7 +201,7 @@ entity Role_Themisto is
     --moMEM_Mp1_ARQOS                 : out   std_ulogic_vector(3 downto 0);
     moMEM_Mp1_ARVALID               : out   std_ulogic;
     moMEM_Mp1_ARREADY               : in    std_ulogic;
-    moMEM_Mp1_RID                   : in    std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_RID                   : in    std_ulogic_vector(7 downto 0);
     moMEM_Mp1_RDATA                 : in    std_ulogic_vector(511 downto 0);
     moMEM_Mp1_RRESP                 : in    std_ulogic_vector(1 downto 0);
     moMEM_Mp1_RLAST                 : in    std_ulogic;
@@ -267,7 +267,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component HarrisApplication is
+  component Median_BlurApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -385,7 +385,7 @@ architecture Flash of Role_Themisto is
     --------------------------------------------------------
     -- SHELL / Mem / Mp1 Interface / Start Component
     --------------------------------------------------------
-    --m_axi_moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
+    --m_axi_moMEM_Mp1_AWID                  : out   std_ulogic_vector(7 downto 0);
     m_axi_moMEM_Mp1_AWADDR                : out   std_ulogic_vector(63 downto 0);
     m_axi_moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
     m_axi_moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
@@ -405,7 +405,7 @@ architecture Flash of Role_Themisto is
     --m_axi_moMEM_Mp1_WUSER                 : out   std_ulogic_vector(0 downto 0);
     m_axi_moMEM_Mp1_WVALID                : out   std_ulogic;
     m_axi_moMEM_Mp1_WREADY                : in    std_ulogic;
-    --m_axi_moMEM_Mp1_BID                   : in    std_ulogic_vector(3 downto 0);
+    --m_axi_moMEM_Mp1_BID                   : in    std_ulogic_vector(7 downto 0);
     --m_axi_moMEM_Mp1_BUSER                 : in    std_ulogic_vector(0 downto 0);
     m_axi_moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
     m_axi_moMEM_Mp1_BVALID                : in    std_ulogic;
@@ -423,7 +423,7 @@ architecture Flash of Role_Themisto is
     m_axi_moMEM_mp1_ARQOS                 : out   std_ulogic_vector(3 downto 0);
     m_axi_moMEM_Mp1_ARVALID               : out   std_ulogic;
     m_axi_moMEM_Mp1_ARREADY               : in    std_ulogic;
-    --m_axi_moMEM_Mp1_RID                   : in    std_ulogic_vector(3 downto 0);
+    --m_axi_moMEM_Mp1_RID                   : in    std_ulogic_vector(7 downto 0);
     --m_axi_moMEM_Mp1_RUSER                 : in    std_ulogic_vector(0 downto 0);
     m_axi_moMEM_Mp1_RDATA                 : in    std_ulogic_vector(511 downto 0);
     m_axi_moMEM_Mp1_RRESP                 : in    std_ulogic_vector(1 downto 0);
@@ -437,7 +437,7 @@ architecture Flash of Role_Themisto is
     --------------------------------------------------------
     
          );
-  end component HarrisApplication;
+  end component Median_BlurApplication;
 
 
 
@@ -498,7 +498,7 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: HarrisApplication
+  UAF: Median_BlurApplication
   port map (
 
              ------------------------------------------------------
@@ -646,7 +646,7 @@ begin
              m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
              m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
              m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
-             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
              m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
              m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
              m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
@@ -656,13 +656,13 @@ begin
              m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
              --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
              m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
-             --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+             --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
              m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
              m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
              --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
              m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
              m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
-             --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+             --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
              m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
              m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
              m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
@@ -705,7 +705,7 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
--- auto excluding TAF             TAF: HarrisApplication
+-- auto excluding TAF             TAF: Median_BlurApplication
 -- auto excluding TAF             port map (
 -- auto excluding TAF           
 -- auto excluding TAF                        ------------------------------------------------------
@@ -774,7 +774,7 @@ begin
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding TAF                        --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
@@ -784,13 +784,13 @@ begin
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
 -- auto excluding TAF                        --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding TAF                        --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
 -- auto excluding TAF                        m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
 -- auto excluding TAF                        --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding TAF                        --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
 -- auto excluding TAF                        m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
 -- auto excluding TAF                        m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,

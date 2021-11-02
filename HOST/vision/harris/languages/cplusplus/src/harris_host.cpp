@@ -41,18 +41,40 @@ void delay(unsigned int mseconds)
 
 void print_cFpVitis(void)
 {
-        cout <<  "                                                          " << endl;
-	cout <<  "...build with:                                            " << endl;
-	cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
-	cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
-	cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
-	cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
-	cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
-	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-	cout <<  "                                                          " << endl;
+    cout <<  "                                                          " << endl;
+    cout <<  "...build with:                                            " << endl;
+    cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
+    cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
+    cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
+    cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
+    cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
+    cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
+    cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
+    cout <<  "                                                          " << endl;
 }
 
+/*****************************************************************************
+ * @brief Resize an image and crop if necessary in order to keep a rectangle 
+ * area in the middle of the image
+ *
+ * @param[in]  input          A pointer to the cv::Mat input image
+ * @param[out] output         A pointer to the cv::Mat output image
+ * @param[in]  Size           A pointer to the cv::Size of the output image (width, height)
+ * @param[in]  interpolation  Enumerator for interpolation algorithm (imgproc.hpp)
+ *
+ * @return Nothing.
+ ******************************************************************************/
+void resizeCropSquare(const cv::Mat &input, const cv::Mat &output, const cv::Size &dstSize, int interpolation = INTER_LINEAR)
+{
+    int h = input.rows;
+    int w = input.cols;
+    int min_size = min(h, w);
+    int x = w/2-min_size/2;
+    int y = h/2-min_size/2;
+    // printf("w=%d, h=%d, min_size=%d, x=%d, y=%d, width=%d, height=%d\n", w, h, min_size, x, y, width, height);
+    cv::Mat crop_img = input(Rect(x, y, min_size, min_size));
+    resize(crop_img, output, Size(dstSize.width, dstSize.height), 0, 0, interpolation);
+}
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
@@ -224,7 +246,7 @@ int main(int argc, char * argv[]) {
         //------------------------------------------------------------------------------------
         //-- STEP-3 : Initialize a Greyscale OpenCV Mat either from image or from video/camera
         //------------------------------------------------------------------------------------
-        Mat frame, send, ocv_out_img;
+        Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
         vector < uchar > encoded;
 
 	#ifdef INPUT_FROM_CAMERA
@@ -261,7 +283,7 @@ int main(int argc, char * argv[]) {
 #else
         cv::cvtColor(frame,frame,cv::COLOR_BGR2GRAY);
 #endif
-	    resize(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), 0, 0, INTER_LINEAR);
+        resizeCropSquare(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), INTER_LINEAR);
 	    if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
 	        cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
 		<< frame.rows << " to " << send.cols << "x" << send.rows << endl;
@@ -289,7 +311,6 @@ int main(int argc, char * argv[]) {
 	    unsigned int send_total = (unsigned int)total_size;
 	    unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
 	    unsigned char * sendarr = input_img;
-	    
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 
    
@@ -299,7 +320,8 @@ int main(int argc, char * argv[]) {
             unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
 	    assert(total_pack == TOT_TRANSFERS);
 
-	    cout << "INFO: Network socket : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+	    cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
 	    cout << "INFO: Total packets to send/receive = " << total_pack << endl;
             cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
 	    cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
@@ -351,7 +373,7 @@ int main(int argc, char * argv[]) {
 		#else
 		sock.send( & sendarr[i * PACK_SIZE], sending_now);
 		#endif
-		delay(100);  
+		//delay(1);  
 	    }
             
             clock_t next_cycle_tx = clock();
@@ -368,7 +390,7 @@ int main(int argc, char * argv[]) {
 	    clock_t last_cycle_rx = clock();
 #endif
 	    unsigned int receiving_now = PACK_SIZE;
-            cout << "INFO: Expecting length of packs:" << total_pack << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             for (unsigned int i = 0; i < send_total; ) {
 	        //cout << "DEBUG: " << i << endl;
@@ -502,7 +524,7 @@ int main(int argc, char * argv[]) {
 	// When everything done, release the video capture and write object
 	cap.release();
 	video.release();
-    videop.release();
+    	videop.release();
 
         // Closes all the windows
 	destroyAllWindows();
@@ -510,6 +532,7 @@ int main(int argc, char * argv[]) {
 #else
 	//output_img = longbuf;
 	memcpy( output_img, longbuf, total_size);
+    	delete(longbuf);
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_HARRIS_FILENAME)
 	
 	// Destructor closes the socket

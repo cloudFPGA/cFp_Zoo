@@ -7,7 +7,7 @@ find_package(OpenCV REQUIRED)
 
 #set(PYTHON_INCLUDE_PATH /usr/include/python3.5m)
 #set(PYTHON_LIBRARIES /usr/lib/x86_64-linux-gnu/libpython3.5m.so)
-set(PYTHON_LIBRARIES /usr/lib64/libpython3.8.so)
+#set(PYTHON_LIBRARIES /usr/lib64/libpython3.8.so)
 #set(PYTHON_EXECUTABLE /usr/bin/python3.5m)
 #set(PYTHON_INCLUDE_DIR  /usr/include/python3.5m)
 #set(Python_ADDITIONAL_VERSIONS 3.5)

@@ -1,0 +1,2128 @@
+This HLS IP Core needs the cFp environment activated....checking...
+echo 4096
+4096
+export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=4096; export SimNumberTests=3; export SimBurstSize=1; export CommandString=""; vivado_hls -f run_hls.tcl
+
+****** Vivado(TM) HLS - High-Level Synthesis from C, C++ and SystemC v2020.1 (64-bit)
+  **** SW Build 2902540 on Wed May 27 19:54:35 MDT 2020
+  **** IP Build 2902112 on Wed May 27 22:43:36 MDT 2020
+    ** Copyright 1986-2020 Xilinx, Inc. All Rights Reserved.
+
+source /tools/Xilinx/Vivado/2020.1/scripts/vivado_hls/hls.tcl -notrace
+INFO: [HLS 200-10] Running '/tools/Xilinx/Vivado/2020.1/bin/unwrapped/lnx64.o/vivado_hls'
+INFO: [HLS 200-10] For user 'dco' on host 'poltera' (Linux_x86_64 version 4.15.0-135-generic) on Fri Oct 29 15:04:23 CEST 2021
+INFO: [HLS 200-10] On os Ubuntu 18.04.5 LTS
+INFO: [HLS 200-10] In directory '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest'
+Sourcing Tcl script 'run_hls.tcl'
+INFO: [HLS 200-10] Opening project '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/memtest_prj'.
+INFO: [HLS 200-10] Adding design file '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/src/memtest.cpp' to the project
+INFO: [HLS 200-10] Adding test bench file '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/test/test_memtest.cpp' to the project
+INFO: [HLS 200-10] Opening solution '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/memtest_prj/solution1'.
+INFO: [SYN 201-201] Setting up clock 'default' with a period of 6.4ns.
+INFO: [HLS 200-10] Setting target device to 'xcku060-ffva1156-2-i'
+INFO: [SIM 211-2] *************** CSIM start ***************
+INFO: [SIM 211-4] CSIM will launch GCC as the compiler.
+make[1]: Entering directory '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/memtest_prj/solution1/csim/build'
+   Compiling ../../../../src/memtest.cpp in release mode
+   Generating csim.exe
+make[1]: Leaving directory '/home/dco/cFp_Vitis/ROLE/custom/hls/memtest/memtest_prj/solution1/csim/build'
+In file included from /tools/Xilinx/Vivado/2020.1/include/ap_utils.h:76:0,
+                 from /home/dco/cFp_Vitis//cFDK/SRA/LIB/hls/network.hpp:35,
+                 from ../../../../src/../include/memtest.hpp:36,
+                 from ../../../../src/memtest.cpp:20:
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:164:31: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_IfRead(...) SSDM_OP_ATTR;
+                               ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:165:32: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_IfWrite(...) SSDM_OP_ATTR;
+                                ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:166:36: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfNbRead(...) SSDM_OP_ATTR;
+                                    ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:166:36: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfNbRead(...) SSDM_OP_ATTR;
+                                    ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:167:37: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfNbWrite(...) SSDM_OP_ATTR;
+                                     ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:167:37: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfNbWrite(...) SSDM_OP_ATTR;
+                                     ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:168:37: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfCanRead(...) SSDM_OP_ATTR;
+                                     ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:168:37: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfCanRead(...) SSDM_OP_ATTR;
+                                     ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:169:38: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfCanWrite(...) SSDM_OP_ATTR;
+                                      ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:169:38: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_ _ssdm_op_IfCanWrite(...) SSDM_OP_ATTR;
+                                      ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:172:32: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_StreamRead(...) SSDM_OP_ATTR;
+                                ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:173:33: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_StreamWrite(...) SSDM_OP_ATTR;
+                                 ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:174:36: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_SetStreamDepth(...) SSDM_OP_ATTR;
+                                    ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:176:38: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamNbRead(...) SSDM_OP_ATTR;
+                                      ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:176:38: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamNbRead(...) SSDM_OP_ATTR;
+                                      ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:177:39: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamNbWrite(...) SSDM_OP_ATTR;
+                                       ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:177:39: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamNbWrite(...) SSDM_OP_ATTR;
+                                       ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:178:39: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamCanRead(...) SSDM_OP_ATTR;
+                                       ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:178:39: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamCanRead(...) SSDM_OP_ATTR;
+                                       ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:179:40: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamCanWrite(...) SSDM_OP_ATTR;
+                                        ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘bitwidth’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:179:40: note: in expansion of macro ‘SSDM_OP_ATTR’
+     _uint1_  _ssdm_StreamCanWrite(...) SSDM_OP_ATTR;
+                                        ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:180:36: note: in expansion of macro ‘SSDM_OP_ATTR’
+     unsigned _ssdm_StreamSize(...) SSDM_OP_ATTR;
+                                    ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:185:37: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_MemShiftRead(...) SSDM_OP_ATTR;
+                                     ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:187:29: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_Wait(...) SSDM_OP_ATTR;
+                             ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:188:29: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_Poll(...) SSDM_OP_ATTR;
+                             ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:153:76: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_OP_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                            ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:190:31: note: in expansion of macro ‘SSDM_OP_ATTR’
+     void _ssdm_op_Return(...) SSDM_OP_ATTR;
+                               ^~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:193:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecSynModule(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:194:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecTopModule(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:195:40: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecProcessDecl(...) SSDM_SPEC_ATTR;
+                                        ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:196:39: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecProcessDef(...) SSDM_SPEC_ATTR;
+                                       ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:197:33: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPort(...) SSDM_SPEC_ATTR;
+                                 ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:198:39: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecConnection(...) SSDM_SPEC_ATTR;
+                                       ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:199:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecChannel(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:200:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecSensitive(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:201:39: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecModuleInst(...) SSDM_SPEC_ATTR;
+                                       ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:202:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPortMap(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:204:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecReset(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:206:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPlatform(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:207:40: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecClockDomain(...) SSDM_SPEC_ATTR;
+                                        ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:208:40: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPowerDomain(...) SSDM_SPEC_ATTR;
+                                        ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:210:39: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     int _ssdm_op_SpecRegionBegin(...) SSDM_SPEC_ATTR;
+                                       ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:211:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     int _ssdm_op_SpecRegionEnd(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:213:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecLoopName(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:215:42: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecLoopTripCount(...) SSDM_SPEC_ATTR;
+                                          ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:217:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     int _ssdm_op_SpecStateBegin(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:218:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     int _ssdm_op_SpecStateEnd(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:220:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecInterface(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:222:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPipeline(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:223:45: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecDataflowPipeline(...) SSDM_SPEC_ATTR;
+                                             ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:226:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecLatency(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:227:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecParallel(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:228:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecProtocol(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:229:39: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecOccurrence(...) SSDM_SPEC_ATTR;
+                                       ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:231:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecResource(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:232:42: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecResourceLimit(...) SSDM_SPEC_ATTR;
+                                          ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:233:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecCHCore(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:234:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecFUCore(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:235:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecIFCore(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:236:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecIPCore(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:237:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecKeepValue(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:238:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecMemCore(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:240:32: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecExt(...) SSDM_SPEC_ATTR;
+                                ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:245:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecArrayDimSize(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:247:33: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_RegionBegin(...) SSDM_SPEC_ATTR;
+                                 ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:248:31: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_RegionEnd(...) SSDM_SPEC_ATTR;
+                               ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:250:28: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_Unroll(...) SSDM_SPEC_ATTR;
+                            ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:251:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_UnrollRegion(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:253:31: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_InlineAll(...) SSDM_SPEC_ATTR;
+                               ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:254:32: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_InlineLoop(...) SSDM_SPEC_ATTR;
+                                ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:255:28: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_Inline(...) SSDM_SPEC_ATTR;
+                            ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:256:32: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_InlineSelf(...) SSDM_SPEC_ATTR;
+                                ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:257:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_InlineRegion(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:259:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecArrayMap(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:260:40: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecArrayPartition(...) SSDM_SPEC_ATTR;
+                                        ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:261:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecArrayReshape(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:263:32: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecStream(...) SSDM_SPEC_ATTR;
+                                ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:265:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecStable(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:266:42: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecStableContent(...) SSDM_SPEC_ATTR;
+                                          ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:268:38: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecPipoDepth(...) SSDM_SPEC_ATTR;
+                                      ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:270:30: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecExpr(...) SSDM_SPEC_ATTR;
+                              ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:271:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecExprBalance(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:273:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecDependence(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:275:35: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecLoopMerge(...) SSDM_SPEC_ATTR;
+                                   ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:276:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecLoopFlatten(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:277:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecLoopRewind(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:279:43: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecFuncInstantiation(...) SSDM_SPEC_ATTR;
+                                           ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:280:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecFuncBuffer(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:281:37: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecFuncExtract(...) SSDM_SPEC_ATTR;
+                                     ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:282:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecConstant(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:284:30: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_DataPack(...) SSDM_SPEC_ATTR;
+                              ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:285:34: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_SpecDataPack(...) SSDM_SPEC_ATTR;
+                                  ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:287:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecBitsMap(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:152:78: warning: ‘overloadable’ attribute directive ignored [-Wattributes]
+ #define SSDM_SPEC_ATTR __attribute__ ((nothrow)) __attribute__((overloadable))
+                                                                              ^
+/tools/Xilinx/Vivado/2020.1/include/etc/autopilot_ssdm_op.h:288:36: note: in expansion of macro ‘SSDM_SPEC_ATTR’
+     void _ssdm_op_SpecLicense(...) SSDM_SPEC_ATTR;
+                                    ^~~~~~~~~~~~~~
+#####################################################
+## TESTBENCH STARTS HERE                           ##
+#####################################################
+Succesfully loaded string ... 4096
+Succesfully loaded the address number 4096 and the number of testings 3, with busrt size 1
+rank: 1; size: 2; 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+[0001] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=0, *processed_bytes_rx=0
+Hallo, I received a start command :D
+DEBUG proc FSM, I am in the PROCESSING_PCKT_PROC state
+DEBUG processing the packet with the address within cmd
+DEBUG processing the packet with the address 0b01000000000000 within cmd 0b011
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0002] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=0, *processed_bytes_rx=0
+Hallo, I received a burst size command :), and prev_was_start=1
+DEBUG proc FSM, I am in the FSM_PROCESSING_BURST_READING state
+0b0100000100
+DEBUG processing the packet with burst cmd, and burst size=1
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0003] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the START state
+ testing the address word aligned0b01000000
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0004] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing write dataflow
+0
+test addr 0 current address 0
+Burst filled or last iteration, end_distance= 64
+BURST transferring 1 words at 0 address, from  0
+3
+test addr 1 current address 1
+Burst filled or last iteration, end_distance= 63
+BURST transferring 1 words at 1 address, from  1
+2
+test addr 2 current address 2
+Burst filled or last iteration, end_distance= 62
+BURST transferring 1 words at 2 address, from  2
+5
+test addr 3 current address 3
+Burst filled or last iteration, end_distance= 61
+BURST transferring 1 words at 3 address, from  3
+4
+test addr 4 current address 4
+Burst filled or last iteration, end_distance= 60
+BURST transferring 1 words at 4 address, from  4
+7
+test addr 5 current address 5
+Burst filled or last iteration, end_distance= 59
+BURST transferring 1 words at 5 address, from  5
+6
+test addr 6 current address 6
+Burst filled or last iteration, end_distance= 58
+BURST transferring 1 words at 6 address, from  6
+9
+test addr 7 current address 7
+Burst filled or last iteration, end_distance= 57
+BURST transferring 1 words at 7 address, from  7
+8
+test addr 8 current address 8
+Burst filled or last iteration, end_distance= 56
+BURST transferring 1 words at 8 address, from  8
+11
+test addr 9 current address 9
+Burst filled or last iteration, end_distance= 55
+BURST transferring 1 words at 9 address, from  9
+10
+test addr 10 current address 10
+Burst filled or last iteration, end_distance= 54
+BURST transferring 1 words at 10 address, from  10
+13
+test addr 11 current address 11
+Burst filled or last iteration, end_distance= 53
+BURST transferring 1 words at 11 address, from  11
+12
+test addr 12 current address 12
+Burst filled or last iteration, end_distance= 52
+BURST transferring 1 words at 12 address, from  12
+15
+test addr 13 current address 13
+Burst filled or last iteration, end_distance= 51
+BURST transferring 1 words at 13 address, from  13
+14
+test addr 14 current address 14
+Burst filled or last iteration, end_distance= 50
+BURST transferring 1 words at 14 address, from  14
+17
+test addr 15 current address 15
+Burst filled or last iteration, end_distance= 49
+BURST transferring 1 words at 15 address, from  15
+0
+test addr 16 current address 16
+Burst filled or last iteration, end_distance= 48
+BURST transferring 1 words at 16 address, from  16
+3
+test addr 17 current address 17
+Burst filled or last iteration, end_distance= 47
+BURST transferring 1 words at 17 address, from  17
+2
+test addr 18 current address 18
+Burst filled or last iteration, end_distance= 46
+BURST transferring 1 words at 18 address, from  18
+5
+test addr 19 current address 19
+Burst filled or last iteration, end_distance= 45
+BURST transferring 1 words at 19 address, from  19
+4
+test addr 20 current address 20
+Burst filled or last iteration, end_distance= 44
+BURST transferring 1 words at 20 address, from  20
+7
+test addr 21 current address 21
+Burst filled or last iteration, end_distance= 43
+BURST transferring 1 words at 21 address, from  21
+6
+test addr 22 current address 22
+Burst filled or last iteration, end_distance= 42
+BURST transferring 1 words at 22 address, from  22
+9
+test addr 23 current address 23
+Burst filled or last iteration, end_distance= 41
+BURST transferring 1 words at 23 address, from  23
+8
+test addr 24 current address 24
+Burst filled or last iteration, end_distance= 40
+BURST transferring 1 words at 24 address, from  24
+11
+test addr 25 current address 25
+Burst filled or last iteration, end_distance= 39
+BURST transferring 1 words at 25 address, from  25
+10
+test addr 26 current address 26
+Burst filled or last iteration, end_distance= 38
+BURST transferring 1 words at 26 address, from  26
+13
+test addr 27 current address 27
+Burst filled or last iteration, end_distance= 37
+BURST transferring 1 words at 27 address, from  27
+12
+test addr 28 current address 28
+Burst filled or last iteration, end_distance= 36
+BURST transferring 1 words at 28 address, from  28
+15
+test addr 29 current address 29
+Burst filled or last iteration, end_distance= 35
+BURST transferring 1 words at 29 address, from  29
+14
+test addr 30 current address 30
+Burst filled or last iteration, end_distance= 34
+BURST transferring 1 words at 30 address, from  30
+17
+test addr 31 current address 31
+Burst filled or last iteration, end_distance= 33
+BURST transferring 1 words at 31 address, from  31
+0
+test addr 32 current address 32
+Burst filled or last iteration, end_distance= 32
+BURST transferring 1 words at 32 address, from  32
+3
+test addr 33 current address 33
+Burst filled or last iteration, end_distance= 31
+BURST transferring 1 words at 33 address, from  33
+2
+test addr 34 current address 34
+Burst filled or last iteration, end_distance= 30
+BURST transferring 1 words at 34 address, from  34
+5
+test addr 35 current address 35
+Burst filled or last iteration, end_distance= 29
+BURST transferring 1 words at 35 address, from  35
+4
+test addr 36 current address 36
+Burst filled or last iteration, end_distance= 28
+BURST transferring 1 words at 36 address, from  36
+7
+test addr 37 current address 37
+Burst filled or last iteration, end_distance= 27
+BURST transferring 1 words at 37 address, from  37
+6
+test addr 38 current address 38
+Burst filled or last iteration, end_distance= 26
+BURST transferring 1 words at 38 address, from  38
+9
+test addr 39 current address 39
+Burst filled or last iteration, end_distance= 25
+BURST transferring 1 words at 39 address, from  39
+8
+test addr 40 current address 40
+Burst filled or last iteration, end_distance= 24
+BURST transferring 1 words at 40 address, from  40
+11
+test addr 41 current address 41
+Burst filled or last iteration, end_distance= 23
+BURST transferring 1 words at 41 address, from  41
+10
+test addr 42 current address 42
+Burst filled or last iteration, end_distance= 22
+BURST transferring 1 words at 42 address, from  42
+13
+test addr 43 current address 43
+Burst filled or last iteration, end_distance= 21
+BURST transferring 1 words at 43 address, from  43
+12
+test addr 44 current address 44
+Burst filled or last iteration, end_distance= 20
+BURST transferring 1 words at 44 address, from  44
+15
+test addr 45 current address 45
+Burst filled or last iteration, end_distance= 19
+BURST transferring 1 words at 45 address, from  45
+14
+test addr 46 current address 46
+Burst filled or last iteration, end_distance= 18
+BURST transferring 1 words at 46 address, from  46
+17
+test addr 47 current address 47
+Burst filled or last iteration, end_distance= 17
+BURST transferring 1 words at 47 address, from  47
+0
+test addr 48 current address 48
+Burst filled or last iteration, end_distance= 16
+BURST transferring 1 words at 48 address, from  48
+3
+test addr 49 current address 49
+Burst filled or last iteration, end_distance= 15
+BURST transferring 1 words at 49 address, from  49
+2
+test addr 50 current address 50
+Burst filled or last iteration, end_distance= 14
+BURST transferring 1 words at 50 address, from  50
+5
+test addr 51 current address 51
+Burst filled or last iteration, end_distance= 13
+BURST transferring 1 words at 51 address, from  51
+4
+test addr 52 current address 52
+Burst filled or last iteration, end_distance= 12
+BURST transferring 1 words at 52 address, from  52
+7
+test addr 53 current address 53
+Burst filled or last iteration, end_distance= 11
+BURST transferring 1 words at 53 address, from  53
+6
+test addr 54 current address 54
+Burst filled or last iteration, end_distance= 10
+BURST transferring 1 words at 54 address, from  54
+9
+test addr 55 current address 55
+Burst filled or last iteration, end_distance= 9
+BURST transferring 1 words at 55 address, from  55
+8
+test addr 56 current address 56
+Burst filled or last iteration, end_distance= 8
+BURST transferring 1 words at 56 address, from  56
+11
+test addr 57 current address 57
+Burst filled or last iteration, end_distance= 7
+BURST transferring 1 words at 57 address, from  57
+10
+test addr 58 current address 58
+Burst filled or last iteration, end_distance= 6
+BURST transferring 1 words at 58 address, from  58
+13
+test addr 59 current address 59
+Burst filled or last iteration, end_distance= 5
+BURST transferring 1 words at 59 address, from  59
+12
+test addr 60 current address 60
+Burst filled or last iteration, end_distance= 4
+BURST transferring 1 words at 60 address, from  60
+15
+test addr 61 current address 61
+Burst filled or last iteration, end_distance= 3
+BURST transferring 1 words at 61 address, from  61
+14
+test addr 62 current address 62
+Burst filled or last iteration, end_distance= 2
+BURST transferring 1 words at 62 address, from  62
+17
+test addr 63 current address 63
+Burst filled or last iteration, end_distance= 1
+LAST transferring 1 words at 63 address, from  63
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0005] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing read dataflow
+read the 0 memory word, outputreading at  0 i at 0
+read the 1 memory word, outputreading at  0 i at 1
+ writing a memory word 0 I have to reach 2
+read the 2 memory word, outputreading at  1 i at 2
+ writing a memory word 1 I have to reach 3
+read the 3 memory word, outputreading at  2 i at 3
+ writing a memory word 2 I have to reach 4
+read the 4 memory word, outputreading at  3 i at 4
+ writing a memory word 3 I have to reach 5
+read the 5 memory word, outputreading at  4 i at 5
+ writing a memory word 4 I have to reach 6
+read the 6 memory word, outputreading at  5 i at 6
+ writing a memory word 5 I have to reach 7
+read the 7 memory word, outputreading at  6 i at 7
+ writing a memory word 6 I have to reach 8
+read the 8 memory word, outputreading at  7 i at 8
+ writing a memory word 7 I have to reach 9
+read the 9 memory word, outputreading at  8 i at 9
+ writing a memory word 8 I have to reach 10
+read the 10 memory word, outputreading at  9 i at 10
+ writing a memory word 9 I have to reach 11
+read the 11 memory word, outputreading at  10 i at 11
+ writing a memory word 10 I have to reach 12
+read the 12 memory word, outputreading at  11 i at 12
+ writing a memory word 11 I have to reach 13
+read the 13 memory word, outputreading at  12 i at 13
+ writing a memory word 12 I have to reach 14
+read the 14 memory word, outputreading at  13 i at 14
+ writing a memory word 13 I have to reach 15
+read the 15 memory word, outputreading at  14 i at 15
+ writing a memory word 14 I have to reach 16
+read the 16 memory word, outputreading at  15 i at 16
+ writing a memory word 15 I have to reach 17
+read the 17 memory word, outputreading at  16 i at 17
+ writing a memory word 16 I have to reach 18
+read the 18 memory word, outputreading at  17 i at 18
+ writing a memory word 17 I have to reach 19
+read the 19 memory word, outputreading at  18 i at 19
+ writing a memory word 18 I have to reach 20
+read the 20 memory word, outputreading at  19 i at 20
+ writing a memory word 19 I have to reach 21
+read the 21 memory word, outputreading at  20 i at 21
+ writing a memory word 20 I have to reach 22
+read the 22 memory word, outputreading at  21 i at 22
+ writing a memory word 21 I have to reach 23
+read the 23 memory word, outputreading at  22 i at 23
+ writing a memory word 22 I have to reach 24
+read the 24 memory word, outputreading at  23 i at 24
+ writing a memory word 23 I have to reach 25
+read the 25 memory word, outputreading at  24 i at 25
+ writing a memory word 24 I have to reach 26
+read the 26 memory word, outputreading at  25 i at 26
+ writing a memory word 25 I have to reach 27
+read the 27 memory word, outputreading at  26 i at 27
+ writing a memory word 26 I have to reach 28
+read the 28 memory word, outputreading at  27 i at 28
+ writing a memory word 27 I have to reach 29
+read the 29 memory word, outputreading at  28 i at 29
+ writing a memory word 28 I have to reach 30
+read the 30 memory word, outputreading at  29 i at 30
+ writing a memory word 29 I have to reach 31
+read the 31 memory word, outputreading at  30 i at 31
+ writing a memory word 30 I have to reach 32
+read the 32 memory word, outputreading at  31 i at 32
+ writing a memory word 31 I have to reach 33
+read the 33 memory word, outputreading at  32 i at 33
+ writing a memory word 32 I have to reach 34
+read the 34 memory word, outputreading at  33 i at 34
+ writing a memory word 33 I have to reach 35
+read the 35 memory word, outputreading at  34 i at 35
+ writing a memory word 34 I have to reach 36
+read the 36 memory word, outputreading at  35 i at 36
+ writing a memory word 35 I have to reach 37
+read the 37 memory word, outputreading at  36 i at 37
+ writing a memory word 36 I have to reach 38
+read the 38 memory word, outputreading at  37 i at 38
+ writing a memory word 37 I have to reach 39
+read the 39 memory word, outputreading at  38 i at 39
+ writing a memory word 38 I have to reach 40
+read the 40 memory word, outputreading at  39 i at 40
+ writing a memory word 39 I have to reach 41
+read the 41 memory word, outputreading at  40 i at 41
+ writing a memory word 40 I have to reach 42
+read the 42 memory word, outputreading at  41 i at 42
+ writing a memory word 41 I have to reach 43
+read the 43 memory word, outputreading at  42 i at 43
+ writing a memory word 42 I have to reach 44
+read the 44 memory word, outputreading at  43 i at 44
+ writing a memory word 43 I have to reach 45
+read the 45 memory word, outputreading at  44 i at 45
+ writing a memory word 44 I have to reach 46
+read the 46 memory word, outputreading at  45 i at 46
+ writing a memory word 45 I have to reach 47
+read the 47 memory word, outputreading at  46 i at 47
+ writing a memory word 46 I have to reach 48
+read the 48 memory word, outputreading at  47 i at 48
+ writing a memory word 47 I have to reach 49
+read the 49 memory word, outputreading at  48 i at 49
+ writing a memory word 48 I have to reach 50
+read the 50 memory word, outputreading at  49 i at 50
+ writing a memory word 49 I have to reach 51
+read the 51 memory word, outputreading at  50 i at 51
+ writing a memory word 50 I have to reach 52
+read the 52 memory word, outputreading at  51 i at 52
+ writing a memory word 51 I have to reach 53
+read the 53 memory word, outputreading at  52 i at 53
+ writing a memory word 52 I have to reach 54
+read the 54 memory word, outputreading at  53 i at 54
+ writing a memory word 53 I have to reach 55
+read the 55 memory word, outputreading at  54 i at 55
+ writing a memory word 54 I have to reach 56
+read the 56 memory word, outputreading at  55 i at 56
+ writing a memory word 55 I have to reach 57
+read the 57 memory word, outputreading at  56 i at 57
+ writing a memory word 56 I have to reach 58
+read the 58 memory word, outputreading at  57 i at 58
+ writing a memory word 57 I have to reach 59
+read the 59 memory word, outputreading at  58 i at 59
+ writing a memory word 58 I have to reach 60
+read the 60 memory word, outputreading at  59 i at 60
+ writing a memory word 59 I have to reach 61
+read the 61 memory word, outputreading at  60 i at 61
+ writing a memory word 60 I have to reach 62
+read the 62 memory word, outputreading at  61 i at 62
+ writing a memory word 61 I have to reach 63
+read the 63 memory word, outputreading at  62 i at 63
+ writing a memory word 62 I have to reach 63
+ writing a memory word 63 I have to reach 63
+ tst=0 vs gld=0
+ tst=3 vs gld=3
+ tst=2 vs gld=2
+ tst=5 vs gld=5
+ tst=4 vs gld=4
+ tst=7 vs gld=7
+ tst=6 vs gld=6
+ tst=9 vs gld=9
+ tst=8 vs gld=8
+ tst=11 vs gld=11
+ tst=10 vs gld=10
+ tst=13 vs gld=13
+ tst=12 vs gld=12
+ tst=15 vs gld=15
+ tst=14 vs gld=14
+ tst=17 vs gld=17
+ tst=0 vs gld=16
+ tst=3 vs gld=19
+ tst=2 vs gld=18
+ tst=5 vs gld=21
+ tst=4 vs gld=20
+ tst=7 vs gld=23
+ tst=6 vs gld=22
+ tst=9 vs gld=25
+ tst=8 vs gld=24
+ tst=11 vs gld=27
+ tst=10 vs gld=26
+ tst=13 vs gld=29
+ tst=12 vs gld=28
+ tst=15 vs gld=31
+ tst=14 vs gld=30
+ tst=17 vs gld=33
+ tst=0 vs gld=32
+ tst=3 vs gld=35
+ tst=2 vs gld=34
+ tst=5 vs gld=37
+ tst=4 vs gld=36
+ tst=7 vs gld=39
+ tst=6 vs gld=38
+ tst=9 vs gld=41
+ tst=8 vs gld=40
+ tst=11 vs gld=43
+ tst=10 vs gld=42
+ tst=13 vs gld=45
+ tst=12 vs gld=44
+ tst=15 vs gld=47
+ tst=14 vs gld=46
+ tst=17 vs gld=49
+ tst=0 vs gld=48
+ tst=3 vs gld=51
+ tst=2 vs gld=50
+ tst=5 vs gld=53
+ tst=4 vs gld=52
+ tst=7 vs gld=55
+ tst=6 vs gld=54
+ tst=9 vs gld=57
+ tst=8 vs gld=56
+ tst=11 vs gld=59
+ tst=10 vs gld=58
+ tst=13 vs gld=61
+ tst=12 vs gld=60
+ tst=15 vs gld=63
+ tst=14 vs gld=62
+ tst=17 vs gld=65
+
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0006] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0007] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 2; faulty address cntr 0b0110000
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=1
+[0008] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 3: first faulty address 0b010000000000
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=2
+[0009] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=3
+[0010] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=4
+[0011] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing continuous run (still run, iter 0b01) max iters: 0b011
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=5
+[0012] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing write dataflow
+0
+test addr 0 current address 0
+Burst filled or last iteration, end_distance= 64
+BURST transferring 1 words at 0 address, from  0
+3
+test addr 1 current address 1
+Burst filled or last iteration, end_distance= 63
+BURST transferring 1 words at 1 address, from  1
+2
+test addr 2 current address 2
+Burst filled or last iteration, end_distance= 62
+BURST transferring 1 words at 2 address, from  2
+5
+test addr 3 current address 3
+Burst filled or last iteration, end_distance= 61
+BURST transferring 1 words at 3 address, from  3
+4
+test addr 4 current address 4
+Burst filled or last iteration, end_distance= 60
+BURST transferring 1 words at 4 address, from  4
+7
+test addr 5 current address 5
+Burst filled or last iteration, end_distance= 59
+BURST transferring 1 words at 5 address, from  5
+6
+test addr 6 current address 6
+Burst filled or last iteration, end_distance= 58
+BURST transferring 1 words at 6 address, from  6
+9
+test addr 7 current address 7
+Burst filled or last iteration, end_distance= 57
+BURST transferring 1 words at 7 address, from  7
+8
+test addr 8 current address 8
+Burst filled or last iteration, end_distance= 56
+BURST transferring 1 words at 8 address, from  8
+11
+test addr 9 current address 9
+Burst filled or last iteration, end_distance= 55
+BURST transferring 1 words at 9 address, from  9
+10
+test addr 10 current address 10
+Burst filled or last iteration, end_distance= 54
+BURST transferring 1 words at 10 address, from  10
+13
+test addr 11 current address 11
+Burst filled or last iteration, end_distance= 53
+BURST transferring 1 words at 11 address, from  11
+12
+test addr 12 current address 12
+Burst filled or last iteration, end_distance= 52
+BURST transferring 1 words at 12 address, from  12
+15
+test addr 13 current address 13
+Burst filled or last iteration, end_distance= 51
+BURST transferring 1 words at 13 address, from  13
+14
+test addr 14 current address 14
+Burst filled or last iteration, end_distance= 50
+BURST transferring 1 words at 14 address, from  14
+17
+test addr 15 current address 15
+Burst filled or last iteration, end_distance= 49
+BURST transferring 1 words at 15 address, from  15
+0
+test addr 16 current address 16
+Burst filled or last iteration, end_distance= 48
+BURST transferring 1 words at 16 address, from  16
+3
+test addr 17 current address 17
+Burst filled or last iteration, end_distance= 47
+BURST transferring 1 words at 17 address, from  17
+2
+test addr 18 current address 18
+Burst filled or last iteration, end_distance= 46
+BURST transferring 1 words at 18 address, from  18
+5
+test addr 19 current address 19
+Burst filled or last iteration, end_distance= 45
+BURST transferring 1 words at 19 address, from  19
+4
+test addr 20 current address 20
+Burst filled or last iteration, end_distance= 44
+BURST transferring 1 words at 20 address, from  20
+7
+test addr 21 current address 21
+Burst filled or last iteration, end_distance= 43
+BURST transferring 1 words at 21 address, from  21
+6
+test addr 22 current address 22
+Burst filled or last iteration, end_distance= 42
+BURST transferring 1 words at 22 address, from  22
+9
+test addr 23 current address 23
+Burst filled or last iteration, end_distance= 41
+BURST transferring 1 words at 23 address, from  23
+8
+test addr 24 current address 24
+Burst filled or last iteration, end_distance= 40
+BURST transferring 1 words at 24 address, from  24
+11
+test addr 25 current address 25
+Burst filled or last iteration, end_distance= 39
+BURST transferring 1 words at 25 address, from  25
+10
+test addr 26 current address 26
+Burst filled or last iteration, end_distance= 38
+BURST transferring 1 words at 26 address, from  26
+13
+test addr 27 current address 27
+Burst filled or last iteration, end_distance= 37
+BURST transferring 1 words at 27 address, from  27
+12
+test addr 28 current address 28
+Burst filled or last iteration, end_distance= 36
+BURST transferring 1 words at 28 address, from  28
+15
+test addr 29 current address 29
+Burst filled or last iteration, end_distance= 35
+BURST transferring 1 words at 29 address, from  29
+14
+test addr 30 current address 30
+Burst filled or last iteration, end_distance= 34
+BURST transferring 1 words at 30 address, from  30
+17
+test addr 31 current address 31
+Burst filled or last iteration, end_distance= 33
+BURST transferring 1 words at 31 address, from  31
+0
+test addr 32 current address 32
+Burst filled or last iteration, end_distance= 32
+BURST transferring 1 words at 32 address, from  32
+3
+test addr 33 current address 33
+Burst filled or last iteration, end_distance= 31
+BURST transferring 1 words at 33 address, from  33
+2
+test addr 34 current address 34
+Burst filled or last iteration, end_distance= 30
+BURST transferring 1 words at 34 address, from  34
+5
+test addr 35 current address 35
+Burst filled or last iteration, end_distance= 29
+BURST transferring 1 words at 35 address, from  35
+4
+test addr 36 current address 36
+Burst filled or last iteration, end_distance= 28
+BURST transferring 1 words at 36 address, from  36
+7
+test addr 37 current address 37
+Burst filled or last iteration, end_distance= 27
+BURST transferring 1 words at 37 address, from  37
+6
+test addr 38 current address 38
+Burst filled or last iteration, end_distance= 26
+BURST transferring 1 words at 38 address, from  38
+9
+test addr 39 current address 39
+Burst filled or last iteration, end_distance= 25
+BURST transferring 1 words at 39 address, from  39
+8
+test addr 40 current address 40
+Burst filled or last iteration, end_distance= 24
+BURST transferring 1 words at 40 address, from  40
+11
+test addr 41 current address 41
+Burst filled or last iteration, end_distance= 23
+BURST transferring 1 words at 41 address, from  41
+10
+test addr 42 current address 42
+Burst filled or last iteration, end_distance= 22
+BURST transferring 1 words at 42 address, from  42
+13
+test addr 43 current address 43
+Burst filled or last iteration, end_distance= 21
+BURST transferring 1 words at 43 address, from  43
+12
+test addr 44 current address 44
+Burst filled or last iteration, end_distance= 20
+BURST transferring 1 words at 44 address, from  44
+15
+test addr 45 current address 45
+Burst filled or last iteration, end_distance= 19
+BURST transferring 1 words at 45 address, from  45
+14
+test addr 46 current address 46
+Burst filled or last iteration, end_distance= 18
+BURST transferring 1 words at 46 address, from  46
+17
+test addr 47 current address 47
+Burst filled or last iteration, end_distance= 17
+BURST transferring 1 words at 47 address, from  47
+0
+test addr 48 current address 48
+Burst filled or last iteration, end_distance= 16
+BURST transferring 1 words at 48 address, from  48
+3
+test addr 49 current address 49
+Burst filled or last iteration, end_distance= 15
+BURST transferring 1 words at 49 address, from  49
+2
+test addr 50 current address 50
+Burst filled or last iteration, end_distance= 14
+BURST transferring 1 words at 50 address, from  50
+5
+test addr 51 current address 51
+Burst filled or last iteration, end_distance= 13
+BURST transferring 1 words at 51 address, from  51
+4
+test addr 52 current address 52
+Burst filled or last iteration, end_distance= 12
+BURST transferring 1 words at 52 address, from  52
+7
+test addr 53 current address 53
+Burst filled or last iteration, end_distance= 11
+BURST transferring 1 words at 53 address, from  53
+6
+test addr 54 current address 54
+Burst filled or last iteration, end_distance= 10
+BURST transferring 1 words at 54 address, from  54
+9
+test addr 55 current address 55
+Burst filled or last iteration, end_distance= 9
+BURST transferring 1 words at 55 address, from  55
+8
+test addr 56 current address 56
+Burst filled or last iteration, end_distance= 8
+BURST transferring 1 words at 56 address, from  56
+11
+test addr 57 current address 57
+Burst filled or last iteration, end_distance= 7
+BURST transferring 1 words at 57 address, from  57
+10
+test addr 58 current address 58
+Burst filled or last iteration, end_distance= 6
+BURST transferring 1 words at 58 address, from  58
+13
+test addr 59 current address 59
+Burst filled or last iteration, end_distance= 5
+BURST transferring 1 words at 59 address, from  59
+12
+test addr 60 current address 60
+Burst filled or last iteration, end_distance= 4
+BURST transferring 1 words at 60 address, from  60
+15
+test addr 61 current address 61
+Burst filled or last iteration, end_distance= 3
+BURST transferring 1 words at 61 address, from  61
+14
+test addr 62 current address 62
+Burst filled or last iteration, end_distance= 2
+BURST transferring 1 words at 62 address, from  62
+17
+test addr 63 current address 63
+Burst filled or last iteration, end_distance= 1
+LAST transferring 1 words at 63 address, from  63
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=5
+[0013] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing read dataflow
+read the 0 memory word, outputreading at  0 i at 0
+read the 1 memory word, outputreading at  0 i at 1
+ writing a memory word 0 I have to reach 2
+read the 2 memory word, outputreading at  1 i at 2
+ writing a memory word 1 I have to reach 3
+read the 3 memory word, outputreading at  2 i at 3
+ writing a memory word 2 I have to reach 4
+read the 4 memory word, outputreading at  3 i at 4
+ writing a memory word 3 I have to reach 5
+read the 5 memory word, outputreading at  4 i at 5
+ writing a memory word 4 I have to reach 6
+read the 6 memory word, outputreading at  5 i at 6
+ writing a memory word 5 I have to reach 7
+read the 7 memory word, outputreading at  6 i at 7
+ writing a memory word 6 I have to reach 8
+read the 8 memory word, outputreading at  7 i at 8
+ writing a memory word 7 I have to reach 9
+read the 9 memory word, outputreading at  8 i at 9
+ writing a memory word 8 I have to reach 10
+read the 10 memory word, outputreading at  9 i at 10
+ writing a memory word 9 I have to reach 11
+read the 11 memory word, outputreading at  10 i at 11
+ writing a memory word 10 I have to reach 12
+read the 12 memory word, outputreading at  11 i at 12
+ writing a memory word 11 I have to reach 13
+read the 13 memory word, outputreading at  12 i at 13
+ writing a memory word 12 I have to reach 14
+read the 14 memory word, outputreading at  13 i at 14
+ writing a memory word 13 I have to reach 15
+read the 15 memory word, outputreading at  14 i at 15
+ writing a memory word 14 I have to reach 16
+read the 16 memory word, outputreading at  15 i at 16
+ writing a memory word 15 I have to reach 17
+read the 17 memory word, outputreading at  16 i at 17
+ writing a memory word 16 I have to reach 18
+read the 18 memory word, outputreading at  17 i at 18
+ writing a memory word 17 I have to reach 19
+read the 19 memory word, outputreading at  18 i at 19
+ writing a memory word 18 I have to reach 20
+read the 20 memory word, outputreading at  19 i at 20
+ writing a memory word 19 I have to reach 21
+read the 21 memory word, outputreading at  20 i at 21
+ writing a memory word 20 I have to reach 22
+read the 22 memory word, outputreading at  21 i at 22
+ writing a memory word 21 I have to reach 23
+read the 23 memory word, outputreading at  22 i at 23
+ writing a memory word 22 I have to reach 24
+read the 24 memory word, outputreading at  23 i at 24
+ writing a memory word 23 I have to reach 25
+read the 25 memory word, outputreading at  24 i at 25
+ writing a memory word 24 I have to reach 26
+read the 26 memory word, outputreading at  25 i at 26
+ writing a memory word 25 I have to reach 27
+read the 27 memory word, outputreading at  26 i at 27
+ writing a memory word 26 I have to reach 28
+read the 28 memory word, outputreading at  27 i at 28
+ writing a memory word 27 I have to reach 29
+read the 29 memory word, outputreading at  28 i at 29
+ writing a memory word 28 I have to reach 30
+read the 30 memory word, outputreading at  29 i at 30
+ writing a memory word 29 I have to reach 31
+read the 31 memory word, outputreading at  30 i at 31
+ writing a memory word 30 I have to reach 32
+read the 32 memory word, outputreading at  31 i at 32
+ writing a memory word 31 I have to reach 33
+read the 33 memory word, outputreading at  32 i at 33
+ writing a memory word 32 I have to reach 34
+read the 34 memory word, outputreading at  33 i at 34
+ writing a memory word 33 I have to reach 35
+read the 35 memory word, outputreading at  34 i at 35
+ writing a memory word 34 I have to reach 36
+read the 36 memory word, outputreading at  35 i at 36
+ writing a memory word 35 I have to reach 37
+read the 37 memory word, outputreading at  36 i at 37
+ writing a memory word 36 I have to reach 38
+read the 38 memory word, outputreading at  37 i at 38
+ writing a memory word 37 I have to reach 39
+read the 39 memory word, outputreading at  38 i at 39
+ writing a memory word 38 I have to reach 40
+read the 40 memory word, outputreading at  39 i at 40
+ writing a memory word 39 I have to reach 41
+read the 41 memory word, outputreading at  40 i at 41
+ writing a memory word 40 I have to reach 42
+read the 42 memory word, outputreading at  41 i at 42
+ writing a memory word 41 I have to reach 43
+read the 43 memory word, outputreading at  42 i at 43
+ writing a memory word 42 I have to reach 44
+read the 44 memory word, outputreading at  43 i at 44
+ writing a memory word 43 I have to reach 45
+read the 45 memory word, outputreading at  44 i at 45
+ writing a memory word 44 I have to reach 46
+read the 46 memory word, outputreading at  45 i at 46
+ writing a memory word 45 I have to reach 47
+read the 47 memory word, outputreading at  46 i at 47
+ writing a memory word 46 I have to reach 48
+read the 48 memory word, outputreading at  47 i at 48
+ writing a memory word 47 I have to reach 49
+read the 49 memory word, outputreading at  48 i at 49
+ writing a memory word 48 I have to reach 50
+read the 50 memory word, outputreading at  49 i at 50
+ writing a memory word 49 I have to reach 51
+read the 51 memory word, outputreading at  50 i at 51
+ writing a memory word 50 I have to reach 52
+read the 52 memory word, outputreading at  51 i at 52
+ writing a memory word 51 I have to reach 53
+read the 53 memory word, outputreading at  52 i at 53
+ writing a memory word 52 I have to reach 54
+read the 54 memory word, outputreading at  53 i at 54
+ writing a memory word 53 I have to reach 55
+read the 55 memory word, outputreading at  54 i at 55
+ writing a memory word 54 I have to reach 56
+read the 56 memory word, outputreading at  55 i at 56
+ writing a memory word 55 I have to reach 57
+read the 57 memory word, outputreading at  56 i at 57
+ writing a memory word 56 I have to reach 58
+read the 58 memory word, outputreading at  57 i at 58
+ writing a memory word 57 I have to reach 59
+read the 59 memory word, outputreading at  58 i at 59
+ writing a memory word 58 I have to reach 60
+read the 60 memory word, outputreading at  59 i at 60
+ writing a memory word 59 I have to reach 61
+read the 61 memory word, outputreading at  60 i at 61
+ writing a memory word 60 I have to reach 62
+read the 62 memory word, outputreading at  61 i at 62
+ writing a memory word 61 I have to reach 63
+read the 63 memory word, outputreading at  62 i at 63
+ writing a memory word 62 I have to reach 63
+ writing a memory word 63 I have to reach 63
+ tst=0 vs gld=0
+ tst=3 vs gld=3
+ tst=2 vs gld=2
+ tst=5 vs gld=5
+ tst=4 vs gld=4
+ tst=7 vs gld=7
+ tst=6 vs gld=6
+ tst=9 vs gld=9
+ tst=8 vs gld=8
+ tst=11 vs gld=11
+ tst=10 vs gld=10
+ tst=13 vs gld=13
+ tst=12 vs gld=12
+ tst=15 vs gld=15
+ tst=14 vs gld=14
+ tst=17 vs gld=17
+ tst=0 vs gld=16
+ tst=3 vs gld=19
+ tst=2 vs gld=18
+ tst=5 vs gld=21
+ tst=4 vs gld=20
+ tst=7 vs gld=23
+ tst=6 vs gld=22
+ tst=9 vs gld=25
+ tst=8 vs gld=24
+ tst=11 vs gld=27
+ tst=10 vs gld=26
+ tst=13 vs gld=29
+ tst=12 vs gld=28
+ tst=15 vs gld=31
+ tst=14 vs gld=30
+ tst=17 vs gld=33
+ tst=0 vs gld=32
+ tst=3 vs gld=35
+ tst=2 vs gld=34
+ tst=5 vs gld=37
+ tst=4 vs gld=36
+ tst=7 vs gld=39
+ tst=6 vs gld=38
+ tst=9 vs gld=41
+ tst=8 vs gld=40
+ tst=11 vs gld=43
+ tst=10 vs gld=42
+ tst=13 vs gld=45
+ tst=12 vs gld=44
+ tst=15 vs gld=47
+ tst=14 vs gld=46
+ tst=17 vs gld=49
+ tst=0 vs gld=48
+ tst=3 vs gld=51
+ tst=2 vs gld=50
+ tst=5 vs gld=53
+ tst=4 vs gld=52
+ tst=7 vs gld=55
+ tst=6 vs gld=54
+ tst=9 vs gld=57
+ tst=8 vs gld=56
+ tst=11 vs gld=59
+ tst=10 vs gld=58
+ tst=13 vs gld=61
+ tst=12 vs gld=60
+ tst=15 vs gld=63
+ tst=14 vs gld=62
+ tst=17 vs gld=65
+
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=5
+[0014] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=5
+[0015] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 2; faulty address cntr 0b0110000
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=6
+[0016] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 3: first faulty address 0b010000000000
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=7
+[0017] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=8
+[0018] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=9
+[0019] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing continuous run (still run, iter 0b010) max iters: 0b011
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=10
+[0020] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing write dataflow
+0
+test addr 0 current address 0
+Burst filled or last iteration, end_distance= 64
+BURST transferring 1 words at 0 address, from  0
+0
+test addr 1 current address 1
+Burst filled or last iteration, end_distance= 63
+BURST transferring 1 words at 1 address, from  1
+0
+test addr 2 current address 2
+Burst filled or last iteration, end_distance= 62
+BURST transferring 1 words at 2 address, from  2
+0
+test addr 3 current address 3
+Burst filled or last iteration, end_distance= 61
+BURST transferring 1 words at 3 address, from  3
+0
+test addr 4 current address 4
+Burst filled or last iteration, end_distance= 60
+BURST transferring 1 words at 4 address, from  4
+0
+test addr 5 current address 5
+Burst filled or last iteration, end_distance= 59
+BURST transferring 1 words at 5 address, from  5
+0
+test addr 6 current address 6
+Burst filled or last iteration, end_distance= 58
+BURST transferring 1 words at 6 address, from  6
+0
+test addr 7 current address 7
+Burst filled or last iteration, end_distance= 57
+BURST transferring 1 words at 7 address, from  7
+0
+test addr 8 current address 8
+Burst filled or last iteration, end_distance= 56
+BURST transferring 1 words at 8 address, from  8
+0
+test addr 9 current address 9
+Burst filled or last iteration, end_distance= 55
+BURST transferring 1 words at 9 address, from  9
+0
+test addr 10 current address 10
+Burst filled or last iteration, end_distance= 54
+BURST transferring 1 words at 10 address, from  10
+0
+test addr 11 current address 11
+Burst filled or last iteration, end_distance= 53
+BURST transferring 1 words at 11 address, from  11
+0
+test addr 12 current address 12
+Burst filled or last iteration, end_distance= 52
+BURST transferring 1 words at 12 address, from  12
+0
+test addr 13 current address 13
+Burst filled or last iteration, end_distance= 51
+BURST transferring 1 words at 13 address, from  13
+0
+test addr 14 current address 14
+Burst filled or last iteration, end_distance= 50
+BURST transferring 1 words at 14 address, from  14
+0
+test addr 15 current address 15
+Burst filled or last iteration, end_distance= 49
+BURST transferring 1 words at 15 address, from  15
+0
+test addr 16 current address 16
+Burst filled or last iteration, end_distance= 48
+BURST transferring 1 words at 16 address, from  16
+0
+test addr 17 current address 17
+Burst filled or last iteration, end_distance= 47
+BURST transferring 1 words at 17 address, from  17
+0
+test addr 18 current address 18
+Burst filled or last iteration, end_distance= 46
+BURST transferring 1 words at 18 address, from  18
+0
+test addr 19 current address 19
+Burst filled or last iteration, end_distance= 45
+BURST transferring 1 words at 19 address, from  19
+0
+test addr 20 current address 20
+Burst filled or last iteration, end_distance= 44
+BURST transferring 1 words at 20 address, from  20
+0
+test addr 21 current address 21
+Burst filled or last iteration, end_distance= 43
+BURST transferring 1 words at 21 address, from  21
+0
+test addr 22 current address 22
+Burst filled or last iteration, end_distance= 42
+BURST transferring 1 words at 22 address, from  22
+0
+test addr 23 current address 23
+Burst filled or last iteration, end_distance= 41
+BURST transferring 1 words at 23 address, from  23
+0
+test addr 24 current address 24
+Burst filled or last iteration, end_distance= 40
+BURST transferring 1 words at 24 address, from  24
+0
+test addr 25 current address 25
+Burst filled or last iteration, end_distance= 39
+BURST transferring 1 words at 25 address, from  25
+0
+test addr 26 current address 26
+Burst filled or last iteration, end_distance= 38
+BURST transferring 1 words at 26 address, from  26
+0
+test addr 27 current address 27
+Burst filled or last iteration, end_distance= 37
+BURST transferring 1 words at 27 address, from  27
+0
+test addr 28 current address 28
+Burst filled or last iteration, end_distance= 36
+BURST transferring 1 words at 28 address, from  28
+0
+test addr 29 current address 29
+Burst filled or last iteration, end_distance= 35
+BURST transferring 1 words at 29 address, from  29
+0
+test addr 30 current address 30
+Burst filled or last iteration, end_distance= 34
+BURST transferring 1 words at 30 address, from  30
+0
+test addr 31 current address 31
+Burst filled or last iteration, end_distance= 33
+BURST transferring 1 words at 31 address, from  31
+0
+test addr 32 current address 32
+Burst filled or last iteration, end_distance= 32
+BURST transferring 1 words at 32 address, from  32
+0
+test addr 33 current address 33
+Burst filled or last iteration, end_distance= 31
+BURST transferring 1 words at 33 address, from  33
+0
+test addr 34 current address 34
+Burst filled or last iteration, end_distance= 30
+BURST transferring 1 words at 34 address, from  34
+0
+test addr 35 current address 35
+Burst filled or last iteration, end_distance= 29
+BURST transferring 1 words at 35 address, from  35
+0
+test addr 36 current address 36
+Burst filled or last iteration, end_distance= 28
+BURST transferring 1 words at 36 address, from  36
+0
+test addr 37 current address 37
+Burst filled or last iteration, end_distance= 27
+BURST transferring 1 words at 37 address, from  37
+0
+test addr 38 current address 38
+Burst filled or last iteration, end_distance= 26
+BURST transferring 1 words at 38 address, from  38
+0
+test addr 39 current address 39
+Burst filled or last iteration, end_distance= 25
+BURST transferring 1 words at 39 address, from  39
+0
+test addr 40 current address 40
+Burst filled or last iteration, end_distance= 24
+BURST transferring 1 words at 40 address, from  40
+0
+test addr 41 current address 41
+Burst filled or last iteration, end_distance= 23
+BURST transferring 1 words at 41 address, from  41
+0
+test addr 42 current address 42
+Burst filled or last iteration, end_distance= 22
+BURST transferring 1 words at 42 address, from  42
+0
+test addr 43 current address 43
+Burst filled or last iteration, end_distance= 21
+BURST transferring 1 words at 43 address, from  43
+0
+test addr 44 current address 44
+Burst filled or last iteration, end_distance= 20
+BURST transferring 1 words at 44 address, from  44
+0
+test addr 45 current address 45
+Burst filled or last iteration, end_distance= 19
+BURST transferring 1 words at 45 address, from  45
+0
+test addr 46 current address 46
+Burst filled or last iteration, end_distance= 18
+BURST transferring 1 words at 46 address, from  46
+0
+test addr 47 current address 47
+Burst filled or last iteration, end_distance= 17
+BURST transferring 1 words at 47 address, from  47
+0
+test addr 48 current address 48
+Burst filled or last iteration, end_distance= 16
+BURST transferring 1 words at 48 address, from  48
+0
+test addr 49 current address 49
+Burst filled or last iteration, end_distance= 15
+BURST transferring 1 words at 49 address, from  49
+0
+test addr 50 current address 50
+Burst filled or last iteration, end_distance= 14
+BURST transferring 1 words at 50 address, from  50
+0
+test addr 51 current address 51
+Burst filled or last iteration, end_distance= 13
+BURST transferring 1 words at 51 address, from  51
+0
+test addr 52 current address 52
+Burst filled or last iteration, end_distance= 12
+BURST transferring 1 words at 52 address, from  52
+0
+test addr 53 current address 53
+Burst filled or last iteration, end_distance= 11
+BURST transferring 1 words at 53 address, from  53
+0
+test addr 54 current address 54
+Burst filled or last iteration, end_distance= 10
+BURST transferring 1 words at 54 address, from  54
+0
+test addr 55 current address 55
+Burst filled or last iteration, end_distance= 9
+BURST transferring 1 words at 55 address, from  55
+0
+test addr 56 current address 56
+Burst filled or last iteration, end_distance= 8
+BURST transferring 1 words at 56 address, from  56
+0
+test addr 57 current address 57
+Burst filled or last iteration, end_distance= 7
+BURST transferring 1 words at 57 address, from  57
+0
+test addr 58 current address 58
+Burst filled or last iteration, end_distance= 6
+BURST transferring 1 words at 58 address, from  58
+0
+test addr 59 current address 59
+Burst filled or last iteration, end_distance= 5
+BURST transferring 1 words at 59 address, from  59
+0
+test addr 60 current address 60
+Burst filled or last iteration, end_distance= 4
+BURST transferring 1 words at 60 address, from  60
+0
+test addr 61 current address 61
+Burst filled or last iteration, end_distance= 3
+BURST transferring 1 words at 61 address, from  61
+0
+test addr 62 current address 62
+Burst filled or last iteration, end_distance= 2
+BURST transferring 1 words at 62 address, from  62
+0
+test addr 63 current address 63
+Burst filled or last iteration, end_distance= 1
+LAST transferring 1 words at 63 address, from  63
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=10
+[0021] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing read dataflow
+read the 0 memory word, outputreading at  0 i at 0
+read the 1 memory word, outputreading at  0 i at 1
+ writing a memory word 0 I have to reach 2
+read the 2 memory word, outputreading at  1 i at 2
+ writing a memory word 1 I have to reach 3
+read the 3 memory word, outputreading at  2 i at 3
+ writing a memory word 2 I have to reach 4
+read the 4 memory word, outputreading at  3 i at 4
+ writing a memory word 3 I have to reach 5
+read the 5 memory word, outputreading at  4 i at 5
+ writing a memory word 4 I have to reach 6
+read the 6 memory word, outputreading at  5 i at 6
+ writing a memory word 5 I have to reach 7
+read the 7 memory word, outputreading at  6 i at 7
+ writing a memory word 6 I have to reach 8
+read the 8 memory word, outputreading at  7 i at 8
+ writing a memory word 7 I have to reach 9
+read the 9 memory word, outputreading at  8 i at 9
+ writing a memory word 8 I have to reach 10
+read the 10 memory word, outputreading at  9 i at 10
+ writing a memory word 9 I have to reach 11
+read the 11 memory word, outputreading at  10 i at 11
+ writing a memory word 10 I have to reach 12
+read the 12 memory word, outputreading at  11 i at 12
+ writing a memory word 11 I have to reach 13
+read the 13 memory word, outputreading at  12 i at 13
+ writing a memory word 12 I have to reach 14
+read the 14 memory word, outputreading at  13 i at 14
+ writing a memory word 13 I have to reach 15
+read the 15 memory word, outputreading at  14 i at 15
+ writing a memory word 14 I have to reach 16
+read the 16 memory word, outputreading at  15 i at 16
+ writing a memory word 15 I have to reach 17
+read the 17 memory word, outputreading at  16 i at 17
+ writing a memory word 16 I have to reach 18
+read the 18 memory word, outputreading at  17 i at 18
+ writing a memory word 17 I have to reach 19
+read the 19 memory word, outputreading at  18 i at 19
+ writing a memory word 18 I have to reach 20
+read the 20 memory word, outputreading at  19 i at 20
+ writing a memory word 19 I have to reach 21
+read the 21 memory word, outputreading at  20 i at 21
+ writing a memory word 20 I have to reach 22
+read the 22 memory word, outputreading at  21 i at 22
+ writing a memory word 21 I have to reach 23
+read the 23 memory word, outputreading at  22 i at 23
+ writing a memory word 22 I have to reach 24
+read the 24 memory word, outputreading at  23 i at 24
+ writing a memory word 23 I have to reach 25
+read the 25 memory word, outputreading at  24 i at 25
+ writing a memory word 24 I have to reach 26
+read the 26 memory word, outputreading at  25 i at 26
+ writing a memory word 25 I have to reach 27
+read the 27 memory word, outputreading at  26 i at 27
+ writing a memory word 26 I have to reach 28
+read the 28 memory word, outputreading at  27 i at 28
+ writing a memory word 27 I have to reach 29
+read the 29 memory word, outputreading at  28 i at 29
+ writing a memory word 28 I have to reach 30
+read the 30 memory word, outputreading at  29 i at 30
+ writing a memory word 29 I have to reach 31
+read the 31 memory word, outputreading at  30 i at 31
+ writing a memory word 30 I have to reach 32
+read the 32 memory word, outputreading at  31 i at 32
+ writing a memory word 31 I have to reach 33
+read the 33 memory word, outputreading at  32 i at 33
+ writing a memory word 32 I have to reach 34
+read the 34 memory word, outputreading at  33 i at 34
+ writing a memory word 33 I have to reach 35
+read the 35 memory word, outputreading at  34 i at 35
+ writing a memory word 34 I have to reach 36
+read the 36 memory word, outputreading at  35 i at 36
+ writing a memory word 35 I have to reach 37
+read the 37 memory word, outputreading at  36 i at 37
+ writing a memory word 36 I have to reach 38
+read the 38 memory word, outputreading at  37 i at 38
+ writing a memory word 37 I have to reach 39
+read the 39 memory word, outputreading at  38 i at 39
+ writing a memory word 38 I have to reach 40
+read the 40 memory word, outputreading at  39 i at 40
+ writing a memory word 39 I have to reach 41
+read the 41 memory word, outputreading at  40 i at 41
+ writing a memory word 40 I have to reach 42
+read the 42 memory word, outputreading at  41 i at 42
+ writing a memory word 41 I have to reach 43
+read the 43 memory word, outputreading at  42 i at 43
+ writing a memory word 42 I have to reach 44
+read the 44 memory word, outputreading at  43 i at 44
+ writing a memory word 43 I have to reach 45
+read the 45 memory word, outputreading at  44 i at 45
+ writing a memory word 44 I have to reach 46
+read the 46 memory word, outputreading at  45 i at 46
+ writing a memory word 45 I have to reach 47
+read the 47 memory word, outputreading at  46 i at 47
+ writing a memory word 46 I have to reach 48
+read the 48 memory word, outputreading at  47 i at 48
+ writing a memory word 47 I have to reach 49
+read the 49 memory word, outputreading at  48 i at 49
+ writing a memory word 48 I have to reach 50
+read the 50 memory word, outputreading at  49 i at 50
+ writing a memory word 49 I have to reach 51
+read the 51 memory word, outputreading at  50 i at 51
+ writing a memory word 50 I have to reach 52
+read the 52 memory word, outputreading at  51 i at 52
+ writing a memory word 51 I have to reach 53
+read the 53 memory word, outputreading at  52 i at 53
+ writing a memory word 52 I have to reach 54
+read the 54 memory word, outputreading at  53 i at 54
+ writing a memory word 53 I have to reach 55
+read the 55 memory word, outputreading at  54 i at 55
+ writing a memory word 54 I have to reach 56
+read the 56 memory word, outputreading at  55 i at 56
+ writing a memory word 55 I have to reach 57
+read the 57 memory word, outputreading at  56 i at 57
+ writing a memory word 56 I have to reach 58
+read the 58 memory word, outputreading at  57 i at 58
+ writing a memory word 57 I have to reach 59
+read the 59 memory word, outputreading at  58 i at 59
+ writing a memory word 58 I have to reach 60
+read the 60 memory word, outputreading at  59 i at 60
+ writing a memory word 59 I have to reach 61
+read the 61 memory word, outputreading at  60 i at 61
+ writing a memory word 60 I have to reach 62
+read the 62 memory word, outputreading at  61 i at 62
+ writing a memory word 61 I have to reach 63
+read the 63 memory word, outputreading at  62 i at 63
+ writing a memory word 62 I have to reach 63
+ writing a memory word 63 I have to reach 63
+ tst=0 vs gld=0
+ tst=0 vs gld=3
+ tst=0 vs gld=2
+ tst=0 vs gld=5
+ tst=0 vs gld=4
+ tst=0 vs gld=7
+ tst=0 vs gld=6
+ tst=0 vs gld=9
+ tst=0 vs gld=8
+ tst=0 vs gld=11
+ tst=0 vs gld=10
+ tst=0 vs gld=13
+ tst=0 vs gld=12
+ tst=0 vs gld=15
+ tst=0 vs gld=14
+ tst=0 vs gld=17
+ tst=0 vs gld=16
+ tst=0 vs gld=19
+ tst=0 vs gld=18
+ tst=0 vs gld=21
+ tst=0 vs gld=20
+ tst=0 vs gld=23
+ tst=0 vs gld=22
+ tst=0 vs gld=25
+ tst=0 vs gld=24
+ tst=0 vs gld=27
+ tst=0 vs gld=26
+ tst=0 vs gld=29
+ tst=0 vs gld=28
+ tst=0 vs gld=31
+ tst=0 vs gld=30
+ tst=0 vs gld=33
+ tst=0 vs gld=32
+ tst=0 vs gld=35
+ tst=0 vs gld=34
+ tst=0 vs gld=37
+ tst=0 vs gld=36
+ tst=0 vs gld=39
+ tst=0 vs gld=38
+ tst=0 vs gld=41
+ tst=0 vs gld=40
+ tst=0 vs gld=43
+ tst=0 vs gld=42
+ tst=0 vs gld=45
+ tst=0 vs gld=44
+ tst=0 vs gld=47
+ tst=0 vs gld=46
+ tst=0 vs gld=49
+ tst=0 vs gld=48
+ tst=0 vs gld=51
+ tst=0 vs gld=50
+ tst=0 vs gld=53
+ tst=0 vs gld=52
+ tst=0 vs gld=55
+ tst=0 vs gld=54
+ tst=0 vs gld=57
+ tst=0 vs gld=56
+ tst=0 vs gld=59
+ tst=0 vs gld=58
+ tst=0 vs gld=61
+ tst=0 vs gld=60
+ tst=0 vs gld=63
+ tst=0 vs gld=62
+ tst=0 vs gld=65
+
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=10
+[0022] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=10
+[0023] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 2; faulty address cntr 0b0111111
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=11
+[0024] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 3: first faulty address 0b01000000
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=12
+[0025] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=13
+[0026] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing the output of a run part 4
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=14
+[0027] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG processing continuous run (stop the run at iter 0b011) max iters: 0b011 
+DEBUG in pTXPath: dequeueFSM=2 - PROCESSING_PACKET, *processed_word_tx=15
+[0028] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=16
+[0029] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0030] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0031] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0032] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0033] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0034] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0035] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0036] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0037] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0038] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0039] STEP DUT 
+DEBUG in pRXPath: enqFiles ../../../../test/ofsUAF_Shl_Data.dat and ../../../../test/verify_UAF_Shl_Data.dat differ
+ueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0040] STEP DUT 
+DEBUG in pRXPath: enqueueFSM - WAIT_FOR_META, *processed_word_rx=0, *processed_bytes_rx=0
+DEBUG proc FSM, I am in the WAIT_FOR_META state
+DEBUG in pTXPath: dequeueFSM=1 - WAIT_FOR_STREAM_PAIR, *processed_word_tx=0
+[0041] STEP DUT 
+## End of simulation at cycle= 41. 
+NRC received NRCmeta stream from rank 1 to rank 0.
+Input string : 13001000041000000
+Output string: 0100000003000000000400000000000000000000000100000003000000000400000010000000000000000100000003f0000000400000000100000000000000033000000
+## Error : File 'ofsUAF_Shl_Data.dat' does not match 'verify_UAF_Shl_Data.dat'.
+
+  End the TB with iteration 0
+
+#####################################################
+## ERROR - TESTBENCH FAILED (RC=256) !!!             ##
+#####################################################
+INFO: [SIM 211-1] CSim done with 0 errors.
+INFO: [SIM 211-3] *************** CSIM finish ***************
+INFO: [Common 17-206] Exiting vivado_hls at Fri Oct 29 15:04:31 2021...
