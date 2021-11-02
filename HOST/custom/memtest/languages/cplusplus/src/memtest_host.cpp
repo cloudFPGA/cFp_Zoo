@@ -42,14 +42,14 @@ int main(int argc, char *argv[])
         exit(1);
     }
 #endif
-
+	cout << argc << endl;
     
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
     
     #ifndef PY_WRAP
-    assert (argc == 5);
+    assert (argc == 6);
     string s_servAddress = argv[1]; // First arg: server address
     char *s_servPort = argv[2];
     bool net_type = NET_TYPE;
@@ -83,10 +83,15 @@ int main(int argc, char *argv[])
     print_cFpMemtest();
     
     try {
-          
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
         //------------------------------------------------------
         //-- STEP-2 : Initialize socket connection
-        //------------------------------------------------------      
+        //------------------------------------------------------    
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////  
 	#if NET_TYPE == udp
 	    #ifndef TB_SIM_CFP_VITIS
 	    UDPSocket udpsock(servPort); // NOTE: It is very important to set port here in order to call 
@@ -118,6 +123,8 @@ int main(int argc, char *argv[])
 	//-- STEP-4 : Infinite Loop for reexecutinge the application! :D
 	//------------------------------------------------------------------------------------
 	string user_choice = "r";
+	createAVGLogFile();
+	createItLogFile();
 	//Iterating and interactive loop
 	while (user_choice.compare("q") != 0 ) // quit
 	{
@@ -128,6 +135,7 @@ int main(int argc, char *argv[])
 		size_t charOutputSize = PACK_SIZE*(test_pack); 
 		string initial_input_string(input_string);
 
+		cout << " Creating mem test commands with " << memory_addr_under_test << " " <<  testingNumber << " " << burst_size << " as addr, iters, brst" << endl;
 		input_string=createMemTestCommands(memory_addr_under_test, testingNumber,burst_size);
 		size_t charInputSize = 8*2; //a single tdata*burst
 
@@ -251,10 +259,15 @@ int main(int argc, char *argv[])
 		cout << "INFO: Effective SPS E2E:" << (1 / duration_main) << endl;
 		cout << "\\___________________________________________________________________/" << endl
 		<< endl;
-
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 		//------------------------------------------------------
 		//-- STEP-5.3 : Parsing and displaying
 		//------------------------------------------------------ 
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 		cout << " ___________________________________________________________________ " << endl;
 		cout << "/                                                                   \\" << endl;
 		cout <<"INFO: Entering in the output parsing section  "<< endl;
@@ -274,11 +287,12 @@ int main(int argc, char *argv[])
 		double avg_wr_bndwdth=0.0;
 		int avg_fault_cnt = 0;
 		int iterations=0;
+		unsigned int written_words=0;
 		for(auto it = std::begin(testResults_vector); it != std::end(testResults_vector); ++it) {
 			cout << " Test number " << it - testResults_vector.begin() << " stress " << 	it->target_address << " addresses "  << endl;
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
 			cout << " and the first faulty address (if any) was " << it->first_fault_address << endl;
-			unsigned int written_words = ((it->target_address) %mem_word_byte_size) == 0 ? ((it->target_address)/mem_word_byte_size)  : (((it->target_address)/mem_word_byte_size) + 1);
+			written_words = ((it->target_address) %mem_word_byte_size) == 0 ? ((it->target_address)/mem_word_byte_size)  : (((it->target_address)/mem_word_byte_size) + 1);
 			rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_read * 6.4 ) ); // Gbit/T
 			wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)it->clock_cycles_write * 6.4 ) );
 			cout << " RD BW " << rd_bndwdth  << "[GBit/s], with  " << it->clock_cycles_read << " ccs" <<  endl;
@@ -288,12 +302,15 @@ int main(int argc, char *argv[])
 			avg_wr_bndwdth += wr_bndwdth;
 			avg_fault_cnt += it->fault_cntr;
 			iterations++;
+
+			logTheSingleResult(iterations, it->target_address, burst_size, written_words, rd_bndwdth, wr_bndwdth, it->fault_cntr, it->first_fault_address);
 		}
 		avg_rd_bndwdth = avg_rd_bndwdth / iterations;
 		avg_wr_bndwdth = avg_wr_bndwdth / iterations;
 		avg_fault_cnt = avg_fault_cnt / iterations;
 		cout << "Based on " << iterations << " iterations, AVG WR " << avg_wr_bndwdth << " AVG RD " << avg_rd_bndwdth << " AVG faults " << avg_fault_cnt << endl;
-		
+
+		logTheAvgResult(iterations, memory_addr_under_test, burst_size, written_words, avg_rd_bndwdth, avg_wr_bndwdth, avg_fault_cnt);
 		//clear dynamic memory
 		delete [] longbuf;
 		delete [] output_string;
@@ -303,10 +320,15 @@ int main(int argc, char *argv[])
 		initial_input_string.clear();
 		strInput_memaddrUT.clear();
     	strInput_nmbrTest.clear();
-
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 		//------------------------------------------------------
 		//-- STEP-5.4 : Interaction part
 		//------------------------------------------------------ 
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 		//Need to close the application and send to the accelerator a stop for signaling a termination
 		if (user_choice.compare("rq")==0)
 		{
@@ -369,7 +391,7 @@ int main(int argc, char *argv[])
 					cout << "WARNING something bad happened in the insertion, hence default used" << endl;
 					memory_addr_under_test = 5;
 				}
-				if(memory_addr_under_test > MAX_TESTABLE_ADDRESS){
+				if(memory_addr_under_test > MAX_TESTABLE_ADDRESS || memory_addr_under_test<=0){
 					cout << "WARNING the address inserted is not allowed, hence it will be moduled" << endl;
 					memory_addr_under_test = memory_addr_under_test % MAX_TESTABLE_ADDRESS;
 					strInput_memaddrUT.assign(to_string(memory_addr_under_test));
@@ -384,12 +406,26 @@ int main(int argc, char *argv[])
 					cout << "WARNING something bad happened in the insertion, hence default used" << endl;
 					testingNumber = 3;
 				}
-				if(testingNumber > max_testingNumber){
+				if(testingNumber > max_testingNumber || testingNumber<=0){
 					cout << "WARNING the repetition inserted is not allowed, hence it will be moduled" << endl;
 					testingNumber = testingNumber % max_testingNumber;
 					strInput_nmbrTest.assign(to_string(testingNumber));
 				}
-				cout << "Your choice is to test " << testingNumber << " times up to address " << memory_addr_under_test  << ", is it ok? (y/n) " << endl;
+				cout << "Please type in the desired burst size (no more than "<< to_string(MAX_BURST_SIZE) << ")"<< endl;
+				cin >> strInput_burstSize;
+				try{
+					burst_size = stoul(strInput_burstSize);
+				} catch  (const std::exception& e) {
+					std::cerr << e.what() << '\n';
+					cout << "WARNING something bad happened in the insertion, hence default used" << endl;
+					burst_size = 16;
+				}
+				if(burst_size > MAX_BURST_SIZE || burst_size<=0){
+					cout << "WARNING the burst size inserted is not allowed, hence it will be moduled" << endl;
+					burst_size = burst_size % MAX_BURST_SIZE;
+					strInput_burstSize.assign(to_string(burst_size));
+				}
+				cout << "Your choice is to test " << testingNumber << " times up to address " << memory_addr_under_test  << " burst size " << burst_size << ", is it ok? (y/n) " << endl;
 				cin >> confirmation;
 			}
 		}
@@ -428,7 +464,12 @@ int main(int argc, char *argv[])
 		
 	}//end of while loop
 
-
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////
 // Destructor closes the socket
 }catch (SocketException & e) {
 	cerr << e.what() << endl;

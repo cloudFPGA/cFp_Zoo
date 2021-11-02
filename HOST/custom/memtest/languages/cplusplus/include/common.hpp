@@ -18,10 +18,13 @@
 #include <bitset>
 #include <vector>
 #include <cmath>
+#include <chrono>
+#include <ctime> 
 
 using namespace std;
 #define MAX_TESTABLE_ADDRESS ((int)(512/8 * 125000000)) //byte addressable!!!
 #define MAX_TEST_REPETITION_BITWIDTH 16
+#define MAX_BURST_SIZE 64
 
 
 //------------------------------------------------------
@@ -513,4 +516,64 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
     tmp_outbuff.clear();
   }
   return testResults_vector;
+}
+
+
+std::ofstream loggingAVGFile;
+const std::string loggingAVGFileName="cfp_vitis_memtest_avg.csv";
+
+void createAVGLogFile(){
+  if (FILE *file = fopen(loggingAVGFileName.c_str(), "r")){
+    fclose(file);
+  }else{
+    loggingAVGFile.open(loggingAVGFileName, std::ios_base::app);
+    loggingAVGFile << "TimeStamp,Iterations[#],Trgt_Address[Byte],Brst_size[#beats],WrittenWords[512b],AVG_RD_BW[Gbit/s],AVG_WR_BW[Gbit/s],AVG_faults[#]\n";
+    loggingAVGFile.close();
+  }
+}
+
+void logTheAvgResult(
+  unsigned int iters, unsigned long long int trgt_address,
+  unsigned int brst_size, unsigned int wr_words,
+  double rd_bw, double wr_bw, unsigned int faults )
+  {
+    loggingAVGFile.open(loggingAVGFileName, std::ios_base::app);
+    std::time_t instant_time = std::time(0);   // get time now
+    std::tm* now = std::localtime(&instant_time);
+    loggingAVGFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
+    loggingAVGFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
+    loggingAVGFile<<rd_bw<< ","<<wr_bw<< ","<< faults <<"\n";
+    loggingAVGFile.close();
+}
+
+std::ofstream loggingMultiItFile;
+const std::string loggingMultiItFileName="cfp_vitis_memtest_multi.csv";
+
+
+void createItLogFile(){
+  if (FILE *file = fopen(loggingMultiItFileName.c_str(), "r")){
+    fclose(file);
+  }else{
+    loggingMultiItFile.open(loggingMultiItFileName, std::ios_base::app);
+    loggingMultiItFile << "TimeStamp,Iteration[#],Trgt_Address[Byte],";
+    loggingMultiItFile << "Brst_size[#beats],WrittenWords[512b],RD_BW[Gbit/s],WR_BW[Gbit/s],";
+    loggingMultiItFile << "faults[#],first_faulty_address[byte]\n";
+    loggingMultiItFile.close();
+  }
+}
+
+void logTheSingleResult(
+  unsigned int iters, unsigned long long int trgt_address,
+  unsigned int brst_size, unsigned int wr_words,
+  double rd_bw, double wr_bw, unsigned int faults,
+  unsigned long long int first_faulty_address )
+  {
+    loggingMultiItFile.open(loggingMultiItFileName, std::ios_base::app);
+    std::time_t instant_time = std::time(0);   // get time now
+    std::tm* now = std::localtime(&instant_time);
+    loggingMultiItFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
+    loggingMultiItFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
+    loggingMultiItFile<<rd_bw<< ","<<wr_bw<< ","<< faults;
+    loggingMultiItFile<<","<<first_faulty_address<<"\n";
+    loggingMultiItFile.close();
 }
