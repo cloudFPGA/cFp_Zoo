@@ -155,7 +155,7 @@ entity Role_Themisto is
     moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
     moMEM_Mp1_BVALID                : in    std_ulogic;
     moMEM_Mp1_BREADY                : out   std_ulogic;
-    moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
+    moMEM_Mp1_ARID                  : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_ARADDR                : out   std_ulogic_vector(32 downto 0);
     moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
     moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
