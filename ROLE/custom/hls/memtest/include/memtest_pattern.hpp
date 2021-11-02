@@ -257,18 +257,18 @@ unsigned int burst_size)
 //accumulated a burst or last iteration
       if (idx-written_i>=burst_size-1 || last_iteration)
       {
-      //#if DEBUG_LEVEL == TRACE_ALL
+      #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
       std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
       #endif
-      //#endif
+      #endif
         if (!last_iteration)
         {
-      //#if DEBUG_LEVEL == TRACE_ALL
+      #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
           std::cout << "BURST transferring " << burst_size << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
       #endif
-      //#endif
+      #endif
           if(!activated_cntr){
             cmd.write(0);
             activated_cntr = true;
@@ -509,6 +509,7 @@ unsigned int burst_size)
     static local_mem_addr_t curr_reading_addr;
     static unsigned int end_distance=0;
     static int ptrs_distance=0;
+    static int ptrs_distance_opposite=0;
     static bool transfer_less_than_burst = false;
     static bool activated_cntr = false;
     static bool can_read_data = false;
@@ -516,6 +517,9 @@ unsigned int burst_size)
   read_data_from_main_mem:
   int reading_mm_i = 0;//how much filled the buff
   int consumed_fifo_i = 0;//how much already outputed
+  unsigned int total_consumed_words=0;
+  unsigned int total_readfrom_mm_words=0;
+  bool fifo_is_not_full=false;
   for (curr_address_ut = 0, curr_reading_addr=0; curr_address_ut < max_addr_ut; )
   {
 #pragma HLS PIPELINE II=1
@@ -524,13 +528,20 @@ unsigned int burst_size)
     {
 
       end_distance = max_addr_ut-curr_reading_addr;
-      ptrs_distance = reading_mm_i-consumed_fifo_i;
+      ptrs_distance = total_readfrom_mm_words - total_consumed_words;
+      ptrs_distance_opposite = total_consumed_words - total_readfrom_mm_words;
+      // ptrs_distance =reading_mm_i-consumed_fifo_i;
       transfer_less_than_burst = burst_size>end_distance;
-      can_read_data=(end_distance > 0) && ((ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst);
+      //fifo_is_not_full = (reading_mm_i+burst_size)%buff_dim>consumed_fifo_i;
+      fifo_is_not_full = ptrs_distance <= burst_size;
+      //can_read_data=(end_distance > 0) && ((ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst);
+      //i have data to crunch, and eithre the fifo can read a burst or consumed enough to tx less than a burst)
+      can_read_data=(end_distance > 0) && (fifo_is_not_full  || (ptrs_distance<=end_distance && transfer_less_than_burst));
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
           std::cout << "Max " << max_addr_ut << " reading at " << curr_reading_addr << " reading fifo at " << reading_mm_i <<  " consumed at " << consumed_fifo_i << std::endl;
           std::cout << "End dst " << end_distance << " ptrs dst " << ptrs_distance << " is last? " << transfer_less_than_burst << std::endl;
+          std::cout << "curr_address_ut " << curr_address_ut << std::endl;  
       #endif
       #endif
       //if more than a burst size to available or the last iteration
@@ -544,14 +555,15 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-      //#if DEBUG_LEVEL == TRACE_ALL
+      #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
           std::cout << "BURST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
       #endif
-      //#endif
+      #endif
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*burst_size);
           cmd.write(1);
           curr_reading_addr+=burst_size;
+          total_readfrom_mm_words+=burst_size;
           reading_mm_i=(reading_mm_i+burst_size)%buff_dim;
         }else{
           //read the missing words
@@ -561,29 +573,42 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-          std::cout << "LAST reading " << consumed_fifo_i%burst_size+1 << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
-          memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*(consumed_fifo_i%burst_size+1));
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "LAST reading " << end_distance%burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+      #endif
+      #endif
+          total_readfrom_mm_words+=end_distance%burst_size;
+          memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*(end_distance%burst_size));
           cmd.write(1);
-          curr_reading_addr+=(consumed_fifo_i%burst_size+1);
-          reading_mm_i=(reading_mm_i+consumed_fifo_i%burst_size+1)%buff_dim;
+          curr_reading_addr+=(end_distance%burst_size);
+          reading_mm_i=(reading_mm_i+end_distance%burst_size)%buff_dim;
         }
       }
 
-      if(ptrs_distance > 0 || -1*ptrs_distance>0 || can_read_data){
+      if(ptrs_distance > 0 || can_read_data){
         readData.write(tmp_out[consumed_fifo_i]);
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
         std::cout << " consumin a read memory word " << consumed_fifo_i << " I have to reach " << reading_mm_i << std::endl;
+        std::cout << " The readmemoryword is  " << tmp_out[consumed_fifo_i]  << std::endl;
       #endif
-      #endif
+     #endif
 
         if(consumed_fifo_i==buff_dim-1){
           consumed_fifo_i=0;
         }else{
           consumed_fifo_i++;
         }
+        total_consumed_words++;
       }
+      //// TODO: add this logic to end before the loop
+      //// Example: with burst 64 the loop need less CC to consume everything
+      //if() still data to read and to consume
       curr_address_ut++;
+      //else{
+      //  curr_address_ut=max_addr_ut;
+      //}
     }
   }
   cmd.write(0);
@@ -649,11 +674,11 @@ void pRDCompareDataStreamsCount(
             int idx = (i + k*LOCAL_MEM_ADDR_OFFSET);
             testingVector_bytes[idx]=testingVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
             goldenVector_bytes[idx]=goldenVector[maddr_non_byte%buff_dim].range((i+1)*8-1,i*8);
-        #if DEBUG_LEVEL == TRACE_ALL
+        //#if DEBUG_LEVEL == TRACE_ALL
         #ifndef __SYNTHESIS__
             std::cout << " tst=" << testingVector_bytes[idx] << " vs gld=" << goldenVector_bytes[idx] ;
         #endif
-        #endif
+        //#endif
 
           cmp_ok[idx] = testingVector_bytes[idx] == goldenVector_bytes[idx];
          // tmpOut[i] = !cmp_ok[idx];
@@ -731,7 +756,7 @@ void pRDCmpStreamsCntWordAligned(
       int idx=maddr_non_byte%buff_dim;
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
-          std::cout << " tst=" << testingVector[idx] << " vs gld=" << goldenVector[idx] << std::endl;
+          std::cout << maddr_non_byte << " tst=" << testingVector[idx] << " vs gld=" << goldenVector[idx] << std::endl;
       #endif
       #endif
       bool cmp_results = testingVector[idx] == goldenVector[idx];

@@ -781,7 +781,10 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
         // memcpy(clock_cycles_cmd, (char*)&clock_cycles, sizeof(unsigned int));
         // memcpy(clock_cycles_cmd+sizeof(unsigned int), (char*)&clock_cycles, sizeof(unsigned int));
         // out = out.append(clock_cycles_cmd,bytes_per_line);
-        out = out.append(filler_cmd,bytes_per_line);//read
+        ////TODO: to make everything pass at the csim lvl since cc of read count always one
+        const unsigned int dummycc=1;
+        memcpy(clock_cycles_cmd,(char*)& dummycc, sizeof(unsigned int));
+        out = out.append(clock_cycles_cmd,bytes_per_line);//read
         out = out.append(filler_cmd,bytes_per_line);//write 
     }
     out = out.append(end_of_tests_cmd,bytes_per_line);

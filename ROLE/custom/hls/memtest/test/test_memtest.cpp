@@ -81,7 +81,7 @@ unsigned int         simCnt;
 //------------------------------------------------------
 //-- SHELL / Role / Mem / Mp1 Interface
 //------------------------------------------------------
-#ifdef ENABLE_DDR;
+#ifdef ENABLE_DDR
 #define MEMORY_LINES_512 TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
 membus_t   lcl_mem1[MEMORY_LINES_512];

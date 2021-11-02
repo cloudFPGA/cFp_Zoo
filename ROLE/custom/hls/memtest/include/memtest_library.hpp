@@ -410,7 +410,7 @@ void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
 #if DEBUG_LEVEL == TRACE_ALL
  #ifndef __SYNTHESIS__
-  printf("DEBUG begin to count :D input_cmd value = %s\n", input_cmd.to_string().c_str());
+  //printf("DEBUG begin to count :D input_cmd value = %s\n", input_cmd.to_string().c_str());
 #endif //__SYNTHESIS__
 #endif     
 // keep counting until a value is available
@@ -421,7 +421,7 @@ count:
         cnt++;       
 #if DEBUG_LEVEL == TRACE_ALL
  #ifndef __SYNTHESIS__
-  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+ // printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
 #endif //__SYNTHESIS__
 #endif     
     }
