@@ -225,41 +225,42 @@ unsigned int burst_size)
 #pragma HLS array_partition variable=tmp_out block factor=2 dim=1
 
   // cmd.write(0);
-  int i, written_i;
+  int idx, written_i;
+  int ptrs_difference=0;
+  unsigned int last_words=0;
   read_and_write:
-  for (curr_address_ut = 0, i=0, curr_writing_addr=0, written_i=0; curr_address_ut < max_addr_ut; curr_address_ut++)// curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
+  for (curr_address_ut = 0, idx=0, curr_writing_addr=0, written_i=0; curr_address_ut < max_addr_ut; curr_address_ut++)// curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
   {
 #pragma HLS PIPELINE II=1
 #pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
     if (!generatedData.empty())
     {
-     unsigned int idx = i;
       tmp_out[idx] = generatedData.read();
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
-      // checking_loop: for (int j = 0; j < LOCAL_MEM_ADDR_OFFSET; j++)
-      //        {
-      //         std::cout << tmp_out[idx].range((j+1)*8-1,j*8) << " ";
-      //        }
-      //        std::cout << std::endl;
       std::cout << tmp_out[idx] << std::endl;
       #endif//synth
       #endif//debug lvl
       //if stored enough data to begin the bursting OR this is last iteration
       end_distance = max_addr_ut-curr_address_ut;
-      //last_iteration = LOCAL_MEM_ADDR_OFFSET>=end_distance;
+      //last_iteration = burst_size>end_distance+1;
+      //last_iteration = burst_size>end_distance;
       last_iteration = 1>=end_distance;
+      //ptrs_difference = idx-written_i;
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
-      std::cout << "test addr " << idx << " current address " << curr_address_ut <<std::endl;
+      std::cout << "test addr " << idx << " current address " << curr_address_ut << " max addr " << max_addr_ut << std::endl;
+      std::cout << "ptrs_difference " << ptrs_difference << " last_iteration " << last_iteration <<std::endl;
       #endif
       #endif
 //accumulated a burst or last iteration
-      if (idx-written_i>=burst_size-1 || last_iteration)
+      //if ((ptrs_difference>0 && ptrs_difference>=burst_size-1) || (ptrs_difference<0 && ptrs_difference<1-burst_size) || last_iteration)
+      if ((ptrs_difference>0 && ptrs_difference>=burst_size-1) || (last_iteration))
+      //if ((ptrs_difference>0 && ptrs_difference>=burst_size-1) || (last_iteration && ptrs_difference>=end_distance-1))
       {
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
-      std::cout << "Burst filled or last iteration, end_distance= " << end_distance << std::endl;
+      std::cout << "Burst filled or last iteration, end distance will be= " << end_distance << std::endl;
       #endif
       #endif
         if (!last_iteration)
@@ -279,10 +280,15 @@ unsigned int burst_size)
           cmd.write(1);
           curr_writing_addr+=burst_size;
           written_i= (written_i+burst_size)%buff_dim;
+          ptrs_difference-=burst_size;
+          last_words=end_distance;
+          //ptrs_difference = idx-written_i;
         }else{
+          //unsigned int last_words=(idx%burst_size+1);
+          //unsigned int last_words=end_distance;//(idx%burst_size+1);
       #if DEBUG_LEVEL == TRACE_ALL
       //#ifndef __SYNTHESIS__
-          std::cout << "LAST transferring " << idx%burst_size+1 << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
+          std::cout << "LAST transferring " << last_words << " words at " << curr_writing_addr << " address, from  " << written_i << std::endl;
       //#endif
       #endif
           if(!activated_cntr){
@@ -291,17 +297,20 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(idx%burst_size+1));
+          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(last_words));
           cmd.write(1);
-          curr_writing_addr+=(idx%burst_size+1);
-          written_i=(written_i+idx%burst_size+1)%buff_dim;
+          curr_writing_addr+=(last_words);
+          written_i=(written_i+last_words)%buff_dim;
+          ptrs_difference-=last_words;
+          //ptrs_difference = idx-written_i;
         }
       }
-      if(i==buff_dim-1){
-        i=0;
+      if(idx==buff_dim-1){
+        idx=0;
       }else{
-        i++;
+        idx++;
       }
+      ptrs_difference++;
      // std::cout << std::endl;
      // memcpy(lcl_mem+curr_address_ut, tmp_out+curr_address_ut%buff_dim, sizeof(local_mem_word_t));
     }else{
@@ -506,6 +515,7 @@ unsigned int burst_size)
     local_mem_addr_t curr_address_ut;
     static local_mem_word_t tmp_out[buff_dim];
 #pragma HLS array_partition variable=tmp_out cyclic factor=2 dim=1
+////TODO: Check if with 64 is better
     static local_mem_addr_t curr_reading_addr;
     static unsigned int end_distance=0;
     static int ptrs_distance=0;
