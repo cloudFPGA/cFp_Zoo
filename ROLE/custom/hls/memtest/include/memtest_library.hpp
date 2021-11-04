@@ -331,6 +331,43 @@ void pMyMemtestMemCpy(Tin* in, Tout* out){
   }
   
 }
+
+
+template<typename Tin, typename Tout, const unsigned int arraysize>
+void pMemCpyCircularBuff(Tin* buff, Tout* out_mem, unsigned int elems,unsigned int offset_buff){
+#pragma HLS INLINE
+  unsigned int j = 0;
+  circ_buff_loop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = arraysize
+    if(offset_buff+j==arraysize)//
+    { 
+      offset_buff=0;
+      j=1;
+      out_mem[i] = buff[0];
+    }else{
+      out_mem[i] = buff[offset_buff+j];
+      j++;
+    }
+  }
+  
+}
+
+
+template<typename Tin, typename Tout, const unsigned int burstsize>
+void pReadAxiMemMapped2HlsStream(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems){
+#pragma HLS INLINE
+  mmloop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = burstsize
+    Tout tmp  = main_mem[i];
+    sOut.write(tmp);
+  }
+  
+}
+
 const unsigned long int  max_counter_cc = 4000000;
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp

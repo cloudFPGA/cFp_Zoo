@@ -276,7 +276,10 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*burst_size);
+          //memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*burst_size);
+          pMemCpyCircularBuff<local_mem_word_t,membus_t,buff_dim>(tmp_out, 
+          lcl_mem+curr_writing_addr, burst_size,written_i);
+
           cmd.write(1);
           curr_writing_addr+=burst_size;
           written_i= (written_i+burst_size)%buff_dim;
@@ -297,7 +300,10 @@ unsigned int burst_size)
           }else{
             cmd.write(1);
           }
-          memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(last_words));
+          //memcpy(lcl_mem+curr_writing_addr, tmp_out+written_i, sizeof(local_mem_word_t)*(last_words));
+          pMemCpyCircularBuff<local_mem_word_t,membus_t,buff_dim>(tmp_out, 
+          lcl_mem+curr_writing_addr, last_words,written_i);
+
           cmd.write(1);
           curr_writing_addr+=(last_words);
           written_i=(written_i+last_words)%buff_dim;
@@ -527,6 +533,7 @@ unsigned int burst_size)
   read_data_from_main_mem:
   int reading_mm_i = 0;//how much filled the buff
   int consumed_fifo_i = 0;//how much already outputed
+  int missing_words=0;
   unsigned int total_consumed_words=0;
   unsigned int total_readfrom_mm_words=0;
   bool fifo_is_not_full=false;
@@ -572,11 +579,15 @@ unsigned int burst_size)
       #endif
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*burst_size);
           cmd.write(1);
+          std::cout << "before " << curr_reading_addr;
           curr_reading_addr+=burst_size;
+          std::cout << " afterwards " << curr_reading_addr << std::endl;
           total_readfrom_mm_words+=burst_size;
           reading_mm_i=(reading_mm_i+burst_size)%buff_dim;
         }else{
           //read the missing words
+          missing_words= end_distance%burst_size;
+          std::cout << "before of before 1" << curr_reading_addr << std::endl;
           if(!activated_cntr){
             cmd.write(0);
             activated_cntr = true;
@@ -585,14 +596,18 @@ unsigned int burst_size)
           }
       #if DEBUG_LEVEL == TRACE_ALL
       #ifndef __SYNTHESIS__
-          std::cout << "LAST reading " << end_distance%burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+          std::cout << "LAST reading " << missing_words << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
       #endif
       #endif
-          total_readfrom_mm_words+=end_distance%burst_size;
+          total_readfrom_mm_words+=missing_words;
+          std::cout << "before of before 3" << curr_reading_addr << std::endl;
           memcpy(tmp_out+reading_mm_i, lcl_mem+curr_reading_addr, sizeof(local_mem_word_t)*(end_distance%burst_size));
           cmd.write(1);
-          curr_reading_addr+=(end_distance%burst_size);
-          reading_mm_i=(reading_mm_i+end_distance%burst_size)%buff_dim;
+
+          std::cout << "before " << curr_reading_addr;
+          curr_reading_addr+=missing_words;
+          std::cout << " afterwards " << curr_reading_addr << std::endl;
+          reading_mm_i=(reading_mm_i+missing_words)%buff_dim;
         }
       }
 
@@ -619,6 +634,159 @@ unsigned int burst_size)
       //else{
       //  curr_address_ut=max_addr_ut;
       //}
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+        std::cout <<std::endl;
+      #endif
+     #endif
+    }
+  }
+  cmd.write(0);
+  //reset
+  end_distance=0;
+  transfer_less_than_burst = false;
+  activated_cntr=false;
+  can_read_data=false;
+  ptrs_distance=0;
+}
+
+
+template <typename Tcntr, const unsigned int max_iterations=4000000,
+const unsigned int buff_dim=64*2>
+void pRDRead2StreamDataVariableBurstNoMemCpy(
+  hls::stream<Tcntr>& cmd,
+  hls::stream<local_mem_word_t>& readData,
+  membus_t * lcl_mem,
+  local_mem_addr_t max_addr_ut,
+unsigned int burst_size)
+{
+#pragma HLS INLINE off
+
+    local_mem_addr_t curr_address_ut;
+    static local_mem_word_t tmp_out[buff_dim];
+#pragma HLS array_partition variable=tmp_out cyclic factor=2 dim=1
+////TODO: Check if with 64 is better
+    static local_mem_addr_t curr_reading_addr;
+    static unsigned int end_distance=0;
+    static int ptrs_distance=0;
+    static int ptrs_distance_opposite=0;
+    static bool transfer_less_than_burst = false;
+    static bool activated_cntr = false;
+    static bool can_read_data = false;
+
+  read_data_from_main_mem:
+  int reading_mm_i = 0;//how much filled the buff
+  int consumed_fifo_i = 0;//how much already outputed
+  int missing_words=0;
+  unsigned int total_consumed_words=0;
+  unsigned int total_readfrom_mm_words=0;
+  bool fifo_is_not_full=false;
+  for (curr_address_ut = 0, curr_reading_addr=0; curr_address_ut < max_addr_ut; )
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_iterations
+    if (!readData.full())
+    {
+
+      end_distance = max_addr_ut-curr_reading_addr;
+      ptrs_distance = total_readfrom_mm_words - total_consumed_words;
+      ptrs_distance_opposite = total_consumed_words - total_readfrom_mm_words;
+      // ptrs_distance =reading_mm_i-consumed_fifo_i;
+      transfer_less_than_burst = burst_size>end_distance;
+      //fifo_is_not_full = (reading_mm_i+burst_size)%buff_dim>consumed_fifo_i;
+      fifo_is_not_full = ptrs_distance <= burst_size;
+      //can_read_data=(end_distance > 0) && ((ptrs_distance<=burst_size || -1*ptrs_distance>burst_size) || transfer_less_than_burst);
+      //i have data to crunch, and eithre the fifo can read a burst or consumed enough to tx less than a burst)
+      can_read_data=(end_distance > 0) && (fifo_is_not_full  || (ptrs_distance<=end_distance && transfer_less_than_burst));
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "Max " << max_addr_ut << " reading at " << curr_reading_addr << " reading fifo at " << reading_mm_i <<  " consumed at " << consumed_fifo_i << std::endl;
+          std::cout << "End dst " << end_distance << " ptrs dst " << ptrs_distance << " is last? " << transfer_less_than_burst << std::endl;
+          std::cout << "curr_address_ut " << curr_address_ut << std::endl;  
+      #endif
+      #endif
+      //if more than a burst size to available or the last iteration
+      if(can_read_data){
+        if (!transfer_less_than_burst)
+        {
+          //read a burst
+          if(!activated_cntr){
+            cmd.write(0);
+            activated_cntr = true;
+          }else{
+            cmd.write(1);
+          }
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "BURST reading " << burst_size << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+      #endif
+      #endif
+          pReadAxiMemMapped2HlsStream<membus_t,
+          local_mem_word_t,64>(lcl_mem+curr_reading_addr, 
+          readData, burst_size);
+          cmd.write(1);
+          std::cout << "before " << curr_reading_addr;
+          curr_reading_addr+=burst_size;
+          std::cout << " afterwards " << curr_reading_addr << std::endl;
+          total_readfrom_mm_words+=burst_size;
+          reading_mm_i=(reading_mm_i+burst_size)%buff_dim;
+        }else{
+          //read the missing words
+          missing_words= end_distance%burst_size;
+          std::cout << "before of before 1" << curr_reading_addr << std::endl;
+          if(!activated_cntr){
+            cmd.write(0);
+            activated_cntr = true;
+          }else{
+            cmd.write(1);
+          }
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+          std::cout << "LAST reading " << missing_words << " words from " << curr_reading_addr << " address, to  " << reading_mm_i << std::endl;
+      #endif
+      #endif
+          total_readfrom_mm_words+=missing_words;
+          std::cout << "before of before 3" << curr_reading_addr << std::endl;
+          pReadAxiMemMapped2HlsStream<membus_t,
+          local_mem_word_t,64>(lcl_mem+curr_reading_addr,
+           readData, missing_words);
+          cmd.write(1);
+
+          std::cout << "before " << curr_reading_addr;
+          curr_reading_addr+=missing_words;
+          std::cout << " afterwards " << curr_reading_addr << std::endl;
+          reading_mm_i=(reading_mm_i+missing_words)%buff_dim;
+        }
+      }
+
+      if(ptrs_distance > 0 || can_read_data){
+        //readData.write(tmp_out[consumed_fifo_i]);
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+        std::cout << " consumin a read memory word " << consumed_fifo_i << " I have to reach " << reading_mm_i << std::endl;
+        std::cout << " The readmemoryword is  " << tmp_out[consumed_fifo_i]  << std::endl;
+      #endif
+     #endif
+
+        if(consumed_fifo_i==buff_dim-1){
+          consumed_fifo_i=0;
+        }else{
+          consumed_fifo_i++;
+        }
+        total_consumed_words++;
+      }
+      //// TODO: add this logic to end before the loop
+      //// Example: with burst 64 the loop need less CC to consume everything
+      //if() still data to read and to consume
+      curr_address_ut++;
+      //else{
+      //  curr_address_ut=max_addr_ut;
+      //}
+      #if DEBUG_LEVEL == TRACE_ALL
+      #ifndef __SYNTHESIS__
+        std::cout <<std::endl;
+      #endif
+     #endif
     }
   }
   cmd.write(0);
@@ -864,7 +1032,8 @@ void pReadDataflowMemTest(
 
       //Step 1: Generate the data
       //pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
-      pRDRead2StreamDataVariableBurst<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
+      //pRDRead2StreamDataVariableBurst<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
+      pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       //Step 2: write 
       pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
       //Step 2.b: count 
