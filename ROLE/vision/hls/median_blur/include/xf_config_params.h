@@ -35,7 +35,7 @@
 #define RGB 0
 #define GRAY 1
 /* Filter window size*/
-#define WINDOW_SIZE 7
+#define WINDOW_SIZE 5
 
 #endif // _XF_MEDIANBLUR_CONFIG_PARAMS_H_
 

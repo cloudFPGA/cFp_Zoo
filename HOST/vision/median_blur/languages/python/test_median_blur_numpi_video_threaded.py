@@ -99,22 +99,37 @@ def main():
     video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
     
-    fpgas = deque([ ["10.12.200.3"   , "2718"],
-                    ["10.12.200.165" , "2719"]])
+    fpgas = deque([["10.12.200.181" , "2718"]])
+
+
+    def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
+        h, w = img.shape[:2]
+        min_size = np.amin([h,w])
+        # Centralize and crop
+        crop_img = img[int(h/2-min_size/2):int(h/2+min_size/2), int(w/2-min_size/2):int(w/2+min_size/2)]
+        #y1=10
+        #y2=y1+100
+        #x1=10
+        #x2=x1+100
+        #roi = crop_img[y1:y2, x1:x2]
+        resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
+        return resized
 
     
     def process_frame(frame, t0, accel_mode, fpga):
+        # Converting to grayscale
+        frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
+        # Adjusting the image file if needed
+        if ((frame.shape[0] != height) or (frame.shape[1] != width)):
+            print("WARNING: The image was resized from [", frame.shape[0] , " x ", frame.shape[1] , "] to [", height  , " x ", width, "]")
+        dim = (width, height)
+        #frame = cv.resize(frame, dim, interpolation = cv.INTER_LINEAR)
+        frame = crop_square_roi(frame, width, interpolation = cv.INTER_AREA)
+        
         if accel_mode:
             print("Will execute on fpga with ip:port: "+fpga[0]+":"+fpga[1])
             # some intensive computation...
             # frame = cv.medianBlur(frame, 19)
-            # Converting to grayscale
-            frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
-            # Adjusting the image file if needed
-            if ((frame.shape[0] != height) or (frame.shape[1] != width)):
-                print("WARNING: The image was resized from [", frame.shape[0] , " x ", frame.shape[1] , "] to [", height  , " x ", width, "]")
-            dim = (width, height)
-            frame = cv.resize(frame, dim, interpolation = cv.INTER_LINEAR)
             # Flattening the image from 2D to 1D
             image = frame.flatten()
             output_array = _trieres_median_blur_numpi.median_blur(image, total_size, fpga[0], fpga[1])
@@ -123,17 +138,15 @@ def main():
             print("Declare free the fpga: "+str(fpga))
             fpgas.appendleft(fpga)
         else:
-            frame = cv.medianBlur(frame, 19)
-            frame = cv.medianBlur(frame, 19)
-            frame = cv.medianBlur(frame, 19)
+            frame = cv.medianBlur(frame, 5)
         return frame, t0
 
-    threadn = 4 #cv.getNumberOfCPUs()
+    threadn = 1 #cv.getNumberOfCPUs()
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
     threaded_mode = True
-    accel_mode = True
+    accel_mode = False
     latency = StatValue()
     frame_interval = StatValue()
     last_frame_time = clock()
@@ -147,7 +160,7 @@ def main():
             draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-            #cv.imshow('threaded video', res)
+            cv.imshow('threaded video', res)
         if len(pending) < threadn and len(fpgas) != 0:
             _ret, frame = cap.read()
             if _ret is False:

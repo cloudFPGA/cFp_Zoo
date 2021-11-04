@@ -448,7 +448,7 @@ void pRXPathNetToStream(
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     #pragma HLS INLINE off
     #pragma HLS pipeline II=1
-    #pragma HLS interface ap_ctrl_none port=return   
+    //#pragma HLS interface ap_ctrl_none port=return   
     
     //-- LOCAL VARIABLES ------------------------------------------------------
     static NetworkWord  netWord;
@@ -540,7 +540,7 @@ void pRXPathStreamToDDR(
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     #pragma HLS INLINE off
     #pragma HLS pipeline II=1
-    #pragma HLS interface ap_ctrl_none port=return
+    //#pragma HLS interface ap_ctrl_none port=return
     
     //-- LOCAL VARIABLES ------------------------------------------------------
     static ap_uint<MEMDW_512> v = 0;
