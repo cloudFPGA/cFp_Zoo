@@ -368,6 +368,35 @@ void pReadAxiMemMapped2HlsStream(Tin* main_mem, hls::stream<Tout> &sOut, unsigne
   
 }
 
+template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
+void pReadAxiMemMapped2HlsStreamCountFirst(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd){
+#pragma HLS INLINE
+cmd.write(0);
+  mmloop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = burstsize
+    Tout tmp  = main_mem[i];
+    sOut.write(tmp);
+  }
+  cmd.write(1);
+  
+}
+
+template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
+void pReadAxiMemMapped2HlsStreamCountActivated(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd){
+#pragma HLS INLINE
+  cmd.write(1);
+  mmloop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = burstsize
+    Tout tmp  = main_mem[i];
+    sOut.write(tmp);
+  }
+  cmd.write(1);
+}
+
 const unsigned long int  max_counter_cc = 4000000;
 //from Xilinx Vitis Accel examples, tempalte from DCO
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
@@ -436,7 +465,7 @@ count:
 
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
 void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
-  
+  #pragma HLS interface ap_ctrl_none port=return
     Tin input_cmd=1;
 
     // wait to receive a value to start counting
