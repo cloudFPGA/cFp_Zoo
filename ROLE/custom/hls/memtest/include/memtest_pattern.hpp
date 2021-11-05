@@ -1004,21 +1004,21 @@ void pReadDataflowMemTest(
 
 #pragma HLS DATAFLOW
       //Step 0  for debugging
-      pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
-      perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
+      //pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
+      //perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
 
       //Step 1: Generate the data
       ////pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       ////pRDRead2StreamDataVariableBurst<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
-      //pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
+      pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       //Step 2: write 
-      //pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
+      pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
       //Step 2.b: count 
       ////perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
-      //perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
+      perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
       //Step 3: compare
       ////pRDCompareDataStreamsCount<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
-      //pRDCmpStreamsCntWordAligned<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
+      pRDCmpStreamsCntWordAligned<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
 }
 
 
