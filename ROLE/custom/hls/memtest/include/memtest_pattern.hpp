@@ -952,7 +952,7 @@ void pRDCmpStreamsCntWordAligned(
 //////////////////////////////////////////////////////////////////////////////
 //////////////////Begin of WR/RD Composed Functions///////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-template <const unsigned int maximum_number_of_beats=256>
+template <const unsigned int maximum_number_of_beats=512>
 void pWriteDataflowMemTest(
   membus_t * lcl_mem0,
   local_mem_addr_t max_address_under_test,
@@ -978,7 +978,7 @@ void pWriteDataflowMemTest(
 }
 
 
-template <const unsigned int maximum_number_of_beats=256>
+template <const unsigned int maximum_number_of_beats=512>
 void pReadDataflowMemTest(
   membus_t * lcl_mem1,
   local_mem_addr_t max_address_under_test,
