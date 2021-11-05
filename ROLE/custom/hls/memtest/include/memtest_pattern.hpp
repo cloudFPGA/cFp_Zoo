@@ -227,7 +227,7 @@ unsigned int burst_size)
   // cmd.write(0);
   int idx, written_i;
   int ptrs_difference=0;
-  unsigned int last_words=0;
+  unsigned int last_words=max_addr_ut;
   unsigned int maximum_usable_fifo_words=buff_dim-buff_dim%burst_size;
   read_and_write:
   for (curr_address_ut = 0, idx=0, curr_writing_addr=0, written_i=0; curr_address_ut < max_addr_ut; curr_address_ut++)// curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
