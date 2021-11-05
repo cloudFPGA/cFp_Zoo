@@ -62,8 +62,9 @@ enum MemTestCmd {
 };
 
 //CMD 8 bitwdith up to 255 commands (0 is invalid)
-#define MEMTEST_COMMANDS_HIGH_BIT 8-1
+#define MEMTEST_COMMANDS_HIGH_BIT MEMTEST_COMMANDS_BITWIDTH-1
 #define MEMTEST_COMMANDS_LOW_BIT 0
+#define MEMTEST_COMMANDS_BITWIDTH 8
 
 #define WAIT_FOR_META 0
 #define WAIT_FOR_STREAM_PAIR 1

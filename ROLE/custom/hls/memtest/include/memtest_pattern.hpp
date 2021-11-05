@@ -27,7 +27,7 @@
 #define LOCAL_MEM_ADDR_SIZE 20
 #define MEMTEST_ADDRESS_BITWIDTH 40
 #define MEMTEST_ITERATION_BITWIDTH 16
-#define MEMTEST_BURST_BITWIDTH 8
+#define MEMTEST_BURST_BITWIDTH 16
 
 
 typedef ap_uint<LOCAL_MEM_WORD_SIZE>  local_mem_word_t;
@@ -45,7 +45,7 @@ typedef ap_uint<LOCAL_MEM_ADDR_SIZE_NON_BYTE_ADDRESSABLE>  local_mem_addr_non_by
 
 
 
-#define MEMTEST_BURST_HIGH_BIT 16-1 // 15
+#define MEMTEST_BURST_HIGH_BIT MEMTEST_BURST_BITWIDTH-1+MEMTEST_COMMANDS_BITWIDTH// 23
 #define MEMTEST_BURST_LOW_BIT  MEMTEST_BURST_HIGH_BIT+1-MEMTEST_BURST_BITWIDTH // 8
 
 #define MAX_ITERATION_COUNT 10
@@ -952,7 +952,7 @@ void pRDCmpStreamsCntWordAligned(
 //////////////////////////////////////////////////////////////////////////////
 //////////////////Begin of WR/RD Composed Functions///////////////////////////
 //////////////////////////////////////////////////////////////////////////////
-
+template <const unsigned int maximum_number_of_beats=256>
 void pWriteDataflowMemTest(
   membus_t * lcl_mem0,
   local_mem_addr_t max_address_under_test,
@@ -971,13 +971,14 @@ void pWriteDataflowMemTest(
           //Step 1: Generate the data
           pWRGenerateData2WriteOnStream<4000000>(generatedWriteData,testCounter,max_address_under_test);
           //Step 2: write 
-          pWRStream2WriteMainMemory<ap_uint<64>,4000000>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, burst_size);
+          pWRStream2WriteMainMemory<ap_uint<64>,4000000,maximum_number_of_beats*2>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, burst_size);
           //Step 2.b: count 
           perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr);
           //perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr);
 }
 
 
+template <const unsigned int maximum_number_of_beats=256>
 void pReadDataflowMemTest(
   membus_t * lcl_mem1,
   local_mem_addr_t max_address_under_test,
@@ -989,13 +990,13 @@ void pReadDataflowMemTest(
   #pragma HLS INLINE off
 
  static hls::stream<ap_uint<64>> sReadPrfCntr_cmd("sReadPrfCntr_cmd"); 
- #pragma HLS STREAM variable=sReadPrfCntr_cmd depth=64 dim=1
+ #pragma HLS STREAM variable=sReadPrfCntr_cmd depth=maximum_number_of_beats dim=1
  static hls::stream<local_mem_word_t> generatedReadData("generatedReadData"); 
- #pragma HLS STREAM variable=generatedReadData depth=192 dim=1
+ #pragma HLS STREAM variable=generatedReadData depth=maximum_number_of_beats dim=1
   static hls::stream<local_mem_word_t> sReadData("sReadData"); 
- #pragma HLS STREAM variable=sReadData depth=192 dim=1
+ #pragma HLS STREAM variable=sReadData depth=maximum_number_of_beats dim=1
   static hls::stream<local_mem_word_t> sGoldData("sGoldData"); 
- #pragma HLS STREAM variable=sGoldData depth=192 dim=1
+ #pragma HLS STREAM variable=sGoldData depth=maximum_number_of_beats dim=1
 
   static hls::stream<ap_uint<64>> sComparisonData("sComparisonData"); 
  #pragma HLS STREAM variable=sComparisonData depth=64 dim=1
@@ -1004,21 +1005,21 @@ void pReadDataflowMemTest(
 
 #pragma HLS DATAFLOW
       //Step 0  for debugging
-      pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
-      perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
+      // pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
+      // perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
 
       //Step 1: Generate the data
       ////pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       ////pRDRead2StreamDataVariableBurst<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
-      //pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
+      pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000,maximum_number_of_beats*2>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       //Step 2: write 
-      //pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
+      pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
       //Step 2.b: count 
       ////perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
-      //perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
+      perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
       //Step 3: compare
       ////pRDCompareDataStreamsCount<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
-      //pRDCmpStreamsCntWordAligned<4000000>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
+      pRDCmpStreamsCntWordAligned<4000000,maximum_number_of_beats>(max_address_under_test,sReadData, sGoldData,faulty_addresses_cntr, first_faulty_address);
 }
 
 
@@ -1115,6 +1116,8 @@ static int emptycntr=0;
 #pragma HLS reset variable=tmp_wordaligned_address
 #pragma HLS reset variable=burst_size
 //#pragma HLS reset variable=testingVector
+
+const unsigned int maximum_number_of_beats = 256;
 
 //assuming that whnever I send a start I must complete the run and then restart unless a stop
 // or stopping once done with the run iterations
