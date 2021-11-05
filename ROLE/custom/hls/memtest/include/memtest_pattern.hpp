@@ -227,7 +227,7 @@ unsigned int burst_size)
   // cmd.write(0);
   int idx, written_i;
   int ptrs_difference=0;
-  unsigned int last_words=0;
+  unsigned int last_words=max_addr_ut;
   unsigned int maximum_usable_fifo_words=buff_dim-buff_dim%burst_size;
   read_and_write:
   for (curr_address_ut = 0, idx=0, curr_writing_addr=0, written_i=0; curr_address_ut < max_addr_ut; curr_address_ut++)// curr_address_ut+=LOCAL_MEM_ADDR_OFFSET)
@@ -1005,8 +1005,8 @@ void pReadDataflowMemTest(
 
 #pragma HLS DATAFLOW
       //Step 0  for debugging
-      // pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
-      // perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
+      //pReadStupidTestMemTest<ap_uint<64>>(sReadPrfCntr_cmd, lcl_mem1, max_address_under_test, burst_size, faulty_addresses_cntr, first_faulty_address);
+      //perfCounterProc2MemCountOnly<ap_uint<64>,ap_uint<64>,64>(sReadPrfCntr_cmd, reading_cntr);
 
       //Step 1: Generate the data
       ////pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);

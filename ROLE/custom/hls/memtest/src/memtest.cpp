@@ -83,7 +83,7 @@ void memtest(
 
 #ifdef ENABLE_DDR
     
-const unsigned int ddr_mem_depth = TOTMEMDW_512*2;
+const unsigned int ddr_mem_depth = TOTMEMDW_512;//*2;
 const unsigned int ddr_latency = DDR_LATENCY;
 const unsigned int num_outstanding_transactions = 16;
 const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4096KBytes;
