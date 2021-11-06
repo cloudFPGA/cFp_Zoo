@@ -388,24 +388,9 @@ set ipName "median_blur"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
-set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
-                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {8} ]
-
-set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-
-if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
-
-
-#------------------------------------------------------------------------------  
-# IBM-HSL-IP : Median_Blur Application Flash
-#------------------------------------------------------------------------------
-set ipModName "Median_BlurApplication"
-set ipName "median_blur"
-set ipVendor  "IBM"
-set ipLibrary "hls"
-set ipVersion "1.0"
-set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
-                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {8} ]
+#set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
+#                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {1} ]
+set ipCfgList  [ list ]
 
 set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
 

@@ -26,7 +26,7 @@ from __future__ import print_function
 
 import sys
 import os
-video_common_lib=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/python/var"
+video_common_lib=os.environ['cFpRootDir'] + "HOST/vision/common/languages/python/var"
 sys.path.append(video_common_lib)
 
 import numpy as np
@@ -46,6 +46,8 @@ import _trieres_median_blur_numpi
 # size of image to be processed on fpga (the bitstream should be already fixed to this)
 height = width = 512
 total_size = height * width
+
+ROI = True
 
 # import the necessary packages
 import datetime
@@ -97,33 +99,69 @@ def main():
     fps = FPS().start()
 
     video_name = str(fn)+"_out.avi"
-    video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (width,height))
+    video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (1280,720))
     
-    fpgas = deque([["10.12.200.181" , "2718"]])
+    fpgas = deque([["10.12.200.173" , "2718"],
+                   ["10.12.200.85" , "2719"]])
 
 
     def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
         h, w = img.shape[:2]
-        min_size = np.amin([h,w])
-        # Centralize and crop
-        crop_img = img[int(h/2-min_size/2):int(h/2+min_size/2), int(w/2-min_size/2):int(w/2+min_size/2)]
-        #y1=10
-        #y2=y1+100
-        #x1=10
-        #x2=x1+100
-        #roi = crop_img[y1:y2, x1:x2]
-        resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
+        if ROI:
+               if (h>height) and (w>width):
+                        roi_x_pos = int((w-width) /2)
+                        roi_y_pos = int((h-height)/2)
+                        crop_img = img[int(roi_y_pos):int(roi_y_pos+height), int(roi_x_pos):int(roi_x_pos+width)]
+               else:
+                        crop_img = img
+                        print("WARNING: The input image of [", h , " x ", w , "] is not bigger to crop a ROI in [", height  , " x ", width, "]. Will just resize")
+        else:
+	        min_size = np.amin([np.amin([h,w]), np.amin([height,width])])
+        	# Centralize and crop
+        	crop_img = img[int(h/2-min_size/2):int(h/2+min_size/2), int(w/2-min_size/2):int(w/2+min_size/2)]
+        	
+        # Adjusting the image file if needed
+        if ((crop_img.shape[0] != height) or (crop_img.shape[1] != width)):
+            print("WARNING: The image was resized from [", crop_img.shape[0] , " x ", crop_img.shape[1] , "] to [", height  , " x ", width, "]")
+            resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
+        else:
+            resized = crop_img
         return resized
+
+
+
+    def patch_sqaure_roi(orig, frame):
+        h_orig,  w_orig  = orig.shape[:2]
+        h_frame, w_frame = frame.shape[:2]
+        
+        patched_img = orig
+        
+        if (h_orig>h_frame) and (w_orig>w_frame):
+                roi_x_pos = int((w_orig-w_frame)/2)
+                roi_y_pos = int((h_orig-h_frame)/2)
+                frame_backtorgb = cv.cvtColor(frame,cv.COLOR_GRAY2RGB)
+                patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
+        else:
+                patched_img = frame
+                print("WARNING: The input image of [", h , " x ", w , "] is not bigger to embed a ROI in [", height  , " x ", width, "]. Will just resize")
+        	
+        # Adjusting the image file if needed
+        if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
+            print("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
+            resized = cv.resize(patched_img , (w_orig, h_orig), interpolation=interpolation)
+        else:
+            resized = patched_img
+        return resized
+
 
     
     def process_frame(frame, t0, accel_mode, fpga):
         # Converting to grayscale
+        orig = frame
         frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
+
         # Adjusting the image file if needed
-        if ((frame.shape[0] != height) or (frame.shape[1] != width)):
-            print("WARNING: The image was resized from [", frame.shape[0] , " x ", frame.shape[1] , "] to [", height  , " x ", width, "]")
-        dim = (width, height)
-        #frame = cv.resize(frame, dim, interpolation = cv.INTER_LINEAR)
+        #frame = cv.resize(frame, (width, height), interpolation = cv.INTER_LINEAR)
         frame = crop_square_roi(frame, width, interpolation = cv.INTER_AREA)
         
         if accel_mode:
@@ -138,15 +176,19 @@ def main():
             print("Declare free the fpga: "+str(fpga))
             fpgas.appendleft(fpga)
         else:
-            frame = cv.medianBlur(frame, 5)
+            frame = cv.medianBlur(frame, 55)
+        
+        if ROI:
+               frame = patch_sqaure_roi(orig, frame)
+                    
         return frame, t0
 
-    threadn = 1 #cv.getNumberOfCPUs()
+    threadn = 2 #cv.getNumberOfCPUs()
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
     threaded_mode = True
-    accel_mode = False
+    accel_mode = True
     latency = StatValue()
     frame_interval = StatValue()
     last_frame_time = clock()
@@ -154,13 +196,13 @@ def main():
         while len(pending) > 0 and pending[0].ready() and len(fpgas) > 0:
             res, t0 = pending.popleft().get()
             latency.update(clock() - t0)
-#            video_out.write(res)
             draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))
             draw_str(res, (20, 40), "cloudFPA       :  " + str(accel_mode))
             draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-            cv.imshow('threaded video', res)
+            video_out.write(res)
+#            cv.imshow('threaded video', res)
         if len(pending) < threadn and len(fpgas) != 0:
             _ret, frame = cap.read()
             if _ret is False:
@@ -168,8 +210,8 @@ def main():
                 print("Saved video: " + video_name)
                 video_out.release()
                 break
-            else:
-                video_out.write(frame)
+            #else:
+            #    video_out.write(frame)
             t = clock()
             frame_interval.update(t - last_frame_time)
             last_frame_time = t

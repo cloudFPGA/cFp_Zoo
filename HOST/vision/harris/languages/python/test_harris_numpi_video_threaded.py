@@ -26,7 +26,7 @@ from __future__ import print_function
 
 import sys
 import os
-video_common_lib=os.environ['cFpRootDir'] + "HOST/vision/harris/languages/python/var"
+video_common_lib=os.environ['cFpRootDir'] + "HOST/vision/common/languages/python/var"
 sys.path.append(video_common_lib)
 
 import numpy as np
