@@ -129,6 +129,42 @@ $ firewall-cmd --reload
 
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
 
+#### Forwarding camera stream from laptop to another machine (e.g. VM)
+
+* On the laptop
+    
+    * Install v4l-utils and ffmpeg by running:
+
+        `sudo apt install v4l-utils ffmpeg`
+
+    * Install matroska media container like so:
+
+        `sudo apt install libmatroska6v5`
+
+    * Run the following command to open a netcat listener for the camera stream:
+
+        `ffmpeg -i /dev/video0 -codec copy -f matroska - | nc -l 2718`
+        
+* On the PC (vm)
+
+    * Install v4l-utils and ffmpeg by running:
+
+        `sudo apt install v4l-utils ffmpeg`
+
+    * Install v4l2loopback and load the virtual camera:
+
+    ```bash
+    sudo apt install v4l2loopback-dkms v4l2loopback-utils
+    sudo modprobe -r v4l2loopback
+    sudo depmod -a
+    sudo modprobe v4l2loopback exclusive_caps=1 card_label="MyLaptopCam:MyLaptopCam"
+    ```
+    
+    * Stream the real camera on the laptop to the virtual camera on the PC ( change Laptop_IP to the IP of the laptop ):
+        `nc Laptop_IP 2718 | ffmpeg -i /dev/stdin -codec copy -f v4l2 /dev/video0`
+
+    * Launch and play the virtual camera:
+        `ffplay /dev/video0`
 
 ##### Acknowledgement and Copyright
 This software part of this project is built upon various open-source libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/) and [OpenCV 3](http://opencv.org/) ; please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.

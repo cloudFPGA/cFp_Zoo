@@ -348,8 +348,9 @@ int main(int argc, char * argv[]) {
 	    unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
+	    unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
-	        //cout << "DEBUG: " << i << endl;
+	        cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;
                 //}
@@ -366,6 +367,7 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i], buffer, recvMsgSize);
 		//cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
 		i += recvMsgSize;
+        delay(200);
             }
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
