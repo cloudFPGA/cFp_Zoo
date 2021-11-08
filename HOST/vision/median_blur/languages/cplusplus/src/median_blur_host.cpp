@@ -282,7 +282,7 @@ int main(int argc, char * argv[]) {
             cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
             cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 
-#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)    
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 	    
             //--------------------------------------------------------
             //-- STEP-4 : RUN MEDIANBLUR DETECTOR FROM OpenCV LIBRARY (SW)
@@ -308,10 +308,10 @@ int main(int argc, char * argv[]) {
             // Anchor a pointer on cvMat raw data
             unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
 
-            clock_t start_cycle_median_blur_hw = clock();
 
-#endif // !PY_WRAP_MEDIANBLUR_NUMPI
+#endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
     
+            clock_t start_cycle_median_blur_hw = clock();
 
             //------------------------------------------------------
             //-- STEP-5.2 : TX Loop
@@ -327,7 +327,7 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                delay(100);  
+                //delay(100);  
             }
             
             clock_t next_cycle_tx = clock();
@@ -340,15 +340,13 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------
             //-- STEP-5.3 : RX Loop
             //------------------------------------------------------    
-#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
             clock_t last_cycle_rx = clock();
-#endif
             unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
-            unsigned int loopi=0;
+            //unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
-                cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
+                //cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;
                 //}
@@ -365,22 +363,11 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
-                delay(200);
+                //delay(200);
             }
 
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
-#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
-
-            frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
-            if (frame.size().width == 0) {
-                cerr << "receive failure!" << endl;
-                continue;
-            }
-#ifdef SHOW_WINDOWS            
-            namedWindow("host_recv", CV_WINDOW_NORMAL);
-            imshow("host_recv", frame);
-#endif
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
             cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
@@ -393,24 +380,29 @@ int main(int argc, char * argv[]) {
                                                 (double) CLOCKS_PER_SEC;
             cout << "INFO: HW exec. time:" << duration_median_blur_hw << " seconds" << endl;
             cout << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << " \tkbps:" << 
-                    (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8) << endl;	    
+                    (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8) << endl;
+                    
+#if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
+
+            frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
+            if (frame.size().width == 0) {
+                cerr << "receive failure!" << endl;
+                continue;
+            }
+#ifdef SHOW_WINDOWS            
+            namedWindow("host_recv", CV_WINDOW_NORMAL);
+            imshow("host_recv", frame);
+#endif
 
             //------------------------------------------------------
             //-- STEP-6 : Write output files and show in windows
             //------------------------------------------------------
-            Mat out_img;
-            out_img = send.clone();
-            vector<Point> hw_points;
 
             ostringstream oss;
             oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << 
                    " \tkbps:" << (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8);
             string windowName = "cFp_Vitis End2End"; //oss.str();
 
-#ifdef SHOW_WINDOWS
-            namedWindow(windowName, CV_WINDOW_NORMAL);
-            imshow(windowName, out_img);
-#endif
             //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
             if (num_frame == 1) {

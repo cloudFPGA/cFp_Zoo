@@ -84,8 +84,14 @@ file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 - Editing videos for input to the MedianBlur example:
   
+  `ffmpeg -i input.mp4 -vcodec mjpeg -qscale 1 -an output.avi`
+  
+  `mencoder input.mp4 -o  output.mjpeg -ovc lavc -lavcopts vcodec=mjpeg -oac=copy`
+  
   `ffmpeg -i The_Mast_Walk_by_Alex_Thomson.mp4 -ss 00:00:39 -t 00:00:17 -async 1 -strict -2 cut.mp4 -c copy`
+  
   `frame= 1025 fps= 42 q=-1.0 Lsize=   10487kB time=00:00:41.00 bitrate=2095.0kbits/s   `
+  
   `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
 
   

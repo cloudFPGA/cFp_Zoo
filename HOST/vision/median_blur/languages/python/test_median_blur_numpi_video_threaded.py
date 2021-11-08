@@ -44,7 +44,7 @@ sys.path.append(trieres_lib)
 import _trieres_median_blur_numpi
 
 # size of image to be processed on fpga (the bitstream should be already fixed to this)
-height = width = 512
+height = width = 256
 total_size = height * width
 
 ROI = True
@@ -101,8 +101,7 @@ def main():
     video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (1280,720))
     
-    fpgas = deque([["10.12.200.173" , "2718"],
-                   ["10.12.200.85" , "2719"]])
+    fpgas = deque([["10.12.200.176" , "2718"]])
 
 
     def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
@@ -176,8 +175,7 @@ def main():
             print("Declare free the fpga: "+str(fpga))
             fpgas.appendleft(fpga)
         else:
-            frame = cv.medianBlur(frame, 55)
-        
+            frame = cv.medianBlur(frame, 9)
         if ROI:
                frame = patch_sqaure_roi(orig, frame)
                     
@@ -187,8 +185,8 @@ def main():
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
-    threaded_mode = True
-    accel_mode = True
+    threaded_mode = False
+    accel_mode = False
     latency = StatValue()
     frame_interval = StatValue()
     last_frame_time = clock()
@@ -202,7 +200,7 @@ def main():
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
             video_out.write(res)
-#            cv.imshow('threaded video', res)
+            cv.imshow('threaded video', res)
         if len(pending) < threadn and len(fpgas) != 0:
             _ret, frame = cap.read()
             if _ret is False:
@@ -249,5 +247,5 @@ def main():
 if __name__ == '__main__':
     print(__doc__)
     main()
-    #cv.destroyAllWindows()
+    cv.destroyAllWindows()
 
