@@ -18,14 +18,10 @@
  *****************************************************************************/
 
 #include "../include/memtest.hpp"
-#include "../include/memtest_pattern.hpp"
+#include "../include/memtest_processing.hpp"
+#include "../include/memtest_pattern_library.hpp"
 #include "../include/memtest_library.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h" //debug level define
-
-#ifdef USE_HLSLIB_DATAFLOW
-#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
-#include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
-#endif
 
 #ifdef USE_HLSLIB_STREAM
 using hlslib::Stream;
@@ -105,16 +101,7 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
   static stream<NetworkMetaStream> sRxtoProc_Meta("sRxtoProc_Meta");
   static stream<NetworkMetaStream> sProctoTx_Meta("sProctoTx_Meta");
   static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); 
- #pragma HLS STREAM variable=sProcpToTxp_Data depth=max_proc_fifo_depth dim=1
-  static hls::stream<bool> sOfEnableCCIncrement("sOfEnableCCIncrement");
- #pragma HLS STREAM variable=sOfEnableCCIncrement depth=20 dim=1
-  static hls::stream<bool> sOfResetCounter("sOfResetCounter");
- #pragma HLS STREAM variable=sOfResetCounter depth=20 dim=1
-  static hls::stream<bool> sOfGetTheCounter("sOfGetTheCounter");
- #pragma HLS STREAM variable=sOfGetTheCounter depth=20 dim=1
-  static hls::stream<ap_uint<64>> sClockCounter("sClockCounter");
- #pragma HLS STREAM variable=sClockCounter depth=20 dim=1
-
+ #pragma HLS STREAM variable=sProcpToTxp_Data depth=20 dim=1
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
 
  static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
@@ -134,47 +121,6 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
 #pragma HLS reset variable=processed_word_tx
 
   
-
-#ifdef USE_HLSLIB_DATAFLOW //TODO: this is not used currently and not updated, consider to cut out
-  /*! @copybrief uppercase()
-   *  Uppercase is eanbled with hlslib support
-   */
-  /*! @copydoc uppercase()
-   * Use this snippet to early check for C++ errors related to dataflow and bounded streams (empty 
-   * and full) during simulation. It can also be both synthesized and used in co-simulation.
-   * Practically we use hlslib when we want to run simulation as close as possible to the HW, by 
-   * executing all functions of dataflow in thread-safe parallel executions, i.e the function 
-   * HLSLIB_DATAFLOW_FINALIZE() acts as a barrier for the threads spawned to serve every function 
-   * called in HLSLIB_DATAFLOW_FUNCTION(func, args...).
-   */
-   /*! @copydetails uppercase()
-   * hlslib is a collection of C++ headers, CMake files, and examples, aimed at improving the 
-   * quality of life of HLS developers. More info at: https://github.com/definelicht/hlslib
-   */
-  // Dataflow functions running in parallel
-  HLSLIB_DATAFLOW_INIT();
-  
-  HLSLIB_DATAFLOW_FUNCTION(pRXPath, 
-         siSHL_This_Data,
-         siNrc_meta,
-         sRxtoTx_Meta,
-         meta_tmp,
-         sRxpToProcp_Data,
-         &processed_word_rx,
-         &processed_bytes_rx);
-
-  HLSLIB_DATAFLOW_FUNCTION(pTXPath,
-         soTHIS_Shl_Data,
-         soNrc_meta,
-         sRxpToProcp_Data,
-         sRxtoTx_Meta,
-         &processed_word_tx,
-         pi_rank,
-         pi_size);
-
-  HLSLIB_DATAFLOW_FINALIZE();
-  
-#else // !USE_HLSLIB_DATAFLOW
 //////////////////////////////////////////////////
 //STEP 0: setup the port and the dst of the cluster
 // CHANGE THE CLUSTER CONNECTIONS HERE
@@ -230,8 +176,7 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
   sDstNode_sig,
   &processed_word_tx,
   pi_rank);
-#endif // USE_HLSLIB_DATAFLOW
+
+
 }
-
-
 /*! \} */

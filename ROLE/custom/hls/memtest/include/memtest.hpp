@@ -86,24 +86,9 @@ enum MemTestCmd {
 /* General memory Data Width is set as a parameter*/
 /* 512-bit host AXI data width*/
 #define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
-#define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
-#define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
 #define TOTMEMDW_512 16384 //1MB
-
-#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
-#define BYTE_PER_MEM_WORD BPERMDW_512 // 64
-#define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
-
-//typedef enum fsmStateDDRenum {
-//    FSM_WR_PAT_CMD	= 0,
-//    FSM_WR_PAT_DATA	= 1,
-//    FSM_WR_PAT_STS  = 2
-//} fsmStateDDRdef;
-//typedef enum fsmStateDDRenum fsmStateDDRdef;
-
-#define fsmStateDDRdef uint8_t
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100

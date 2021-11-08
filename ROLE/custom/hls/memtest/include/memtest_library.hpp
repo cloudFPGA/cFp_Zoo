@@ -1,5 +1,23 @@
-#ifndef _ROLE_MEMTEST_LIBRARY_H_
-#define _ROLE_MEMTEST_LIBRARY_H_
+/*****************************************************************************
+ * @file       memtest_library.hpp
+ * @brief      A library for some common functionalities
+ * @author     FAB, WEI, NGL, DID, DCO
+ * @date       September 2021
+ *----------------------------------------------------------------------------
+ *
+ * @details      This application implements a UDP/TCP-oriented Memory test function.
+ *
+ * @deprecated   
+ * 
+ *----------------------------------------------------------------------------
+ * 
+ * @ingroup MemtestHLS
+ * @addtogroup MemtestHLS
+ * \{
+ *****************************************************************************/
+
+#ifndef _ROLE_MEMTEST_LIBRARY_HPP_
+#define _ROLE_MEMTEST_LIBRARY_HPP_
 
 #include <stdio.h>
 #include <iostream>
@@ -11,6 +29,10 @@
 #include "network.hpp"
 
 using namespace hls;
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////Begin of Network-Related Functions//////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
 /*****************************************************************************
  * @brief pPortAndDestionation - Setup the port and the destination rank.
@@ -305,22 +327,25 @@ void pTXPath(
   }
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//////////////////End of Network-Related Functions////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
+//////////////////////////////////////////////////////////////////////////////
+//////////////////Begin of Mem. Interaction Functions/////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-////TODO: parametrize the width?
+/*****************************************************************************
+ * @brief Copy a fixed compile time amount of data to another array
+ *
+ * @param[out] out the dst ptr
+ * @param[in]  in the src ptr
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  arraysize the fixed amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tin, typename Tout, unsigned int arraysize>
 void pMyMemtestMemCpy(Tin* in, Tout* out){
 #pragma HLS INLINE
@@ -332,7 +357,20 @@ void pMyMemtestMemCpy(Tin* in, Tout* out){
   
 }
 
-
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to another array employing
+ *  the src as circular buffer i.e.,  handling overflow
+ *
+ * @param[out] out_mem the dst ptr
+ * @param[in]  buff the src ptr, or the circular buffer
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  offset_buff the initial offest in the circular buffer
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  arraysize the maxmimum amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tin, typename Tout, const unsigned int arraysize>
 void pMemCpyCircularBuff(Tin* buff, Tout* out_mem, unsigned int elems,unsigned int offset_buff){
 #pragma HLS INLINE
@@ -355,6 +393,18 @@ void pMemCpyCircularBuff(Tin* buff, Tout* out_mem, unsigned int elems,unsigned i
 }
 
 
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to an hls stream with a given max
+ *
+ * @param[out] main_mem the src ptr to read
+ * @param[in]  sOut the dst hls stream
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  burstsize the maxmimum amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tin, typename Tout, const unsigned int burstsize>
 void pReadAxiMemMapped2HlsStream(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems){
 #pragma HLS INLINE
@@ -368,6 +418,22 @@ void pReadAxiMemMapped2HlsStream(Tin* main_mem, hls::stream<Tout> &sOut, unsigne
   
 }
 
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to an hls stream with a given max
+ *  it assumes also the initialization of a perf counter of "perfCounterMultipleCounts" 
+ *  function
+ *
+ * @param[out] main_mem the src ptr to read
+ * @param[in]  sOut the dst hls stream
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  cmd the performance counter cmd stream
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  burstsize the maxmimum amount of data
+ * @param[in]  Tcntr the cmd perf counter datatype
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
 void pReadAxiMemMapped2HlsStreamCountFirst(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd){
 #pragma HLS INLINE
@@ -383,6 +449,21 @@ cmd.write(0);
   
 }
 
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to an hls stream with a given max
+ *  it assumes  "perfCounterMultipleCounts" function already initialized so it just incr
+ *
+ * @param[out] main_mem the src ptr to read
+ * @param[in]  sOut the dst hls stream
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  cmd the performance counter cmd stream
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  burstsize the maxmimum amount of data
+ * @param[in]  Tcntr the cmd perf counter datatype
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
 void pReadAxiMemMapped2HlsStreamCountActivated(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd){
 #pragma HLS INLINE
@@ -397,106 +478,18 @@ void pReadAxiMemMapped2HlsStreamCountActivated(Tin* main_mem, hls::stream<Tout> 
   cmd.write(1);
 }
 
+//////////////////////////////////////////////////////////////////////////////
+//////////////////End of Mem. Interaction Functions///////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////////////////////////////
+//////////////////Begin of Perf. Counter Functions////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
+
 const unsigned long int  max_counter_cc = 4000000;
-//from Xilinx Vitis Accel examples, tempalte from DCO
-//https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
-template<typename Tin, typename Tout, unsigned int counter_precision=64>
-void perfCounterProc2Mem(hls::stream<Tin>& cmd, Tout * out, int direction, int burst_length, int nmbr_outstanding) {
-  
-    Tin input_cmd;
-    // wait to receive a value to start counting
-    ap_uint<counter_precision> cnt = cmd.read();
-// keep counting until a value is available
-count:
-    while (cmd.read_nb(input_cmd) == false) {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
-        cnt++;
 
-#if DEBUG_LEVEL == TRACE_ALL
-#ifndef __SYNTHESIS__
-  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
-#endif //__SYNTHESIS__
-#endif     
-    }
-    *out =cnt;
-}
-
-template<typename Tin, typename Tout, unsigned int counter_precision=64>
-void perfCounterProc2MemCountOnly(hls::stream<Tin>& cmd, Tout * out) {
-  
-    Tin input_cmd;
-    // wait to receive a value to start counting
-    ap_uint<counter_precision> cnt = cmd.read();
-// keep counting until a value is available
-count:
-    while (cmd.read_nb(input_cmd) == false) {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
-        cnt++;
-
-#if DEBUG_LEVEL == TRACE_ALL
-#ifndef __SYNTHESIS__
-  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
-#endif //__SYNTHESIS__
-#endif     
-    }
-    *out =cnt;
-}
-
-template<typename Tin, typename Tout, unsigned int counter_precision=64>
-void perfCounterProc2MemCountIncremental(hls::stream<Tin>& cmd, Tout * out) {
-  
-    Tin input_cmd;
-    // wait to receive a value to start counting
-    ap_uint<counter_precision> cnt = cmd.read();
-// keep counting until a value is available
-count:
-    while (cmd.read_nb(input_cmd) == false) {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
-        cnt++;
-#if DEBUG_LEVEL == TRACE_ALL
-#ifndef __SYNTHESIS__
-  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
-#endif //__SYNTHESIS__
-#endif     
-    }
-    *out +=cnt;
-}
-
-
-template<typename Tin, typename Tout, unsigned int counter_precision=64>
-void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
-  #pragma HLS interface ap_ctrl_none port=return
-    Tin input_cmd=1;
-
-    // wait to receive a value to start counting
-    ap_uint<counter_precision> cnt = cmd.read();
-    reset:
-    while (input_cmd != 0)//a zero will stop the counter
-    {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
-#if DEBUG_LEVEL == TRACE_ALL
- #ifndef __SYNTHESIS__
-  //printf("DEBUG begin to count :D input_cmd value = %s\n", input_cmd.to_string().c_str());
-#endif //__SYNTHESIS__
-#endif     
-// keep counting until a value is available
-count:
-    while (cmd.read_nb(input_cmd) == false) {
-#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
-#pragma HLS PIPELINE II=1
-        cnt++;       
-#if DEBUG_LEVEL == TRACE_ALL
- #ifndef __SYNTHESIS__
- // printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
-#endif //__SYNTHESIS__
-#endif     
-    }
-    input_cmd=cmd.read();
-  }
-  *out +=cnt;
-}
-
-//from Xilinx Vitis Accel examples, tempalte from DCO
+//Original function from Xilinx Vitis Accel examples, template from DCO
+// @DEPRECATED
 //https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
 template<typename Tin, typename Tout, unsigned int counter_precision=64>
 void perfCounterProc(hls::stream<Tin>& cmd, hls::stream<Tout>& out, int direction, int burst_length, int nmbr_outstanding)
@@ -530,8 +523,158 @@ count:
     //out.write(input_cmd); Xilinx use this to count the errors but we are already counting so...
 }
 
-/*
-*/
+//Original function from Xilinx Vitis Accel examples, template from DCO
+// @DEPRECATED
+//https://github.com/Xilinx/Vitis_Accel_Examples/blob/master/cpp_kernels/axi_burst_performance/src/test_kernel_common.hpp
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc2Mem(hls::stream<Tin>& cmd, Tout * out, int direction, int burst_length, int nmbr_outstanding) {
+  
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;
+
+#if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    *out =cnt;
+}
+
+
+/*****************************************************************************
+ * @brief Count Clock Cycles between two events, the first event init the 
+ * counter the second stop the count
+ *
+ * @param[in]  cmd the performance counter cmd stream, first is init second stop
+ * @param[out] out the output register of where store the counter value
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  counter_precision the maxmimum amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc2MemCountOnly(hls::stream<Tin>& cmd, Tout * out) {
+  
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;
+
+#if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    *out =cnt;
+}
+
+
+/*****************************************************************************
+ * @brief Count Clock Cycles between two events, the first event init the 
+ * counter the second stop the count and increment the out register
+ * TODO: seems not working at the csim lvl (never tested below) when executing single
+ * DUT step, hanging stream values
+ *
+ * @param[in]  cmd the performance counter cmd stream, first is init second stop
+ * @param[out] out the output register of where increment the counter value
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  counter_precision the maxmimum amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterProc2MemCountIncremental(hls::stream<Tin>& cmd, Tout * out) {
+  
+    Tin input_cmd;
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+        cnt++;
+#if DEBUG_LEVEL == TRACE_ALL
+#ifndef __SYNTHESIS__
+  printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    *out +=cnt;
+}
+
+/*****************************************************************************
+ * @brief Count Clock Cycles between two events, the first event init the 
+ * counter the second stop the count, a 0 after the init stop definitevely the counter
+ *
+ * @param[in]  cmd the performance counter cmd stream, first is init second stop(0)/continue(everything else)
+ * @param[out] out the output register of where store the incremental counter value
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  counter_precision the maxmimum amount of data
+ *
+ * @return Nothing.
+ *****************************************************************************/
+template<typename Tin, typename Tout, unsigned int counter_precision=64>
+void perfCounterMultipleCounts(hls::stream<Tin>& cmd, Tout * out) {
+  #pragma HLS interface ap_ctrl_none port=return
+    Tin input_cmd=1;
+
+    // wait to receive a value to start counting
+    ap_uint<counter_precision> cnt = cmd.read();
+    reset:
+    while (input_cmd != 0)//a zero will stop the counter
+    {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+#if DEBUG_LEVEL == TRACE_ALL
+ #ifndef __SYNTHESIS__
+  //printf("DEBUG begin to count :D input_cmd value = %s\n", input_cmd.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+// keep counting until a value is available
+count:
+    while (cmd.read_nb(input_cmd) == false) {
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = max_counter_cc
+#pragma HLS PIPELINE II=1
+        cnt++;       
+#if DEBUG_LEVEL == TRACE_ALL
+ #ifndef __SYNTHESIS__
+ // printf("DEBUG perfCounterProc counter value = %s\n", cnt.to_string().c_str());
+#endif //__SYNTHESIS__
+#endif     
+    }
+    input_cmd=cmd.read();
+  }
+  *out +=cnt;
+}
+
+/*****************************************************************************
+ * @brief Count Clock Cycles between two events first sketch
+ * TODO: make it working without counting with the stream or reshaping as FSM
+ *
+ * @param[in]  sOfEnableCCIncrement 
+ * @param[in]  sOfResetCounter 
+ * @param[in]  sOfGetTheCounter 
+ * @param[in]  oSClockCounter 
+ * @param[in]  Tevent the event datatype
+ * @param[in]  counter_width the counter precision
+ * @param[in]  maximum_counter_value_before_reset the maxmimum amount of cc count before auto reset
+ *
+ * @return Nothing.
+ *****************************************************************************/
 template<typename Tevent=bool, const unsigned int counter_width=32, const unsigned int maximum_counter_value_before_reset=4000000>
 void pCountClockCycles(
 hls::stream<Tevent> &sOfEnableCCIncrement,
@@ -577,6 +720,8 @@ hls::stream<ap_uint<counter_width> > &oSClockCounter)
     }
   }
 }
+//////////////////////////////////////////////////////////////////////////////
+//////////////////End of Perf. Counter Functions//////////////////////////////
+//////////////////////////////////////////////////////////////////////////////
 
-
-#endif //_ROLE_MEMTEST_LIBRARY_H_
+#endif //_ROLE_MEMTEST_LIBRARY_HPP_
