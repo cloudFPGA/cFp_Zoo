@@ -37,6 +37,7 @@ from collections import deque
 
 from common import clock, draw_str, StatValue
 import video
+import time 
 
 trieres_lib=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/python/build"
 sys.path.append(trieres_lib)
@@ -129,7 +130,7 @@ def main():
 
 
 
-    def patch_sqaure_roi(orig, frame):
+    def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA):
         h_orig,  w_orig  = orig.shape[:2]
         h_frame, w_frame = frame.shape[:2]
         
@@ -142,7 +143,7 @@ def main():
                 patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
         else:
                 patched_img = frame
-                print("WARNING: The input image of [", h , " x ", w , "] is not bigger to embed a ROI in [", height  , " x ", width, "]. Will just resize")
+                print("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI in [", h_frame  , " x ", w_frame, "]. Will just resize")
         	
         # Adjusting the image file if needed
         if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
@@ -160,7 +161,7 @@ def main():
         frame = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)
 
         # Adjusting the image file if needed
-        #frame = cv.resize(frame, (width, height), interpolation = cv.INTER_LINEAR)
+        ##frame = cv.resize(frame, (width, height), interpolation = cv.INTER_LINEAR)
         frame = crop_square_roi(frame, width, interpolation = cv.INTER_AREA)
         
         if accel_mode:
@@ -176,12 +177,14 @@ def main():
             fpgas.appendleft(fpga)
         else:
             frame = cv.medianBlur(frame, 9)
+            #time.sleep(1)
+            frame = cv.medianBlur(frame, 9)
         if ROI:
-               frame = patch_sqaure_roi(orig, frame)
+               frame = patch_sqaure_roi(orig, frame, cv.INTER_AREA)
                     
         return frame, t0
 
-    threadn = 2 #cv.getNumberOfCPUs()
+    threadn = cv.getNumberOfCPUs()
     pool = ThreadPool(processes = threadn)
     pending = deque()
 
@@ -191,7 +194,7 @@ def main():
     frame_interval = StatValue()
     last_frame_time = clock()
     while True:
-        while len(pending) > 0 and pending[0].ready() and len(fpgas) > 0:
+        while len(pending) > 0  and pending[0].ready() and len(fpgas) > 0:
             res, t0 = pending.popleft().get()
             latency.update(clock() - t0)
             draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))
@@ -227,7 +230,8 @@ def main():
         else:
             if accel_mode:
                 print("Waiting for a free fpga")
-            
+            else:
+                print("Waiting for a free thread")
         ch = cv.waitKey(1)
         if ch == ord(' '):
             threaded_mode = not threaded_mode

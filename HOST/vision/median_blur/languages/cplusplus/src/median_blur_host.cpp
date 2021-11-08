@@ -327,7 +327,7 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                //delay(100);  
+                //delay(200);  
             }
             
             clock_t next_cycle_tx = clock();
@@ -344,9 +344,9 @@ int main(int argc, char * argv[]) {
             unsigned int receiving_now = PACK_SIZE;
             cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
-            //unsigned int loopi=0;
+            unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
-                //cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
+                cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;
                 //}
