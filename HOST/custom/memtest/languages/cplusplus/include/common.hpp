@@ -24,7 +24,7 @@
 using namespace std;
 #define MAX_TESTABLE_ADDRESS ((int)(512/8 * 125000000)) //byte addressable!!!
 #define MAX_TEST_REPETITION_BITWIDTH 16
-#define MAX_BURST_SIZE 64
+#define MAX_BURST_SIZE 512 
 
 
 //------------------------------------------------------
