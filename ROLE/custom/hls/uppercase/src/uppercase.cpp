@@ -60,7 +60,7 @@ void pPortAndDestionation(
     )
 {
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS INLINE off
+#pragma HLS INLINE
   //-- STATIC VARIABLES (with RESET) ------------------------------------------
   static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
 #pragma HLS reset variable=port_fsm
@@ -151,12 +151,13 @@ void pRXPath(
     ap_uint<64> tmp_64_bytes;
     tmp_text.range(63,0) = netWord.tdata;
     tmp_text.range(511,64) = 0;
-  //  memcpy(lcl_mem0, &tmp_text, 64);
     lcl_mem0[0]=tmp_text;
-   // memcpy(&tmp_text, lcl_mem1, 64);
-    tmp_text=lcl_mem1[0];
+    tmp_text=lcl_mem0[0];
     tmp_64_bytes = tmp_text.range(63,0);
     memcpy(&text, &tmp_64_bytes, 64/8);
+    //#ifndef __SYNTHESIS__
+     printf("%s\n",text);
+    // #endif
     #else
       	/* Read in one word_t */
       	memcpy((char*) text, &netWord.tdata, 64/8);
@@ -212,7 +213,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE off
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
@@ -363,12 +364,14 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
   max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
-  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions
+  // latency=ddr_latency
 
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
   max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
-  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions 
+  //latency=ddr_latency
 
 #endif
 

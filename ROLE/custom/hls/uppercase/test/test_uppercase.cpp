@@ -91,8 +91,8 @@ membus_t   lcl_mem1[MEMORY_LINES_512];
  ******************************************************************************/
 void stepDut() {
     uppercase(
-        &node_rank,
-        &cluster_size,
+      &node_rank,
+      &cluster_size,
       sSHL_Uaf_Data,
       sUAF_Shl_Data,
       siUdp_meta,
@@ -105,6 +105,7 @@ void stepDut() {
       #endif
       );
     simCnt++;
+    //memcpy(lcl_mem1,lcl_mem0,MEMORY_LINES_512*sizeof(membus_t));
     printf("[%4.4d] STEP DUT \n", simCnt);
 }
 
