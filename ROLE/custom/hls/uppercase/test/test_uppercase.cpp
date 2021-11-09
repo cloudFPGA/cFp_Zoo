@@ -17,6 +17,7 @@
  * \{
  *****************************************************************************/
 
+#include "../../uppercase/include/uppercase.hpp"
 #include "../../common/src/common.cpp"
 
 using namespace std;
@@ -44,6 +45,8 @@ using namespace std;
 #define VALID       true
 #define UNVALID     false
 #define DEBUG_TRACE true
+#define DEBUG_MULTI_RUNS True
+#define TB_MULTI_RUNS_ITERATIONS 2
 
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
@@ -73,7 +76,14 @@ ap_uint<32>                 cluster_size;
 //-- TESTBENCH GLOBAL VARIABLES
 //------------------------------------------------------
 unsigned int         simCnt;
-
+//------------------------------------------------------
+//-- SHELL / Role / Mem / Mp1 Interface
+//------------------------------------------------------
+#ifdef ENABLE_DDR
+#define MEMORY_LINES_512 TOTMEMDW_512 /* 100 Byte */
+membus_t   lcl_mem0[MEMORY_LINES_512];
+membus_t   lcl_mem1[MEMORY_LINES_512];
+#endif
 
 /*****************************************************************************
  * @brief Run a single iteration of the DUT model.
@@ -81,10 +91,19 @@ unsigned int         simCnt;
  ******************************************************************************/
 void stepDut() {
     uppercase(
-        &node_rank, &cluster_size,
-      sSHL_Uaf_Data, sUAF_Shl_Data,
-      siUdp_meta, soUdp_meta,
-      &s_udp_rx_ports);
+        &node_rank,
+        &cluster_size,
+      sSHL_Uaf_Data,
+      sUAF_Shl_Data,
+      siUdp_meta,
+      soUdp_meta,
+      &s_udp_rx_ports
+      #ifdef ENABLE_DDR
+                      ,
+        lcl_mem0,
+        lcl_mem0
+      #endif
+      );
     simCnt++;
     printf("[%4.4d] STEP DUT \n", simCnt);
 }
@@ -119,10 +138,11 @@ int main(int argc, char** argv) {
     string strInput;
 
     //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
-    if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
+    if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`") or isCornerPresent(tmp_string,"\"") ){
         tmp_string = tmp_string.substr(1,tmp_string.length()-2);
-    }    
+    }
     
+    strInput = tmp_string;
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -152,6 +172,23 @@ int main(int argc, char** argv) {
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
+    std::string strGold = createUppercaseGoldenOutput(strInput);
+    if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
+      nrErr++;
+    }
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////
+    #ifdef DEBUG_MULTI_RUNS // test if the HLS kernel has reinit issues with streams leftovers or other stuffs
+    for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
+    #endif //DEBUG_MULTI_RUNS
+      #ifdef ENABLE_DDR
+      for(int i=0; i < MEMORY_LINES_512; i++){
+        lcl_mem0[i]=0;
+        lcl_mem1[i]=0;
+      }
+      #endif//ENABLE_DDR
 
     //------------------------------------------------------
     //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
@@ -162,8 +199,8 @@ int main(int argc, char** argv) {
             nrErr++;
         }
 
-        //there are tot_trasnfers streams from the the App to the Role
-        NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
+  //there are tot_trasnfers streams from the the App to the Role
+  NetworkMeta tmp_meta = NetworkMeta(1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0);
 	for (unsigned int i=0; i<tot_trasnfers; i++) {
 	  siUdp_meta.write(NetworkMetaStream(tmp_meta));
 	}        
@@ -270,6 +307,7 @@ int main(int argc, char** argv) {
       printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
     }
 
+  cout<< endl << "  End the TB with iteration " << iterations << endl << endl;
     nrErr += rc1;
 
     printf("#####################################################\n");
@@ -281,7 +319,21 @@ int main(int argc, char** argv) {
     }
     printf("#####################################################\n");
 
-
+    simCnt = 0;//reset sim counter
+    nrErr=0;
+  #ifdef DEBUG_MULTI_RUNS
+  }
+  #endif//DEBUG_MULTI_RUNS
+  
+  //free dynamic memory
+  if(charOutput != NULL){
+  free(charOutput);
+  charOutput = NULL;
+  }
+  if(charInput != NULL){
+    free(charInput);
+    charInput = NULL;
+  }
     return(nrErr);
 }
 

@@ -27,9 +27,16 @@
 #include <cstring>                       
 #include <string.h>
 #include <bitset>
-//#include "../../uppercase/include/uppercase.hpp"
+#ifdef ROLE_IS_UPPERCASE
+#include "../../../../../HOST/custom/uppercase/languages/cplusplus/include/config.h"
+#include "../../uppercase/include/uppercase.hpp"
+#endif //ROLE_IS_UPPERCASE
+
+#ifdef ROLE_IS_MEMTEST
 #include "../../memtest/include/memtest.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
+#endif //ROLE_IS_MEMTEST
+
 #include <bits/stdc++.h>
 #include <typeinfo>
 
@@ -45,7 +52,7 @@
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 
-#define DEBUG_LEVEL (TRACE_OFF)
+#define DEBUG_LEVEL (TRACE_ALL)
 
 
 //------------------------------------------------------
@@ -261,6 +268,15 @@ std::string createMemTestCommands(unsigned int mem_address, int testingNumber, u
  * @return  out the results of the memory test (with FAULT INJECTION)
  ******************************************************************************/
 std::string createMemTestGoldenOutput(unsigned int mem_address, int testingNumber);
+
+/*****************************************************************************
+ * @brief Create the expected output results for the uppercase
+ *
+ * @param[in]  input_string the input string of the uppercase
+ * 
+ * @return  out the results of the uppercase
+ ******************************************************************************/
+std::string createUppercaseGoldenOutput(std::string input_string);
 
 /*****************************************************************************
  * @brief reverse a given string

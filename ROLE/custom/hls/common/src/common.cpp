@@ -206,7 +206,7 @@ bool getOutputDataStream(stream<UdpWord> &sDataStream,
  * @param[in] outFileName    the name of the output file to write to.
  * @return OK if successful, otherwise KO.
  ******************************************************************************/
-bool dumpStringToFile(const string s, const string   outFileName, int simCnt)
+bool dumpStringToFile(const string s, const string  outFileName, int simCnt)
 {
     //string      strLine;
     ofstream    outFileStream;
@@ -791,6 +791,26 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
   //  out.append(stop_cmd,bytes_per_line);
   return string(out);
 }
+
+/*****************************************************************************
+ * @brief Create the expected output results for the uppercase
+ *
+ * @param[in]  input_string the input string of the uppercase
+ * 
+ * @return  out the results of the uppercase
+ ******************************************************************************/
+std::string createUppercaseGoldenOutput(std::string input_string){
+      std::string strGold;
+      strGold = input_string;
+      uppercase_conversion:
+      	for (unsigned int i = 0; i < strGold.length(); i++ ) {
+      	  if (strGold[i] >= 'a' && strGold[i] <= 'z'){
+      		strGold[i] = strGold[i] - ('a' - 'A');
+          }
+      	}
+  return strGold;
+}
+
 
 
 /*****************************************************************************
