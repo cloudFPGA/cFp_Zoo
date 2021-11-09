@@ -102,7 +102,7 @@ void ascii2hex(const string& in, string& out)
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber, unsigned int burst_size)
+string createMemTestCommands(unsigned long long int mem_address, unsigned int testingNumber, unsigned int burst_size)
 {
   string out;
     char start_cmd [bytes_per_line];
@@ -125,7 +125,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
      }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
     out = out.append(start_cmd,3);
-  memcpy(value_cmd, (char*)&mem_address, 4);
+  memcpy(value_cmd, (char*)&mem_address, 5);
   out = out.append(value_cmd,5);
   memcpy(burst_cmd+1,(char*)&burst_size,2);
   out = out.append(burst_cmd,8);  
@@ -543,7 +543,7 @@ void logTheAvgResult(
     loggingAVGFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
     loggingAVGFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
     loggingAVGFile<<rd_bw<< ","<<wr_bw<< ","<< faults <<",";
-    loggingAVGFile << (int) log2(wr_words)<<"\n";
+    loggingAVGFile << (int) log2(trgt_address)<<"\n";
     loggingAVGFile.close();
 }
 
@@ -575,6 +575,6 @@ void logTheSingleResult(
     loggingMultiItFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
     loggingMultiItFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
     loggingMultiItFile<<rd_bw<< ","<<wr_bw<< ","<< faults;
-    loggingMultiItFile<<","<<first_faulty_address<<"," << (int) log2(wr_words)<<"\n";
+    loggingMultiItFile<<","<<first_faulty_address<<"," << (int) log2(trgt_address)<<"\n";
     loggingMultiItFile.close();
 }

@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
     
 	std::string strInput_listMode;
 
-	unsigned int memory_addr_under_test=0;
+    unsigned long long int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
     unsigned int burst_size = 1;
     //UDPSocket *udpsock_p;
