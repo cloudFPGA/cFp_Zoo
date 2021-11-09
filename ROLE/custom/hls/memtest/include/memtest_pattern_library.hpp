@@ -666,7 +666,7 @@ void pRDCmpStreamsCntWordAligned(
  * @brief Read two streams, compare them and output the number of faults and 
  * the first faulty address, but check every single byte
  * NOT USED
- *
+ * @deprecated
  * @param[in]  max_addr_ut the maximum address to test
  * @param[in]  sInReadData the read data stream
  * @param[in]  sInGoldData the gold data stream
@@ -772,7 +772,7 @@ void pRDCompareDataStreamsCount(
  * @brief Read a single word of data and output on a stream 
  * and count the cc needed just 4 transfer  
  * NOT USED 
- * @depracted 
+ * @deprecated
  *
  * @param[out]  sOutCmd the perf counter cmd stream
  * @param[out]  sOutreadData the read data stream
@@ -870,7 +870,7 @@ void pRDMainMemoryRead2StreamData(
  * and count the cc needed just 4 transfer  
  * THIS FUNCTION SUFFER FIFO OVERFLOW 4 transfer different from power of 2 numbers
  * NOT USED
- *
+ * @deprecated
  * @param[out]  sOutCmd the perf counter cmd stream
  * @param[out]  sOutreadData the read data stream
  * @param[in]   lcl_mem the virtual memory mapped pointer

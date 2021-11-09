@@ -17,6 +17,7 @@
  * \{
  *****************************************************************************/
 
+#include "../../memtest/include/memtest.hpp"
 #include "../../common/src/common.cpp"
 #include <math.h>
 
@@ -103,26 +104,8 @@ void stepDut() {
       #endif
       );
     simCnt++;
-    // for(int i=0;i<MEMORY_LINES_512; i++){
-    //   if(lcl_mem1[i]!=lcl_mem0[i]){
-    //     printf("Difference at %d of %s and %s\n", i, lcl_mem1[i].to_string(), lcl_mem0[i].to_string());
-    //   }
-    // }
-   //memcpy(lcl_mem1,lcl_mem0, sizeof(membus_t)*MEMORY_LINES_512);
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
-    // if(simCnt%4==0){
-    //   for (int i = 0; i < MEMORY_LINES_512; i++)
-    //   {
-    //     for (int j = 0; j < 64; j++)
-    //        {
-    //         std::cout << lcl_mem0[i].range((j+1)*8-1,j*8) << " ";
-    //        }
-    //        std::cout << std::endl;
-        
-    //   }
-      
-    // }
     #endif
 }
 

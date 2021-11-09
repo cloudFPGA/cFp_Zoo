@@ -40,6 +40,8 @@ using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
 #define ENABLE_DDR
+//
+#define ROLE_IS_MEMTEST
 
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
@@ -110,7 +112,7 @@ void memtest(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
-        #ifdef ENABLE_DDR
+    #ifdef ENABLE_DDR
                                             ,
     //------------------------------------------------------
     //-- SHELL / Role / Mem / Mp1 Interface
