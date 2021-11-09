@@ -527,7 +527,7 @@ void createAVGLogFile(){
     fclose(file);
   }else{
     loggingAVGFile.open(loggingAVGFileName, std::ios_base::app);
-    loggingAVGFile << "TimeStamp,Iterations[#],Trgt_Address[Byte],Brst_size[#beats],WrittenWords[512b],AVG_RD_BW[Gbit/s],AVG_WR_BW[Gbit/s],AVG_faults[#]\n";
+    loggingAVGFile << "TimeStamp,Iterations[#],Trgt_Address[Byte],Brst_size[#beats],WrittenWords[512b],AVG_RD_BW[Gbit/s],AVG_WR_BW[Gbit/s],AVG_faults[#],PowOfTwoBytes\n";
     loggingAVGFile.close();
   }
 }
@@ -542,7 +542,8 @@ void logTheAvgResult(
     std::tm* now = std::localtime(&instant_time);
     loggingAVGFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
     loggingAVGFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
-    loggingAVGFile<<rd_bw<< ","<<wr_bw<< ","<< faults <<"\n";
+    loggingAVGFile<<rd_bw<< ","<<wr_bw<< ","<< faults <<",";
+    loggingAVGFile << (int) log2(wr_words)<<"\n";
     loggingAVGFile.close();
 }
 
@@ -557,7 +558,7 @@ void createItLogFile(){
     loggingMultiItFile.open(loggingMultiItFileName, std::ios_base::app);
     loggingMultiItFile << "TimeStamp,Iteration[#],Trgt_Address[Byte],";
     loggingMultiItFile << "Brst_size[#beats],WrittenWords[512b],RD_BW[Gbit/s],WR_BW[Gbit/s],";
-    loggingMultiItFile << "faults[#],first_faulty_address[byte]\n";
+    loggingMultiItFile << "faults[#],first_faulty_address[byte],PowOfTwoBytes\n";
     loggingMultiItFile.close();
   }
 }
@@ -574,6 +575,6 @@ void logTheSingleResult(
     loggingMultiItFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
     loggingMultiItFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
     loggingMultiItFile<<rd_bw<< ","<<wr_bw<< ","<< faults;
-    loggingMultiItFile<<","<<first_faulty_address<<"\n";
+    loggingMultiItFile<<","<<first_faulty_address<<"," << (int) log2(wr_words)<<"\n";
     loggingMultiItFile.close();
 }

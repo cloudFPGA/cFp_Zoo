@@ -122,13 +122,17 @@ int main(int argc, char *argv[])
 	testingNumber = stoul(strInput_nmbrTest);
 	burst_size = stoul(strInput_burstSize);
 
-	unsigned int max_size_mem_size = pow(2,20);
-	unsigned int min_size_mem_size = pow(2,6);
+	unsigned long long int max_size_mem_size = pow(2,33);
+	unsigned long long int min_size_mem_size = pow(2,6);
 	unsigned int max_burst_size = 512;
 	unsigned int min_burst_size = 1;
 	unsigned int desired_repetitions = 2;
 	
-	strInput_listMode.assign(argv[6]);
+	if(argc==7){
+		strInput_listMode.assign(argv[6]);
+	}else{
+		strInput_listMode.assign("");
+	}
 	bool use_the_list_mode=false;
 	if(strInput_listMode.compare("list")==0){
 		use_the_list_mode=true;
@@ -393,10 +397,10 @@ int main(int argc, char *argv[])
 			user_choice.assign("r");
 			testingNumber=desired_repetitions;
 			memory_addr_under_test=memory_addr_under_test*2;
-			if(memory_addr_under_test==max_size_mem_size){ //if iterated all the mem trgt address increment the burst
-				burst_size=burst_size+1;
+			if(memory_addr_under_test>max_size_mem_size){ //if iterated all the mem trgt address increment the burst
+				burst_size=burst_size*2;
 				memory_addr_under_test=min_size_mem_size;
-				if(burst_size==max_burst_size){ //if iterated all the burst sizes quit
+				if(burst_size>max_burst_size){ //if iterated all the burst sizes quit
 					user_choice.assign("q");
 				}
 			}
