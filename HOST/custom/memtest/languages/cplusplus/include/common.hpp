@@ -18,10 +18,13 @@
 #include <bitset>
 #include <vector>
 #include <cmath>
+#include <chrono>
+#include <ctime> 
 
 using namespace std;
-#define MAX_TESTABLE_ADDRESS ((int)(512/8 * 20)) //byte addressable!!!
+#define MAX_TESTABLE_ADDRESS ((int)(512/8 * 125000000)) //byte addressable!!!
 #define MAX_TEST_REPETITION_BITWIDTH 16
+#define MAX_BURST_SIZE 512 
 
 
 //------------------------------------------------------
@@ -99,28 +102,33 @@ void ascii2hex(const string& in, string& out)
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber)
+string createMemTestCommands(unsigned long long int mem_address, unsigned int testingNumber, unsigned int burst_size)
 {
   string out;
-	char start_cmd [bytes_per_line];
-	char stop_cmd [bytes_per_line];
-	char value_cmd[bytes_per_line];
+    char start_cmd [bytes_per_line];
+    char stop_cmd [bytes_per_line];
+    char value_cmd[bytes_per_line];
+    char burst_cmd[bytes_per_line];
     //WARNING: currently hardcoded way of start and stop commands with a 1 and 2 for start and stop respectively
-	for (unsigned int k = 0; k < bytes_per_line; k++) {
+    for (unsigned int k = 0; k < bytes_per_line; k++) {
        value_cmd[k]    = (char)0;
-		if (k != 0) {
-			stop_cmd[k] = (char)0;
-			start_cmd[k] = (char)0;
-	    }
-	    else {
-			start_cmd[k] = (char)1; 
-			stop_cmd[k] = (char)2;
-	    }
-	 }
+        if (k != 0) {
+            stop_cmd[k] = (char)0;
+            start_cmd[k] = (char)0;
+            burst_cmd[k] = (char)0;
+        }
+        else {
+            start_cmd[k] = (char)1; 
+            stop_cmd[k] = (char)2;
+            burst_cmd[k] = (char)4;
+        }
+     }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
-	out = out.append(start_cmd,3);
-  memcpy(value_cmd, (char*)&mem_address, 4);
+    out = out.append(start_cmd,3);
+  memcpy(value_cmd, (char*)&mem_address, 5);
   out = out.append(value_cmd,5);
+  memcpy(burst_cmd+1,(char*)&burst_size,2);
+  out = out.append(burst_cmd,8);  
   return string(out);
   }
 
@@ -370,20 +378,21 @@ void string2hexnumerics(const string& in, char * out, size_t byteSize)
 	}
 }
 
+//Data structure of a memory test Result
 struct MemoryTestResult {
-  unsigned int    target_address;
+  unsigned long long int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
-  unsigned int    clock_cycles_read;
-  unsigned int    clock_cycles_write;
+  unsigned long long int    clock_cycles_read;
+  unsigned long long int    clock_cycles_write;
 
   MemoryTestResult()      {}
   MemoryTestResult(
-    unsigned int target_address,
+    unsigned long long int target_address,
     unsigned int fault_cntr,
     unsigned int  first_fault_address,
-    unsigned int clock_cycles_write,
-    unsigned int clock_cycles_read) :
+    unsigned long long int clock_cycles_write,
+    unsigned long long int clock_cycles_read) :
     target_address(target_address), 
     fault_cntr(fault_cntr), 
     first_fault_address(first_fault_address),  
@@ -410,40 +419,38 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
   bool is_stop_present = rawdatalines % (3+1+1) == 0; //guard to check if multiple data of 3 64bytes or with 
 
   int k = 1;
-  char myTmpOutBuff [bytes_per_line+1];
-  unsigned int testingNumber_out=0, max_memory_addr_out=0, fault_cntr_out=0, fault_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
+  char myTmpOutBuff [bytes_per_line];
+  for (int i = 0; i < bytes_per_line; ++i)
+  {
+      myTmpOutBuff[i]=(char)0;
+  }
+  unsigned int testingNumber_out=0, fault_cntr_out=0, fault_addr_out=0;
+  unsigned long long int max_memory_addr_out=0, clock_cycles_read=0, clock_cycles_write=0;
   for (int i = 1; i < rawdatalines+1; i++)
   {
     string tmp_outbuff;
     tmp_outbuff= longbuf.substr((i-1)*bytes_per_line,bytes_per_line);
-    if(is_stop_present && k==6){
+    if(is_stop_present && k==7){
       cout << "DEBUG the stop is present and is here" << endl;
-    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==5){ //check it is either the last or one before the last
+    } else  if( ( (i == rawdatalines-1) || (i == rawdatalines) ) && k==6){ //check it is either the last or one before the last
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line-1);
-      testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str()+1,bytes_per_line-1);
+      //testingNumber_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      memcpy(&testingNumber_out,tmp_outbuff.c_str()+1,bytes_per_line/2);
+
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG last command with the iterations " << testingNumber_out << endl;
     #endif
-    } else  if(k==4){ //clock cycless
-      char mySecondTmpOutBuff[bytes_per_line/2];
-      string additional_string;
-      //init the buffer
-      for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
-      additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
+    }else if(k==5){
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //clock_cycles_read = *reinterpret_cast<unsigned long long int*>(myTmpOutBuff);
+      memcpy(&clock_cycles_read,tmp_outbuff.c_str(),bytes_per_line);
 
-      tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
-      clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
-
-
-      strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
-      clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
-    #if DEBUG_LEVEL == TRACE_ALL
+          #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG clock_cycles_read (or the fourth half data pckt) " << clock_cycles_read << endl;
       cout << "DEBUG clock_cycles_write (or the fourth half data pckt) " << clock_cycles_write << endl;
     #endif
-      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_read,clock_cycles_write);
+      MemoryTestResult tmpResult(max_memory_addr_out,fault_cntr_out,fault_addr_out,clock_cycles_write,clock_cycles_read);
       testResults_vector.push_back(tmpResult);
       if(!( (i+1 == rawdatalines-1) || (i+1 == rawdatalines) )){
         k=0;
@@ -452,8 +459,8 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
     #endif
       }
       unsigned int written_words = max_memory_addr_out%mem_word_byte_size == 0 ? max_memory_addr_out/mem_word_byte_size  : max_memory_addr_out/mem_word_byte_size + 1;
-      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 1.0 / 200.0 ) ) ) / 1000.0; // Gbit/T
-      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 1.0 / 200.0 ) ) ) / 1000.0;
+      double rd_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_read * ( 6.4 ) ) ); // Gbit/T
+      double wr_bndwdth = ( (double)written_words*(double)mem_word_size / ( (double)tmpResult.clock_cycles_write * ( 6.4 ) ) );
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "Written " << written_words << " words" << endl;
       cout << "DEBUG overall test results: target address " << tmpResult.target_address << " ";
@@ -462,24 +469,46 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
       cout << " RD BW " << rd_bndwdth  << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_read << " "  << endl;
       cout << " WR BW " << wr_bndwdth << "[GBit/s] with cc equal to " << tmpResult.clock_cycles_write << " "  << endl;
     #endif
+    } else  if(k==4){ //clock cycless
+      //char mySecondTmpOutBuff[bytes_per_line/2];
+      //string additional_string;
+      //init the buffer
+      //for(int i=0;i<bytes_per_line;i++){myTmpOutBuff[i]=(char)0;mySecondTmpOutBuff[i%(bytes_per_line/2)]=(char)0;}
+      // additional_string=tmp_outbuff.substr(bytes_per_line/2,bytes_per_line/2);
+      //
+      // tmp_outbuff = tmp_outbuff.erase(bytes_per_line/2,bytes_per_line/2);
+      // strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line/2);
+      // clock_cycles_read = *reinterpret_cast<unsigned int*>(myTmpOutBuff);
+      //
+      // strncpy(mySecondTmpOutBuff,additional_string.c_str(),bytes_per_line/2);
+      // clock_cycles_write = *reinterpret_cast<unsigned int*>(mySecondTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //clock_cycles_write = *reinterpret_cast<unsigned long long int*>(myTmpOutBuff);
+      memcpy(&clock_cycles_write,tmp_outbuff.c_str(),bytes_per_line);
+
     }else if(k==3){ // first fault address
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //fault_addr_out = *reinterpret_cast<unsigned long long int *>(myTmpOutBuff);
+      memcpy(&fault_addr_out,tmp_outbuff.c_str(),bytes_per_line/2);
+
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG first fault address (or the third data pckt) " << fault_addr_out << endl;
     #endif
     }else if(k==2){ // fault cntr
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      fault_cntr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+      //strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      //fault_cntr_out = *reinterpret_cast<unsigned long long int *>(myTmpOutBuff);
+      memcpy(&fault_cntr_out,tmp_outbuff.c_str(),bytes_per_line/2);
+
     #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG the fault counters (or the second data pack) " <<  fault_cntr_out << endl;
     #endif
     }else { //max addrss
       //substr extraction and parsing
-      strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
-      max_memory_addr_out = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-    #if DEBUG_LEVEL == TRACE_ALL
+      // strncpy(myTmpOutBuff,tmp_outbuff.c_str(),bytes_per_line);
+      // max_memory_addr_out = *reinterpret_cast<unsigned long long *>(myTmpOutBuff);
+      memcpy(&max_memory_addr_out,tmp_outbuff.c_str(),bytes_per_line);
+      #if DEBUG_LEVEL == TRACE_ALL
       cout << "DEBUG max address (or the first data pack) " << max_memory_addr_out << endl;
     #endif
     }
@@ -487,4 +516,65 @@ std::vector<MemoryTestResult> parseMemoryTestOutput(const string longbuf, size_t
     tmp_outbuff.clear();
   }
   return testResults_vector;
+}
+
+
+std::ofstream loggingAVGFile;
+const std::string loggingAVGFileName="cfp_vitis_memtest_avg.csv";
+
+void createAVGLogFile(){
+  if (FILE *file = fopen(loggingAVGFileName.c_str(), "r")){
+    fclose(file);
+  }else{
+    loggingAVGFile.open(loggingAVGFileName, std::ios_base::app);
+    loggingAVGFile << "TimeStamp,Iterations[#],Trgt_Address[Byte],Brst_size[#beats],WrittenWords[512b],AVG_RD_BW[Gbit/s],AVG_WR_BW[Gbit/s],AVG_faults[#],PowOfTwoBytes\n";
+    loggingAVGFile.close();
+  }
+}
+
+void logTheAvgResult(
+  unsigned int iters, unsigned long long int trgt_address,
+  unsigned int brst_size, unsigned int wr_words,
+  double rd_bw, double wr_bw, unsigned int faults )
+  {
+    loggingAVGFile.open(loggingAVGFileName, std::ios_base::app);
+    std::time_t instant_time = std::time(0);   // get time now
+    std::tm* now = std::localtime(&instant_time);
+    loggingAVGFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
+    loggingAVGFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
+    loggingAVGFile<<rd_bw<< ","<<wr_bw<< ","<< faults <<",";
+    loggingAVGFile << (int) log2(trgt_address)<<"\n";
+    loggingAVGFile.close();
+}
+
+std::ofstream loggingMultiItFile;
+const std::string loggingMultiItFileName="cfp_vitis_memtest_multi.csv";
+
+
+void createItLogFile(){
+  if (FILE *file = fopen(loggingMultiItFileName.c_str(), "r")){
+    fclose(file);
+  }else{
+    loggingMultiItFile.open(loggingMultiItFileName, std::ios_base::app);
+    loggingMultiItFile << "TimeStamp,Iteration[#],Trgt_Address[Byte],";
+    loggingMultiItFile << "Brst_size[#beats],WrittenWords[512b],RD_BW[Gbit/s],WR_BW[Gbit/s],";
+    loggingMultiItFile << "faults[#],first_faulty_address[byte],PowOfTwoBytes\n";
+    loggingMultiItFile.close();
+  }
+}
+
+void logTheSingleResult(
+  unsigned int iters, unsigned long long int trgt_address,
+  unsigned int brst_size, unsigned int wr_words,
+  double rd_bw, double wr_bw, unsigned int faults,
+  unsigned long long int first_faulty_address )
+  {
+    loggingMultiItFile.open(loggingMultiItFileName, std::ios_base::app);
+    std::time_t instant_time = std::time(0);   // get time now
+    std::tm* now = std::localtime(&instant_time);
+    loggingMultiItFile << (now->tm_year + 1900)<< '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "," << iters<< ",";
+    loggingMultiItFile<<trgt_address<< ","<<brst_size<< ","<<wr_words<< ",";
+    loggingMultiItFile<<rd_bw<< ","<<wr_bw<< ","<< faults;
+    loggingMultiItFile<<","<<first_faulty_address<<"," << (int) log2(trgt_address)<<"\n";
+    loggingMultiItFile.close();
 }

@@ -17,6 +17,7 @@
  * \{
  *****************************************************************************/
 
+#include "../../memtest/include/memtest.hpp"
 #include "../../common/src/common.cpp"
 #include <math.h>
 
@@ -34,7 +35,7 @@ using namespace std;
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 #define DEBUG_MULTI_RUNS True
-#define TB_MULTI_RUNS_ITERATIONS 5
+#define TB_MULTI_RUNS_ITERATIONS 2
 #define DEBUG_LEVEL (TRACE_ALL)
 
 
@@ -81,7 +82,7 @@ unsigned int         simCnt;
 //------------------------------------------------------
 //-- SHELL / Role / Mem / Mp1 Interface
 //------------------------------------------------------
-#ifdef ENABLE_DDR;
+#ifdef ENABLE_DDR
 #define MEMORY_LINES_512 TOTMEMDW_512 /* 64 KiB */
 membus_t   lcl_mem0[MEMORY_LINES_512];
 membus_t   lcl_mem1[MEMORY_LINES_512];
@@ -99,11 +100,10 @@ void stepDut() {
       #ifdef ENABLE_DDR
                       ,
         lcl_mem0,
-        lcl_mem1
+        lcl_mem0
       #endif
       );
     simCnt++;
-    memcpy(lcl_mem1,lcl_mem0,sizeof(membus_t)*MEMORY_LINES_512);
     #if DEBUG_LEVEL > TRACE_OFF
     printf("[%4.4d] STEP DUT \n", simCnt);
     #endif
@@ -129,8 +129,8 @@ int main(int argc, char** argv) {
 // consider to execute : ulimit -s unlimited
 // if any stack/memory related issue before executing
 
-    if (argc < 3 || argc > 4) {
-        printf("Usage : %s <number of address to test> , <testing times> , <command string ready2go> ;provided %d\n", argv[0], argc);
+    if (argc < 3 || argc > 5) {
+        printf("Usage : %s <number of address to test> , <testing times> , <burst size> <command string ready2go> ;provided %d\n", argv[0], argc);
         return -1;
     }
 
@@ -139,13 +139,15 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     string strInput_memaddrUT = argv[1];
     string strInput_nmbrTest = argv[2];
+    string strInput_burstSize = argv[3];
     string strInput_commandstring= "";
-    if(argc > 3)
+    if(argc > 4)
     {
-      strInput_commandstring.assign(argv[3]);
+      strInput_commandstring.assign(argv[4]);
     }
-    unsigned int memory_addr_under_test=0;
+    unsigned long long int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
+    unsigned int burst_size = 1;
     if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -153,7 +155,7 @@ int main(int argc, char** argv) {
     else {
       try
       {
-       memory_addr_under_test = stoul(strInput_memaddrUT);
+       memory_addr_under_test = stoull(strInput_memaddrUT);
       }
       catch(const std::exception& e)
       {
@@ -169,10 +171,20 @@ int main(int argc, char** argv) {
         std::cerr << e.what() << '\n';
         testingNumber = 3; //at least see the fault
       }
+
+      try
+      {     
+        burst_size = stoul(strInput_burstSize);
+      }
+      catch(const std::exception& e)
+      {
+        std::cerr << e.what() << '\n';
+        burst_size = 1; //at least see the fault
+      }
       
 
       printf("Succesfully loaded string ... %s\n", argv[1]);
-      printf("Succesfully loaded the address number %u and the number of testings %u\n", memory_addr_under_test, testingNumber);
+      printf("Succesfully loaded the address number %u and the number of testings %u, with busrt size %u\n", memory_addr_under_test, testingNumber, burst_size);
       // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
       assert(PACK_SIZE % 8 == 0);
     }
@@ -180,11 +192,12 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR MEMTEST
     //------------------------------------------------------
-    unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5) + 2 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
-    size_t charInputSize = 8; //a single tdata is the current command dimension for this test
-    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
+    //unsigned int sim_time = testingNumber * ((2 * (memory_addr_under_test/64+2)) + 5 + 1) + 2 + 1 + 20; // # of tests*((2*(rd/wr addresses + 2 state update))+start+out*4) + meta+start + 10 random cycles
+    unsigned int sim_time = 1 + 3 + testingNumber * (1 + 2 + 5) + 1 + 2 + 10;     // meta-pckt-brst testnmbr*(strt-wr-rd-out1-out2-out3-out4-out5) + final cntstart + 2 tx + 10 rand
+    size_t charInputSize = 8*2; //a single tdata is the current command dimension for this test, plus the burst cmd
+    size_t charOutputSize = 8*1+((8 * (2 + 1 + 1 + 1)) * testingNumber); //overdimensioned: eventual stop, 4 (address, fault cntr, flt addr, ccs) for each test foreach test
 
-    unsigned int tot_input_transfers = CEIL(( 1 ) * 8,PACK_SIZE);// only a single tx
+    unsigned int tot_input_transfers = CEIL(( 2 ) * 8,PACK_SIZE);// only a single tx + 1
     unsigned int tot_output_transfers =  charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1; // check if bigger output than mtu
     // if(charOutputSize>PACK_SIZE){
     //   tot_output_transfers = charOutputSize%PACK_SIZE==0 ? charOutputSize/PACK_SIZE : charOutputSize/PACK_SIZE + 1;
@@ -231,7 +244,7 @@ int main(int argc, char** argv) {
 // Assumption: if the user knows how to format the command stream she/he does by itself (
 // otheriwse the TB takes care and create the commands based on the inputs
     if(!strInput_commandstring.length()){
-      strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
+      strInput=createMemTestCommands(memory_addr_under_test, testingNumber, burst_size);
     }else{
       ////////////////////////////////////////////////////////////
       //////TODO: command string ready2go is not working at the current status
@@ -256,7 +269,7 @@ int main(int argc, char** argv) {
     //   printStringHex(strInput_commandstring, strInput_commandstring.length());
     //   printCharBuffHex(char_command, strInput_commandstring.length());
     //   printStringHex(strInput, strInput_commandstring.length());
-    strInput=createMemTestCommands(memory_addr_under_test, testingNumber);
+    strInput=createMemTestCommands(memory_addr_under_test, testingNumber, burst_size);
         if(char_command != NULL){
           cout << "Clearing the char command" << endl;
           delete[] char_command;
@@ -284,6 +297,13 @@ int main(int argc, char** argv) {
 #ifdef DEBUG_MULTI_RUNS // test if the HLS kernel has reinit issues with streams leftovers or other stuffs
 for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
 #endif //DEBUG_MULTI_RUNS
+
+#ifdef ENABLE_DDR
+for(int i=0; i < MEMORY_LINES_512; i++){
+  lcl_mem0[i]=0;
+  lcl_mem1[i]=0;
+}
+#endif//ENABLE_DDR
   //------------------------------------------------------
   //-- STEP-2.1 : CREATE TRAFFIC AS INPUT STREAMS
   //------------------------------------------------------
@@ -409,6 +429,16 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
     } else {
       printf("Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n");
     }
+    
+// #ifdef ENABLE_DDR
+// for(int i=0; i < MEMORY_LINES_512; i++){
+//   if(lcl_mem0[i]!=lcl_mem1[i]){
+//       cout << "Main mem difference :" << lcl_mem0[i] << " " << lcl_mem1[i] << endl;
+//   }else{
+//     cout << "ok ";
+//   }
+// }
+// #endif//ENABLE_DDR
 
     //------------------------------------------------------
     //-- STEP-7 [OPTIONAL] : Parse the output stream
@@ -439,7 +469,7 @@ for(int iterations=0; iterations < TB_MULTI_RUNS_ITERATIONS; iterations++){
   printf("#####################################################\n");
 
   simCnt = 0;//reset sim counter
-
+  nrErr=0;
 #ifdef DEBUG_MULTI_RUNS
 }
  #endif//DEBUG_MULTI_RUNS

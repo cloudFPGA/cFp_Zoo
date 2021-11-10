@@ -37,30 +37,18 @@
    */
 int main(int argc, char * argv[]) {
 
-    if ((argc < 2) || (argc > 4)) { // Test for correct number of parameters
-        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode> <optional number of repetitions>" << endl;
+    if ((argc < 2) || (argc > 3)) { // Test for correct number of parameters
+        cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode>" << endl;
         exit(1);
     }
 
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_batch = 0;
     string clean_cmd, synth_cmd;
-    unsigned int testingNumber;
-	string strInput_nmbrTest;
-	if(argc == 4){
-    	strInput_nmbrTest = argv[3];
-	}else{
-		strInput_nmbrTest="";
-	}
+    unsigned int testingNumber=3;
+	string strInput_nmbrTest="";
 
-    
-	if (!strInput_nmbrTest.length())
-	{
-		testingNumber = 3;
-	}	else	{
-		testingNumber = stoul(strInput_nmbrTest);
-	}
-	
+
 //Infinite Loop Logic
 bool endOfLooping=false;    
 while(!endOfLooping){
@@ -146,6 +134,8 @@ while(!endOfLooping){
     //------------------------------------------------------
 	unsigned int memory_addr_under_test = 0;
 	testingNumber = 0;
+	unsigned int burst_size = 0;
+
 	cout << "Begin the decoding step" << endl;
 	//printStringHex(input_string,input_string.length());
 	//printBits(input_string.length(),input_string.c_str());
@@ -186,18 +176,29 @@ while(!endOfLooping){
 	//-- DECODING LOGIC for output and TB setup
     //------------------------------------------------------
 	char myTmpOutBuff[8];
+	//how many test to perform
 	substr_tmp = input_string.substr(1,2);
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
 	strncpy(myTmpOutBuff,substr_tmp.c_str(),2);
     testingNumber = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
-
 	substr_tmp.clear();
+
+	//the maximum address to test
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
 	substr_tmp=input_string.substr(3,5);
-	strncpy(myTmpOutBuff,substr_tmp.c_str(),5);
+	memcpy(myTmpOutBuff,substr_tmp.c_str(),5);
 	memory_addr_under_test = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
 	substr_tmp.clear();
+
+	//the selected burst size
+	substr_tmp = input_string.substr(9,2);
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
+	strncpy(myTmpOutBuff,substr_tmp.c_str(),2);
+    burst_size = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
+	substr_tmp.clear();
+	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
+
+
 	reverse(input_string.begin(), input_string.end());
 	//------------------------------------------------------
     //-- EMULATION preparing the emulation mode, default is fcsim
@@ -230,7 +231,7 @@ while(!endOfLooping){
 	string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && ";
     str_command = str_command.append(clean_cmd + synth_cmd+ exec_cmd);
 	size_t str_command_size = str_command.length();
-	string final_cmd = " TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) +	" && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
+	string final_cmd = " TEST_NUMBER=" + std::to_string(testingNumber) + " INPUT_STRING=" + std::to_string(memory_addr_under_test) + " BURST_SIZE=" + std::to_string(burst_size) +  " && cd ../../../../HOST/custom/memtest/languages/cplusplus/build/ ";
 	str_command = str_command.append(final_cmd);
 	str_command_size+=final_cmd.length();
 
@@ -239,7 +240,6 @@ while(!endOfLooping){
 		command[i]=str_command[i];
 	}
   	cout << "Calling TB with command:" << command << endl; 
-
 	system(command); 
 
 	//clean dynamic memory
@@ -252,7 +252,7 @@ while(!endOfLooping){
     //-- TB output parsing
     //------------------------------------------------------
 	ssize_t size = __file_size(ouf_file.c_str());
-	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1)) * testingNumber); //stop, 4 for each test, potential stop?
+	size_t charOutputSize = 8*1+((8 * (2 + 1+ 1 + 1)) * testingNumber); //stop, 4 for each test, potential stop?
 
 	int rawdatalines=0;
   	int rc = 0;

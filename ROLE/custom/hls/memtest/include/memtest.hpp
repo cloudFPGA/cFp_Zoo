@@ -40,6 +40,8 @@ using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
 #define ENABLE_DDR
+//
+#define ROLE_IS_MEMTEST
 
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
@@ -54,14 +56,17 @@ enum EchoCtrl {
  * Internal MemTest accelerator command
  ********************************************/
 enum MemTestCmd {
+    TEST_BURSTSIZE_CMD  = 4,
     TEST_ENDOFTESTS_CMD  = 3,
     TEST_STOP_CMD  = 2,
     TEST_START_CMD = 1,
     TEST_INVLD_CMD = 0
 };
+
 //CMD 8 bitwdith up to 255 commands (0 is invalid)
-#define MEMTEST_COMMANDS_HIGH_BIT 8-1
+#define MEMTEST_COMMANDS_HIGH_BIT MEMTEST_COMMANDS_BITWIDTH-1
 #define MEMTEST_COMMANDS_LOW_BIT 0
+#define MEMTEST_COMMANDS_BITWIDTH 8
 
 #define WAIT_FOR_META 0
 #define WAIT_FOR_STREAM_PAIR 1
@@ -83,24 +88,9 @@ enum MemTestCmd {
 /* General memory Data Width is set as a parameter*/
 /* 512-bit host AXI data width*/
 #define MEMDW_512 512               // 512 Bus width in bits for cF DDR memory
-#define BPERMDW_512 (MEMDW_512/8)   // Bytes per DDR Memory Data Word,  if MEMDW=512 => BPERMDW_512 = 64
-#define KWPERMDW_512 (BPERMDW_512/sizeof(IN_TYPE)) // Number of Harris kernel words per DDR memory word
 typedef ap_uint<MEMDW_512>  membus_512_t;   /* 512-bit ddr memory access */
 typedef membus_512_t membus_t;
-#define TOTMEMDW_512 125
-
-#define CHECK_CHUNK_SIZE 0x40 // 0x40 -> 64, 0x1000 -> 4 KiB
-#define BYTE_PER_MEM_WORD BPERMDW_512 // 64
-#define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
-
-//typedef enum fsmStateDDRenum {
-//    FSM_WR_PAT_CMD	= 0,
-//    FSM_WR_PAT_DATA	= 1,
-//    FSM_WR_PAT_STS  = 2
-//} fsmStateDDRdef;
-//typedef enum fsmStateDDRenum fsmStateDDRdef;
-
-#define fsmStateDDRdef uint8_t
+#define TOTMEMDW_512 16384 //1MB
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
 #define CYCLES_UNTIL_TIMEOUT 0x0100
@@ -122,7 +112,7 @@ void memtest(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
-        #ifdef ENABLE_DDR
+    #ifdef ENABLE_DDR
                                             ,
     //------------------------------------------------------
     //-- SHELL / Role / Mem / Mp1 Interface

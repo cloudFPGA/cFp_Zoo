@@ -36,7 +36,7 @@ using hls::stream;
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>
 
 PacketFsmType enqueueFSM = WAIT_FOR_META;
-PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
+PacketFsmType dequeueFSM = WAIT_FOR_META;
 PacketFsmType UppercaseFSM  = WAIT_FOR_META;
 
 
@@ -60,7 +60,7 @@ void pPortAndDestionation(
     )
 {
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-#pragma HLS INLINE off
+#pragma HLS INLINE
   //-- STATIC VARIABLES (with RESET) ------------------------------------------
   static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
 #pragma HLS reset variable=port_fsm
@@ -106,11 +106,19 @@ void pRXPath(
 	NetworkMetaStream                                meta_tmp,
 	unsigned int                                     *processed_word_rx,
 	unsigned int                                     *processed_bytes_rx
+      #ifdef ENABLE_DDR
+                                            ,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------             
+    membus_t   *lcl_mem0,
+    membus_t   *lcl_mem1
+    #endif
 	    )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE 
+     #pragma  HLS INLINE off
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
     word_t text;
@@ -136,8 +144,24 @@ void pRXPath(
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
+        
+
+    #ifdef ENABLE_DDR
+    membus_t tmp_text;
+    ap_uint<64> tmp_64_bytes;
+    tmp_text.range(63,0) = netWord.tdata;
+    tmp_text.range(511,64) = 0;
+    lcl_mem0[0]=tmp_text;
+    tmp_text=lcl_mem0[0];
+    tmp_64_bytes = tmp_text.range(63,0);
+    memcpy(&text, &tmp_64_bytes, 64/8);
+    //#ifndef __SYNTHESIS__
+     printf("%s\n",text);
+    // #endif
+    #else
       	/* Read in one word_t */
       	memcpy((char*) text, &netWord.tdata, 64/8);
+    #endif
       	
       	/* Convert lower cases to upper cases byte per byte */
       	uppercase_conversion:
@@ -189,7 +213,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE 
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
@@ -304,6 +328,14 @@ void uppercase(
     stream<NetworkMetaStream>   &siNrc_meta,
     stream<NetworkMetaStream>   &soNrc_meta,
     ap_uint<32>                 *po_rx_ports
+    #ifdef ENABLE_DDR
+                                            ,
+    //------------------------------------------------------
+    //-- SHELL / Role / Mem / Mp1 Interface
+    //------------------------------------------------------             
+    membus_t   *lcl_mem0,
+    membus_t   *lcl_mem1
+    #endif
     )
 {
 
@@ -322,6 +354,26 @@ void uppercase(
 #pragma HLS INTERFACE ap_stable register port=pi_rank name=piFMC_ROL_rank
 #pragma HLS INTERFACE ap_stable register port=pi_size name=piFMC_ROL_size
 
+#ifdef ENABLE_DDR
+    
+const unsigned int ddr_mem_depth = TOTMEMDW_512;
+const unsigned int ddr_latency = DDR_LATENCY;
+const unsigned int num_outstanding_transactions = 256;
+const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4096KBytes;
+
+// Mapping LCL_MEM0 interface to moMEM_Mp1 channel
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
+  max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions
+  // latency=ddr_latency
+
+// Mapping LCL_MEM1 interface to moMEM_Mp1 channel
+#pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
+  max_read_burst_length=MAX_BURST_LENGTH_512  max_write_burst_length=MAX_BURST_LENGTH_512 offset=direct \
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions 
+  //latency=ddr_latency
+
+#endif
 
   //-- LOCAL VARIABLES ------------------------------------------------------
   static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
@@ -399,11 +451,20 @@ void uppercase(
 	sRxpToTxp_Data,
   meta_tmp,
   &processed_word_rx,
-	&processed_bytes_rx);
+	&processed_bytes_rx
+  #ifdef ENABLE_DDR
+                                          ,
+  //------------------------------------------------------
+  //-- SHELL / Role / Mem / Mp1 Interface
+  //------------------------------------------------------             
+  lcl_mem0,
+  lcl_mem1
+  #endif
+    );
   
   pTXPath(
   soTHIS_Shl_Data,
-   soNrc_meta,
+  soNrc_meta,
 	sRxpToTxp_Data,
 	sRxtoTx_Meta,
   sDstNode_sig,

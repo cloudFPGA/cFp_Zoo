@@ -27,9 +27,16 @@
 #include <cstring>                       
 #include <string.h>
 #include <bitset>
-//#include "../../uppercase/include/uppercase.hpp"
-#include "../../memtest/include/memtest.hpp"
+#ifdef ROLE_IS_UPPERCASE
 #include "../../../../../HOST/custom/uppercase/languages/cplusplus/include/config.h"
+#include "../../uppercase/include/uppercase.hpp"
+#endif //ROLE_IS_UPPERCASE
+
+#ifdef ROLE_IS_MEMTEST
+#include "../../memtest/include/memtest.hpp"
+#include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h"
+#endif //ROLE_IS_MEMTEST
+
 #include <bits/stdc++.h>
 #include <typeinfo>
 
@@ -45,7 +52,7 @@
 #define TRACE_MMIO   1 <<  3
 #define TRACE_ALL     0xFFFF
 
-#define DEBUG_LEVEL (TRACE_OFF)
+#define DEBUG_LEVEL (TRACE_ALL)
 
 
 //------------------------------------------------------
@@ -63,26 +70,25 @@
 
 //Data structure of a memory test Result
 struct MemoryTestResult {
-  unsigned int    target_address;
+  unsigned long long int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
-  unsigned int    clock_cycles_read;
-  unsigned int    clock_cycles_write;
+  unsigned long long int    clock_cycles_read;
+  unsigned long long int    clock_cycles_write;
 
   MemoryTestResult()      {}
   MemoryTestResult(
-    unsigned int target_address,
+    unsigned long long int target_address,
     unsigned int fault_cntr,
     unsigned int  first_fault_address,
-    unsigned int clock_cycles_write,
-    unsigned int clock_cycles_read) :
+    unsigned long long int clock_cycles_write,
+    unsigned long long int clock_cycles_read) :
     target_address(target_address), 
     fault_cntr(fault_cntr), 
     first_fault_address(first_fault_address),  
     clock_cycles_write(clock_cycles_write),
     clock_cycles_read(clock_cycles_read) {}
 };
-
 
 /*****************************************************************************
  * @brief Initialize an input data stream from a file.
@@ -250,7 +256,7 @@ void string2hexnumerics(const std::string& in, char * out, size_t byteSize);
  * 
  * @return out the output string with start/max address-nops4trgtCCsNeeded-stop
  ******************************************************************************/
-std::string createMemTestCommands(unsigned int mem_address, int testingNumber);
+std::string createMemTestCommands(unsigned long long int mem_address, int testingNumber, unsigned int burst_size);
 
 /*****************************************************************************
  * @brief Create the expected output results for the memory test (with FAULT INJECTION)
@@ -260,7 +266,16 @@ std::string createMemTestCommands(unsigned int mem_address, int testingNumber);
  * 
  * @return  out the results of the memory test (with FAULT INJECTION)
  ******************************************************************************/
-std::string createMemTestGoldenOutput(unsigned int mem_address, int testingNumber);
+std::string createMemTestGoldenOutput(unsigned long long int mem_address, int testingNumber);
+
+/*****************************************************************************
+ * @brief Create the expected output results for the uppercase
+ *
+ * @param[in]  input_string the input string of the uppercase
+ * 
+ * @return  out the results of the uppercase
+ ******************************************************************************/
+std::string createUppercaseGoldenOutput(std::string input_string);
 
 /*****************************************************************************
  * @brief reverse a given string

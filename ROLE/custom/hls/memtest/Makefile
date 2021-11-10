@@ -57,6 +57,7 @@ MY_STRING_CLEANED=$(shell sed -e 's/ //g' <<< "${MY_STRING_WITH_SEPARATOR}")
 #INPUT_STRING ?="${START_COMMAND}$(MY_STRING_WITH_SEPARATOR)${STOP_COMMAND}"
 INPUT_STRING ?= 5
 TEST_NUMBER ?= 1
+BURST_SIZE ?= 1
 COMMAND_STRING ?=""
 
 src = ./src/${ipName}.cpp \
@@ -96,13 +97,13 @@ endif
 
 fcsim: fcompile
 	@make logo
-	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ $(INPUT_STRING) $(TEST_NUMBER) $(COMMAND_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build && ./$@ $(INPUT_STRING) $(TEST_NUMBER) $(BURST_SIZE) $(COMMAND_STRING)
 	
 memchecksim: fcompile
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim $(INPUT_STRING) $(TEST_NUMBER) $(COMMAND_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=memcheck --leak-check=full --track-origins=yes ./fcsim $(INPUT_STRING) $(TEST_NUMBER) $(BURST_SIZE) $(COMMAND_STRING)
 
 callgraph: fcsim
-	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim $(INPUT_STRING) $(TEST_NUMBER) $(COMMAND_STRING)
+	cd ./${ipName}_prj/solution1/fcsim/build; valgrind --tool=callgrind ./fcsim $(INPUT_STRING) $(TEST_NUMBER) $(BURST_SIZE) $(COMMAND_STRING)
 
 kcachegrind: callgraph
 	kcachegrind ./${ipName}_prj/solution1/fcsim/build/callgrind.out.* &
@@ -112,10 +113,10 @@ csynth: assert_env
 
 csim: assert_env
 	echo ${INPUT_STRING}
-	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=${INPUT_STRING}; export SimNumberTests=$(TEST_NUMBER); export CommandString=$(COMMAND_STRING); vivado_hls -f run_hls.tcl
+	export hlsSim=1; export hlsCoSim=0; export hlsSyn=0; export SimString=${INPUT_STRING}; export SimNumberTests=$(TEST_NUMBER); export SimBurstSize=$(BURST_SIZE); export CommandString=$(COMMAND_STRING); vivado_hls -f run_hls.tcl
 
 cosim: assert_env
-		export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimString=$(INPUT_STRING); export SimNumberTests=$(TEST_NUMBER); export CommandString=$(COMMAND_STRING); vivado_hls -f run_hls.tcl
+		export hlsSim=0; export hlsCoSim=1; export hlsSyn=0; export SimString=$(INPUT_STRING); export SimNumberTests=$(TEST_NUMBER); export SimBurstSize=$(BURST_SIZE); export CommandString=$(COMMAND_STRING); vivado_hls -f run_hls.tcl
 	#@#rm -rf ${ipName}_prj
 
 cosim_view:

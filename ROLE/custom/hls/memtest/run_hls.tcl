@@ -59,6 +59,10 @@ if { [info exists env(SimNumberTests)] } {
   set SimNumberTests $env(SimNumberTests)
 }
 
+if { [info exists env(SimBurstSize)] } {
+  set SimBurstSize $env(SimBurstSize)
+}
+
 if { [info exists env(CommandString)] } {
   set CommandString $env(CommandString)
 }
@@ -88,11 +92,13 @@ open_solution ${solutionName}
 
 set_part      ${xilPartName}
 create_clock -period 6.4 -name default
+# Enable an 64-bit address interface for axi master. We need it for the FPGA DRAM I/F
+config_interface -m_axi_addr64
 
 # Run C Simulation and Synthesis
 #-------------------------------------------------
 if { $hlsSim } {
-  csim_design -O -compiler gcc -argv "${SimString} ${SimNumberTests} ${CommandString}"
+  csim_design -O -compiler gcc -argv "${SimString} ${SimNumberTests} ${SimBurstSize} ${CommandString}"
 } else {
 
   if { $hlsSyn } {
@@ -100,7 +106,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -compiler gcc -trace_level all -argv "${SimString} ${SimNumberTests} ${CommandString}"
+    cosim_design -trace_level all -argv "${SimString} ${SimNumberTests} ${SimBurstSize} ${CommandString}"
   } else {
 
   # Export RTL
