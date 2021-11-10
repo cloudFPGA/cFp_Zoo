@@ -121,12 +121,12 @@ int main(int argc, char *argv[])
 	memory_addr_under_test = stoull(strInput_memaddrUT);
 	testingNumber = stoul(strInput_nmbrTest);
 	burst_size = stoul(strInput_burstSize);
-
 	unsigned long long int max_size_mem_size = pow(2,33);
 	unsigned long long int min_size_mem_size = pow(2,6);
 	unsigned int max_burst_size = 512;
 	unsigned int min_burst_size = 1;
 	unsigned int desired_repetitions = 2;
+	unsigned int burst_size_opposite = min_burst_size;
 	
 	if(argc==7){
 		strInput_listMode.assign(argv[6]);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[])
 	if(use_the_list_mode){
 		testingNumber=desired_repetitions;
 		memory_addr_under_test=min_size_mem_size;
-		burst_size=min_burst_size;
+		burst_size=max_burst_size;
 	}//else take user params
 	//Iterating and interactive loop
 	while (user_choice.compare("q") != 0 ) // quit
@@ -396,16 +396,21 @@ int main(int argc, char *argv[])
 		if(use_the_list_mode){
 			user_choice.assign("r");
 			testingNumber=desired_repetitions;
-			memory_addr_under_test=memory_addr_under_test*2;
-			if(memory_addr_under_test>max_size_mem_size){ //if iterated all the mem trgt address increment the burst
-				burst_size=burst_size*2;
-				memory_addr_under_test=min_size_mem_size;
-				if(burst_size>max_burst_size){ //if iterated all the burst sizes quit
+			burst_size=burst_size/2;
+			burst_size_opposite=burst_size_opposite*2;
+			cout << " burst size  " << burst_size << " burst oppostit " << burst_size_opposite << endl; 
+			if(burst_size_opposite>max_burst_size){ //if iterated all the burst sizes quit
+	//			memory_addr_under_test=min_size_mem_size;
+				burst_size=max_burst_size;
+				burst_size=min_burst_size;
+				memory_addr_under_test=memory_addr_under_test*2;
+				memory_addr_under_test=memory_addr_under_test==max_size_mem_size ? memory_addr_under_test-64 : memory_addr_under_test;
+				if(memory_addr_under_test>max_size_mem_size){ //if iterated all the mem trgt address increment the burst
 					user_choice.assign("q");
 				}
 			}
-			unsigned long long int max_gb =  8*pow(10,9);
-			memory_addr_under_test=memory_addr_under_test%max_gb;
+			//unsigned long long int max_gb =  8*pow(10,9);
+			//memory_addr_under_test=memory_addr_under_test%max_gb;
 
 		}else{
 
