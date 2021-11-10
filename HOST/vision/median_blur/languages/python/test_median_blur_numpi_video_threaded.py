@@ -45,7 +45,7 @@ sys.path.append(trieres_lib)
 import _trieres_median_blur_numpi
 
 # size of image to be processed on fpga (the bitstream should be already fixed to this)
-height = width = 256
+height = width = 512
 total_size = height * width
 
 ROI = True
@@ -102,7 +102,8 @@ def main():
     video_name = str(fn)+"_out.avi"
     video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 10, (1280,720))
     
-    fpgas = deque([["10.12.200.176" , "2718"]])
+    fpgas = deque([["10.12.200.4" , "2718"],
+                   ["10.12.200.164" , "2719"]])
 
 
     def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
@@ -172,7 +173,9 @@ def main():
             image = frame.flatten()
             output_array = _trieres_median_blur_numpi.median_blur(image, total_size, fpga[0], fpga[1])
             # Convert 1D array to a 2D numpy array 
+            #time.sleep(1)
             frame = np.reshape(output_array, (height, width))
+            #time.sleep(1)
             print("Declare free the fpga: "+str(fpga))
             fpgas.appendleft(fpga)
         else:
@@ -181,7 +184,6 @@ def main():
             frame = cv.medianBlur(frame, 9)
         if ROI:
                frame = patch_sqaure_roi(orig, frame, cv.INTER_AREA)
-                    
         return frame, t0
 
     threadn = cv.getNumberOfCPUs()
@@ -194,7 +196,7 @@ def main():
     frame_interval = StatValue()
     last_frame_time = clock()
     while True:
-        while len(pending) > 0  and pending[0].ready() and len(fpgas) > 0:
+        while len(pending) > 0 and pending[0].ready() and len(fpgas) > 0:
             res, t0 = pending.popleft().get()
             latency.update(clock() - t0)
             draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))

@@ -346,7 +346,7 @@ int main(int argc, char * argv[]) {
             unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
-                cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
+                //cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
                 //if ( i == total_pack - 1 ) {
                 //    receiving_now = bytes_in_last_pack;
                 //}
@@ -365,7 +365,6 @@ int main(int argc, char * argv[]) {
                 i += recvMsgSize;
                 //delay(200);
             }
-
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
             clock_t next_cycle_rx = clock();
