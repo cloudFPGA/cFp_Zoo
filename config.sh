@@ -174,7 +174,8 @@ elif [ $option2 = 'vision' ]; then
   Gammacorrection "Gamma Correction Filter" off)
 elif [ $option2 = 'custom' ]; then
   option3=$($DIALOG --radiolist "Select Custom kernel" 0 0 0 \
-  Uppercase "Select Uppercase kernel example" on \
+  Uppercase "Select Uppercase kernel example" off \
+  Memtest "Select Memtest kernel example" on \
   N/A "N/A" off)
 else
   echo "Unknown domain."

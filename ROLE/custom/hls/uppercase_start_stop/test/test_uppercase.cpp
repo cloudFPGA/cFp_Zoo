@@ -114,15 +114,12 @@ int main(int argc, char** argv) {
         printf("Usage : %s <input string> , provided %d\n", argv[0], argc);
         return -1;
     }
-
-    string tmp_string= argv[1];
-    string strInput;
-
+    string strInput = argv[1];
+       
     //clean the corners if make or other utilities insert this weird ticks at the beginning of the string
-    if(isCornerPresent(tmp_string,"'") or isCornerPresent(tmp_string,"`")){
-        tmp_string = tmp_string.substr(1,tmp_string.length()-2);
-    }    
-    
+    if(isCornerPresent(strInput,"'") or isCornerPresent(strInput,"`")){
+	    strInput = strInput.substr(1,strInput.length()-2);
+    }
     if (!strInput.length()) {
         printf("ERROR: Empty string provided. Aborting...\n");
         return -1;
@@ -137,9 +134,9 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR UPPERCASE
     //------------------------------------------------------
     unsigned int sim_time = 2 * CEIL(strInput.length(), 8) + 10;
-    unsigned int tot_trasnfers = (CEIL(strInput.length(), PACK_SIZE));
-    char *charOutput = (char*)malloc(strInput.length() * sizeof(char));
-    char *charInput = (char*)malloc(strInput.length() * sizeof(char));
+    unsigned int tot_trasnfers = (CEIL(strInput.length()+1, PACK_SIZE));
+    char *charOutput = (char*)malloc((strInput.length()+8) * sizeof(char));
+    char *charInput = (char*)malloc((strInput.length())+8 * sizeof(char));
     if (!charOutput || !charInput) {
         printf("ERROR: Cannot allocate memory for output string. Aborting...\n");
         return -1;
@@ -149,7 +146,7 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- STEP-1.1 : CREATE MEMORY FOR OUTPUT IMAGES
     //------------------------------------------------------
-    if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
+    if (!dumpStringToFileWithCommands(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
 
@@ -240,7 +237,7 @@ int main(int argc, char** argv) {
     //-------------------------------------------------------
     //-- STEP-5 : FROM THE OUTPUT FILE CREATE AN ARRAY
     //------------------------------------------------------- 
-    if (!dumpFileToString("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
+    if (!dumpFileToStringWithoutCommands("ifsSHL_Uaf_Data.dat", charInput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }
@@ -248,7 +245,7 @@ int main(int argc, char** argv) {
     for (unsigned int i = 0; i < strInput.length(); i++)
        printf("%c", charInput[i]); 
     printf("\n");    
-    if (!dumpFileToString("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
+    if (!dumpFileToStringWithoutCommands("ofsUAF_Shl_Data.dat", charOutput, simCnt)) {
       printf("### ERROR : Failed to set string from file \"ofsUAF_Shl_Data.dat\". \n");
       nrErr++;
     }

@@ -10,9 +10,9 @@
 # *
 # ******************************************************************************
 
-.PHONY: all clean mem_test_flash uppercase
+.PHONY: all clean mem_test_flash memtest
 
-all: mem_test_flash uppercase
+all: mem_test_flash memtest
 
 
 *:

@@ -38,6 +38,7 @@ using hls::stream;
 PacketFsmType enqueueFSM = WAIT_FOR_META;
 PacketFsmType dequeueFSM = WAIT_FOR_STREAM_PAIR;
 PacketFsmType UppercaseFSM  = WAIT_FOR_META;
+ProcessingFsmType processingFSM  = FSM_PROCESSING_STOP;
 
 
 typedef char word_t[8];
@@ -92,7 +93,8 @@ void pPortAndDestionation(
  * @param[in]  siSHL_This_Data
  * @param[in]  siNrc_meta
  * @param[out] sRxtoTx_Meta
- * @param[out] img_in_axi_stream
+ * @param[out] sRxpToProcp_Data
+ * @param[out] start_stop
  * @param[out] meta_tmp
  * @param[out] processed_word
  *
@@ -102,8 +104,9 @@ void pRXPath(
 	stream<NetworkWord>                              &siSHL_This_Data,
         stream<NetworkMetaStream>                        &siNrc_meta,
 	stream<NetworkMetaStream>                        &sRxtoTx_Meta,
-	stream<NetworkWord>                              &sRxpToTxp_Data,
+	stream<NetworkWord>                              &sRxpToProcp_Data,
 	NetworkMetaStream                                meta_tmp,
+  bool  *                                           start_stop,
 	unsigned int                                     *processed_word_rx,
 	unsigned int                                     *processed_bytes_rx
 	    )
@@ -113,8 +116,12 @@ void pRXPath(
      #pragma  HLS INLINE 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord    netWord;
-    word_t text;
-    
+    // word_t text;
+    //UppercaseCmd fsmCmd;
+    static bool start_stop_local = false;
+#pragma HLS reset variable=start_stop_local
+
+    *start_stop = start_stop_local;
   switch(enqueueFSM)
   {
     case WAIT_FOR_META: 
@@ -127,34 +134,45 @@ void pRXPath(
         sRxtoTx_Meta.write(meta_tmp);
         enqueueFSM = PROCESSING_PACKET;
       }
+     // *start_stop = start_stop_local;
       break;
 
     case PROCESSING_PACKET:
       printf("DEBUG in pRXPath: enqueueFSM - PROCESSING_PACKET, *processed_word_rx=%u, *processed_bytes_rx=%u\n",
 	     *processed_word_rx, *processed_bytes_rx);
-      if ( !siSHL_This_Data.empty() && !sRxpToTxp_Data.full() )
+      //*start_stop = start_stop_local;
+      
+      if ( !siSHL_This_Data.empty() && !sRxpToProcp_Data.full() )
       {
         //-- Read incoming data chunk
         netWord = siSHL_This_Data.read();
-      	/* Read in one word_t */
-      	memcpy((char*) text, &netWord.tdata, 64/8);
-      	
-      	/* Convert lower cases to upper cases byte per byte */
-      	uppercase_conversion:
-      	for (unsigned int i = 0; i < sizeof(text); i++ ) {
-      //#pragma HLS PIPELINE
-      //#pragma HLS UNROLL
 
-      	    if (text[i] >= 'a' && text[i] <= 'z')
-      		text[i] = text[i] - ('a' - 'A');
-      	}
-      	memcpy(&netWord.tdata, (char*) text, 64/8);
-      	
-      	sRxpToTxp_Data.write(netWord);
-              if(netWord.tlast == 1)
-              {
-                enqueueFSM = WAIT_FOR_META;
-              }
+        switch(netWord.tdata)
+        {
+          case(START_CMD):
+	    start_stop_local=true;
+            *start_stop=true;
+	    netWord.tdata=1;//28506595412;//"B_ACK";
+            break;
+          case(STOP_CMD):
+            start_stop_local=false;
+	    *start_stop=false;
+	    netWord.tdata=0;//358080398155;//"S_ACK" string
+	    netWord.tlast = 1;
+            break;
+          default:
+            if (start_stop_local)
+            {
+		    //some data manipulation here
+            }
+            break;
+
+        }	
+        sRxpToProcp_Data.write(netWord);
+        if(netWord.tlast == 1)
+        {
+          enqueueFSM = WAIT_FOR_META;
+        }
       }
       break;
   }
@@ -163,6 +181,75 @@ void pRXPath(
 }
 
 
+/*****************************************************************************
+ * @brief THIS processing the data once recieved a start command
+ *
+ * @param[in]  sRxpToProcp_Data
+ * @param[out] sProcpToTxp_Data
+ * @param[in]  start_stop
+ *
+ * @return Nothing.
+ ******************************************************************************/
+ void pTHISProcessingData(
+  stream<NetworkWord>                              &sRxpToProcp_Data,
+  stream<NetworkWord>                              &sProcpToTxp_Data,
+  bool *                                             start_stop
+  ){
+
+    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
+#pragma  HLS INLINE off
+    //-- LOCAL VARIABLES ------------------------------------------------------
+    NetworkWord    netWord;
+    word_t text;
+    
+    switch(processingFSM)
+    {
+      case FSM_PROCESSING_STOP: 
+      printf("DEBUG proc FSM, I am in the stop state\n");
+      if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
+      {
+        //-- Read incoming data chunk
+        netWord = sRxpToProcp_Data.read();
+ 	      sProcpToTxp_Data.write(netWord);
+      }
+      if ( *start_stop )
+      {
+        processingFSM = FSM_PROCESSING_START;
+      }
+      break;
+
+    case FSM_PROCESSING_START:
+      if ( !sRxpToProcp_Data.empty() && !sProcpToTxp_Data.full() )
+      {
+        //-- Read incoming data chunk
+      if ( *start_stop ) {
+        netWord = sRxpToProcp_Data.read();
+        /* Read in one word_t */
+        memcpy((char*) text, &netWord.tdata, 64/8);
+        
+        /* Convert lower cases to upper cases byte per byte */
+        uppercase_conversion:
+        for (unsigned int i = 0; i < sizeof(text); i++ ) {
+
+            if (text[i] >= 'a' && text[i] <= 'z')
+          text[i] = text[i] - ('a' - 'A');
+        }
+        memcpy(&netWord.tdata, (char*) text, 64/8);
+        
+        sProcpToTxp_Data.write(netWord);
+        if(netWord.tlast == 1)
+        {
+          processingFSM = FSM_PROCESSING_STOP;
+        }
+      } else {
+          processingFSM = FSM_PROCESSING_STOP;
+      }
+  
+      }
+      break;
+  }
+ };
+
 
 
 /*****************************************************************************
@@ -170,7 +257,7 @@ void pRXPath(
  *
  * @param[out] soTHIS_Shl_Data
  * @param[out] soNrc_meta
- * @param[in]  sRxpToTxp_Data
+ * @param[in]  sProcpToTxp_Data
  * @param[in]  sRxtoTx_Meta
  * @param[in]  pi_rank
  * @param[in]  sDstNode_sig
@@ -180,7 +267,7 @@ void pRXPath(
 void pTXPath(
         stream<NetworkWord>         &soTHIS_Shl_Data,
         stream<NetworkMetaStream>   &soNrc_meta,
-	stream<NetworkWord>         &sRxpToTxp_Data,
+	stream<NetworkWord>         &sProcpToTxp_Data,
 	stream<NetworkMetaStream>   &sRxtoTx_Meta,
   stream<NodeId>          &sDstNode_sig,
         unsigned int                *processed_word_tx, 
@@ -189,7 +276,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE 
+    #pragma  HLS INLINE
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
@@ -212,16 +299,16 @@ void pTXPath(
       *processed_word_tx = 0;
       
       /*
-      printf("!sRxpToTxp_Data.empty()=%d\n", !sRxpToTxp_Data.empty());
+      printf("!sRxpToProcp_Data.empty()=%d\n", !sRxpToProcp_Data.empty());
       printf("!sRxtoTx_Meta.empty()=%d\n", !sRxtoTx_Meta.empty());
       printf("!soTHIS_Shl_Data.full()=%d\n", !soTHIS_Shl_Data.full());
       printf("!soNrc_meta.full()=%d\n", !soNrc_meta.full());
       */
       
-      if (( !sRxpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
+      if (( !sProcpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
           && !soTHIS_Shl_Data.full() &&  !soNrc_meta.full() )) 
       {
-        netWordTx = sRxpToTxp_Data.read();
+        netWordTx = sProcpToTxp_Data.read();
 
 	// in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
 	if (PACK_SIZE == 8) 
@@ -247,7 +334,7 @@ void pTXPath(
 	//meta_out_stream.tdata.len = meta_in.len; 
         soNrc_meta.write(meta_out_stream);
 
-	      (*processed_word_tx)++;
+	(*processed_word_tx)++;
 	
         if(netWordTx.tlast != 1)
         {
@@ -259,9 +346,9 @@ void pTXPath(
     case PROCESSING_PACKET: 
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
 	     dequeueFSM, *processed_word_tx);
-      if( !sRxpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
+      if( !sProcpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
-        netWordTx = sRxpToTxp_Data.read();
+        netWordTx = sProcpToTxp_Data.read();
 
 	// This is a normal termination of the axi stream from vitis functions
 	if(netWordTx.tlast == 1)
@@ -324,14 +411,22 @@ void uppercase(
 
 
   //-- LOCAL VARIABLES ------------------------------------------------------
-  static stream<NetworkWord>       sRxpToTxp_Data("sRxpToTxP_Data"); // FIXME: works even with no static
+  // static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
   NetworkMetaStream  meta_tmp = NetworkMetaStream();
   static stream<NetworkMetaStream> sRxtoTx_Meta("sRxtoTx_Meta");
+  static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); // FIXME: works even with no static
+  static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data"); // FIXME: works even with no static
+
+
+
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
   //*po_rx_ports = 0x1; //currently work only with default ports...
   static stream<NodeId>            sDstNode_sig   ("sDstNode_sig");
+  bool                              start_stop;
+
+
 
 
   
@@ -340,6 +435,7 @@ void uppercase(
 #pragma HLS reset variable=enqueueFSM
 #pragma HLS reset variable=dequeueFSM
 #pragma HLS reset variable=UppercaseFSM
+#pragma HLS reset variable=processingFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 
@@ -369,14 +465,14 @@ void uppercase(
 			   siNrc_meta,
 			   sRxtoTx_Meta,
 			   meta_tmp,
-			   sRxpToTxp_Data,
+			   sRxpToProcp_Data,
 			   &processed_word_rx,
 			   &processed_bytes_rx);
 
   HLSLIB_DATAFLOW_FUNCTION(pTXPath,
 			   soTHIS_Shl_Data,
 			   soNrc_meta,
-			   sRxpToTxp_Data,
+			   sRxpToProcp_Data,
 			   sRxtoTx_Meta,
 			   &processed_word_tx,
 			   pi_rank,
@@ -396,15 +492,22 @@ void uppercase(
 	siSHL_This_Data,
   siNrc_meta,
 	sRxtoTx_Meta,
-	sRxpToTxp_Data,
+	sRxpToProcp_Data,
   meta_tmp,
+  &start_stop,
   &processed_word_rx,
 	&processed_bytes_rx);
+
+ pTHISProcessingData(
+  sRxpToProcp_Data,
+  sProcpToTxp_Data,
+  &start_stop);
+
   
   pTXPath(
   soTHIS_Shl_Data,
-   soNrc_meta,
-	sRxpToTxp_Data,
+  soNrc_meta,
+	sProcpToTxp_Data,
 	sRxtoTx_Meta,
   sDstNode_sig,
   &processed_word_tx,

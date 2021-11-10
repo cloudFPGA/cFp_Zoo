@@ -353,8 +353,8 @@ my_puts ""
 # [HOWTO] #    [0]   : TUSER Width (bits)
 # [HOWTO] #    [No]  : Enable ACLKEN
 # [HOWTO] #------------------------------------------------------------------------------
-set ipModName "UppercaseApplication"
-set ipName "uppercase"
+set ipModName "MemtestApplication"
+set ipName "memtest"
 # [HOWTO] set ipVendor  "xilinx.com"
 # [HOWTO] set ipLibrary "ip"
 # [HOWTO] set ipVersion "1.1"
@@ -381,10 +381,10 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : Uppercase Application Flash
+# IBM-HSL-IP : Memtest Application Flash
 #------------------------------------------------------------------------------
-set ipModName "UppercaseApplication"
-set ipName "uppercase"
+set ipModName "MemtestApplication"
+set ipName "memtest"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
@@ -396,10 +396,10 @@ if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
 
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : Uppercase Application Flash
+# IBM-HSL-IP : Memtest Application Flash
 #------------------------------------------------------------------------------
-set ipModName "UppercaseApplication"
-set ipName "uppercase"
+set ipModName "MemtestApplication"
+set ipName "memtest"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
