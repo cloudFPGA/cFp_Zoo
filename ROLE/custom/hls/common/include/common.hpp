@@ -70,11 +70,11 @@
 
 //Data structure of a memory test Result
 struct MemoryTestResult {
-  unsigned int    target_address;
+  unsigned long long int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
-  unsigned int    clock_cycles_read;
-  unsigned int    clock_cycles_write;
+  unsigned long long int    clock_cycles_read;
+  unsigned long long int    clock_cycles_write;
 
   MemoryTestResult()      {}
   MemoryTestResult(
@@ -89,7 +89,6 @@ struct MemoryTestResult {
     clock_cycles_write(clock_cycles_write),
     clock_cycles_read(clock_cycles_read) {}
 };
-
 
 /*****************************************************************************
  * @brief Initialize an input data stream from a file.
@@ -257,7 +256,7 @@ void string2hexnumerics(const std::string& in, char * out, size_t byteSize);
  * 
  * @return out the output string with start/max address-nops4trgtCCsNeeded-stop
  ******************************************************************************/
-std::string createMemTestCommands(unsigned int mem_address, int testingNumber, unsigned int burst_size);
+std::string createMemTestCommands(unsigned long long int mem_address, int testingNumber, unsigned int burst_size);
 
 /*****************************************************************************
  * @brief Create the expected output results for the memory test (with FAULT INJECTION)
@@ -267,7 +266,7 @@ std::string createMemTestCommands(unsigned int mem_address, int testingNumber, u
  * 
  * @return  out the results of the memory test (with FAULT INJECTION)
  ******************************************************************************/
-std::string createMemTestGoldenOutput(unsigned int mem_address, int testingNumber);
+std::string createMemTestGoldenOutput(unsigned long long int mem_address, int testingNumber);
 
 /*****************************************************************************
  * @brief Create the expected output results for the uppercase

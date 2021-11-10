@@ -655,7 +655,7 @@ void string2hexnumericsString(const string& in, string &out, size_t byteSize)
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestCommands(unsigned int mem_address, unsigned int testingNumber, unsigned int burst_size)
+string createMemTestCommands(unsigned long long int mem_address, unsigned int testingNumber, unsigned int burst_size)
 {
   string out;
 	char start_cmd [bytes_per_line];
@@ -678,7 +678,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
 	 }
   memcpy(start_cmd+1, (char*)&testingNumber, 2);
 	out = out.append(start_cmd,3);
-  memcpy(value_cmd, (char*)&mem_address, 4);
+  memcpy(value_cmd, (char*)&mem_address, 5);
   out = out.append(value_cmd,5);
   memcpy(burst_cmd+1,(char*)&burst_size,2);
   out = out.append(burst_cmd,8);  
@@ -694,7 +694,7 @@ string createMemTestCommands(unsigned int mem_address, unsigned int testingNumbe
  * 
  ******************************************************************************/
 template<unsigned int bytes_per_line = 8>
-string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingNumber, bool with_bw_analysis)
+string createMemTestGoldenOutput(unsigned long long int mem_address, unsigned int testingNumber, bool with_bw_analysis)
 {
 	char addr_cmd [bytes_per_line]; // Half of the command filled with start other half with the address
 	char fault_cntr_cmd [bytes_per_line];
@@ -765,7 +765,7 @@ string createMemTestGoldenOutput(unsigned int mem_address, unsigned int testingN
         stop_cmd[0]    = (char)2;
         end_of_tests_cmd[0]    = (char)3;
         memcpy(end_of_tests_cmd+1, (char*)&testingNumber, 2);
-        memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned int));
+        memcpy(addr_cmd, (char*)&mem_address, sizeof(unsigned long long int));
         out = out.append(addr_cmd,bytes_per_line);
         //if not yet in the fault injection point just let em empty as expected from good tests
         if(i < first_faultTests-1 || mem_address <= mem_addr_per_word)

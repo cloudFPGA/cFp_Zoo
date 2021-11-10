@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
     {
       strInput_commandstring.assign(argv[4]);
     }
-    unsigned int memory_addr_under_test=0;
+    unsigned long long int memory_addr_under_test=0;
     unsigned int testingNumber = 1;
     unsigned int burst_size = 1;
     if (!strInput_memaddrUT.length() || !strInput_nmbrTest.length()) {
@@ -155,7 +155,7 @@ int main(int argc, char** argv) {
     else {
       try
       {
-       memory_addr_under_test = stoul(strInput_memaddrUT);
+       memory_addr_under_test = stoull(strInput_memaddrUT);
       }
       catch(const std::exception& e)
       {

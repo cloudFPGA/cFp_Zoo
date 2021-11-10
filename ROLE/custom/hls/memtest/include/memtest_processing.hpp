@@ -386,7 +386,7 @@ void pReadDataflowMemTest(
     #endif
             bytes_sent_for_tx = 0;
           }
-        processingFSM = FSM_PROCESSING_DATAFLOW_WRITE;//FSM_PROCESSING_WRITE;
+        processingFSM = FSM_PROCESSING_DATAFLOW_WRITE;
 
           break;
         }else{
