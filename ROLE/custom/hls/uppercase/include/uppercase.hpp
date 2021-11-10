@@ -37,7 +37,7 @@
 using namespace hls;
 
 
-#define ENABLE_DDR 
+#define ENABLE_DDR
 #define ROLE_IS_UPPERCASE
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
