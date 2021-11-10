@@ -26,6 +26,13 @@
 #include "../include/config.h"
 #include "../include/common.hpp"
 
+#define MAX_MEM_SIZE_BENCHMARKING_POWER_OF_TWO 33
+//20  for EMULATION (2^20 == 1MB) 33 --> 8 GB 
+#define MIN_MEM_SIZE_BENCHMARKING_POWER_OF_TWO 6
+#define MAX_BURST_SIZE_BENCHMARKING 512
+#define MIN_BURST_SIZE_BENCHMARKING 1
+#define REPETITIONS_BENCHMARKING 2
+
 
 #ifdef PY_WRAP
 int memtest(char *s_servAddress, char *s_servPort, char *input_str, char *output_str, bool net_type)
@@ -121,11 +128,11 @@ int main(int argc, char *argv[])
 	memory_addr_under_test = stoull(strInput_memaddrUT);
 	testingNumber = stoul(strInput_nmbrTest);
 	burst_size = stoul(strInput_burstSize);
-	unsigned long long int max_size_mem_size = pow(2,33);
-	unsigned long long int min_size_mem_size = pow(2,6);
-	unsigned int max_burst_size = 512;
-	unsigned int min_burst_size = 1;
-	unsigned int desired_repetitions = 2;
+	unsigned long long int max_size_mem_size = pow(2,MAX_MEM_SIZE_BENCHMARKING_POWER_OF_TWO);
+	unsigned long long int min_size_mem_size = pow(2,MIN_MEM_SIZE_BENCHMARKING_POWER_OF_TWO);
+	unsigned int max_burst_size = MAX_BURST_SIZE_BENCHMARKING;
+	unsigned int min_burst_size = MIN_BURST_SIZE_BENCHMARKING;
+	unsigned int desired_repetitions = REPETITIONS_BENCHMARKING;
 	unsigned int burst_size_opposite = min_burst_size;
 	
 	if(argc==7){
@@ -402,7 +409,7 @@ int main(int argc, char *argv[])
 			if(burst_size_opposite>max_burst_size){ //if iterated all the burst sizes quit
 	//			memory_addr_under_test=min_size_mem_size;
 				burst_size=max_burst_size;
-				burst_size=min_burst_size;
+				burst_size_opposite=min_burst_size;
 				memory_addr_under_test=memory_addr_under_test*2;
 				memory_addr_under_test=memory_addr_under_test==max_size_mem_size ? memory_addr_under_test-64 : memory_addr_under_test;
 				if(memory_addr_under_test>max_size_mem_size){ //if iterated all the mem trgt address increment the burst
