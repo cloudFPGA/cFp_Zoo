@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
     strInput_nmbrTest.assign(argv[4]);
     strInput_burstSize.assign(argv[5]);
 	#endif
-	memory_addr_under_test = stoul(strInput_memaddrUT);
+	memory_addr_under_test = stoull(strInput_memaddrUT);
 	testingNumber = stoul(strInput_nmbrTest);
 	burst_size = stoul(strInput_burstSize);
 
@@ -312,7 +312,7 @@ int main(int argc, char *argv[])
 		double avg_wr_bndwdth=0.0;
 		int avg_fault_cnt = 0;
 		int iterations=0;
-		unsigned int written_words=0;
+		unsigned long long int written_words=0;
 		for(auto it = std::begin(testResults_vector); it != std::end(testResults_vector); ++it) {
 			cout << " Test number " << it - testResults_vector.begin() << " stress " << 	it->target_address << " addresses "  << endl;
 			cout << " it presented " << it->fault_cntr << " faults " << endl;
@@ -404,6 +404,8 @@ int main(int argc, char *argv[])
 					user_choice.assign("q");
 				}
 			}
+			unsigned long long int max_gb =  8*pow(10,9);
+			memory_addr_under_test=memory_addr_under_test%max_gb;
 
 		}else{
 
@@ -425,7 +427,7 @@ int main(int argc, char *argv[])
 					cout << "Please type in the maximum address to test (no more than "<< to_string(max_testable_address) << ")"<< endl;
 					cin >> strInput_memaddrUT;
 					try{
-						memory_addr_under_test = stoul(strInput_memaddrUT);
+						memory_addr_under_test = stoull(strInput_memaddrUT);
 					} catch  (const std::exception& e) {
 						std::cerr << e.what() << '\n';
 						cout << "WARNING something bad happened in the insertion, hence default used" << endl;
