@@ -380,11 +380,11 @@ void string2hexnumerics(const string& in, char * out, size_t byteSize)
 
 //Data structure of a memory test Result
 struct MemoryTestResult {
-  unsigned int    target_address;
+  unsigned long long int    target_address;
   unsigned int    fault_cntr;
   unsigned int    first_fault_address;
-  unsigned int    clock_cycles_read;
-  unsigned int    clock_cycles_write;
+  unsigned long long int    clock_cycles_read;
+  unsigned long long int    clock_cycles_write;
 
   MemoryTestResult()      {}
   MemoryTestResult(
