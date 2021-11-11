@@ -125,9 +125,49 @@ int main(int argc, char *argv[])
     strInput_nmbrTest.assign(argv[4]);
     strInput_burstSize.assign(argv[5]);
 	#endif
-	memory_addr_under_test = stoull(strInput_memaddrUT);
-	testingNumber = stoul(strInput_nmbrTest);
-	burst_size = stoul(strInput_burstSize);
+	// memory_addr_under_test = stoull(strInput_memaddrUT);
+	// testingNumber = stoul(strInput_nmbrTest);
+	// burst_size = stoul(strInput_burstSize);
+
+	try{
+		memory_addr_under_test = stoull(strInput_memaddrUT);
+	} catch  (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		cout << "WARNING something bad happened in the insertion, hence default used" << endl;
+		memory_addr_under_test = 64;
+	}
+	if(memory_addr_under_test > MAX_TESTABLE_ADDRESS || memory_addr_under_test<=0){
+		cout << "WARNING the address inserted is not allowed, hence it will be moduled" << endl;
+		memory_addr_under_test = memory_addr_under_test % MAX_TESTABLE_ADDRESS;
+		strInput_memaddrUT.assign(to_string(memory_addr_under_test));
+	}
+	unsigned int max_testingNumber = ((int) pow(2,MAX_TEST_REPETITION_BITWIDTH) - 1);
+	try{
+		testingNumber = stoul(strInput_nmbrTest);
+	} catch (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		cout << "WARNING something bad happened in the insertion, hence default used" << endl;
+		testingNumber = 2;
+	}
+	if(testingNumber > max_testingNumber || testingNumber<=0){
+		cout << "WARNING the repetition inserted is not allowed, hence it will be moduled" << endl;
+		testingNumber = testingNumber % max_testingNumber;
+		strInput_nmbrTest.assign(to_string(testingNumber));
+	}
+	try{
+		burst_size = stoul(strInput_burstSize);
+	} catch  (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		cout << "WARNING something bad happened in the insertion, hence default used" << endl;
+		burst_size = 16;
+	}
+	if(burst_size > MAX_BURST_SIZE || burst_size<=0){
+		cout << "WARNING the burst size inserted is not allowed, hence it will be moduled" << endl;
+		burst_size = burst_size % MAX_BURST_SIZE;
+		strInput_burstSize.assign(to_string(burst_size));
+	}
+
+
 	unsigned long long int max_size_mem_size = pow(2,MAX_MEM_SIZE_BENCHMARKING_POWER_OF_TWO);
 	unsigned long long int min_size_mem_size = pow(2,MIN_MEM_SIZE_BENCHMARKING_POWER_OF_TWO);
 	unsigned int max_burst_size = MAX_BURST_SIZE_BENCHMARKING;
@@ -421,7 +461,7 @@ int main(int argc, char *argv[])
 
 		}else{
 
-			while (user_choice.empty() || (confirmation.compare("y")!=0))
+			while (user_choice.empty() || (confirmation.compare("y")!=0) || (user_choice.compare("r")!=0 || user_choice.compare("q")!=0) || user_choice.compare("rq")!=0)
 			{
 				cout << "What do you want to do now?" << endl;
 				cout << " <r>: run a new test, <q>: quit, <rq>: run a new test and quit "<<endl;
