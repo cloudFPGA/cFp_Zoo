@@ -190,6 +190,9 @@ Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-s
 procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
 the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1. 
 
+By default the Memory Test will come with `#define SIMPLER_BANDWIDTH_TEST` commented. Which means that you will use the complex memory test that can handle any variable burst size. 
+To change this just decomment the define.
+
 ###### The Themisto SHELL
 ```bash
 cd cFp_Memtest/cFDK/SRA/LIB/SHELL/Themisto
