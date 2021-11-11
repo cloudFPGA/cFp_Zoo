@@ -1,3 +1,19 @@
+/*****************************************************************************
+ * @file       commom.hpp
+ * @brief      Common functions for testbenches - headers.
+ *
+ * @date       September 2021
+ * @author     FAB, WEI, NGL, DID, DCO
+ * 
+ * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
+ * Copyright 2015-2020 - IBM Research - All Rights Reserved.
+ *
+ * @ingroup Memtest 
+ * @addtogroup Memtest 
+ * \{
+ *****************************************************************************/
+
+
 #include <stdio.h>
 #include <iostream>                     // For cout and cerr
 #include <cstdlib>                      // For atoi()
