@@ -31,12 +31,12 @@ The following programming languanges are currently supported (and are on the roa
 
 - [x] C/C++
 - [ ] Java
-- [x] Python
+- [ ] Python
 - [ ] Javascript
 
 The following programming frameworks are currently supported (and are on the roadmap)
 
-- [x] [Jupyter Notebook / Jupyter Lab](https://jupyter.org/)
+- [ ] [Jupyter Notebook / Jupyter Lab](https://jupyter.org/)
 - [ ] [Spark](https://spark.apache.org/)
 
 The following socket libraries are currently supported (and are on the roadmap)
@@ -49,7 +49,7 @@ The following socket libraries are currently supported (and are on the roadmap)
 
 The following containerization software is currently supported (and is on the roadmap)
 
-- [x] [Docker](www.docker.com)
+- [ ] [Docker](www.docker.com)
 - [ ] [Kubernetes](https://kubernetes.io/)
 - [ ] [Red Hat OpenShift Community Distribution of Kubernetes](https://www.okd.io/)
 
@@ -153,8 +153,13 @@ make -j 2
 cd cFp_Memtest
 source ./env/setenv.sh
 cd ./HOST/memtest/build
-# Usage: ./memtest_host <Server> <Server Port> <input string>
-./memtest_host localhost 1234 "HelloWorld"
+# Usage: ./memtest_host <Server> <Server Port> <number of address to test> <testing times> <burst size> <optional list/interactive mode (type list or nothing)>
+./memtest_host 10.12.200.153 1234 4096 2 512
+#interactive mode
+# You should expect the output in the stdout and a log in a csv file for both average results and single tests
+./memtest_host 10.12.200.153 1234 1 1 1 list
+# benchmarking mode, running for a fixed number of times the benchmark from the biggest burst size to the shortest
+# on incremental number of addresses
 
 # What happens is that the user application (memtest_host) is sending an input string to 
 # intermediate listener (memtest_host_fwd_tb) through socket. The latter receives the payload and 
@@ -192,15 +197,22 @@ make csynth # with Vivado HLS >= 2019.1
 
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
+![Memory Test Bandwidth Write Results](../../../../doc/membw_write.png)
+![Memory Test Bandwidth Read Results](../../../../doc/membw_read.png)
+![Memory Test Bandwidth comparison simple and complex](../../../../doc/membw_performance_scaling_new.png)
 
 ```bash
 cd ./HOST
 mkdir build && cd build
 cmake ../
 make -j 2
-# Usage: ./memtest_host <Server> <Server Port> <input string>
-./memtest_host 10.12.200.153 2718 "HelloWorld"
-# You should expect the output in the stdout
+# Usage: ./memtest_host <Server> <Server Port> <number of address to test> <testing times> <burst size> <optional list/interactive mode (type list or nothing)>
+./memtest_host 10.12.200.153 2718 4096 2 512
+#interactive mode
+# You should expect the output in the stdout and a log in a csv file for both average results and single tests
+./memtest_host 10.12.200.153 2718 1 1 1 list
+# benchmarking mode, running for a fixed number of times the benchmark from the biggest burst size to the shortest
+# on incremental number of addresses
 ```
 
 **NOTE:** The cFp_Memtest ROLE (FPGA part) is equipped with both the UDP and TCP offload engines. At 
