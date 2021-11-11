@@ -94,15 +94,23 @@ The testbench is offered in two flavors:
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives strings over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
   
-  ```c
+  ```
   // Calling the actual TB over its typical makefile procedure, but passing the save file
   string str_command = "cd ../../../../ROLE/1/hls/memtest/ && " + clean_cmd + "\
-  INPUT_STRING=input_string " + exec_cmd + " && \
+  INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 " + exec_cmd + " && \
   cd ../../../../HOST/memtest/build/ "; 
   const char *command = str_command.c_str(); 
   cout << "Calling TB with command:" << command << endl; 
   system(command); 
   ```
+
+The Makefile pass as argument to the TB the following params:
+1. `INPUT_STRING` is the maxmimum target address (e.d., max 1000000 or 1MB)
+2. `TEST_NUMBER` is the number of repetitions of the test 
+3. `BURST_SIZE` is the desired burst size
+
+###### Simulation example: 
+``` make csim INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 ```
 
 Basic files/modules:
   1. [memtest_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/HOST/src/memtest_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Memtest function. This file is part of both the `HLS TB` and the `Host TB`
@@ -110,11 +118,19 @@ Basic files/modules:
   3. [test_memtest.cpp](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/ROLE/1/hls/memtest/src/memtest.cpp): The typical Vivado HLS testbench of Memtest IP, when this is wrapped in a Themisto Shell.
   4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
   5. [cFp_Memtest](https://github.ibm.com/cloudFPGA/cFp_Memtest): The project that bridges Memtest libraries with cF.
-
-  
-  
+   
 **Note:** Remember to run `make clean` every time you change those definitions.
-  
+###### Memory test modularity
+Modularity of the memory test:
+1. `src/memtest.cpp` contains the **TOP** module where you may find the three coarse grained stage: Port&Dst//RX - Processing - TX
+2. `include/memtest.hpp` is the **TOP** level **HEADER** with some info on the most basic **COMMANDS** such as a **start/stop** for a controllable execution
+3. `include/memtest_library.hpp` contains the **library** for some **basic cF** components: Port&Dst, RX, TX, Memory R/W utilities, Performance counter utilities
+4. `include/memtest_processing.hpp`contains a **template structure** of a **processing** function for the cF environment for a start/stop approach with commands management, processing, and output management. There are example of processing functions for the memory test
+5. `include/memtest_pattern_library.hpp` contains the functions used to developed the **custom processing** algorithm of the memory test: pattern generator functions, read functions, write functions.
+
+A developer might replace the command handling, and the processing with their own one.
+To this extent, the modifications are minimal and referred mostly to the processing functions.
+
 ###### Run simulation
 
 **HLS TB**
@@ -196,10 +212,6 @@ make csynth # with Vivado HLS >= 2019.1
 ##### Memtest cF Demo
 
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
-
-![Memory Test Bandwidth Write Results](../../../../doc/membw_write.png)
-![Memory Test Bandwidth Read Results](../../../../doc/membw_read.png)
-![Memory Test Bandwidth comparison simple and complex](../../../../doc/membw_performance_scaling_new.png)
 
 ```bash
 cd ./HOST
@@ -302,3 +314,19 @@ $ firewall-cmd --reload
 ```
 
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
+
+# Memory test Results 
+Follows some expected outputs of the memory test in the simple (i.e., free running) and the complex version (i.e., burst controlled).
+First some analysis of the burst controlled bandwidth for the read and the write.
+Analyzing power of two memory sizes starting from 64 bytes (i.e., one 512bits word)
+## Bandwidth Burst Control Results
+Burst: 1 -- > 512 (power of two)
+1. Read 
+2. Write
+### Bandwidth write results variable burst sizes
+![Memory Test Bandwidth Write Results](../../../../doc/membw_write.png)
+### Bandwidth read results variable burst sizes
+![Memory Test Bandwidth Read Results](../../../../doc/membw_read.png)
+
+## Bandwidth read and write results comparison simple and complex memory tests (i.e. free-running vs burst cntrlled)
+![Memory Test Bandwidth comparison simple and complex](../../../../doc/membw_performance_scaling_new.png)

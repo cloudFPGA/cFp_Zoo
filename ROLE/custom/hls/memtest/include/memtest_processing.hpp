@@ -22,7 +22,7 @@
 #include "../include/memtest_pattern_library.hpp"
 
 #define FAULT_INJECTION // macro for fault injection insertion
-//#define SIMPLER_BANDWIDTH_TEST // macro for usage of the simpler version: BW, FLT CNT, not fault address reporting
+#define SIMPLER_BANDWIDTH_TEST // macro for usage of the simpler version: BW, FLT CNT, not fault address reporting
 
 #define FSM_PROCESSING_WAIT_FOR_META 0
 #define FSM_PROCESSING_PCKT_PROC 1
