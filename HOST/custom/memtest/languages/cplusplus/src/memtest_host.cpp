@@ -137,8 +137,8 @@ int main(int argc, char *argv[])
 		memory_addr_under_test = 64;
 	}
 	if(memory_addr_under_test > MAX_TESTABLE_ADDRESS || memory_addr_under_test<=0){
-		cout << "WARNING the address inserted is not allowed, hence it will be moduled" << endl;
-		memory_addr_under_test = memory_addr_under_test % MAX_TESTABLE_ADDRESS;
+		cout << "WARNING the address inserted is not allowed, hence default use" << endl;
+		memory_addr_under_test = 64;
 		strInput_memaddrUT.assign(to_string(memory_addr_under_test));
 	}
 	unsigned int max_testingNumber = ((int) pow(2,MAX_TEST_REPETITION_BITWIDTH) - 1);
@@ -150,8 +150,8 @@ int main(int argc, char *argv[])
 		testingNumber = 2;
 	}
 	if(testingNumber > max_testingNumber || testingNumber<=0){
-		cout << "WARNING the repetition inserted is not allowed, hence it will be moduled" << endl;
-		testingNumber = testingNumber % max_testingNumber;
+		cout << "WARNING the repetition inserted is not allowed, hence default use" << endl;
+		testingNumber = 2;
 		strInput_nmbrTest.assign(to_string(testingNumber));
 	}
 	try{
@@ -162,8 +162,8 @@ int main(int argc, char *argv[])
 		burst_size = 16;
 	}
 	if(burst_size > MAX_BURST_SIZE || burst_size<=0){
-		cout << "WARNING the burst size inserted is not allowed, hence it will be moduled" << endl;
-		burst_size = burst_size % MAX_BURST_SIZE;
+		cout << "WARNING the burst size inserted is not allowed, hence default use" << endl;
+		burst_size = 16;
 		strInput_burstSize.assign(to_string(burst_size));
 	}
 
@@ -461,7 +461,7 @@ int main(int argc, char *argv[])
 
 		}else{
 
-			while (user_choice.empty() || (confirmation.compare("y")!=0) || (user_choice.compare("r")!=0 || user_choice.compare("q")!=0) || user_choice.compare("rq")!=0)
+			while (user_choice.empty() || (confirmation.compare("y")!=0) || ( (confirmation.compare("y")==0)  && (user_choice.compare("r")!=0 && user_choice.compare("q")!=0) && user_choice.compare("rq")!=0) )
 			{
 				cout << "What do you want to do now?" << endl;
 				cout << " <r>: run a new test, <q>: quit, <rq>: run a new test and quit "<<endl;
@@ -483,11 +483,11 @@ int main(int argc, char *argv[])
 					} catch  (const std::exception& e) {
 						std::cerr << e.what() << '\n';
 						cout << "WARNING something bad happened in the insertion, hence default used" << endl;
-						memory_addr_under_test = 5;
+						memory_addr_under_test = 64;
 					}
 					if(memory_addr_under_test > MAX_TESTABLE_ADDRESS || memory_addr_under_test<=0){
-						cout << "WARNING the address inserted is not allowed, hence it will be moduled" << endl;
-						memory_addr_under_test = memory_addr_under_test % MAX_TESTABLE_ADDRESS;
+						cout << "WARNING the address inserted is not allowed, hence default use" << endl;
+						memory_addr_under_test = 64;
 						strInput_memaddrUT.assign(to_string(memory_addr_under_test));
 					}
 					unsigned int max_testingNumber = ((int) pow(2,MAX_TEST_REPETITION_BITWIDTH) - 1);
@@ -501,8 +501,8 @@ int main(int argc, char *argv[])
 						testingNumber = 3;
 					}
 					if(testingNumber > max_testingNumber || testingNumber<=0){
-						cout << "WARNING the repetition inserted is not allowed, hence it will be moduled" << endl;
-						testingNumber = testingNumber % max_testingNumber;
+						cout << "WARNING something bad happened in the insertion, hence default used" << endl;
+						testingNumber = 2;
 						strInput_nmbrTest.assign(to_string(testingNumber));
 					}
 					cout << "Please type in the desired burst size (no more than "<< to_string(MAX_BURST_SIZE) << ")"<< endl;
@@ -515,8 +515,8 @@ int main(int argc, char *argv[])
 						burst_size = 16;
 					}
 					if(burst_size > MAX_BURST_SIZE || burst_size<=0){
-						cout << "WARNING the burst size inserted is not allowed, hence it will be moduled" << endl;
-						burst_size = burst_size % MAX_BURST_SIZE;
+						cout << "WARNING the burst size inserted is not allowed, hence default use" << endl;
+						burst_size = 16;
 						strInput_burstSize.assign(to_string(burst_size));
 					}
 					cout << "Your choice is to test " << testingNumber << " times up to address " << memory_addr_under_test  << " burst size " << burst_size << ", is it ok? (y/n) " << endl;
