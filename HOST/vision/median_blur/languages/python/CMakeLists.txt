@@ -36,6 +36,8 @@ add_custom_target(swignumpi ALL
 #swig_add_module(trieres_median_blur_filename python ./trieres_median_blur_filename.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/median_blur_host.cpp)
 #swig_link_libraries (trieres_median_blur_filename ${OpenCV_LIBS} ${PYTHON_LIBRARIES})
 
+#set_source_files_properties (./trieres_median_blur_numpi.i PROPERTIES SWIG_FLAGS "-threads")
+
 set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP=PY_WRAP_MEDIANBLUR_NUMPI")
 set_property(SOURCE ./trieres_median_blur_numpi.i PROPERTY CPLUSPLUS ON)
 swig_add_module(trieres_median_blur_numpi python ./trieres_median_blur_numpi.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/median_blur_host.cpp)
