@@ -55,7 +55,7 @@
 #define MEMTEST_BURST_HIGH_BIT MEMTEST_BURST_BITWIDTH-1+MEMTEST_COMMANDS_BITWIDTH// 23
 #define MEMTEST_BURST_LOW_BIT  MEMTEST_BURST_HIGH_BIT+1-MEMTEST_BURST_BITWIDTH // 8
 
-const unsigned int top_param_maximum_number_of_beats = 512;
+const unsigned int top_param_maximum_number_of_beats = 4096;
 
 
 //////////////////////////////////////////////////////////////////////////////
