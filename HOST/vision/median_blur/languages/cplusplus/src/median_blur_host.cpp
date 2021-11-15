@@ -21,8 +21,9 @@
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
 #include <string.h>                     // For memcpy()
-#include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
-#include "../include/config.h"
+#include "PracticalSockets.h" // For UDPSocket and SocketException
+#include "config.h"
+#include "util.hpp"
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME) || (PY_WRAP == PY_WRAP_MEDIANBLUR_NUMPI)
 #include "opencv2/opencv.hpp"
@@ -77,6 +78,7 @@ void resizeCropSquare(const cv::Mat &input, const cv::Mat &output, const cv::Siz
 }
 
 
+
 #ifdef PY_WRAP
 #if PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME
 void median_blur(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
@@ -95,7 +97,7 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 #endif // PY_WRAP
-    
+
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------

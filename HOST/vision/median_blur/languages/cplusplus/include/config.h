@@ -56,6 +56,11 @@
 /** The network socket type: tcp or udp                                                           */
 #define NET_TYPE udp
 
+/** The level of debugging.
+ *  0->None, 1-> Light Debug, 2-> Medium Debug , 3-> Insane Debug
+ */
+#define DEBUG_LEVEL dbgLevelNone
+
 //-------------------  AUTOMATICALLY DEFINED OR AUXILILIARY OPTIONS  -------------------------------
 
 #define FRAME_TOTAL FRAME_HEIGHT * FRAME_WIDTH //* 3
