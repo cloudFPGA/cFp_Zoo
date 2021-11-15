@@ -221,7 +221,7 @@ int main(int argc, char * argv[]) {
             exit(1);
         }
         
-        #endif // INPUT_FROM_CAMERA
+#endif // INPUT_FROM_CAMERA
         
         //frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         unsigned int num_frame = 0;
@@ -268,12 +268,13 @@ int main(int argc, char * argv[]) {
             unsigned char * sendarr = input_img;
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
-   
-
             unsigned int total_pack  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
             unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
             assert(total_pack == TOT_TRANSFERS);
+
+            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
+	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack * sizeof (unsigned char));
 
 //            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
 //            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
@@ -344,7 +345,7 @@ int main(int argc, char * argv[]) {
             clock_t last_cycle_rx = clock();
             unsigned int receiving_now = PACK_SIZE;
 //            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
-            unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
+            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
                 //cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
@@ -439,6 +440,8 @@ int main(int argc, char * argv[]) {
 //            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
 //            cout << "\\___________________________________________________________________/" << endl
 //            << endl;
+            //delete(longbuf);
+	    free (longbuf);
         } // while loop
 	
         // When everything done, release the video capture and write object
@@ -451,7 +454,7 @@ int main(int argc, char * argv[]) {
 #else  // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
         //output_img = longbuf;
         memcpy( output_img, longbuf, total_size);
-        delete(longbuf);
+	free(longbuf);
 #endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
         // Destructor closes the socket

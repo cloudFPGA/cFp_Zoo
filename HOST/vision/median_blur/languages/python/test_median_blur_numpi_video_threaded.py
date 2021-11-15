@@ -39,6 +39,7 @@ from collections import deque
 
 # Manager to create shared object.
 manager = multiprocessing.Manager()
+from threading import  Lock
 
 from common import clock, draw_str, StatValue
 import video
@@ -117,6 +118,7 @@ def main():
 
     # Create a lock.
     lock = manager.Lock()
+    #lock = Lock()
 
     def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
         h, w = img.shape[:2]
@@ -157,7 +159,7 @@ def main():
         else:
                 patched_img = frame
                 print("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI of [", h_frame  , " x ", w_frame, "]. Will just resize")
-        	
+        print("after 1st if")        	
         # Adjusting the image file if needed
         if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
             print("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
@@ -180,15 +182,14 @@ def main():
         if accel_mode:
             #print("Will execute on fpga with ip:port: "+fpga[0]+":"+fpga[1])
             # some intensive computation...
-            # frame = cv.medianBlur(frame, 19)
             # Flattening the image from 2D to 1D
             image = frame.flatten()
             output_array = _trieres_median_blur_numpi.median_blur(image, total_size, fpga[0], fpga[1])
             # Convert 1D array to a 2D numpy array 
             #time.sleep(1)
             frame = np.reshape(output_array, (height, width))
-            #time.sleep(1)
-            #print("Declare free the fpga: "+str(fpga))
+            print(type(frame))
+            print("Declare free the fpga: "+str(fpga))
             lock.acquire()
             if threaded_mode:
                 fpgas.append(fpga)
@@ -196,24 +197,22 @@ def main():
                 fpgas.appendleft(fpga)
             lock.release()
         else:
-            #frame = cv.medianBlur(frame, 9)
             #time.sleep(10)
             frame = cv.medianBlur(frame, 9)
         if ROI:
                frame = patch_sqaure_roi(orig, frame, cv.INTER_AREA)
-        #print(frame.shape)
-        #exit(0)
+        print("returning from process_frame")
         return frame, t0
 
     
-    threaded_mode = False
+    threaded_mode = True
     accel_mode = True
 
-    fpgas = deque([["10.12.200.195" , "2718"],
-                   ["10.12.200.216" , "2719"],
-                   ["10.12.200.171" , "2720"],
-                   ["10.12.200.19" , "2721"],
-                   ["10.12.200.29" , "2722"]])
+    fpgas = deque([["10.12.200.225" , "2718"],
+                   ["10.12.200.224" , "2719"]])
+#                   ["10.12.200.11" , "2720"],
+#                   ["10.12.200.19" , "2721"],
+#                   ["10.12.200.29" , "2722"]])
 
     if accel_mode:
         threadn = len(fpgas) 
@@ -227,12 +226,14 @@ def main():
     last_frame_time = clock()
     while True:
         fpga = 0
-        #print("len(pending)="+str(len(pending)))
+        print("Before while len(pending)="+str(len(pending)))
         while len(pending) > 0 and pending[0].ready() :
-            #print("Before pending.popleft().get()")
+            print("After while len(pending)="+str(len(pending)))
+            print("Before pending.popleft().get()")
             res, t0 = pending.popleft().get()
-            #print(type(fpga))
-            #print(str(fpga))
+            print("After pending.popleft().get(): len(pending)="+str(len(pending)))
+            print(type(fpga))
+            print(str(fpga))
             #exit(0)
             latency.update(clock() - t0)
             draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))
@@ -240,11 +241,11 @@ def main():
             draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
             draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
             draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-            try:
-                video_out.write(res)
-            except:
-                video_name = str(fn)+"_out.avi"
-                video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (res.shape[1],res.shape[0]))
+#            try:
+#                video_out.write(res)
+#            except:
+#                video_name = str(fn)+"_out.avi"
+#                video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (res.shape[1],res.shape[0]))
                 #print("video_out Size is:"+str(res.shape[1])+","+str(res.shape[0]))
             #cv.imshow('threaded video', res)
         if len(pending) < threadn: # and len(fpgas) != 0:
@@ -252,7 +253,7 @@ def main():
             if _ret is False:
                 print("Reached EOF.")
                 print("Saved video: " + video_name)
-                video_out.release()
+                #video_out.release()
                 break
             #print("frame Size is:"+str(frame.shape[1])+","+str(frame.shape[0]))
             t = clock()
@@ -263,7 +264,7 @@ def main():
             if accel_mode:
                 lock.acquire()
                 fpga = fpgas.popleft()
-                #print("Reserved the fpga:"+str(fpga))
+                print("Reserved the fpga:"+str(fpga))
                 lock.release()
             else:
                 fpga = 0
