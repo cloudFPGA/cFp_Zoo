@@ -473,7 +473,7 @@ int main(int argc, char *argv[])
 			if (user_choice.compare("q")!=0)
 			{
 				confirmation.clear();
-				const unsigned int max_testable_address = MAX_TESTABLE_ADDRESS;
+				const unsigned long long int max_testable_address = MAX_TESTABLE_ADDRESS;
 				while (	strInput_memaddrUT.empty() || strInput_nmbrTest.empty() || strInput_burstSize.empty() || (confirmation.compare("y")!=0))
 				{
 					cout << "Please type in the maximum address to test (no more than "<< to_string(max_testable_address) << ")"<< endl;
