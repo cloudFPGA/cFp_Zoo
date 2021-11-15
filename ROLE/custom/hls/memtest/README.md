@@ -82,8 +82,8 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 ##### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Memtest.git
-cd cFp_Memtest
+git clone --recursive-submodules git@github.ibm.com:cloudFPGA/cFp_Vitis.git
+cd cFp_Vitis
 source ./env/setenv.sh
 ```
 
@@ -96,9 +96,9 @@ The testbench is offered in two flavors:
   
   ```
   // Calling the actual TB over its typical makefile procedure, but passing the save file
-  string str_command = "cd ../../../../ROLE/1/hls/memtest/ && " + clean_cmd + "\
+  string str_command = "cd ../../../../../../ROLE/custom/hls/memtest/ && " + clean_cmd + "\
   INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 " + exec_cmd + " && \
-  cd ../../../../HOST/memtest/build/ "; 
+  cd ../../../../../../HOST/custom/memtest/languages/cplusplus/build/ "; 
   const char *command = str_command.c_str(); 
   cout << "Calling TB with command:" << command << endl; 
   system(command); 
@@ -113,20 +113,20 @@ The Makefile pass as argument to the TB the following params:
 ``` make csim INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 ```
 
 Basic files/modules:
-  1. [memtest_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/HOST/src/memtest_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Memtest function. This file is part of both the `HLS TB` and the `Host TB`
-  2. [memtest_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/HOST/src/memtest_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
-  3. [test_memtest.cpp](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/ROLE/1/hls/memtest/src/memtest.cpp): The typical Vivado HLS testbench of Memtest IP, when this is wrapped in a Themisto Shell.
+  1. [memtest_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/HOST/custom/memtest/languages/cplusplus/src/memtest_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Memtest function. This file is part of both the `HLS TB` and the `Host TB`
+  2. [memtest_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/HOST/custom/memtest/languages/cplusplus/src/memtest_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
+  3. [test_memtest.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/test/test_memtest.cpp): The typical Vivado HLS testbench of Memtest IP, when this is wrapped in a Themisto Shell.
   4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
-  5. [cFp_Memtest](https://github.ibm.com/cloudFPGA/cFp_Memtest): The project that bridges Memtest libraries with cF.
+  5. [cFp_Memtest](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Memtest libraries with cF.
    
 **Note:** Remember to run `make clean` every time you change those definitions.
 ###### Memory test modularity
 Modularity of the memory test:
-1. [`src/memtest.cpp`](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/ROLE/custom/hls/memtest/src/memtest.cpp) contains the **TOP** module where you may find the three coarse grained stage: Port&Dst//RX - Processing - TX
-2. `include/memtest.hpp` is the **TOP** level **HEADER** with some info on the most basic **COMMANDS** such as a **start/stop** for a controllable execution
-3. `include/memtest_library.hpp` contains the **library** for some **basic cF** components: Port&Dst, RX, TX, Memory R/W utilities, Performance counter utilities
-4. `include/memtest_processing.hpp`contains a **template structure** of a **processing** function for the cF environment for a start/stop approach with commands management, processing, and output management. There are example of processing functions for the memory test
-5. `include/memtest_pattern_library.hpp` contains the functions used to developed the **custom processing** algorithm of the memory test: pattern generator functions, read functions, write functions.
+1. [`src/memtest.cpp`](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/src/memtest.cpp) contains the **TOP** module where you may find the three coarse grained stage: Port&Dst//RX - Processing - TX
+2. [`include/memtest.hpp`](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/include/memtest.cpp) is the **TOP** level **HEADER** with some info on the most basic **COMMANDS** such as a **start/stop** for a controllable execution
+3. [`include/memtest_library.hpp`](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/include/memtest_library.hpp) contains the **library** for some **basic cF** components: Port&Dst, RX, TX, Memory R/W utilities, Performance counter utilities
+4. [`include/memtest_processing.hpp`](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/include/memtest_processing.hpp) contains a **template structure** of a **processing** function for the cF environment for a start/stop approach with commands management, processing, and output management. There are example of processing functions for the memory test
+5. [`include/memtest_pattern_library.hpp`](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/custom/hls/memtest/include/memtest_pattern_library.hpp) contains the functions used to developed the **custom processing** algorithm of the memory test: pattern generator functions, read functions, write functions.
 
 A developer might replace the command handling, and the processing with their own one.
 To this extent, the modifications are minimal and referred mostly to the processing functions.
@@ -136,7 +136,7 @@ To this extent, the modifications are minimal and referred mostly to the process
 **HLS TB**
   
 ```bash
-cd ./ROLE/1/hls/memtest
+cd ./ROLE/custom/hls/memtest/
 make fcsim -j 4  # to run simulation using your system's gcc (with 4 threads)
 make csim   # to run simulation using Vivado's gcc
 make cosim  # to run co-simulation using Vivado
@@ -145,7 +145,7 @@ make cosim  # to run co-simulation using Vivado
 **Optional steps**
 
 ```bash
-cd ./ROLE/1/hls/memtest
+cd ./ROLE/custom/hls/memtest/
 make callgraph # to run fcsim and then execute the binary in Valgrind's callgraph tool
 make kcachegrind # to run callgrah and then view the output in Kcachegrind tool
 make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck tool (to inspect memory leaks)
@@ -155,7 +155,7 @@ make memcheck # to run fcsim and then execute the binary in Valgrind's memcheck 
   
 ```bash
 # Compile sources
-cd ./HOST/memtest
+cd ./HOST/custom/memtest/languages/cplusplus
 mkdir build && cd build
 cmake ../
 make -j 2
@@ -168,7 +168,7 @@ make -j 2
 # Open another terminal and prepare env
 cd cFp_Memtest
 source ./env/setenv.sh
-cd ./HOST/memtest/build
+./HOST/custom/memtest/languages/cplusplus/build
 # Usage: ./memtest_host <Server> <Server Port> <number of address to test> <testing times> <burst size> <optional list/interactive mode (type list or nothing)>
 ./memtest_host 10.12.200.153 1234 4096 2 512
 #interactive mode
@@ -195,19 +195,19 @@ To change this just decomment the define.
 
 ###### The Themisto SHELL
 ```bash
-cd cFp_Memtest/cFDK/SRA/LIB/SHELL/Themisto
+cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
 make all # with Vivado HLS == 2017.4
 ```
 
 ###### The complete cFp_Memtest
 ```bash
-cd cFp_Memtest
+cd cFp_Vitis
 make monolithic # with Vivado HLS >= 2019.1
 ```
 
 Optional HLS only for the Memtest IP (e.g. to check synthesizability)
 ```bash
-cd cFp_Memtest/ROLE/1/hls/memtest
+cd cFp_Vitis/ROLE/custom/hls/memtest/
 make csynth # with Vivado HLS >= 2019.1
 ```
 
@@ -217,7 +217,7 @@ make csynth # with Vivado HLS >= 2019.1
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
 ```bash
-cd ./HOST
+cd ./HOST/custom/memtest/languages/cplusplus/
 mkdir build && cd build
 cmake ../
 make -j 2
@@ -231,12 +231,12 @@ make -j 2
 ```
 
 **NOTE:** The cFp_Memtest ROLE (FPGA part) is equipped with both the UDP and TCP offload engines. At 
-runtime, on host, to select one over the other, you simply need to change in [config.h](https://github.ibm.com/cloudFPGA/cFp_Memtest/blob/master/HOST/1/memtest/include/config.h) 
+runtime, on host, to select one over the other, you simply need to change in [config.h](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master//HOST/custom/memtest/languages/cplusplus/include/config.h) 
 file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
 ###### JupyterLab example
-
+NOT UP TO DATE
 ```bash
 cd HOST/langauges/python
 mkdir build
