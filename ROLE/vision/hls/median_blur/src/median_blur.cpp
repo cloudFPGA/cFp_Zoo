@@ -1242,8 +1242,9 @@ const unsigned int ddr_mem_depth = TOTMEMDW_512;
 const unsigned int ddr_latency = DDR_LATENCY;
 
 
-// Max burst size is 1KB, thus with 512bit bus we get 16 burst transactions
-const unsigned int max_axi_rw_burst_length = 16;
+// When max burst size is 1KB, with 512bit bus we get 16 burst transactions
+// When max burst size is 4KB, with 512bit bus we get 64 burst transactions
+const unsigned int max_axi_rw_burst_length = 64;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\

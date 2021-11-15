@@ -110,7 +110,7 @@ typedef membus_512_t membus_t;
  * AXI4 allows 4KiB, but Role's AXI interconnect is configured at max 1KiB
  * 0x40->64, 0x400->1024B(1KiB), 0x1000->4KiB
  **************************************************************************************************/
-#define CHECK_CHUNK_SIZE 0x400 
+#define CHECK_CHUNK_SIZE 0x1000 
 #define BYTE_PER_MEM_WORD BPERMDW_512 // 64
 #define TRANSFERS_PER_CHUNK (CHECK_CHUNK_SIZE/BYTE_PER_MEM_WORD) //64
 #define TRANSFERS_PER_CHUNK_DIVEND (TOTMEMDW_512-(TOTMEMDW_512/TRANSFERS_PER_CHUNK)*TRANSFERS_PER_CHUNK)
