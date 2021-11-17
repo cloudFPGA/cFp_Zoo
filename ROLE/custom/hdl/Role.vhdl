@@ -236,7 +236,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component MemtestApplication is
+  component UppercaseApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -335,7 +335,7 @@ architecture Flash of Role_Themisto is
     -- SHELL / Mem / Mp1 Interface / End Component
     --------------------------------------------------------
          );
-  end component MemtestApplication;
+  end component UppercaseApplication;
 
 
 
@@ -396,7 +396,7 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: MemtestApplication
+  UAF: UppercaseApplication
   port map (
 
              ------------------------------------------------------
@@ -520,7 +520,7 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
--- auto excluding TAF             TAF: MemtestApplication
+-- auto excluding TAF             TAF: UppercaseApplication
 -- auto excluding TAF             port map (
 -- auto excluding TAF           
 -- auto excluding TAF                        ------------------------------------------------------

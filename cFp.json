@@ -3,7 +3,21 @@
     "cFpMOD": "FMKU60",
     "cFpSRAtype": "Themisto",
     "usedRoleDir": "custom/",
-    "usedRoleDir2": "vision/",
+    "usedRoleDir2": "",
     "roleName1": "custom",
-    "roleName2": "vision"
+    "roleName2": "unused",
+    "lignin-conf": {
+        "version": 0.2,
+        "roles": [
+            {
+                "name": "default",
+                "path": ""
+            },
+            {
+                "name": "1st-role",
+                "path": "custom/"
+            }
+        ],
+        "active_role": "1st-role"
+    }
 }

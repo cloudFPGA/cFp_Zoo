@@ -1,3 +1,4 @@
+#!/bin/bash
 # /*******************************************************************************
 #  * Copyright 2016 -- 2021 IBM Corporation
 #  *
@@ -17,28 +18,25 @@
 #  *
 #  *                       cloudFPGA
 #  *    =============================================
-#  *     Created: Apr 2019
+#  *     Created: Nov 2021
 #  *     Authors: FAB, WEI, NGL, DID
 #  *
 #  *     Description:
-#  *        Auto generated file that exports all necessary environment variables
+#  *       Bash script to build and manage cloudFPGA project
+#  *
+#  *       The name is based on a very central polymers that form key
+#  *       structural materials in the support tissues of most plants
+#  *       (see further: https://en.wikipedia.org/wiki/Lignin).
 #  *
 
-##SOURCE_VIVADO##
-# we need absolut paths
-rootDir="##ROOTDIR##"
+# 0. get current folder
+cur_dir=$(pwd)
 
-export cFpRootDir="$rootDir/"
-export cFpIpDir="$rootDir/ip/"
-export cFpMOD="##MOD##"
-export usedRoleDir="$rootDir/ROLE/##DIR1##"
-export usedRole2Dir="$rootDir/ROLE/##DIR2##"
-export cFpSRAtype="##SRA##"
-export cFpXprDir="$rootDir/xpr/"
-export cFpDcpDir="$rootDir/dcps/"
-export roleName1="##ROLE1##"
-export roleName2="##ROLE2##"
-export cFenv_path="##virtual_path##"
-export cFsysPy3_cmd="##python3_bin##"
-
+# so, some kind of bootstrapping
+# 1. source the cFp environment
+source $cur_dir/env/setenv.sh
+# 2. now, since the path are there:
+source $cFenv_path/bin/activate
+# 3. finally, invoke the script
+python3 $cur_dir/env/cf_lignin.py "$@"
 
