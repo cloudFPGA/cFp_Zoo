@@ -15,8 +15,8 @@
 
 #include <cstdlib>           // For atoi()
 #include <iostream>          // For cout and cerr
-#include "../../../../../PracticalSockets/src/PracticalSockets.h"
-#include "../include/config.h"
+#include "PracticalSockets.h"
+#include "config.h"
 #include "opencv2/opencv.hpp"
 
 using namespace cv;

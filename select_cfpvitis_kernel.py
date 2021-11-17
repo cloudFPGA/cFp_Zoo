@@ -275,7 +275,7 @@ def edit_file(full_file, new_kernel, udp, tcp, mtu, port, ddr):
 ###################################################################################################
 
 
-kernels = ["Harris", "Median_Blur", "MCEuropeanEngine", "Uppercase","Memtest"]
+kernels = ["Harris", "Median_Blur", "MCEuropeanEngine", "Uppercase", "Memtest"]
 #print("Available kernels:")
 #print('\n'.join(kernels)) 
 

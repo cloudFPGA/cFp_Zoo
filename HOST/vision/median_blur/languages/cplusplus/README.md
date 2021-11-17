@@ -84,8 +84,14 @@ file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 - Editing videos for input to the MedianBlur example:
   
+  `ffmpeg -i input.mp4 -vcodec mjpeg -qscale 1 -an output.avi`
+  
+  `mencoder input.mp4 -o  output.mjpeg -ovc lavc -lavcopts vcodec=mjpeg -oac=copy`
+  
   `ffmpeg -i The_Mast_Walk_by_Alex_Thomson.mp4 -ss 00:00:39 -t 00:00:17 -async 1 -strict -2 cut.mp4 -c copy`
+  
   `frame= 1025 fps= 42 q=-1.0 Lsize=   10487kB time=00:00:41.00 bitrate=2095.0kbits/s   `
+  
   `ffmpeg -i cut.mp4 -filter:v "crop=720:720:200:20" -strict -2 cut_720x720.mp4`
 
   
@@ -129,6 +135,42 @@ $ firewall-cmd --reload
 
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
 
+#### Forwarding camera stream from laptop to another machine (e.g. VM)
+
+* On the laptop
+    
+    * Install v4l-utils and ffmpeg by running:
+
+        `sudo apt install v4l-utils ffmpeg`
+
+    * Install matroska media container like so:
+
+        `sudo apt install libmatroska6v5`
+
+    * Run the following command to open a netcat listener for the camera stream:
+
+        `ffmpeg -i /dev/video0 -codec copy -f matroska - | nc -l 2718`
+        
+* On the PC (vm)
+
+    * Install v4l-utils and ffmpeg by running:
+
+        `sudo apt install v4l-utils ffmpeg`
+
+    * Install v4l2loopback and load the virtual camera:
+
+    ```bash
+    sudo apt install v4l2loopback-dkms v4l2loopback-utils
+    sudo modprobe -r v4l2loopback
+    sudo depmod -a
+    sudo modprobe v4l2loopback exclusive_caps=1 card_label="MyLaptopCam:MyLaptopCam"
+    ```
+    
+    * Stream the real camera on the laptop to the virtual camera on the PC ( change Laptop_IP to the IP of the laptop ):
+        `nc Laptop_IP 2718 | ffmpeg -i /dev/stdin -codec copy -f v4l2 /dev/video0`
+
+    * Launch and play the virtual camera:
+        `ffplay /dev/video0`
 
 ##### Acknowledgement and Copyright
 This software part of this project is built upon various open-source libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/) and [OpenCV 3](http://opencv.org/) ; please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.

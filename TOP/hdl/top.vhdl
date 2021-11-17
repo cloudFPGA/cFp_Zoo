@@ -278,6 +278,7 @@ architecture structural of topFMKU60 is
   signal smROL_SHL_Mem_Mp1_WDATA            : std_ulogic_vector(511 downto 0);
   signal smROL_SHL_Mem_Mp1_WSTRB            : std_ulogic_vector(63 downto 0);
   signal smROL_SHL_Mem_Mp1_WLAST            : std_ulogic;
+  --signal smROL_SHL_Mem_Mp1_WID              : std_ulogic_vector(3 downto 0);
   signal smROL_SHL_Mem_Mp1_WVALID           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_WREADY           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_BID              : std_ulogic_vector(7 downto 0);
@@ -536,6 +537,7 @@ architecture structural of topFMKU60 is
       miROL_Mem_Mp1_WDATA               : in    std_ulogic_vector(511 downto 0);
       miROL_Mem_Mp1_WSTRB               : in    std_ulogic_vector(63 downto 0);
       miROL_Mem_Mp1_WLAST               : in    std_ulogic;
+      --miROL_Mem_Mp1_WID                 : in    std_ulogic_vector(3 downto 0);
       miROL_Mem_Mp1_WVALID              : in    std_ulogic;
       miROL_Mem_Mp1_WREADY              : out   std_ulogic;
       miROL_Mem_Mp1_BID                 : out   std_ulogic_vector(7 downto 0);
@@ -711,6 +713,7 @@ architecture structural of topFMKU60 is
       moMEM_Mp1_WDATA                 : out   std_ulogic_vector(511 downto 0);
       moMEM_Mp1_WSTRB                 : out   std_ulogic_vector(63 downto 0);
       moMEM_Mp1_WLAST                 : out   std_ulogic;
+      --moMEM_Mp1_WID                   : out   std_ulogic_vector(3 downto 0);
       moMEM_Mp1_WVALID                : out   std_ulogic;
       moMEM_Mp1_WREADY                : in    std_ulogic;
       moMEM_Mp1_BID                   : in    std_ulogic_vector(7 downto 0);
@@ -1028,6 +1031,7 @@ begin
       miROL_Mem_Mp1_WDATA               =>  smROL_SHL_Mem_Mp1_WDATA    ,
       miROL_Mem_Mp1_WSTRB               =>  smROL_SHL_Mem_Mp1_WSTRB    ,
       miROL_Mem_Mp1_WLAST               =>  smROL_SHL_Mem_Mp1_WLAST    ,
+      --miROL_Mem_Mp1_WID                 =>  smROL_SHL_Mem_Mp1_WID      ,
       miROL_Mem_Mp1_WVALID              =>  smROL_SHL_Mem_Mp1_WVALID   ,
       miROL_Mem_Mp1_WREADY              =>  smROL_SHL_Mem_Mp1_WREADY   ,
       miROL_Mem_Mp1_BID                 =>  smROL_SHL_Mem_Mp1_BID      ,
@@ -1211,6 +1215,7 @@ begin
       moMEM_Mp1_WDATA               =>  smROL_SHL_Mem_Mp1_WDATA    ,
       moMEM_Mp1_WSTRB               =>  smROL_SHL_Mem_Mp1_WSTRB    ,
       moMEM_Mp1_WLAST               =>  smROL_SHL_Mem_Mp1_WLAST    ,
+      --moMEM_Mp1_WID                 =>  smROL_SHL_Mem_Mp1_WID      ,
       moMEM_Mp1_WVALID              =>  smROL_SHL_Mem_Mp1_WVALID   ,
       moMEM_Mp1_WREADY              =>  smROL_SHL_Mem_Mp1_WREADY   ,
       moMEM_Mp1_BID                 =>  smROL_SHL_Mem_Mp1_BID      ,
