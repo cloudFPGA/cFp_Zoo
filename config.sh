@@ -171,6 +171,7 @@ elif [ $option2 = 'vision' ]; then
   option3=$($DIALOG --radiolist "Select Vision kernel" 0 0 0 \
   Harris "Harris Corner Detector" on \
   Median_Blur "Median Blur Filter" off \
+  Sobel "Sobel Filter" off \
   Gammacorrection "Gamma Correction Filter" off)
 elif [ $option2 = 'custom' ]; then
   option3=$($DIALOG --radiolist "Select Custom kernel" 0 0 0 \
