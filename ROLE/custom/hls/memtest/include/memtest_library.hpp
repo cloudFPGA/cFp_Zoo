@@ -106,8 +106,7 @@ void pRXPath(
       )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE 
+     #pragma  HLS INLINE  off
     //-- LOCAL VARIABLES ------------------------------------------------------
 
 
@@ -237,7 +236,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE
+    #pragma  HLS INLINE off
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
@@ -478,6 +477,34 @@ void pReadAxiMemMapped2HlsStreamCountActivated(Tin* main_mem, hls::stream<Tout> 
   cmd.write(1);
 }
 
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to an hls stream with a given max
+ *  it assumes  "perfCounterMultipleCounts" function already initialized so it just incr
+ *
+ * @param[out] main_mem the src ptr to read
+ * @param[in]  sOut the dst hls stream
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  cmd the performance counter cmd stream
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  burstsize the maxmimum amount of data
+ * @param[in]  Tcntr the cmd perf counter datatype
+ *
+ * @return Nothing.
+ *****************************************************************************/
+template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
+void pReadAxiMemMapped2HlsStreamCountExtern(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd, bool activated){
+#pragma HLS INLINE
+  cmd.write(activated);
+  mmloop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = burstsize
+    Tout tmp  = main_mem[i];
+    sOut.write(tmp);
+  }
+  cmd.write(1);
+}
 //////////////////////////////////////////////////////////////////////////////
 //////////////////End of Mem. Interaction Functions///////////////////////////
 //////////////////////////////////////////////////////////////////////////////

@@ -72,3 +72,9 @@ dcps/
 mce_from_net.conf
 bitstreams
 .ipynb_checkpoints
+
+# VScode
+#---------------------
+.vscode
+./*/.vscode
+ROLE/custom/hls/memtest/test/workspace.code-workspace
