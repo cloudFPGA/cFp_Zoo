@@ -6,6 +6,7 @@
  *----------------------------------------------------------------------------
  *
  * @details      This application implements a UDP/TCP-oriented Memory test function.
+ * Mainly structural component (like a hw top)
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.

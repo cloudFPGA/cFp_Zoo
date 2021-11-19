@@ -1,13 +1,37 @@
 /*****************************************************************************
  * @file       memtest_library.hpp
- * @brief      A library for some common functionalities
+ * @brief      A library for some common functionalities:
+ *              Network-Related
+ *              Memory interaction
+ *              Performance Counters
+ * 
  * @author     FAB, WEI, NGL, DID, DCO
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
- * @details      This application implements a UDP/TCP-oriented Memory test function.
- *
- * @deprecated   
+ * @details      Implementations of library example functionalities
+ * Network-Related for
+ *    setting the cluster port destination
+ *    receiving(RX) some commands (generally data)
+ *    transmitting(TX) the test results back 
+ * 
+ * Memory interaction 
+ *    pMyMemtestMemCpy --> memcpy reimplementation
+ *    pMemCpyCircularBuff --> memcpy using a circular buffer (not optimized)
+ *    pReadAxiMemMapped2HlsStream --> read data and write on stream
+ *    pReadAxiMemMapped2HlsStreamCountFirst --> as before but with the activation of perf counter
+ *    pReadAxiMemMapped2HlsStreamCountActivated --> as before but with perf counter activated
+ *    pReadAxiMemMapped2HlsStreamCountExtern --> summary of two function before but with activation as input param
+ * 
+ * Performance Counters
+ *    perfCounterProc --> original function from Xilinx for perf counters that takes INIT and STOP (any)
+ *    perfCounterProc2Mem --> first iteration on the original function
+ *    perfCounterProc2MemCountOnly --> trimming unsued stuffs
+ *    perfCounterProc2MemCountIncremental --> as before but incrementing the output register not overwriting
+ *    perfCounterMultipleCounts --> as before but with multiple activations possible: INIT;ANY(repeat);STOP(0)
+ *    pCountClockCycles --> alternative implementations that does not behave correctly in hls
+ * 
+ * @deprecated pMemCpyCircularBuff; pCountClockCycles
  * 
  *----------------------------------------------------------------------------
  * 
