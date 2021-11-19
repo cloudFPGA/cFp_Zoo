@@ -126,3 +126,13 @@ More info for the Sobel IP: https://xilinx.github.io/Vitis_Libraries/vision/2020
   /lib64/libtbb.so.2: undefined reference to `std::__exception_ptr::exception_ptr::exception_ptr(void*)@CXXABI_1.3.11'
   ```
   Fix: `csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
+
+*
+  ```
+/usr/include/features.h:367:12: fatal error: 'sys/cdefs.h' file not found # include <sys/cdefs.h>
+```
+Fix: `sudo apt-get install gcc-multilib g++-multilib`
+
+* Inability to compile vitis libraries for some libs.
+Add this fix to the Xilinx makefile
+Fix: ```LDFLAGS += `pkg-config --libs opencv` `xml2-config --cflags --libs```
