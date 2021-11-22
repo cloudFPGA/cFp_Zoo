@@ -1,19 +1,19 @@
-## cFp_Vitis
+## cFp_Zoo
 
 [![Doc Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-cloudFPGA project (cFp) for Xilinx Vitis library
+cloudFPGA project (cFp) for domain-specific accelerators for the hybrid multi-cloud era.
 
 - [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/project_repository.html#cfp-vitis)
 - [Code documentation](https://pages.github.ibm.com/cloudFPGA/Dox/group__cFp__Vitis.html)
 
-**Idea**: The `cFp_Vitis` project bridges the accelerated libraries of open source [Vitis Libraries](https://github.com/Xilinx/Vitis_Libraries) to [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
+**Idea**: The `cFp_Zoo` project develops numerous domain-specific accelerators, incuding those from the open source library [Vitis Libraries](https://github.com/Xilinx/Vitis_Libraries) to the [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
 ```
    CPU(OpenCL/OpenCV)  -->  FPGA (Vitis HLS C++)  -->  FPGA (Vitis HLS C++)
     /\__________________________________________________|
 ```
 
-![Oveview of cFp_Vitis](./doc/cFp_Vitis.png)
+![Oveview of cFp_Zoo](./doc/cFp_Vitis.png)
 
 
 ### System configurattion
@@ -49,9 +49,14 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 
 - [x] 2017
   - [x] 2017.4
-- [ ] 2018
-- [ ] 2019
-- [ ] 2020
+- [x] 2018
+- [x] 2019
+  - [x] 2019.1
+  - [x] 2019.2 
+- [X] 2020
+  - [x] 2020.1
+  - [ ] 2020.2
+- [ ] 2021
 
 #### For the ROLE (user's code)
 
@@ -62,12 +67,14 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
   - [x] 2019.2
 - [x] 2020
   - [x] 2020.1
+  - [ ] 2020.2
+- [ ] 2021
 
 
 
 ### Vitis libraries support
 
-The following Vitis accelerated libraries are supported by cFp_Vitis:
+The following Vitis accelerated libraries are supported by cFp_Zoo:
 
 - [ ] BLAS
 - [ ] Data Compression
@@ -83,7 +90,7 @@ The following Vitis accelerated libraries are supported by cFp_Vitis:
   
   
 
-### Quick cFp_Vitis configuration
+### Quick cFp_Zoo configuration
 ![Step 1 - Terminal](./doc/config1.png)
 ![Step 2 - Info](./doc/config2.png)
 ![Step 3 - Select TCP/UDP](./doc/config3.png)
