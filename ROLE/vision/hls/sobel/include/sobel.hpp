@@ -107,13 +107,6 @@ typedef membus_512_t membus_t;
 #define TRANSFERS_PER_CHUNK_DIVEND (TOTMEMDW_512-(TOTMEMDW_512/TRANSFERS_PER_CHUNK)*TRANSFERS_PER_CHUNK)
 
 
-//typedef enum fsmStateDDRenum {
-//    FSM_WR_PAT_CMD	= 0,
-//    FSM_WR_PAT_DATA	= 1,
-//    FSM_WR_PAT_STS  = 2
-//} fsmStateDDRdef;
-//typedef enum fsmStateDDRenum fsmStateDDRdef;
-
 #define fsmStateDDRdef uint8_t
 
 // The maximum number of cycles allowed to acknowledge a write to DDR (i.e. read the status stream)
@@ -126,6 +119,8 @@ typedef membus_512_t membus_t;
 /*
  * A generic unsigned AXI4-Stream interface used all over the cloudFPGA place.
  */
+//Consider using axi_utils.hpp header? 
+// though some difference in the init
 template<int D>
 struct Axis {
   ap_uint<D>       tdata;

@@ -19,6 +19,9 @@
  
 #include "../include/sobel.hpp"
 #include "../include/xf_sobel_config.h"
+#include "../include/sobel_network_library.hpp"
+#include "../include/sobel_hw_common.hpp"
+#include "../include/sobel_processing.hpp"
 
 #ifdef USE_HLSLIB_DATAFLOW
 #include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
@@ -168,7 +171,6 @@ const unsigned int max_axi_rw_burst_length = 64;
 
 //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS stream variable=sRxtoTx_Meta depth=tot_transfers
-#pragma HLS reset variable=SobelFSM
 #pragma HLS reset variable=processed_word_rx
 #pragma HLS reset variable=processed_word_tx
 #pragma HLS reset variable=processed_bytes_rx
