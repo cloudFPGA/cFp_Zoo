@@ -205,10 +205,10 @@ def main():
         return frame, t0
 
     
-    threaded_mode = True
-    accel_mode = True
+    threaded_mode = False
+    accel_mode = False
 
-    fpgas = deque([["10.12.200.225" , "2718"],
+    fpgas = deque([["10.12.200.167" , "2718"],
                    ["10.12.200.224" , "2719"]])
 #                   ["10.12.200.11" , "2720"],
 #                   ["10.12.200.19" , "2721"],
@@ -236,18 +236,18 @@ def main():
             print(str(fpga))
             #exit(0)
             latency.update(clock() - t0)
-            draw_str(res, (20, 20), "threaded       :  " + str(threaded_mode))
-            draw_str(res, (20, 40), "cloudFPA       :  " + str(accel_mode))
-            draw_str(res, (20, 60), "latency        :  %.1f ms" % (latency.value*1000))
-            draw_str(res, (20, 80), "frame interval :  %.1f ms" % (frame_interval.value*1000))
-            draw_str(res, (20, 100), "FPS           :  %.1f" % (1.0/frame_interval.value))
-#            try:
-#                video_out.write(res)
-#            except:
-#                video_name = str(fn)+"_out.avi"
-#                video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (res.shape[1],res.shape[0]))
+            draw_str(res, (20, 20),  "threaded      :  " + str(threaded_mode))
+            draw_str(res, (20, 40),  "cloudFPGA     :  " + str(accel_mode))
+            draw_str(res, (20, 60),  "latency        :  %.1f ms" % (latency.value*1000))
+            draw_str(res, (20, 80),  "frame interval :  %.1f ms" % (frame_interval.value*1000))
+            draw_str(res, (20, 100), "FPS            :  %.1f" % (1.0/frame_interval.value))
+            try:
+                video_out.write(res)
+            except:
+                video_name = str(fn)+"_out.avi"
+                video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (res.shape[1],res.shape[0]))
                 #print("video_out Size is:"+str(res.shape[1])+","+str(res.shape[0]))
-            #cv.imshow('threaded video', res)
+            cv.imshow('threaded video', res)
         if len(pending) < threadn: # and len(fpgas) != 0:
             _ret, frame = cap.read()
             if _ret is False:
@@ -302,5 +302,5 @@ def main():
 if __name__ == '__main__':
     print(__doc__)
     main()
-    #cv.destroyAllWindows()
+    cv.destroyAllWindows()
 
