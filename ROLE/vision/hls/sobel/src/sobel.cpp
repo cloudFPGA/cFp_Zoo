@@ -74,10 +74,6 @@ void sobel(
     
 
 //-- DIRECTIVES FOR THE BLOCK ---------------------------------------------
-//#pragma HLS INTERFACE ap_ctrl_none port=return
-
-//#pragma HLS INTERFACE ap_stable     port=piSHL_This_MmioEchoCtrl
-
 #pragma HLS INTERFACE axis register both port=siSHL_This_Data
 #pragma HLS INTERFACE axis register both port=soTHIS_Shl_Data
 
