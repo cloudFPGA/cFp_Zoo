@@ -11,9 +11,9 @@ template_kernel2="Harris"
 template_kernel3="HARRIS"
 
 # Choose the name of the new kernel/files/dirs
-new_kernel="gammacorrection"
-new_kernel2="Gammacorrection"
-new_kernel3="GAMMACORRECTION"
+new_kernel="median_blur"
+new_kernel2="MedianBlur"
+new_kernel3="MEDIANBLUR"
 
 function replace() {
     files="$(find -L "$1" -type f)";
@@ -24,7 +24,7 @@ function replace() {
     file_count=$(echo "$files" | wc -l)
     echo "Count: $file_count"
     echo "$files" | while read filen; do
-        if [[ $filen =~ "hls_reports" ]] || [[ $filen =~ "build" ]] || [[ $filen =~ "Vitis_Libraries" ]]  || [[ $filen =~ "cFDK" ]] || [[ $filen =~ "hlslib" ]] 
+        if [[ $filen =~ "hls_reports" ]] || [[ $filen =~ "build" ]] || [[ $filen =~ "Vitis_Libraries" ]]  || [[ $filen =~ "cFDK" ]] || [[ $filen =~ "hlslib" ]] || [[ $filen =~ ".git" ]] || [[ $filen =~ ".log" ]]
         then
            echo "Skipping auxililiary file " ${filen}
            continue
@@ -40,7 +40,7 @@ function replace() {
 
 find ./ -type d -name ${template_kernel} -print 2>/dev/null | while read dir_src_kernel; do
     echo  "#####################################"
-    if [[ $dir_src_kernel =~ "Vitis_Libraries" ]] || [[ $filen =~ "build" ]]
+    if [[ $dir_src_kernel =~ "Vitis_Libraries" ]] || [[ $dir_src_kernel =~ "build" ]] || [[ $dir_src_kernel =~ ".git" ]] || [[ $dir_src_kernel =~ "cFDK" ]] || [[ $dir_src_kernel =~ "hlslib" ]]
     then
        echo "Skipping auxililiary dir " ${dir_src_kernel}
        continue
@@ -55,8 +55,9 @@ find ./ -type d -name ${template_kernel} -print 2>/dev/null | while read dir_src
     pattern="*"${template_kernel}"*"
     echo "Finding in "${newdir}" for "${pattern}
     find ${newdir} -type f -name "${pattern}" | while read FILE ; do
-	echo "Renaming ${template_kernel} to ${new_kernel} in " ${FILE}
-	rename 's/'${template_kernel}'/'${new_kernel}'/g' ${FILE}
+        echo "Renaming ${template_kernel} to ${new_kernel} in " ${FILE}
+        # rename 's/'${template_kernel}'/'${new_kernel}'/g' ${FILE} # This is the perl command rename
+        rename ${template_kernel} ${new_kernel} ${FILE} # This is the bash command rename
     done
     echo "Replacing recursively in the files of directory " ${newdir}
     replace ${newdir}

@@ -57,15 +57,15 @@ entity Role_Themisto is
     -- Open Port vector
     poROL_Nrc_Udp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
     -- ROLE <-> NRC Meta Interface
-    soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+    soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
     soROLE_Nrc_Udp_Meta_TVALID  : out   std_ulogic;
     soROLE_Nrc_Udp_Meta_TREADY  : in    std_ulogic;
-    soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+    soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
     soROLE_Nrc_Udp_Meta_TLAST   : out   std_ulogic;
-    siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+    siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
     siNRC_Role_Udp_Meta_TVALID  : in    std_ulogic;
     siNRC_Role_Udp_Meta_TREADY  : out   std_ulogic;
-    siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+    siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
     siNRC_Role_Udp_Meta_TLAST   : in    std_ulogic;
       
     ------------------------------------------------------
@@ -86,15 +86,15 @@ entity Role_Themisto is
     -- Open Port vector
     poROL_Nrc_Tcp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
     -- ROLE <-> NRC Meta Interface
-    soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+    soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
     soROLE_Nrc_Tcp_Meta_TVALID  : out   std_ulogic;
     soROLE_Nrc_Tcp_Meta_TREADY  : in    std_ulogic;
-    soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+    soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
     soROLE_Nrc_Tcp_Meta_TLAST   : out   std_ulogic;
-    siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+    siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
     siNRC_Role_Tcp_Meta_TVALID  : in    std_ulogic;
     siNRC_Role_Tcp_Meta_TREADY  : out   std_ulogic;
-    siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+    siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
     siNRC_Role_Tcp_Meta_TLAST   : in    std_ulogic;
     
     
@@ -254,16 +254,16 @@ architecture Flash of Role_Themisto is
            soTHIS_Shl_Data_tvalid    : out std_logic;
            soTHIS_Shl_Data_tready    : in  std_logic;
       -- NRC Meta and Ports
-           siNrc_meta_TDATA          : in std_logic_vector (79 downto 0);
+           siNrc_meta_TDATA          : in std_logic_vector (63 downto 0);
            siNrc_meta_TVALID         : in std_logic;
            siNrc_meta_TREADY         : out std_logic;
-           siNrc_meta_TKEEP          : in std_logic_vector (9 downto 0);
+           siNrc_meta_TKEEP          : in std_logic_vector (7 downto 0);
            siNrc_meta_TLAST          : in std_logic_vector (0 downto 0);
 
-           soNrc_meta_TDATA          : out std_logic_vector (79 downto 0);
+           soNrc_meta_TDATA          : out std_logic_vector (63 downto 0);
            soNrc_meta_TVALID         : out std_logic;
            soNrc_meta_TREADY         : in std_logic;
-           soNrc_meta_TKEEP          : out std_logic_vector (9 downto 0);
+           soNrc_meta_TKEEP          : out std_logic_vector (7 downto 0);
            soNrc_meta_TLAST          : out std_logic_vector (0 downto 0);
 
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
@@ -398,52 +398,52 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
---  TAF: MCEuropeanEngineApplication
---  port map (
-
-             ------------------------------------------------------
-             -- From SHELL / Clock and Reset
-             ------------------------------------------------------
---             ap_clk                      => piSHL_156_25Clk,
---             ap_rst_n                    => (not piMMIO_Ly7_Rst),
---             ap_start                    => piMMIO_Ly7_En,
-          
---             piFMC_ROL_rank_V         => piFMC_ROLE_rank,
-             --piFMC_ROL_rank_V_ap_vld  => '1',
---             piFMC_ROL_size_V         => piFMC_ROLE_size,
-             --piFMC_ROL_size_V_ap_vld  => '1',
-             --------------------------------------------------------
-             -- From SHELL / Tcp Data Interfaces
-             --------------------------------------------------------
---             siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
---             siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
---             siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
---             siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
---             siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
-             --------------------------------------------------------
-             -- To SHELL / Tcp Data Interfaces
-             --------------------------------------------------------
---             soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
---             soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
---             soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
---             soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
---             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
-
---             siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
---             siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
---             siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
---             siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
---             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
-
---             soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
---             soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
---             soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
---             soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
---             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
-
---            poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
---           --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
---           );
+-- auto excluding TAF             TAF: MCEuropeanEngineApplication
+-- auto excluding TAF             port map (
+-- auto excluding TAF           
+-- auto excluding TAF                        ------------------------------------------------------
+-- auto excluding TAF                        -- From SHELL / Clock and Reset
+-- auto excluding TAF                        ------------------------------------------------------
+-- auto excluding TAF                        ap_clk                      => piSHL_156_25Clk,
+-- auto excluding TAF                        ap_rst_n                    => (not piMMIO_Ly7_Rst),
+-- auto excluding TAF                        ap_start                    => piMMIO_Ly7_En,
+-- auto excluding TAF                     
+-- auto excluding TAF                        piFMC_ROL_rank_V         => piFMC_ROLE_rank,
+-- auto excluding TAF                        --piFMC_ROL_rank_V_ap_vld  => '1',
+-- auto excluding TAF                        piFMC_ROL_size_V         => piFMC_ROLE_size,
+-- auto excluding TAF                        --piFMC_ROL_size_V_ap_vld  => '1',
+-- auto excluding TAF                        --------------------------------------------------------
+-- auto excluding TAF                        -- From SHELL / Tcp Data Interfaces
+-- auto excluding TAF                        --------------------------------------------------------
+-- auto excluding TAF                        siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
+-- auto excluding TAF                        siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
+-- auto excluding TAF                        siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
+-- auto excluding TAF                        siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
+-- auto excluding TAF                        siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
+-- auto excluding TAF                        --------------------------------------------------------
+-- auto excluding TAF                        -- To SHELL / Tcp Data Interfaces
+-- auto excluding TAF                        --------------------------------------------------------
+-- auto excluding TAF                        soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
+-- auto excluding TAF                        soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
+-- auto excluding TAF                        soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
+-- auto excluding TAF                        soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
+-- auto excluding TAF                        soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
+-- auto excluding TAF           
+-- auto excluding TAF                        siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
+-- auto excluding TAF                        siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
+-- auto excluding TAF                        siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
+-- auto excluding TAF                        siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
+-- auto excluding TAF                        siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
+-- auto excluding TAF           
+-- auto excluding TAF                        soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
+-- auto excluding TAF                        soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
+-- auto excluding TAF                        soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
+-- auto excluding TAF                        soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
+-- auto excluding TAF                        soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
+-- auto excluding TAF           
+-- auto excluding TAF                       poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
+-- auto excluding TAF                      --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
+-- auto excluding TAF                      );
 
 
 

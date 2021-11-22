@@ -44,6 +44,7 @@ vivado*.str
 #--------
 *.bak
 *.sav
+*_backup
 
 # Folders
 #---------
@@ -65,7 +66,9 @@ dcps/
 # cFp_Vitis specific files
 # #---------------------
 *.png
+*.jpg
 *.avi
 *.mp4
 mce_from_net.conf
 bitstreams
+.ipynb_checkpoints

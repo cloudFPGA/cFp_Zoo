@@ -35,7 +35,14 @@
 #include "common/xf_utility.hpp"
 #include "features/xf_harris.hpp"
 #include "xf_config_params.h"
-#include "../../../../../HOST/vision/harris/include/config.h"
+#include "harris.hpp"
+#include "../../../../../HOST/vision/harris/languages/cplusplus/include/config.h"
+
+#ifdef USE_HLSLIB_STREAM
+#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
+using hlslib::Stream;
+#endif
+using hls::stream;
 
 // # for gammacorrection
 #include "imgproc/xf_gammacorrection.hpp"
@@ -84,10 +91,8 @@
 // #define USE_HLSLIB_STREAM
 
 // Enable it to fake the call of actual Harris kernel and instead consume input data and write back 
-// the last element from the input to every output value. This option is used dor debugging.
+// the last element from the input to every output value. This option is used for debugging.
 // #define FAKE_Harris
-
-
 
 // Function prototypes
 void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
@@ -96,19 +101,30 @@ void harris_accel(xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                   unsigned short k);
 
 void cornerHarrisAccelArray(ap_uint<INPUT_PTR_WIDTH>* img_inp,
-                        ap_uint<OUTPUT_PTR_WIDTH>* img_out,
-                        int rows, int cols, int threshold, int k);
+                            ap_uint<OUTPUT_PTR_WIDTH>* img_out,
+                            int rows, int cols, int threshold, int k);
 
 void cornerHarrisAccelStream(
-    hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
-    hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    //hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
+    hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
+    //hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
     int rows, int cols, int threshold, int k);
 
 void fakeCornerHarrisAccelStream(
+    #ifdef USE_HLSLIB_STREAM
+    hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        & img_in_axi_stream,
+    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       & img_out_axi_stream,
+    #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
+    #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops);
+
+void cornerHarrisAccelMem(membus_t* img_inp,
+                          membus_t* img_out,
+                          int rows, int cols, int threshold, int k);
 
 void gammacorrection_accel(xf::cv::Mat<IN_TYPE, HEIGHT, WIDTH, NPC1>& imgInput1,
                            xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPC1>& imgOutput,

@@ -1,0 +1,22 @@
+{
+    "folders": [
+        {
+            "path": "../../../.."
+        },
+        {
+            "path": "../../../../../HOST"
+        },
+        {
+            "path": "../../../../../TOP"
+        }
+    ],
+    "settings": {
+        "files.associations": {
+            "chrono": "cpp",
+            "random": "cpp",
+            "limits": "cpp",
+            "valarray": "cpp",
+            "algorithm": "cpp"
+        }
+    }
+}

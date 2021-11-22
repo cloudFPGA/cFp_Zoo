@@ -91,7 +91,7 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
 	for (unsigned int i = 0; i < OUTDEP; i++) {
 	  out[i] = (DtUsed)i + offset;
 	}
-	#else
+	#else // FAKE_MCEuropeanEngine
 	ap_uint<32> seeds[MCM_NM];
 	for (int i = 0; i < MCM_NM; ++i) {
 	    seeds[i] = seed + i * 1000;
@@ -101,7 +101,7 @@ extern "C" void kernel_mc(DtUsedInt loop_nm,
                                                       strike, optionType, seeds, &out[i], requiredTolerance,
                                                       requiredSamples, timeSteps, maxSamples);
 	}
-	#endif
+	#endif // FAKE_MCEuropeanEngine
 	if (out[loop_nm-1] != (DtUsed)std::numeric_limits<double>::quiet_NaN()) {
 	    *finished = true;
 	}

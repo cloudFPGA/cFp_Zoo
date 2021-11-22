@@ -1,6 +1,21 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2020 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
+
 --  *
 --  *                       cloudFPGA
---  *     Copyright IBM Research, All Rights Reserved
 --  *    =============================================
 --  *     Created: Apr 2019
 --  *     Authors: FAB, WEI, NGL
@@ -41,7 +56,8 @@ entity topFMKU60 is
     gTopDateDay          : stDate  := 8d"00";   --  Not used w/ Xilinx parts (see USR_ACCESSE2)
     -- External Memory Interface (EMIF) ----------
     gEmifAddrWidth       : integer :=  8;
-    gEmifDataWidth       : integer :=  8
+    gEmifDataWidth       : integer :=  8;
+    gAxiIdWidth          : integer :=  8
   );
   port (
     ------------------------------------------------------
@@ -180,15 +196,15 @@ architecture structural of topFMKU60 is
   -- Open Port vector
   signal sROL_Nrc_Udp_Rx_ports              : std_ulogic_vector( 31 downto 0);
   -- ROLE <-> NRC Meta Interface
-  signal sROLE_Nrc_Udp_Meta_TDATA               : std_ulogic_vector( 79 downto 0);
+  signal sROLE_Nrc_Udp_Meta_TDATA               : std_ulogic_vector( 63 downto 0);
   signal sROLE_Nrc_Udp_Meta_TVALID              : std_ulogic;
   signal sROLE_Nrc_Udp_Meta_TREADY              : std_ulogic;
-  signal sROLE_Nrc_Udp_Meta_TKEEP               : std_ulogic_vector(  9 downto 0);
+  signal sROLE_Nrc_Udp_Meta_TKEEP               : std_ulogic_vector(  7 downto 0);
   signal sROLE_Nrc_Udp_Meta_TLAST               : std_ulogic;
-  signal sNRC_Role_Udp_Meta_TDATA               : std_ulogic_vector( 79 downto 0);
+  signal sNRC_Role_Udp_Meta_TDATA               : std_ulogic_vector( 63 downto 0);
   signal sNRC_Role_Udp_Meta_TVALID              : std_ulogic;
   signal sNRC_Role_Udp_Meta_TREADY              : std_ulogic;
-  signal sNRC_Role_Udp_Meta_TKEEP               : std_ulogic_vector(  9 downto 0);
+  signal sNRC_Role_Udp_Meta_TKEEP               : std_ulogic_vector(  7 downto 0);
   signal sNRC_Role_Udp_Meta_TLAST               : std_ulogic;
   
   ---- TCP Interface ---------------------------
@@ -207,15 +223,15 @@ architecture structural of topFMKU60 is
   -- Open Port vector
   signal sROL_Nrc_Tcp_Rx_ports              : std_ulogic_vector( 31 downto 0);
   -- ROLE <-> NRC Meta Interface
-  signal sROLE_Nrc_Tcp_Meta_TDATA               : std_ulogic_vector( 79 downto 0);
+  signal sROLE_Nrc_Tcp_Meta_TDATA               : std_ulogic_vector( 63 downto 0);
   signal sROLE_Nrc_Tcp_Meta_TVALID              : std_ulogic;
   signal sROLE_Nrc_Tcp_Meta_TREADY              : std_ulogic;
-  signal sROLE_Nrc_Tcp_Meta_TKEEP               : std_ulogic_vector(  9 downto 0);
+  signal sROLE_Nrc_Tcp_Meta_TKEEP               : std_ulogic_vector(  7 downto 0);
   signal sROLE_Nrc_Tcp_Meta_TLAST               : std_ulogic;
-  signal sNRC_Role_Tcp_Meta_TDATA               : std_ulogic_vector( 79 downto 0);
+  signal sNRC_Role_Tcp_Meta_TDATA               : std_ulogic_vector( 63 downto 0);
   signal sNRC_Role_Tcp_Meta_TVALID              : std_ulogic;
   signal sNRC_Role_Tcp_Meta_TREADY              : std_ulogic;
-  signal sNRC_Role_Tcp_Meta_TKEEP               : std_ulogic_vector(  9 downto 0);
+  signal sNRC_Role_Tcp_Meta_TKEEP               : std_ulogic_vector(  7 downto 0);
   signal sNRC_Role_Tcp_Meta_TLAST               : std_ulogic;
 
 
@@ -253,7 +269,7 @@ architecture structural of topFMKU60 is
   signal ssROL_SHL_Mem_Mp0_Write_tvalid     : std_ulogic;
   signal ssROL_SHL_Mem_Mp0_Write_tready     : std_ulogic;
   -- Memory Port #1 ------------------------------
-  signal smROL_SHL_Mem_Mp1_AWID             : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_AWID             : std_ulogic_vector(gAxiIdWidth-1 downto 0);
   signal smROL_SHL_Mem_Mp1_AWADDR           : std_ulogic_vector(32 downto 0);
   signal smROL_SHL_Mem_Mp1_AWLEN            : std_ulogic_vector(7 downto 0);
   signal smROL_SHL_Mem_Mp1_AWSIZE           : std_ulogic_vector(2 downto 0);
@@ -263,20 +279,21 @@ architecture structural of topFMKU60 is
   signal smROL_SHL_Mem_Mp1_WDATA            : std_ulogic_vector(511 downto 0);
   signal smROL_SHL_Mem_Mp1_WSTRB            : std_ulogic_vector(63 downto 0);
   signal smROL_SHL_Mem_Mp1_WLAST            : std_ulogic;
+  --signal smROL_SHL_Mem_Mp1_WID              : std_ulogic_vector(3 downto 0);
   signal smROL_SHL_Mem_Mp1_WVALID           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_WREADY           : std_ulogic;
-  signal smROL_SHL_Mem_Mp1_BID              : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_BID              : std_ulogic_vector(gAxiIdWidth-1 downto 0);
   signal smROL_SHL_Mem_Mp1_BRESP            : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_BVALID           : std_ulogic;
   signal smROL_SHL_Mem_Mp1_BREADY           : std_ulogic;
-  signal smROL_SHL_Mem_Mp1_ARID             : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_ARID             : std_ulogic_vector(gAxiIdWidth-1 downto 0);
   signal smROL_SHL_Mem_Mp1_ARADDR           : std_ulogic_vector(32 downto 0);
   signal smROL_SHL_Mem_Mp1_ARLEN            : std_ulogic_vector(7 downto 0);
   signal smROL_SHL_Mem_Mp1_ARSIZE           : std_ulogic_vector(2 downto 0);
   signal smROL_SHL_Mem_Mp1_ARBURST          : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_ARVALID          : std_ulogic;
   signal smROL_SHL_Mem_Mp1_ARREADY          : std_ulogic;
-  signal smROL_SHL_Mem_Mp1_RID              : std_ulogic_vector(3 downto 0);
+  signal smROL_SHL_Mem_Mp1_RID              : std_ulogic_vector(gAxiIdWidth-1 downto 0);
   signal smROL_SHL_Mem_Mp1_RDATA            : std_ulogic_vector(511 downto 0);
   signal smROL_SHL_Mem_Mp1_RRESP            : std_ulogic_vector(1 downto 0);
   signal smROL_SHL_Mem_Mp1_RLAST            : std_ulogic;
@@ -327,7 +344,8 @@ architecture structural of topFMKU60 is
       gSecurityPriviledges : string  := "super";  -- Can be "user" or "super"
       gBitstreamUsage      : string  := "flash";  -- Can be "user" or "flash"
       gMmioAddrWidth       : integer := 8;        -- Default is 8-bits
-      gMmioDataWidth       : integer := 8         -- Default is 8-bits
+      gMmioDataWidth       : integer := 8;         -- Default is 8-bits
+      gAxiIdWidth          : integer := 8
     );
     port (
       ------------------------------------------------------
@@ -435,15 +453,15 @@ architecture structural of topFMKU60 is
       -- Open Port vector
       piROL_Nrc_Udp_Rx_ports         : in    std_ulogic_vector( 31 downto 0);
       -- ROLE <-> NRC Meta Interface
-      siROLE_Nrc_Udp_Meta_TDATA      : in    std_ulogic_vector( 79 downto 0);
+      siROLE_Nrc_Udp_Meta_TDATA      : in    std_ulogic_vector( 63 downto 0);
       siROLE_Nrc_Udp_Meta_TVALID     : in    std_ulogic;
       siROLE_Nrc_Udp_Meta_TREADY     : out   std_ulogic;
-      siROLE_Nrc_Udp_Meta_TKEEP      : in    std_ulogic_vector(  9 downto 0);
+      siROLE_Nrc_Udp_Meta_TKEEP      : in    std_ulogic_vector(  7 downto 0);
       siROLE_Nrc_Udp_Meta_TLAST      : in    std_ulogic;
-      soNRC_Role_Udp_Meta_TDATA      : out   std_ulogic_vector( 79 downto 0);
+      soNRC_Role_Udp_Meta_TDATA      : out   std_ulogic_vector( 63 downto 0);
       soNRC_Role_Udp_Meta_TVALID     : out   std_ulogic;
       soNRC_Role_Udp_Meta_TREADY     : in    std_ulogic;
-      soNRC_Role_Udp_Meta_TKEEP      : out   std_ulogic_vector(  9 downto 0);
+      soNRC_Role_Udp_Meta_TKEEP      : out   std_ulogic_vector(  7 downto 0);
       soNRC_Role_Udp_Meta_TLAST      : out   std_ulogic;
       
       ------------------------------------------------------
@@ -464,15 +482,15 @@ architecture structural of topFMKU60 is
       -- Open Port vector
       piROL_Nrc_Tcp_Rx_ports         : in    std_ulogic_vector( 31 downto 0);
       -- ROLE <-> NRC Meta Interface
-      siROLE_Nrc_Tcp_Meta_TDATA      : in    std_ulogic_vector( 79 downto 0);
+      siROLE_Nrc_Tcp_Meta_TDATA      : in    std_ulogic_vector( 63 downto 0);
       siROLE_Nrc_Tcp_Meta_TVALID     : in    std_ulogic;
       siROLE_Nrc_Tcp_Meta_TREADY     : out   std_ulogic;
-      siROLE_Nrc_Tcp_Meta_TKEEP      : in    std_ulogic_vector(  9 downto 0);
+      siROLE_Nrc_Tcp_Meta_TKEEP      : in    std_ulogic_vector(  7 downto 0);
       siROLE_Nrc_Tcp_Meta_TLAST      : in    std_ulogic;
-      soNRC_Role_Tcp_Meta_TDATA      : out   std_ulogic_vector( 79 downto 0);
+      soNRC_Role_Tcp_Meta_TDATA      : out   std_ulogic_vector( 63 downto 0);
       soNRC_Role_Tcp_Meta_TVALID     : out   std_ulogic;
       soNRC_Role_Tcp_Meta_TREADY     : in    std_ulogic;
-      soNRC_Role_Tcp_Meta_TKEEP      : out   std_ulogic_vector(  9 downto 0);
+      soNRC_Role_Tcp_Meta_TKEEP      : out   std_ulogic_vector(  7 downto 0);
       soNRC_Role_Tcp_Meta_TLAST      : out   std_ulogic;
   
       ------------------------------------------------------  
@@ -511,7 +529,7 @@ architecture structural of topFMKU60 is
       ------------------------------------------------------
       -- ROLE / Mem / Mp1 Interface
       ------------------------------------------------------
-      miROL_Mem_Mp1_AWID                : in    std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_AWID                : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
       miROL_Mem_Mp1_AWADDR              : in    std_ulogic_vector(32 downto 0);
       miROL_Mem_Mp1_AWLEN               : in    std_ulogic_vector(7 downto 0);
       miROL_Mem_Mp1_AWSIZE              : in    std_ulogic_vector(2 downto 0);
@@ -521,20 +539,21 @@ architecture structural of topFMKU60 is
       miROL_Mem_Mp1_WDATA               : in    std_ulogic_vector(511 downto 0);
       miROL_Mem_Mp1_WSTRB               : in    std_ulogic_vector(63 downto 0);
       miROL_Mem_Mp1_WLAST               : in    std_ulogic;
+      --miROL_Mem_Mp1_WID                 : in    std_ulogic_vector(3 downto 0);
       miROL_Mem_Mp1_WVALID              : in    std_ulogic;
       miROL_Mem_Mp1_WREADY              : out   std_ulogic;
-      miROL_Mem_Mp1_BID                 : out   std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_BID                 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
       miROL_Mem_Mp1_BRESP               : out   std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_BVALID              : out   std_ulogic;
       miROL_Mem_Mp1_BREADY              : in    std_ulogic;
-      miROL_Mem_Mp1_ARID                : in    std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_ARID                : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
       miROL_Mem_Mp1_ARADDR              : in    std_ulogic_vector(32 downto 0);
       miROL_Mem_Mp1_ARLEN               : in    std_ulogic_vector(7 downto 0);
       miROL_Mem_Mp1_ARSIZE              : in    std_ulogic_vector(2 downto 0);
       miROL_Mem_Mp1_ARBURST             : in    std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_ARVALID             : in    std_ulogic;
       miROL_Mem_Mp1_ARREADY             : out   std_ulogic;
-      miROL_Mem_Mp1_RID                 : out   std_ulogic_vector(3 downto 0);
+      miROL_Mem_Mp1_RID                 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
       miROL_Mem_Mp1_RDATA               : out   std_ulogic_vector(511 downto 0);
       miROL_Mem_Mp1_RRESP               : out   std_ulogic_vector(1 downto 0);
       miROL_Mem_Mp1_RLAST               : out   std_ulogic;
@@ -609,15 +628,15 @@ architecture structural of topFMKU60 is
       -- Open Port vector
       poROL_Nrc_Udp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
       -- ROLE <-> NRC Meta Interface
-      soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+      soROLE_Nrc_Udp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
       soROLE_Nrc_Udp_Meta_TVALID  : out   std_ulogic;
       soROLE_Nrc_Udp_Meta_TREADY  : in    std_ulogic;
-      soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+      soROLE_Nrc_Udp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
       soROLE_Nrc_Udp_Meta_TLAST   : out   std_ulogic;
-      siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+      siNRC_Role_Udp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
       siNRC_Role_Udp_Meta_TVALID  : in    std_ulogic;
       siNRC_Role_Udp_Meta_TREADY  : out   std_ulogic;
-      siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+      siNRC_Role_Udp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
       siNRC_Role_Udp_Meta_TLAST   : in    std_ulogic;
       
       ------------------------------------------------------
@@ -638,15 +657,15 @@ architecture structural of topFMKU60 is
       -- Open Port vector
       poROL_Nrc_Tcp_Rx_ports     : out    std_ulogic_vector( 31 downto 0);
       -- ROLE <-> NRC Meta Interface
-      soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 79 downto 0);
+      soROLE_Nrc_Tcp_Meta_TDATA   : out   std_ulogic_vector( 63 downto 0);
       soROLE_Nrc_Tcp_Meta_TVALID  : out   std_ulogic;
       soROLE_Nrc_Tcp_Meta_TREADY  : in    std_ulogic;
-      soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  9 downto 0);
+      soROLE_Nrc_Tcp_Meta_TKEEP   : out   std_ulogic_vector(  7 downto 0);
       soROLE_Nrc_Tcp_Meta_TLAST   : out   std_ulogic;
-      siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 79 downto 0);
+      siNRC_Role_Tcp_Meta_TDATA   : in    std_ulogic_vector( 63 downto 0);
       siNRC_Role_Tcp_Meta_TVALID  : in    std_ulogic;
       siNRC_Role_Tcp_Meta_TREADY  : out   std_ulogic;
-      siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  9 downto 0);
+      siNRC_Role_Tcp_Meta_TKEEP   : in    std_ulogic_vector(  7 downto 0);
       siNRC_Role_Tcp_Meta_TLAST   : in    std_ulogic;
       
 
@@ -686,7 +705,7 @@ architecture structural of topFMKU60 is
       ------------------------------------------------------
       -- SHELL / Mem / Mp1 Interface
       ------------------------------------------------------
-      moMEM_Mp1_AWID                  : out   std_ulogic_vector(3 downto 0);
+      moMEM_Mp1_AWID                  : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
       moMEM_Mp1_AWADDR                : out   std_ulogic_vector(32 downto 0);
       moMEM_Mp1_AWLEN                 : out   std_ulogic_vector(7 downto 0);
       moMEM_Mp1_AWSIZE                : out   std_ulogic_vector(2 downto 0);
@@ -696,20 +715,21 @@ architecture structural of topFMKU60 is
       moMEM_Mp1_WDATA                 : out   std_ulogic_vector(511 downto 0);
       moMEM_Mp1_WSTRB                 : out   std_ulogic_vector(63 downto 0);
       moMEM_Mp1_WLAST                 : out   std_ulogic;
+      --moMEM_Mp1_WID                   : out   std_ulogic_vector(3 downto 0);
       moMEM_Mp1_WVALID                : out   std_ulogic;
       moMEM_Mp1_WREADY                : in    std_ulogic;
-      moMEM_Mp1_BID                   : in    std_ulogic_vector(3 downto 0);
+      moMEM_Mp1_BID                   : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
       moMEM_Mp1_BRESP                 : in    std_ulogic_vector(1 downto 0);
       moMEM_Mp1_BVALID                : in    std_ulogic;
       moMEM_Mp1_BREADY                : out   std_ulogic;
-      moMEM_Mp1_ARID                  : out   std_ulogic_vector(3 downto 0);
+      moMEM_Mp1_ARID                  : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
       moMEM_Mp1_ARADDR                : out   std_ulogic_vector(32 downto 0);
       moMEM_Mp1_ARLEN                 : out   std_ulogic_vector(7 downto 0);
       moMEM_Mp1_ARSIZE                : out   std_ulogic_vector(2 downto 0);
       moMEM_Mp1_ARBURST               : out   std_ulogic_vector(1 downto 0);
       moMEM_Mp1_ARVALID               : out   std_ulogic;
       moMEM_Mp1_ARREADY               : in    std_ulogic;
-      moMEM_Mp1_RID                   : in    std_ulogic_vector(3 downto 0);
+      moMEM_Mp1_RID                   : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
       moMEM_Mp1_RDATA                 : in    std_ulogic_vector(511 downto 0);
       moMEM_Mp1_RRESP                 : in    std_ulogic_vector(1 downto 0);
       moMEM_Mp1_RLAST                 : in    std_ulogic;
@@ -1013,6 +1033,7 @@ begin
       miROL_Mem_Mp1_WDATA               =>  smROL_SHL_Mem_Mp1_WDATA    ,
       miROL_Mem_Mp1_WSTRB               =>  smROL_SHL_Mem_Mp1_WSTRB    ,
       miROL_Mem_Mp1_WLAST               =>  smROL_SHL_Mem_Mp1_WLAST    ,
+      --miROL_Mem_Mp1_WID                 =>  smROL_SHL_Mem_Mp1_WID      ,
       miROL_Mem_Mp1_WVALID              =>  smROL_SHL_Mem_Mp1_WVALID   ,
       miROL_Mem_Mp1_WREADY              =>  smROL_SHL_Mem_Mp1_WREADY   ,
       miROL_Mem_Mp1_BID                 =>  smROL_SHL_Mem_Mp1_BID      ,
@@ -1196,6 +1217,7 @@ begin
       moMEM_Mp1_WDATA               =>  smROL_SHL_Mem_Mp1_WDATA    ,
       moMEM_Mp1_WSTRB               =>  smROL_SHL_Mem_Mp1_WSTRB    ,
       moMEM_Mp1_WLAST               =>  smROL_SHL_Mem_Mp1_WLAST    ,
+      --moMEM_Mp1_WID                 =>  smROL_SHL_Mem_Mp1_WID      ,
       moMEM_Mp1_WVALID              =>  smROL_SHL_Mem_Mp1_WVALID   ,
       moMEM_Mp1_WREADY              =>  smROL_SHL_Mem_Mp1_WREADY   ,
       moMEM_Mp1_BID                 =>  smROL_SHL_Mem_Mp1_BID      ,

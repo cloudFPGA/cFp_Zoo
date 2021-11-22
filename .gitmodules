@@ -9,4 +9,7 @@
 	url = https://github.com/definelicht/hlslib.git
 [submodule "HOST/PracticalSockets"]
 	path = HOST/PracticalSockets
-	url = https://github.com/Tookmund/PracticalSockets
+	url = https://github.com/diamantopoulos/PracticalSockets.git
+[submodule "HOST/custom/memtest/languages/cplusplus/segretini-matplottini"]
+	path = HOST/custom/memtest/languages/cplusplus/segretini-matplottini
+	url = https://github.com/DavideConficconi/segretini-matplottini.git

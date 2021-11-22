@@ -1,12 +1,27 @@
+# /*******************************************************************************
+#  * Copyright 2016 -- 2020 IBM Corporation
+#  *
+#  * Licensed under the Apache License, Version 2.0 (the "License");
+#  * you may not use this file except in compliance with the License.
+#  * You may obtain a copy of the License at
+#  *
+#  *     http://www.apache.org/licenses/LICENSE-2.0
+#  *
+#  * Unless required by applicable law or agreed to in writing, software
+#  * distributed under the License is distributed on an "AS IS" BASIS,
+#  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  * See the License for the specific language governing permissions and
+#  * limitations under the License.
+# *******************************************************************************/
+
 #  *
 #  *                       cloudFPGA
-#  *     Copyright IBM Research, All Rights Reserved
 #  *    =============================================
-#  *     Created: Apr 2019
+#  *     Created: May 2018
 #  *     Authors: FAB, WEI, NGL
 #  *
 #  *     Description:
-#  *        TCL file execute the Vivado commands
+#  *        TCL file to execute the Vivado commands
 #  *
 
 
@@ -16,7 +31,6 @@ package require cmdline
 
 # Set the Global Settings used by the SHELL Project
 #-------------------------------------------------------------------------------
-#source xpr_settings.tcl
 source ../../cFDK/SRA/LIB/tcl/xpr_settings.tcl
 
 # import environment Variables
@@ -67,6 +81,7 @@ set use_incr       0
 set save_incr      0
 set only_pr_bitgen 0
 set insert_ila 0
+set generate_mcs 0
 
 
 #-------------------------------------------------------------------------------
@@ -103,6 +118,7 @@ if { $argc > 0 } {
         { save_incr "Save current implementation for use in incremental compile for non-BlackBox flow."}
         { only_pr_bitgen "Generate only the partial bitfiles for PR-Designs."}
         { insert_ila "Insert the debug nets according to xdc/debug.xdc"}
+        { generate_mcs "Generate the mcs file to write to the board flash (1st impl run)."}
     }
     set usage "\nIT IS STRONGLY RECOMMENDED TO CALL THIS SCRIPT ONLY THROUGH THE CORRESPONDING MAKEFILES\n\nUSAGE: Vivado -mode batch -source ${argv0} -notrace -tclargs \[OPTIONS] \nOPTIONS:"
     
@@ -201,6 +217,10 @@ if { $argc > 0 } {
               set insert_ila 1
               my_info_puts "The argument \'insert_ila\' is set."
             }
+            if { ${key} eq "generate_mcs" && ${value} eq 1 } {
+              set generate_mcs 1
+              my_info_puts "The argument \'generate_mcs\' is set."
+            }
         } 
     }
 }
@@ -210,6 +230,17 @@ my_info_puts "usedRole2 is set to $usedRole2"
 
 # -----------------------------------------------------
 # Assert valid combination of arguments 
+if {$only_pr_bitgen} {
+  # to deal with https://www.xilinx.com/support/answers/70708.html
+  set pr_verify 0
+  set generate_mcs 0
+}
+
+if {$generate_mcs} {
+  set bitGen1 1
+  set pr 1
+}
+
 if {$pr || $link} {
   set forceWithoutBB 0
 }
@@ -217,10 +248,7 @@ if {$pr || $link} {
 if {$pr && $impl1 && $synth} {
   set link 1
 }
-if {$only_pr_bitgen} {
-  # to deal with https://www.xilinx.com/support/answers/70708.html
-  set pr_verify 0
-}
+
 # -----------------------------------------------------
 
 if { ${create} } {
@@ -228,6 +256,8 @@ if { ${create} } {
     my_puts "################################################################################"
     my_puts "##"
     my_puts "##  CREATING PROJECT: ${xprName}  "
+    my_puts "##"
+    my_puts "##    Vivado Version is ${VIVADO_VERSION}  "
     my_puts "##"
     my_puts "################################################################################"
     my_puts "Start at: [clock format [clock seconds] -format {%T %a %b %d %Y}] \n"
@@ -294,6 +324,12 @@ if { ${create} } {
 
     set_property "ip_output_repo" "${xprDir}/${xprName}/${xprName}.cache/ip" ${xprObj}
 
+    if { [format "%.1f" ${VIVADO_VERSION}] == 2017.4 } {
+        my_dbg_trace "Enabling the use of deprecated PRAGMAs." ${dbgLvl_2};
+        set_property verilog_define {USE_DEPRECATED_DIRECTIVES=true} [ current_fileset ]
+        set_property generic        {gVivadoVersion=2017}            [ current_fileset ]
+    }
+    
     my_dbg_trace "Done with set project properties." ${dbgLvl_1}
 
     #===============================================================================
@@ -320,13 +356,10 @@ if { ${create} } {
     update_ip_catalog -rebuild
 
     # Add *ALL* the HDL Source Files from the HLD Directory (Recursively) 
-    #-------------------------------------------------------------------------------
-    
-    #add_files -fileset ${srcObj} ../hdl/
+    #-------------------------------------------------------------------------------   
     add_files -fileset ${srcObj} ${rootDir}/TOP/hdl/
-    #add_files -fileset ${srcObj} ${hdlDir}/topFlash_pkg.vhdl
     
-    # add TOP library files
+    # Add TOP library files
     add_files -fileset ${srcObj} ${rootDir}/cFDK/SRA/LIB/TOP/hdl/
 
     # Turn the VHDL-2008 mode on 
@@ -344,16 +377,17 @@ if { ${create} } {
         add_files     ${rootDir}/cFDK/SRA/LIB/SHELL/${cFpSRAtype}/hdl/
         add_files     ${rootDir}/cFDK/SRA/LIB/SHELL/LIB/hdl/
 
+        set_property file_type {VHDL 2008} [ get_files [ glob -nocomplain ${rootDir}/cFDK/SRA/LIB/SHELL/LIB/hdl/*/*.vhd ] ]
+        set_property file_type {VHDL}      [ get_files [ glob -nocomplain ${rootDir}/cFDK/SRA/LIB/SHELL/LIB/hdl/mmio/dpAsymRam.vhd ] ]
+
         my_dbg_trace "Done with add_files (HDL) for the SHELL." ${dbgLvl_1}
 
         # IP Cores SHELL
         # Specify the IP Repository Path to make IPs available through the IP Catalog
         #  (Must do this because IPs are stored outside of the current project) 
         #---------------------------------------------------------------------------
-        #set ipDirShell  ${rootDir}/cFDK/SRA/LIB/SHELL/${usedShellType}/ip/
         set ipDirShell  ${ipDir}
         set hlsDirShell ${rootDir}/cFDK/SRA/LIB/SHELL/LIB/hls/
-        #OBSOLETE-20180917 set_property ip_repo_paths "${ipDirShell} ${rootDir}/../../SHELL/${usedShellType}/hls" [ current_project ]
         set_property ip_repo_paths [ concat [ get_property ip_repo_paths [current_project] ] \
                                           ${ipDirShell} ${hlsDirShell} ] [current_project]
         update_ip_catalog
@@ -394,50 +428,13 @@ if { ${create} } {
 
   if { $forceWithoutBB } {
 
-
-    set MdlHdlFile ${rootDir}/cFDK/SRA/LIB/MIDLW/${cFpSRAtype}/Middleware.vhdl
-    # we don't know, if this Shell has a Middleware?
-    if { [ file exists ${MdlHdlFile} ] && ${midlwActive} } {
-      # Add HDL Source Files for the MIDDLEWARE and turn VHDL-2008 mode on
-      #---------------------------------------------------------------------------
-      add_files  ${MdlHdlFile}
-      set_property file_type {VHDL 2008} [ get_files  ${MdlHdlFile} ]
-      update_compile_order -fileset sources_1
-      my_dbg_trace "Finished adding the  HDL files of the MIDDLEWARE." ${dbgLvl_1}
-
-      #setting IP and HLS folder
-      #ipDirMidlw comes from xpr_settings!!
-      #general LIB  folder
-      set hlsDirMidlw ${rootDir}/cFDK/SRA/LIB/MIDLW/LIB/hls/
-      set_property ip_repo_paths [ concat [ get_property ip_repo_paths [current_project] ] \
-      ${ipDirMidlw} ${hlsDirMidlw} ] [current_project]
-
-      #SRA specific dir
-      set hlsDirMidlw ${rootDir}/cFDK/SRA/LIB/MIDLW/${cFpSRAtype}/hls/
-      set_property ip_repo_paths [ concat [ get_property ip_repo_paths [current_project] ] \
-      ${ipDirMidlw} ${hlsDirMidlw} ] [current_project]
-
-
-      # Add *ALL* the User-based IPs (i.e. VIVADO- as well HLS-based) needed for the MIDDLEWARE. 
-      #---------------------------------------------------------------------------
-      set ipList [ glob -nocomplain ${ipDirMidlw}/ip_user_files/ip/* ]
-      if { $ipList ne "" } {
-        foreach ip $ipList {
-          set ipName [file tail ${ip} ]
-          add_files ${ipDirMidlw}/${ipName}/${ipName}.xci
-          my_dbg_trace "Done with add_files for MIDDLEWARE: ${ipDir}/${ipName}/${ipName}.xci" 2
-        }
-      }
-
-      update_ip_catalog
-      my_dbg_trace "Done with update_ip_catalog for the MIDDLEWARE" ${dbgLvl_1}
-    }
-
-
     # Add HDL Source Files for the ROLE and turn VHDL-2008 mode on
     #---------------------------------------------------------------------------
     add_files  ${usedRoleDir}/hdl/
-    set_property file_type {VHDL 2008} [ get_files [ file normalize ${usedRoleDir}/hdl/*.vhd* ] ]
+    set roleVhdlList [ glob -nocomplain ${usedRoleDir}/hdl/*.vhd* ]
+    if { $roleVhdlList ne "" } {
+      set_property file_type {VHDL 2008} [ get_files [ file normalize ${usedRoleDir}/hdl/*.vhd* ] ]
+    }
     update_compile_order -fileset sources_1
     my_dbg_trace "Finished adding the  HDL files of the ROLE." ${dbgLvl_1}
 
@@ -494,8 +491,7 @@ if { ${create} } {
     #         Timing Assertions -> Timing Exceptions -> Physical Constraints
     #-------------------------------------------------------------------------------
     set constrObj [ get_filesets constrs_1 ]
-    #set orderedList "xdc_settings.tcl topFMKU60_timg.xdc topFMKU60_pins.xdc  topFMKU60.xdc"
-    # import orderedList
+    # Import orderedList
     source ${xdcDir}/order.tcl 
     foreach file ${orderedList} {
         if { [ add_files -fileset ${constrObj} -norecurse ${xdcDir}/${file} ] eq "" } {
@@ -505,6 +501,9 @@ if { ${create} } {
             exit ${KO}
         }
     }
+
+    set_property used_in_implementation false [get_files topFMKU60_timg_synt.xdc]
+    set_property used_in_synthesis      false [get_files topFMKU60_timg_impl.xdc]
 
     my_dbg_trace "Done with adding XDC files." ${dbgLvl_1}
 
@@ -573,14 +572,11 @@ if { ${create} } {
     # TODO: add SIM 
     #if { [ string equal [ get_runs -quiet sim_1 ] ""] } {
     #    set_property SOURCE_SET sources_1 [ get_filesets sim_1 ]
-    #    #OBSOLETE-20180705 add_files -fileset sim_1 -norecurse  ${rootDir}/sim/tb_topFlash_Shell_Mmio.vhd
     #    add_files -fileset sim_1 -norecurse  ${rootDir}/sim
 
     #    # Turn the VHDL-2008 mode on 
     #    #---------------------------------------------------------------------------
     #    set_property file_type {VHDL 2008} [ get_files  ${rootDir}/sim/*.vhd* ]
-    #    #OBSOLETE-20180705 set_property file_type {VHDL 2008} [ get_files  ${hdlDir}/*.vhd* ]
-
     #    set_property source_mgmt_mode All [ current_project ]
     #    update_compile_order -fileset sim_1
     #}
@@ -664,20 +660,10 @@ if { ${link} } {
 
   set_property SCOPED_TO_CELLS {ROLE} [get_files ${roleDcpFile} ]
 
-  if { $midlwActive } {
-    #TODO: select multiple middlewares
-    set mdlwDcpFile ${rootDir}/cFDK/SRA/LIB/MIDLW/${cFpSRAtype}/MIDLW_${cFpSRAtype}_OOC.dcp
-    add_files ${mdlwDcpFile}
-    update_compile_order -fileset sources_1
-    my_dbg_trace "Added dcp of MIDDLEWARE ${mdlwDcpFile}." ${dbgLvl_1}
-
-    set_property SCOPED_TO_CELLS {MIDLW} [get_files ${mdlwDcpFile} ]
-  }
-
   open_run synth_1 -name synth_1
   # Link the two dcps together
   #link_design -mode default -reconfig_partitions {ROLE}  -top ${topName} -part ${xilPartName} 
-  ### CAVE: link_design is done by open_design in project mode!!
+  ### NOTE: link_design is done by open_design in project mode!!
   # to prevent the "out-of-date" message; we just added an alreday synthesized dcp -> not necessary
   set_property needs_refresh false [get_runs synth_1]
   
@@ -703,15 +689,6 @@ if { ${link} } {
     my_puts "################################################################################"
     my_puts "## ADDED Partial Reconfiguration Constraint File: ${prConstrFile}; PBLOCK CREATED;"
     my_puts "################################################################################"
-
-    if { $midlwActive } { 
-      set mdlwPrConstrFile "${xdcDir}/topFMKU60_midlw_pr.xdc"
-      add_files -fileset ${constrObj} ${mdlwPrConstrFile} 
-    
-      my_puts "################################################################################"
-      my_puts "## ADDED Partial Reconfiguration Constraint File: ${mdlwPrConstrFile}; PBLOCK CREATED;"
-      my_puts "################################################################################"
-    }
 
     write_checkpoint -force ${dcpDir}/1_${topName}_linked_pr.dcp
   } else {
@@ -821,12 +798,7 @@ if { ${impl1} || ( $forceWithoutBB && $impl1 ) } {
       # now, black box 
       update_design -cell ROLE -black_box
 
-      #TODO right now, we support only one MIDLW...so better not
-      #if { $midlwActive } { 
-      #  update_design -cell MIDLW -black_box
-      #}
-      
-      lock_design -level routing 
+      lock_design -level routing
       
       write_checkpoint -force ${dcpDir}/3_${topName}_STATIC.dcp
       
@@ -1024,25 +996,34 @@ if { $bitGen1 || $bitGen2 || $pr_grey_bitgen } {
       # --> moved to fix_things.tcl
 
       if { $pr } {
-        if { $bitGen1 } { 
-          open_checkpoint ${dcpDir}/2_${topName}_impl_${usedRole}_complete_pr.dcp 
+        if { $bitGen1 } {
+          open_checkpoint ${dcpDir}/2_${topName}_impl_${usedRole}_complete_pr.dcp
           
-          source ${tclTopDir}/fix_things.tcl 
-          #source ./fix_things.tcl 
+          source ${tclTopDir}/fix_things.tcl
+          #source ./fix_things.tcl
           if { $only_pr_bitgen } {
-            write_bitstream -bin_file -cell ROLE -force ${dcpDir}/4_${topName}_impl_${curImpl}_pblock_ROLE_partial 
+            write_bitstream -bin_file -cell ROLE -force ${dcpDir}/4_${topName}_impl_${curImpl}_pblock_ROLE_partial
             # no file extenstions .bit/.bin here!
           } else {
             write_bitstream -bin_file -force ${dcpDir}/4_${topName}_impl_${curImpl}.bit
           }
           #close_project
           # DEBUG probes
-          if { $insert_ila } { 
+          if { $insert_ila } {
             write_debug_probes -force ${dcpDir}/5_${topName}_impl_${curImpl}.ltx
           }
-        } 
+          if { $generate_mcs } {
+            my_puts "################################################################################"
+            my_puts "## GENERATE MCS file for FMKU2595v2 "
+            my_puts "## only valid with PR flow "
+            my_puts "################################################################################"
+
+            set loadbit_cmd "up 0x00000000 ${dcpDir}/4_${topName}_impl_${curImpl}.bit "
+            write_cfgmem -format mcs -size 64 -interface BPIx16 -loadbit ${loadbit_cmd} -file ${dcpDir}/6_${topName}_impl_${curImpl}_flash.mcs
+          }
+        }
         # else: do nothing: only impl2 or grey_box will be generated (to save time)
-        
+
       } else {
         open_checkpoint ${dcpDir}/2_${topName}_impl_${usedRole}_complete.dcp 
         source ${tclTopDir}/fix_things.tcl 
@@ -1095,7 +1076,6 @@ if { $bitGen1 || $bitGen2 || $pr_grey_bitgen } {
     #     write_debug_probes -force ${dcpDir}/5_${topName}_impl_${curImpl}.ltx
     #   }
     # }
-
 
     my_puts "################################################################################"
     my_puts "##  DONE WITH BITSTREAM GENERATION RUN "

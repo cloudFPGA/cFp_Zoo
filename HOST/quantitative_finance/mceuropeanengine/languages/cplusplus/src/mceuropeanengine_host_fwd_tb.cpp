@@ -164,6 +164,11 @@ int main(int argc, char * argv[]) {
     }
 
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
+    if ((servPort <= 0) || (servPort <= 1024) || (servPort >= 65536)) {
+        cerr << "ERROR: Invalid port number " << servPort <<
+        ". Please select a value at range [1025-65535]. Aborting..." << endl;
+        exit(1);
+    }
     unsigned int num_batch = 0;
     string clean_cmd, synth_cmd;
     

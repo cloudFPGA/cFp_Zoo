@@ -353,8 +353,8 @@ my_puts ""
 # [HOWTO] #    [0]   : TUSER Width (bits)
 # [HOWTO] #    [No]  : Enable ACLKEN
 # [HOWTO] #------------------------------------------------------------------------------
-# [HOWTO] set ipModName "AxisRegisterSlice_64"
-# [HOWTO] set ipName    "axis_register_slice"
+set ipModName "Median_BlurApplication"
+set ipName "median_blur"
 # [HOWTO] set ipVendor  "xilinx.com"
 # [HOWTO] set ipLibrary "ip"
 # [HOWTO] set ipVersion "1.1"
@@ -381,28 +381,15 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : UDP Harris Application Flash
+# IBM-HSL-IP : Median_Blur Application Flash
 #------------------------------------------------------------------------------
-set ipModName "HarrisApplication"
-set ipName    "harris"
+set ipModName "Median_BlurApplication"
+set ipName "median_blur"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
-set ipCfgList  [ list ]
-
-set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
-
-if { ${rc} != ${::OK} } { set nrErrors [ expr { ${nrErrors} + 1 } ] }
-
-
-#------------------------------------------------------------------------------  
-# IBM-HSL-IP : MemTest Flash
-#------------------------------------------------------------------------------
-set ipModName "MemTestFlash"
-set ipName    "mem_test_flash_main"
-set ipVendor  "IBM"
-set ipLibrary "hls"
-set ipVersion "1.0"
+#set ipCfgList  [ list CONFIG.C_M_AXI_MOMEM_MP1_ENABLE_ID_PORTS {true} \
+#                      CONFIG.C_M_AXI_MOMEM_MP1_ID_WIDTH {1} ]
 set ipCfgList  [ list ]
 
 set rc [ my_customize_ip ${ipModName} ${ipDir} ${ipVendor} ${ipLibrary} ${ipName} ${ipVersion} ${ipCfgList} ]
