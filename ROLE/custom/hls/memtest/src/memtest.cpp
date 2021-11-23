@@ -24,9 +24,6 @@
 #include "../include/memtest_library.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h" //debug level define
 
-#ifdef USE_HLSLIB_STREAM
-using hlslib::Stream;
-#endif
 using hls::stream;
 
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
