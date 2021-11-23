@@ -429,6 +429,9 @@
  *
  * @return Nothing.
  ******************************************************************************/
+#ifndef ENABLE_DDR
+template <typename TimgIn=ap_uint<INPUT_PTR_WIDTH>, typename TimgOut=ap_uint<OUTPUT_PTR_WIDTH>>
+#endif // ENABLE_DDR
 void pProcPath(
         stream<NetworkWord>                     &sRxpToTxp_Data,
         #ifdef ENABLE_DDR
@@ -436,8 +439,8 @@ void pProcPath(
         membus_t                                *lcl_mem0,        
         membus_t                                *lcl_mem1,
         #else // !ENABLE_DDR
-        stream<ap_uint<INPUT_PTR_WIDTH>>        &img_in_axi_stream,
-        stream<ap_uint<OUTPUT_PTR_WIDTH>>       &img_out_axi_stream,
+        stream<TimgIn>        &img_in_axi_stream,
+        stream<TimgOut>       &img_out_axi_stream,
         #endif // ENABLE_DDR	       
         stream<bool>                            &sImageLoaded
         )
@@ -456,7 +459,7 @@ void pProcPath(
     static unsigned int timeoutCntAbs;
     static unsigned int cnt_i;
     static membus_t tmp;
-    ap_uint<OUTPUT_PTR_WIDTH> raw64;
+    TimgOut raw64;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
     //static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");

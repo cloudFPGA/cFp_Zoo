@@ -55,7 +55,7 @@ void sobel_accel( xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPC1>& imgInput,
  * @return Nothing.
  *****************************************************************************/
 //extern "C" {
-void medianBlurAccelArray(
+void sobelAccelArray(
     ap_uint<INPUT_PTR_WIDTH>* img_in, ap_uint<OUTPUT_PTR_WIDTH>* img_out, int rows, int cols) {
 // clang-format off
 //    #pragma HLS INTERFACE m_axi      port=img_in        offset=slave  bundle=gmem0 depth=__XF_DEPTH
@@ -187,15 +187,15 @@ void fakeSobelAccelStream(
 
 
 /*****************************************************************************
- * @brief   Top-level accelerated function of the Sobel Application with 
- * array I/F
+ * @brief   Top-level accelerated function of the Sobel Application with memory mapped interfaces
  * @ingroup SobelHLS
  *
  * @return Nothing.
  *****************************************************************************/
 //extern "C" {
-void medianBlurAccelMem(    membus_t* img_inp,
-                            membus_t* img_out,
+void sobelAccelMem(         membus_t* img_inp,
+                            membus_t* img_out1,
+                            membus_t* img_out2,
                             int rows, int cols) {
     // clang-format on
     #pragma  HLS INLINE off
@@ -206,9 +206,13 @@ void medianBlurAccelMem(    membus_t* img_inp,
     // clang-format on
 
     #ifndef FAKE_Sobel
-    xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> imgOutput(rows, cols);
+    xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> _dstgx(rows, cols);
     // clang-format off
-    #pragma HLS stream variable=imgOutput.data depth=2
+    #pragma HLS stream variable=_dstgx.data depth=2
+    // clang-format on
+        xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> _dstgy(rows, cols);
+    // clang-format off
+    #pragma HLS stream variable=_dstgy.data depth=2
     // clang-format on
     #endif
     
@@ -220,15 +224,22 @@ void medianBlurAccelMem(    membus_t* img_inp,
     xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, imgInput);
     
     #ifdef FAKE_Sobel
-    
     // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out1);
+    // Feed ddr memory from a cv matrix
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out2);
+    
     #else
     
-    xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
+    // xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
+    xf::cv::Sobel<XF_BORDER_CONSTANT, FILTER_WIDTH,
+              IN_TYPE, TYPE, HEIGHT, WIDTH,
+              NPC1, XF_USE_URAM>(in_mat, _dstgx,_dstgy);
 
     // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutput, img_out);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(_dstgx, img_out1);
+    // Feed ddr memory from a cv matrix
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(_dstgy, img_out2);
     
     #endif
     
