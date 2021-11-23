@@ -23,14 +23,6 @@
 #include "../include/sobel_hw_common.hpp"
 #include "../include/sobel_processing.hpp"
 
-#ifdef USE_HLSLIB_DATAFLOW
-#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
-#include "../../../../../hlslib/include/hlslib/xilinx/Simulation.h"
-#endif
-
-#ifdef USE_HLSLIB_STREAM
-using hlslib::Stream;
-#endif
 using hls::stream;
 
 
@@ -157,15 +149,9 @@ const unsigned int max_axi_rw_burst_length = 64;
 #else
   const int img_in_axi_stream_depth = MIN_RX_LOOPS;
   const int img_out_axi_stream_depth = MIN_TX_LOOPS;
-#ifdef USE_HLSLIB_DATAFLOW
-  static hlslib::Stream<Data_t_in,  MIN_RX_LOOPS> img_in_axi_stream ("img_in_axi_stream");
-  static hlslib::Stream<Data_t_out, MIN_TX_LOOPS> img_out_axi_stream ("img_out_axi_stream");
-#else
   static stream<ap_uint<INPUT_PTR_WIDTH>> img_in_axi_stream ("img_in_axi_stream");
   static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
 #endif
-#endif
-  //*po_rx_ports = 0x1; //currently work only with default ports...
   static stream<NodeId>            sDstNode_sig("sDstNode_sig");
 
 

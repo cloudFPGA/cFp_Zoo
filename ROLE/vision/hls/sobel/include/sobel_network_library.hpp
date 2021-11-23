@@ -124,12 +124,8 @@ void pRXPath(
     stream<NetworkWord>                 &siSHL_This_Data,
     stream<NetworkMetaStream>           &siNrc_meta,
     stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    #ifdef USE_HLSLIB_STREAM
-    Stream<Data_t_in, MIN_RX_LOOPS>     &img_in_axi_stream,
-    #else // !USE_HLSLIB_STREAM
     //stream<Data_t_in>                   &img_in_axi_stream,
     stream<ap_uint<INPUT_PTR_WIDTH>>      &img_in_axi_stream,    
-    #endif // USE_HLSLIB_STREAM
     NetworkMetaStream                   meta_tmp,
     unsigned int                        *processed_word_rx,
     unsigned int                        *processed_bytes_rx,

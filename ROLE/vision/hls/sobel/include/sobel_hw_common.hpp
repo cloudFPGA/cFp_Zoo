@@ -205,11 +205,7 @@ template<typename Tin,const unsigned int loop_cnt,
 const unsigned int bytes_per_loop, const unsigned int max_data_transfer>
 void storeWordToAxiStream(
   NetworkWord word,
-  // #ifdef USE_HLSLIB_STREAM
-  // Stream<Data_t_in, MIN_RX_LOOPS>   &img_in_axi_stream,
-  // #else
   // stream<ap_uint<INPUT_PTR_WIDTH>>    &img_in_axi_stream,
-  // #endif
   Tin    &img_in_axi_stream,
   unsigned int                      *processed_word_rx,
   unsigned int                      *processed_bytes_rx,

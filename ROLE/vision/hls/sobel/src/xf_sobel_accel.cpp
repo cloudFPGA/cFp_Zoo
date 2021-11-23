@@ -31,63 +31,6 @@
 
 using namespace std;
 
-/*****************************************************************************
- * @brief   Top-level accelerated function of the Sobel Application with 
- * xf::cv I/F
- * @ingroup SobelHLS
- *
- * @return Nothing.
- *****************************************************************************/
-void sobel_accel( xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPC1>& imgInput,
-                        xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPC1>& imgOutput) {
-    
-    // Run xfOpenCV kernel:
-    xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
-
-}
-
-
-/*****************************************************************************
- * @brief   Top-level accelerated function of the Sobel Application with 
- * array I/F
- * @ingroup SobelHLS
- *
- * @return Nothing.
- *****************************************************************************/
-//extern "C" {
-void sobelAccelArray(
-    ap_uint<INPUT_PTR_WIDTH>* img_in, ap_uint<OUTPUT_PTR_WIDTH>* img_out, int rows, int cols) {
-// clang-format off
-//    #pragma HLS INTERFACE m_axi      port=img_in        offset=slave  bundle=gmem0 depth=__XF_DEPTH
-//    #pragma HLS INTERFACE m_axi      port=img_out        offset=slave bundle=gmem1 depth=__XF_DEPTH
-//    #pragma HLS INTERFACE s_axilite  port=rows 			       	   	  bundle=control
-//    #pragma HLS INTERFACE s_axilite  port=cols 			              bundle=contro
-//    #pragma HLS INTERFACE s_axilite  port=return 			          bundle=control
-// clang-format on
-    
-    const int pROWS = HEIGHT;
-    const int pCOLS = WIDTH;
-    const int pNPC1 = NPIX;
-
-    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> imgInput(rows, cols);
-// clang-format off
-    #pragma HLS stream variable=imgInput.data depth=2
-    // clang-format on
-
-    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> imgOutput(rows, cols);
-// clang-format off
-    #pragma HLS stream variable=imgOutput.data depth=2
-// clang-format on
-
-// clang-format off
-    #pragma HLS DATAFLOW
-    // clang-format on
-    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPC1>(img_in, imgInput);
-    xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
-    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutput, img_out);
-}
-//}
-
 
 #ifndef FAKE_Sobel
 
@@ -95,6 +38,7 @@ void sobelAccelArray(
  * @brief   Top-level accelerated function of the Sobel Application with 
  * array I/F
  * @ingroup SobelHLS
+ * add SOBEL
  *
  * @return Nothing.
  *****************************************************************************/
@@ -144,13 +88,8 @@ void medianBlurAccelStream(
  *****************************************************************************/
 //extern "C" {
 void fakeSobelAccelStream(
-    #ifdef USE_HLSLIB_STREAM
-    hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        &img_in_axi_stream,
-    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       &img_out_axi_stream,
-    #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
-    #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops) {
 

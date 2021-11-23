@@ -38,10 +38,6 @@
 #include "sobel.hpp"
 #include "../../../../../HOST/vision/sobel/languages/cplusplus/include/config.h"
 
-#ifdef USE_HLSLIB_STREAM
-#include "../../../../../hlslib/include/hlslib/xilinx/Stream.h"
-using hlslib::Stream;
-#endif
 using hls::stream;
 
 // Set the optimization type:
@@ -96,11 +92,6 @@ using hls::stream;
 // Compatibility for common.hpp
 #define OUT_TYPE TYPE
 
-// Enable it to use the dataflow mode of hlslib
-// #define USE_HLSLIB_DATAFLOW
-
-// Enable it to use the Stream class of hlslib
-// #define USE_HLSLIB_STREAM
 
 // Enable it to fake the call of actual Sobel kernel and instead consume input data and write back 
 // the last element from the input to every output value. This option is used for debugging.
@@ -121,13 +112,8 @@ void medianBlurAccelStream(
     int rows, int cols);
 
 void fakeSobelAccelStream(
-    #ifdef USE_HLSLIB_STREAM
-    hlslib::Stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>, MIN_RX_LOOPS>        & img_in_axi_stream,
-    hlslib::Stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>, MIN_TX_LOOPS>       & img_out_axi_stream,
-    #else
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
-    #endif
     unsigned int min_rx_loops,
     unsigned int min_tx_loops);
 
