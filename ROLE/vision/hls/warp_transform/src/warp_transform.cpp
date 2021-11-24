@@ -113,16 +113,17 @@ const unsigned int ddr_latency = DDR_LATENCY;
 // When max burst size is 1KB, with 512bit bus we get 16 burst transactions
 // When max burst size is 4KB, with 512bit bus we get 64 burst transactions
 const unsigned int max_axi_rw_burst_length = 64;
+const unsigned int num_outstanding_transactions = 256;//16;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
   max_read_burst_length=max_axi_rw_burst_length  max_write_burst_length=max_axi_rw_burst_length offset=direct \
-  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
 
 // Mapping LCL_MEM1 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem1 bundle=moMEM_Mp1 \
   max_read_burst_length=max_axi_rw_burst_length  max_write_burst_length=max_axi_rw_burst_length offset=direct \
-  num_read_outstanding=16 num_write_outstanding=16 latency=ddr_latency
+  num_read_outstanding=num_outstanding_transactions num_write_outstanding=num_outstanding_transactions latency=ddr_latency
 
 #endif
  

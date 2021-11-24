@@ -40,6 +40,18 @@
 
 using hls::stream;
 
+// Number of rows of input image to be stored
+#define NUM_STORE_ROWS 100
+
+// Number of rows of input image after which output image processing must start
+#define START_PROC 50
+// transform type 0-NN 1-BILINEAR
+#define INTERPOLATION 0
+
+// transform type 0-AFFINE 1-PERSPECTIVE
+#define TRANSFORM_TYPE 0
+#define XF_USE_URAM false
+
 // Set the optimization type:
 #if NO == 1
 #define NPC1 XF_NPPC1

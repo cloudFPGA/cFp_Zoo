@@ -30,24 +30,24 @@
 #define RO 0 // Resource Optimized (8-pixel implementation)
 #define NO 1 // Normal Operation (1-pixel implementation)
 
-/*  Set Filter size  */
-#define FILTER_SIZE_3 1
-#define FILTER_SIZE_5 0
-#define FILTER_SIZE_7 0
-
-#define GRAY 1
 #define RGBA 0
+#define GRAY 1
+// // Number of rows in the input image
+// #define HEIGHT 2160
+// // Number of columns in  in the input image
+// #define WIDTH 3840
 
-#define INPUT_PTR_WIDTH 256
-#define OUTPUT_PTR_WIDTH 256
+// // Number of rows of input image to be stored
+// #define NUM_STORE_ROWS 100
 
-#define XF_USE_URAM false
-//TODO: delete the following lines
-///* Filter window size*/
-//#define WINDOW_SIZE 9
+// // Number of rows of input image after which output image processing must start
+// #define START_PROC 50
+// // transform type 0-NN 1-BILINEAR
+// #define INTERPOLATION 0
+
+// // transform type 0-AFFINE 1-PERSPECTIVE
+// #define TRANSFORM_TYPE 0
+// #define XF_USE_URAM false
 
 #endif // _XF_WARPTRANSFORM_CONFIG_PARAMS_H_
-
-
-
 /*! \} */

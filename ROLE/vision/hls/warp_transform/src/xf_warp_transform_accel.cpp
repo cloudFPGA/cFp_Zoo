@@ -31,6 +31,7 @@
 
 using namespace std;
 
+//{0.87,−0.5,0,0.5,0.87,0,0,0,1}
 
 #ifndef FAKE_WarpTransform
 
@@ -132,9 +133,9 @@ void fakeWarpTransformAccelStream(
  * @return Nothing.
  *****************************************************************************/
 //extern "C" {
-void warp_transformAccelMem(         membus_t* img_inp,
-                            membus_t* img_out1,
-                            membus_t* img_out2,
+void warp_transformAccelMem(membus_t* img_inp,
+                            membus_t* img_out,
+                            // membus_t* img_out2,
                             int rows, int cols) {
     // clang-format on
     #pragma  HLS INLINE off
@@ -145,13 +146,9 @@ void warp_transformAccelMem(         membus_t* img_inp,
     // clang-format on
 
     #ifndef FAKE_WarpTransform
-    xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> _dstgx(rows, cols);
+    xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> imgOutput(rows, cols);
     // clang-format off
-    #pragma HLS stream variable=_dstgx.data depth=2
-    // clang-format on
-        xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> _dstgy(rows, cols);
-    // clang-format off
-    #pragma HLS stream variable=_dstgy.data depth=2
+    #pragma HLS stream variable=imgOutput.data depth=2
     // clang-format on
     #endif
     
@@ -159,27 +156,24 @@ void warp_transformAccelMem(         membus_t* img_inp,
     #pragma HLS DATAFLOW
     // clang-format on
 
+    // Copy transform data from global memory to local memory:
+    //FIXME: not static matrix
+    float transform_matrix[9]={0.87,-0.5,0,0.5,0.87,0,0,0,1};
+
     // Feed a cv matrix from ddr memory
     xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, imgInput);
     
     #ifdef FAKE_WarpTransform
     // Feed ddr memory from a cv matrix
     xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out1);
-    // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out2);
-    
     #else
     
-    // xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
-    xf::cv::WarpTransform<XF_BORDER_CONSTANT, FILTER_WIDTH,
-              IN_TYPE, TYPE, HEIGHT, WIDTH,
-              NPC1, XF_USE_URAM>(in_mat, _dstgx,_dstgy);
+    // Run xfOpenCV kernel:
+    xf::cv::warpTransform<NUM_STORE_ROWS, START_PROC, TRANSFORM_TYPE, INTERPOLATION, TYPE, HEIGHT, WIDTH, NPC1,
+                          XF_USE_URAM>(imgInput, imgOutput, transform_matrix);
 
     // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(_dstgx, img_out1);
-    // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(_dstgy, img_out2);
-    
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutput, img_out);    
     #endif
     
     
