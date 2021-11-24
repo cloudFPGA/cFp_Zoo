@@ -102,11 +102,6 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
  #pragma HLS STREAM variable=sProcpToTxp_Data depth=20 dim=1
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
 
- static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
- #pragma HLS STREAM variable=sPerfCounter_cmd depth=1 dim=1
- static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results"); 
- #pragma HLS STREAM variable=sPerfCounter_results depth=2 dim=1 //contain  ALL the output of this process
-
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;
   static unsigned int processed_word_tx;
