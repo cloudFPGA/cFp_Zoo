@@ -136,3 +136,22 @@ Fix: `sudo apt-get install gcc-multilib g++-multilib`
 * Inability to compile vitis libraries for some libs.
 Add this fix to the Xilinx makefile
 Fix: ```LDFLAGS += `pkg-config --libs opencv` `xml2-config --cflags --libs```
+
+* For recompiling opencv one possibility
+```cmake -D CMAKE_BUILD_TYPE=RELEASE \
+-D CMAKE_INSTALL_PREFIX=$cwd/installation/OpenCV-"$cvVersion" \
+-D INSTALL_C_EXAMPLES=ON \
+-D INSTALL_PYTHON_EXAMPLES=ON \
+-D WITH_TBB=ON \
+-D WITH_V4L=ON \
+-D OPENCV_SKIP_PYTHON_LOADER=ON \
+-D OPENCV_GENERATE_PKGCONFIG=ON \
+-D WITH_QT=ON \
+-D WITH_OPENGL=ON \
+-D OPENCV_PYTHON3_INSTALL_PATH=$cwd/OpenCV-$cvVersion-py3/lib/python3.5/site-packages \
+-D PYTHON_DEFAULT_EXECUTABLE=/usr/bin/python3 \
+-D OPENCV_EXTRA_MODULES_PATH=../../opencv_contrib/modules \
+-D ENABLE_CXX11=ON \
+-D BUILD_EXAMPLES=ON \
+-D OPENCV_GENERATE_PKGCONFIG=ON ../opencv ..
+```

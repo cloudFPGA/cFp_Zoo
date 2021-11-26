@@ -116,9 +116,6 @@ void stepDut() {
         &s_udp_rx_ports
         #ifdef ENABLE_DDR
                         ,
-        // sROL_Shl_Mem_RdCmdP0,
-        // sSHL_Rol_Mem_RdStsP0,
-        // sSHL_Rol_Mem_ReadP0,
         sROL_Shl_Mem_WrCmdP0,
         sSHL_Rol_Mem_WrStsP0,
         sROL_Shl_Mem_WriteP0,
@@ -154,7 +151,8 @@ int main(int argc, char** argv) {
     //------------------------------------------------------
     //-- TESTBENCH LOCAL VARIABLES FOR WARPTRANSFORM
     //------------------------------------------------------
-    cv::Mat in_img, img_gray;
+    cv::Mat in_img;
+    cv::Mat transformation_matrix;
     cv::Mat hls_out_img, ocv_out_img;
 
     if (argc != 2) {
