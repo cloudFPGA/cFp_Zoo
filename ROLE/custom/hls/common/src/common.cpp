@@ -6,10 +6,10 @@
  * @author     FAB, WEI, NGL, DID, DCO
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
- * Copyright 2015-2020 - IBM Research - All Rights Reserved.
+ * Copyright 2015-2021 - IBM Research - All Rights Reserved.
  *
- * @ingroup CustomIBMZRL 
- * @addtogroup CustomIBMZRL 
+ * @ingroup IBMZRL 
+ * @addtogroup IBMZRL 
  * \{
  *****************************************************************************/
 
