@@ -55,7 +55,7 @@
 #define MEMTEST_BURST_HIGH_BIT MEMTEST_BURST_BITWIDTH-1+MEMTEST_COMMANDS_BITWIDTH// 23
 #define MEMTEST_BURST_LOW_BIT  MEMTEST_BURST_HIGH_BIT+1-MEMTEST_BURST_BITWIDTH // 8
 
-const unsigned int top_param_maximum_number_of_beats = 512;
+const unsigned int top_param_maximum_number_of_beats = 4096;
 
 
 //////////////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ void pWriteDataflowMemTest(
           //Step 1: Generate the data
           pWRGenerateData2WriteOnStream<4000000>(generatedWriteData,testCounter,max_address_under_test);
           //Step 2: write 
-          pWRStream2WriteMainMemory<ap_uint<64>,4000000,maximum_number_of_beats*2>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, burst_size);
+          pWRStream2WriteMainMemory<ap_uint<64>,4000000,maximum_number_of_beats>(sWritePrfCntr_cmd, generatedWriteData, lcl_mem0, max_address_under_test, burst_size);
           //Step 2.b: count 
           perfCounterMultipleCounts<ap_uint<64>,ap_uint<64>,64>(sWritePrfCntr_cmd, writing_cntr);
     #endif     
@@ -129,7 +129,7 @@ void pReadDataflowMemTest(
       //Step 1: Generate the data
       ////pRDMainMemoryRead2StreamData<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       ////pRDRead2StreamDataVariableBurst<ap_uint<64>,4000000>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
-      pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000,maximum_number_of_beats*2>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
+      pRDRead2StreamDataVariableBurstNoMemCpy<ap_uint<64>,4000000,maximum_number_of_beats>( sReadPrfCntr_cmd, generatedReadData, lcl_mem1, max_address_under_test,burst_size);
       //Step 2: write 
       pRDReadDataStreamAndProduceGold<4000000>(generatedReadData, max_address_under_test, sReadData, sGoldData); 
       //Step 2.b: count 

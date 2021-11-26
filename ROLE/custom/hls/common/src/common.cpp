@@ -534,7 +534,7 @@ unsigned char hexval(unsigned char c)
 
 /*****************************************************************************
  * @brief Convert a hexadecimal string to a ascii string
- *
+ *FIXME: 
  * @param[in]  in the input hexadecimal string
  * @param[out] out the output ascii string
  ******************************************************************************/
@@ -554,7 +554,7 @@ void hex2ascii(const string& in, string& out)
 
 /*****************************************************************************
  * @brief Convert a ascii string to a hexadecimal string
- *
+ *FIXME: 
  * @param[in]  in the input ascii string
  * @param[out] out the output hexadecimal string
  ******************************************************************************/
@@ -569,7 +569,7 @@ void ascii2hex(const string& in, string& out)
 
 /*****************************************************************************
  * @brief Convert a ascii string to a hexadecimal string
- *
+ *FIXME: 
  * @param[in]  in the input ascii string
  * @param[out] out the output hexadecimal string
  * @param[in]  bytesize the input ascii string size
@@ -608,7 +608,7 @@ bool isCornerPresent(string str, string corner)
 
 /*****************************************************************************
  * @brief Convert a hex string to a integer into a char buffer with the SAME dimensions
- *
+ *FIXME: 
  * @param[in]  in the input hex string
  * @param[out] out the output numerical hexadec string string
  * @param[in]  byteSize the bytesize of the input string and the buffer, it assumes equal dimension
@@ -631,7 +631,7 @@ void stringHex2Unsigned(const string& in, unsigned int * out, size_t byteSize)
 }
 /*****************************************************************************
  * @brief Convert a hex string to a integer into a char buffer with the SAME dimensions
- *
+ * FIXME: 
  * @param[in]  in the input hex string
  * @param[out] out the output numerical hexadec string string
  * @param[in]  byteSize the bytesize of the input string and the buffer, it assumes equal dimension
