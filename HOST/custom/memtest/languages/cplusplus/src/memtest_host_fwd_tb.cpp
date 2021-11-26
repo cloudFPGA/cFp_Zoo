@@ -132,7 +132,7 @@ while(!endOfLooping){
     //------------------------------------------------------
     //-- DECODING LOGIC for output size determination and end of looping
     //------------------------------------------------------
-	unsigned int memory_addr_under_test = 0;
+	unsigned long long int memory_addr_under_test = 0;
 	testingNumber = 0;
 	unsigned int burst_size = 0;
 
@@ -192,14 +192,16 @@ while(!endOfLooping){
 
 	//the selected burst size
 	substr_tmp = input_string.substr(9,2);
+	printBits(2,substr_tmp.c_str());
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
-	strncpy(myTmpOutBuff,substr_tmp.c_str(),2);
+	memcpy(myTmpOutBuff,substr_tmp.c_str(),2);
     burst_size = *reinterpret_cast<unsigned long long*>(myTmpOutBuff);
 	substr_tmp.clear();
 	for(int i=0; i < 8; i++){myTmpOutBuff[i]=(char)0;}
 
 
 	reverse(input_string.begin(), input_string.end());
+	cout << input_string << endl;
 	//------------------------------------------------------
     //-- EMULATION preparing the emulation mode, default is fcsim
     //------------------------------------------------------
