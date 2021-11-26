@@ -54,10 +54,10 @@
  * \brief This is a subgroup of Harris accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup HarrisHLS Harris Vivado HLS
+/** \defgroup HarrisHLS Harris HLS
  *  @ingroup Harris
  *
- * \brief This is a subgroup of Harris accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of Harris accelerated function with only synthesizable (HLS) functions/classes.
  */
 
 /** \defgroup HarrisHost Harris Host
@@ -80,10 +80,10 @@
  * \brief This is a subgroup of Gammacorrection accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup GammacorrectionHLS Gammacorrection Vivado HLS
+/** \defgroup GammacorrectionHLS Gammacorrection HLS
  *  @ingroup Gammacorrection
  *
- * \brief This is a subgroup of Gammacorrection accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of Gammacorrection accelerated function with only synthesizable (HLS) functions/classes.
  */
 
 /** \defgroup GammacorrectionHost Gammacorrection Host
@@ -108,10 +108,10 @@
  * \brief This is a subgroup of MedianBlur accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup MedianBlurHLS MedianBlur Vivado HLS
+/** \defgroup MedianBlurHLS MedianBlur  HLS
  *  @ingroup MedianBlur
  *
- * \brief This is a subgroup of MedianBlur accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of MedianBlur accelerated function with only synthesizable (HLS) functions/classes.
  */
 
 /** \defgroup MedianBlurHost MedianBlur Host
@@ -141,13 +141,13 @@
  * \brief This is a subgroup of MCEuropeanEngine accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup MCEuropeanEngineHLS MCEuropeanEngine Vivado HLS
+/** \defgroup MCEuropeanEngineHLS MCEuropeanEngine HLS
  *  @ingroup MCEuropeanEngine
  *
- * \brief This is a subgroup of MCEuropeanEngine accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of MCEuropeanEngine accelerated function with only synthesizable (HLS) functions/classes.
  */
 
-/** \defgroup MCEuropeanEngineHost MCEuropeanEngine Vivado Host
+/** \defgroup MCEuropeanEngineHost MCEuropeanEngine Host
  *  @ingroup MCEuropeanEngine
  *
  * \brief This is a subgroup of MCEuropeanEngine accelerated function with only host code software.
@@ -174,10 +174,10 @@
  * \brief This is a subgroup of Uppercase accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup UppercaseHLS Uppercase Vivado HLS
+/** \defgroup UppercaseHLS Uppercase HLS
  *  @ingroup Uppercase
  *
- * \brief This is a subgroup of Uppercase accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of Uppercase accelerated function with only synthesizable (HLS) functions/classes.
  */
 
 /** \defgroup UppercaseHost Uppercase Host
@@ -200,10 +200,10 @@
  * \brief This is a subgroup of Memtest accelerated function with only testbench-related functions/classes.
  */
 
-/** \defgroup MemtestHLS Memtest Vivado HLS
+/** \defgroup MemtestHLS Memtest HLS
  *  @ingroup Memtest
  *
- * \brief This is a subgroup of Memtest accelerated function with only synthesizable (Vivado HLS) functions/classes.
+ * \brief This is a subgroup of Memtest accelerated function with only synthesizable (HLS) functions/classes.
  */
 
 /** \defgroup MemtestHost Memtest Host

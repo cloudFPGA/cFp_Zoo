@@ -5,7 +5,7 @@
 cloudFPGA project (cFp) for domain-specific accelerators for the hybrid multi-cloud era.
 
 - [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/project_repository.html#cfp-vitis)
-- [Code documentation](https://pages.github.ibm.com/cloudFPGA/Dox/group__cFp__Vitis.html)
+- [Code documentation](https://cloudfpga.github.io/Dox/group__cFp__Zoo.html)
 
 **Idea**: The `cFp_Zoo` project develops numerous domain-specific accelerators, incuding those from the open source library [Vitis Libraries](https://github.com/Xilinx/Vitis_Libraries) to the [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
 ```
@@ -87,6 +87,8 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
 - [x] Vision
   - [x] [Gamma Correction](./ROLE/vision/hls/gammacorrection)
   - [x] [Harris](./ROLE/vision/hls/harris/)
+  - [x] [MedianBlur](./ROLE/vision/hls/median_blur/)
+
   
   
 
