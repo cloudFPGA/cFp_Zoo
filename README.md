@@ -2,7 +2,7 @@
 
 [![Doc Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-cloudFPGA project (cFp) for domain-specific accelerators for the hybrid multi-cloud era.
+cFp_Zoo is a cloudFPGA project (cFp) featuring domain-specific accelerators for the hybrid multi-cloud era.
 
 - [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/project_repository.html#cfp-vitis)
 - [Code documentation](https://cloudfpga.github.io/Dox/group__cFp__Zoo.html)
