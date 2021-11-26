@@ -1,4 +1,4 @@
-## cFp_Zoo
+# cFp_Zoo
 
 [![Doc Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -16,9 +16,9 @@ cloudFPGA project (cFp) for domain-specific accelerators for the hybrid multi-cl
 ![Oveview of cFp_Zoo](./doc/cFp_Vitis.png)
 
 
-### System configurattion
+## System configurattion
 
-#### Ubuntu
+### Ubuntu
 
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
@@ -33,13 +33,13 @@ sudo apt-get install ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 rm ./libpng12-0_1.2.54-1ubuntu1_amd64.deb
 ```
 
-#### CentOS/EL7
+### CentOS/EL7
 ```
 sudo yum groupinstall 'Development Tools'
 sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wireshark wireshark-gnome xauth rpl
 ```
 
-### Vivado/Vitis tool support
+## Vivado/Vitis tool support
 
 The versions below are supported by cFp_Vitis. As of today we follow a hybrid development approach
 where a specific part of `SHELL` code is synthesized using `Vivado 2017.4`, while the rest of the 
@@ -58,7 +58,7 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
   - [ ] 2020.2
 - [ ] 2021
 
-#### For the ROLE (user's code)
+### For the ROLE (user's code)
 
 - [ ] 2017
 - [ ] 2018
@@ -72,7 +72,7 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 
 
 
-### Vitis libraries support
+## Vitis libraries support
 
 The following Vitis accelerated libraries are supported by cFp_Zoo:
 
@@ -92,7 +92,7 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
   
   
 
-### Quick cFp_Zoo configuration
+## Quick cFp_Zoo configuration
 ![Step 1 - Terminal](./doc/config1.png)
 ![Step 2 - Info](./doc/config2.png)
 ![Step 3 - Select TCP/UDP](./doc/config3.png)
@@ -102,7 +102,7 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
 ![Step 7 - Select Port](./doc/config7.png)
 ![Step 8 - Confirm](./doc/config8.png)
 
-#### Usefull commands
+### Usefull commands
 
 - Connect to ZYC2 network through openvpn:
 
