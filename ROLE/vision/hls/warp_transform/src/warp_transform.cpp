@@ -142,6 +142,9 @@ const unsigned int num_outstanding_transactions = 256;//16;
   static bool ready_to_accept_new_data;
   static bool signal_init;
   const int tot_transfers = TOT_TRANSFERS;
+  const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
+  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
+
 #ifdef ENABLE_DDR
     static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
     const unsigned int img_in_axi_stream_depth = TRANSFERS_PER_CHUNK; // the AXI burst size
@@ -189,7 +192,9 @@ const unsigned int num_outstanding_transactions = 256;//16;
   
 #ifdef ENABLE_DDR
 
- pRXPathNetToStream(
+ pRXPathNetToStream<ap_uint<MEMDW_512>, 
+ loop_cnt,
+ TRANSFERS_PER_CHUNK>(
         siSHL_This_Data,
         siNrc_meta,
         sRxtoTx_Meta,
@@ -197,7 +202,9 @@ const unsigned int num_outstanding_transactions = 256;//16;
         sMemBurstRx
     );
  
- pRXPathStreamToDDR(
+ pRXPathStreamToDDR<Axis<ap_uint<MEMDW_512>>,
+  loop_cnt,
+ bytes_per_loop>(
         img_in_axi_stream,
         sMemBurstRx,
         //---- P0 Write Path (S2MM) -----------

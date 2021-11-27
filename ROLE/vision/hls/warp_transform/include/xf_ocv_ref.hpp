@@ -34,7 +34,7 @@ using namespace cv;
 using namespace std;
 
 
-void ocv_ref(cv::Mat img_gray, cv::Mat& opencv_image, cv::Mat transformation_matrix) {
+void ocv_ref(cv::Mat image_input, cv::Mat& opencv_image, cv::Mat transformation_matrix) {
 
     for (int I1 = 0; I1 < opencv_image.rows; I1++) {
         for (int J1 = 0; J1 < opencv_image.cols; J1++) {
@@ -70,7 +70,7 @@ void ocv_ref(cv::Mat img_gray, cv::Mat& opencv_image, cv::Mat transformation_mat
 }
 
 
-#endif
+#endif //_XF_OCV_REF_HPP_
 
 
 /*! \} */

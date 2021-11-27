@@ -25,6 +25,8 @@
  * @addtogroup WarpTransformHLS
  * \{
  *****************************************************************************/
+#ifndef _XF_WARPTRANSFORM_CONFIG_PARAMS_H_
+#define _XF_WARPTRANSFORM_CONFIG_PARAMS_H_
 
 
 #define RO 0 // Resource Optimized (8-pixel implementation)

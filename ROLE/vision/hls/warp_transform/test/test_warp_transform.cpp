@@ -19,6 +19,8 @@
 
 #include "../include/warp_transform.hpp"
 #include "../../common/src/common.cpp"
+#include "../include/xf_warp_transform_config.h"
+#include "../include/warp_transform_network_library.hpp"
 
 using namespace std;
 
@@ -55,6 +57,14 @@ using namespace std;
 #define ENABLED     (ap_uint<1>)1
 #define DISABLED    (ap_uint<1>)0
 
+
+#if TRANSFORM_TYPE == 1
+#define TRMAT_DIM2 3
+#define TRMAT_DIM1 3
+#else
+#define TRMAT_DIM2 3
+#define TRMAT_DIM1 2
+#endif
 
 //------------------------------------------------------
 //-- DUT INTERFACES AS GLOBAL VARIABLES
@@ -152,7 +162,8 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR WARPTRANSFORM
     //------------------------------------------------------
     cv::Mat in_img;
-    cv::Mat transformation_matrix;
+    float transformation_matrix_float [9] = {0.87,−0.5,0,0.5,0.87,0,0,0,0};
+    cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     cv::Mat hls_out_img, ocv_out_img;
 
     if (argc != 2) {
@@ -246,8 +257,8 @@ int main(int argc, char** argv) {
         //-- STEP-1.2 : RUN WARPTRANSFORM DETECTOR FROM OpenCV LIBRARY
         //------------------------------------------------------
         // ksize: aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
-        int ksize = WINDOW_SIZE ;
-        ocv_ref ( in_img, ocv_out_img, ksize);
+        //int ksize = WINDOW_SIZE ;
+        ocv_ref ( in_img, ocv_out_img, transformation_matrix);
 
 
 

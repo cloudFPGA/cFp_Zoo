@@ -33,6 +33,7 @@
 #include "../../../../../HOST/vision/warp_transform/languages/cplusplus/include/config.h"//debug level define 
 #include "memory_utils.hpp" //for stream based communication with ddr
 #include "network.hpp"
+#include "warp_transform_hw_common.hpp"
 
 using namespace hls;
 
@@ -70,7 +71,7 @@ using namespace hls;
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
-    stream<NodeId>          &sDstNode_sig,
+    hls::stream<NodeId>          &sDstNode_sig,
     ap_uint<32>             *po_rx_ports
     )
 {
@@ -121,15 +122,15 @@ void pPortAndDestionation(
  * @return Nothing.
  ******************************************************************************/
 void pRXPath(
-    stream<NetworkWord>                 &siSHL_This_Data,
-    stream<NetworkMetaStream>           &siNrc_meta,
-    stream<NetworkMetaStream>           &sRxtoTx_Meta,
+    hls::stream<NetworkWord>                 &siSHL_This_Data,
+    hls::stream<NetworkMetaStream>           &siNrc_meta,
+    hls::stream<NetworkMetaStream>           &sRxtoTx_Meta,
     //stream<Data_t_in>                   &img_in_axi_stream,
-    stream<ap_uint<INPUT_PTR_WIDTH>>      &img_in_axi_stream,    
+    hls::stream<ap_uint<INPUT_PTR_WIDTH>>      &img_in_axi_stream,    
     NetworkMetaStream                   meta_tmp,
     unsigned int                        *processed_word_rx,
     unsigned int                        *processed_bytes_rx,
-    stream<bool>                        &sImageLoaded
+    hls::stream<bool>                        &sImageLoaded
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -140,6 +141,8 @@ void pRXPath(
     static NetworkWord    netWord;
     static PacketFsmType enqueueFSM = WAIT_FOR_META;
     #pragma HLS reset variable=enqueueFSM
+    const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
+    const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
 
   switch(enqueueFSM)
   {
@@ -162,7 +165,11 @@ void pRXPath(
         {
             //-- Read incoming data chunk
             netWord = siSHL_This_Data.read();
-            storeWordToAxiStream(netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
+            storeWordToAxiStream<stream<ap_uint<INPUT_PTR_WIDTH>>,
+            loop_cnt, 
+            bytes_per_loop,
+            IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET>
+            (netWord, img_in_axi_stream, processed_word_rx, processed_bytes_rx, 
                             sImageLoaded);
             if(netWord.tlast == 1)
             {
@@ -188,11 +195,11 @@ void pRXPath(
  ******************************************************************************/
 template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
 void pRXPathNetToStream(
-    stream<NetworkWord>                 &siSHL_This_Data,
-    stream<NetworkMetaStream>           &siNrc_meta,
-    stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    stream<ap_uint<TMemWrd>>            &img_in_axi_stream,
-    stream<bool>                        &sMemBurstRx
+    hls::stream<NetworkWord>                 &siSHL_This_Data,
+    hls::stream<NetworkMetaStream>           &siNrc_meta,
+    hls::stream<NetworkMetaStream>           &sRxtoTx_Meta,
+    hls::stream<TMemWrd>            &img_in_axi_stream,
+    hls::stream<bool>                        &sMemBurstRx
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -202,7 +209,7 @@ void pRXPathNetToStream(
     static NetworkWord  netWord;
     // const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
     NetworkMetaStream   meta_tmp;
-    static ap_uint<TMemWrd> v = 0;
+    static TMemWrd v = 0;
     static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;      
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_burst
@@ -269,14 +276,14 @@ void pRXPathNetToStream(
  ******************************************************************************/
 template <typename TMemWrd,const unsigned int loop_cnt,const unsigned int bytes_per_loop>
 void pRXPathStreamToDDR(
-    stream<ap_uint<TMemWrd>>          &img_in_axi_stream,
-    stream<bool>                      &sMemBurstRx,    
+    hls::stream<TMemWrd>         &img_in_axi_stream,
+    hls::stream<bool>                      &sMemBurstRx,    
     //---- P0 Write Path (S2MM) -----------
-    stream<DmCmd>                     &soMemWrCmdP0,
-    stream<DmSts>                     &siMemWrStsP0,
-    stream<Axis<TMemWrd> >            &soMemWriteP0,
+    hls::stream<DmCmd>                     &soMemWrCmdP0,
+    hls::stream<DmSts>                     &siMemWrStsP0,
+    hls::stream<TMemWrd>                   &soMemWriteP0,
     //---- P1 Memory mapped ---------------
-    stream<bool>                      &sImageLoaded
+    hls::stream<bool>                      &sImageLoaded
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -284,7 +291,7 @@ void pRXPathStreamToDDR(
     #pragma HLS pipeline II=1
     
     //-- LOCAL VARIABLES ------------------------------------------------------
-    static ap_uint<TMemWrd> v = 0;
+    static TMemWrd v = 0;
     // const unsigned int loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
     // const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
     static unsigned int cur_transfers_per_chunk;
@@ -296,7 +303,7 @@ void pRXPathStreamToDDR(
     static ap_uint<32> patternWriteNum;
     static ap_uint<32> timeoutCnt;
     
-    static Axis<TMemWrd>     memP0;
+    static TMemWrd     memP0;
     static DmSts             memWrStsP0;    
     static unsigned int      processed_bytes_rx;
      
@@ -495,11 +502,11 @@ case FSM_WR_PAT_STS_C:
  * @return Nothing.
  *****************************************************************************/
 void pTXPath(
-  stream<NetworkWord>         &soTHIS_Shl_Data,
-  stream<NetworkMetaStream>   &soNrc_meta,
-  stream<NetworkWord>         &sProcpToTxp_Data,
-  stream<NetworkMetaStream>   &sRxtoTx_Meta,
-  stream<NodeId>              &sDstNode_sig,
+  hls::stream<NetworkWord>         &soTHIS_Shl_Data,
+  hls::stream<NetworkMetaStream>   &soNrc_meta,
+  hls::stream<NetworkWord>         &sProcpToTxp_Data,
+  hls::stream<NetworkMetaStream>   &sRxtoTx_Meta,
+  hls::stream<NodeId>              &sDstNode_sig,
   unsigned int                *processed_word_tx, 
   ap_uint<32>                 *pi_rank
 )
@@ -599,7 +606,7 @@ void pTXPath(
         if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
         {
             netWordTx.tlast = 1;
-            printf("DEBUG: A netWordTx.tlast=1 ... sRxpToTxp_Data.empty()==%u \n", sRxpToTxp_Data.empty());
+            printf("DEBUG: A netWordTx.tlast=1 ... sProcpToTxp_Data.empty()==%u \n", sProcpToTxp_Data.empty());
             dequeueFSM = WAIT_FOR_STREAM_PAIR;
         }
         
