@@ -173,7 +173,7 @@ elif [ $option2 = 'vision' ]; then
   Median_Blur "Median Blur Filter" off \
   Sobel "Sobel Filter" off \
   Gammacorrection "Gamma Correction Filter" off \
-  Warp Transform "Warp Transform" off)
+  Warp_Transform "Warp Transform" off)
 elif [ $option2 = 'custom' ]; then
   option3=$($DIALOG --radiolist "Select Custom kernel" 0 0 0 \
   Uppercase "Select Uppercase kernel example" off \
