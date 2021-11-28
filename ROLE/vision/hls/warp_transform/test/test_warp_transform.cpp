@@ -20,7 +20,6 @@
 #include "../include/warp_transform.hpp"
 #include "../../common/src/common.cpp"
 #include "../include/xf_warp_transform_config.h"
-#include "../include/warp_transform_network_library.hpp"
 
 using namespace std;
 
@@ -162,7 +161,7 @@ int main(int argc, char** argv) {
     //-- TESTBENCH LOCAL VARIABLES FOR WARPTRANSFORM
     //------------------------------------------------------
     cv::Mat in_img;
-    float transformation_matrix_float [9] = {0.87,−0.5,0,0.5,0.87,0,0,0,0};
+    float transformation_matrix_float [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0};
     cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     cv::Mat hls_out_img, ocv_out_img;
 
@@ -485,7 +484,7 @@ if (simCnt < 0)
     #if NO
 
     // L2 Vitis WarpTransform
-    medianBlurAccelArray(imgInputArray, imgOutputArrayTb, in_img.rows, in_img.cols);
+    warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
     xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
     // L1 Vitis WarpTransform 

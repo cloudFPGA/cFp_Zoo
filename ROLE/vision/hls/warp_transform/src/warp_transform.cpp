@@ -146,7 +146,7 @@ const unsigned int num_outstanding_transactions = 256;//16;
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
 
 #ifdef ENABLE_DDR
-    static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
+    static stream<membus_t> img_in_axi_stream ("img_in_axi_stream");
     const unsigned int img_in_axi_stream_depth = TRANSFERS_PER_CHUNK; // the AXI burst size
     static stream<bool>               sMemBurstRx("sMemBurstRx");
     
@@ -192,7 +192,8 @@ const unsigned int num_outstanding_transactions = 256;//16;
   
 #ifdef ENABLE_DDR
 
- pRXPathNetToStream<ap_uint<MEMDW_512>, 
+ pRXPathNetToStream<Axis<MEMDW_512>,
+ membus_t, 
  loop_cnt,
  TRANSFERS_PER_CHUNK>(
         siSHL_This_Data,
@@ -202,7 +203,8 @@ const unsigned int num_outstanding_transactions = 256;//16;
         sMemBurstRx
     );
  
- pRXPathStreamToDDR<Axis<ap_uint<MEMDW_512>>,
+ pRXPathStreamToDDR< Axis<MEMDW_512>, 
+ membus_t,
   loop_cnt,
  bytes_per_loop>(
         img_in_axi_stream,
@@ -252,8 +254,7 @@ const unsigned int num_outstanding_transactions = 256;//16;
         sRxtoTx_Meta,
         sDstNode_sig,
         &processed_word_tx,
-        pi_rank,
-        pi_size
+        pi_rank
         );
 }
 

@@ -22,8 +22,8 @@
  * \{
  *****************************************************************************/
 
-#ifndef _ROLE_WARPTRANSFORM_LIBRARY_HPP_
-#define _ROLE_WARPTRANSFORM_LIBRARY_HPP_
+#ifndef _ROLE_WARPTRANSFORM_NETWORK_LIBRARY_HPP_
+#define _ROLE_WARPTRANSFORM_NETWORK_LIBRARY_HPP_
 
 #include <stdio.h>
 #include <iostream>
@@ -40,10 +40,6 @@ using namespace hls;
 #define FSM_WRITE_NEW_DATA 0
 #define FSM_DONE 1
 #define PortFsmType uint8_t
-// Starting with 2718, this number corresponds to the extra opened ports of this role. Every bit set
-// corresponds to one port.
-// e.g. 0x1->2718, 0x2->2719, 0x3->[2718,2719], 0x7->[2718,2719,2720], 0x17->[2718-2722], etc.
-#define PORTS_OPENED 0x1F
 
 #ifdef ENABLE_DDR
 #if TRANSFERS_PER_CHUNK_DIVEND == 0
@@ -193,7 +189,7 @@ void pRXPath(
  *
  * @return Nothing.
  ******************************************************************************/
-template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
+template<typename TStreamMemWrd, typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
 void pRXPathNetToStream(
     hls::stream<NetworkWord>                 &siSHL_This_Data,
     hls::stream<NetworkMetaStream>           &siNrc_meta,
@@ -274,14 +270,14 @@ void pRXPathNetToStream(
  *
  * @return Nothing.
  ******************************************************************************/
-template <typename TMemWrd,const unsigned int loop_cnt,const unsigned int bytes_per_loop>
+template <typename TStreamMemWrd, typename TMemWrd,const unsigned int loop_cnt,const unsigned int bytes_per_loop>
 void pRXPathStreamToDDR(
     hls::stream<TMemWrd>         &img_in_axi_stream,
     hls::stream<bool>                      &sMemBurstRx,    
     //---- P0 Write Path (S2MM) -----------
     hls::stream<DmCmd>                     &soMemWrCmdP0,
     hls::stream<DmSts>                     &siMemWrStsP0,
-    hls::stream<TMemWrd>                   &soMemWriteP0,
+    hls::stream<TStreamMemWrd>             &soMemWriteP0,
     //---- P1 Memory mapped ---------------
     hls::stream<bool>                      &sImageLoaded
     )
@@ -303,7 +299,7 @@ void pRXPathStreamToDDR(
     static ap_uint<32> patternWriteNum;
     static ap_uint<32> timeoutCnt;
     
-    static TMemWrd     memP0;
+    static TStreamMemWrd     memP0;
     static DmSts             memWrStsP0;    
     static unsigned int      processed_bytes_rx;
      
@@ -477,18 +473,6 @@ case FSM_WR_PAT_STS_C:
 }
 
 
-
-//TODO:
-// void pTXPath(
-//         stream<NodeId>              &sDstNode_sig,
-//         stream<NetworkWord>         &soTHIS_Shl_Data,
-//         stream<NetworkMetaStream>   &soNrc_meta,
-//         stream<NetworkWord>         &sRxpToTxp_Data,
-//         stream<NetworkMetaStream>   &sRxtoTx_Meta,
-//         unsigned int                *processed_word_tx,
-//         ap_uint<32>                 *pi_rank,
-//         ap_uint<32>                 *pi_size
-//         )   
 /*****************************************************************************
  * @brief Transmit Path - From THIS to SHELL.
  *
@@ -620,4 +604,4 @@ void pTXPath(
 //////////////////End of Network-Related Functions////////////////////////////
 //////////////////////////////////////////////////////////////////////////////
 
-#endif //_ROLE_WARPTRANSFORM_LIBRARY_HPP_
+#endif //_ROLE_WARPTRANSFORM_NETWORK_LIBRARY_HPP_

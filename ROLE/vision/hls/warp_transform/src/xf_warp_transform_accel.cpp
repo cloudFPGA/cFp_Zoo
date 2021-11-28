@@ -33,6 +33,48 @@ using namespace std;
 
 //{0.87,−0.5,0,0.5,0.87,0,0,0,1}
 
+/*****************************************************************************
+ * @brief   Top-level accelerated function of the WarptTransform Application with 
+ * array I/F used only for simulation/TB purposes
+ * @ingroup WarptTransformHLS
+ *
+ * @return Nothing.
+ *****************************************************************************/
+void warptTransformAccelArray(
+    ap_uint<INPUT_PTR_WIDTH>* img_in, float* transform, ap_uint<OUTPUT_PTR_WIDTH>* img_out, int rows, int cols) {   
+    const int pROWS = HEIGHT;
+    const int pCOLS = WIDTH;
+    const int pNPC1 = NPIX;
+
+    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> imgInput(rows, cols);
+// clang-format off
+    #pragma HLS stream variable=imgInput.data depth=2
+    // clang-format on
+    xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX> imgOutput(rows, cols);
+// clang-format off
+    #pragma HLS stream variable=imgOutput.data depth=2
+// clang-format on
+
+// clang-format off
+    #pragma HLS DATAFLOW
+    // clang-format on
+
+    // Copy transform data from global memory to local memory:
+    float transform_matrix[9];
+
+    for (unsigned int i = 0; i < 9; ++i) {
+// clang-format off
+        #pragma HLS PIPELINE
+        // clang-format on
+        transform_matrix[i] = transform[i];
+    }
+
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPC1>(img_in, imgInput);
+    xf::cv::warpTransform<NUM_STORE_ROWS, START_PROC, TRANSFORM_TYPE, INTERPOLATION, TYPE, HEIGHT, WIDTH, NPC1,
+                          XF_USE_URAM>(imgInput, imgOutput, transform_matrix);  
+    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutput, img_out);
+}
+
 #ifndef FAKE_WarpTransform
 
 /*****************************************************************************

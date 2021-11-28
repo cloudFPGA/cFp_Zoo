@@ -461,7 +461,6 @@ void pProcPath(
     static unsigned int timeoutCntAbs;
     static unsigned int cnt_i;
     static membus_t tmp;
-    TimgOut raw64;
     Data_t_out temp;
     #ifdef ENABLE_DDR 
     //static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
@@ -477,7 +476,6 @@ void pProcPath(
     #pragma HLS reset variable=timeoutCntAbs  
     #pragma HLS reset variable=cnt_i  
     #pragma HLS reset variable=tmp  
-    #pragma HLS reset variable=raw64  
     #pragma HLS reset variable=temp  
     
   switch(WarpTransformFSM)
@@ -544,23 +542,6 @@ void pProcPath(
             cnt_i = 0;
         }
     break;
-    /*
-    case WARPTRANSFORM_RETURN_RESULTS_UNPACK:
-      printf("DEBUG in pProcPath: WARPTRANSFORM_RETURN_RESULTS_UNPACK, cnt_i=%u\n", cnt_i);        
-        //for (unsigned int cnt_i=0; cnt_i<(MEMDW_512/OUTPUT_PTR_WIDTH); cnt_i++) {
-            #if OUTPUT_PTR_WIDTH == 64
-            raw64(0 ,63) = tmp(cnt_i*OUTPUT_PTR_WIDTH   , cnt_i*OUTPUT_PTR_WIDTH+63);
-            #endif
-            if ( !img_out_axi_stream.full() ) {
-                img_out_axi_stream.write(raw64);
-            }
-            if (cnt_i == (MEMDW_512/OUTPUT_PTR_WIDTH) - 1) {
-                WarpTransformFSM = WARPTRANSFORM_RETURN_RESULTS_FWD;
-            }
-            cnt_i++;
-        //}
-    break;
-    */
     case WARPTRANSFORM_RETURN_RESULTS_FWD: 
       printf("DEBUG in pProcPath: WARPTRANSFORM_RETURN_RESULTS_FWD\n");
       //if ( !img_out_axi_stream.empty() && !sRxpToTxp_Data.full() ) {

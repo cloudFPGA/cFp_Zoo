@@ -73,6 +73,10 @@ enum EchoCtrl {
 
 #define DEFAULT_TX_PORT 2718
 #define DEFAULT_RX_PORT 2718
+// Starting with 2718, this number corresponds to the extra opened ports of this role. Every bit set
+// corresponds to one port.
+// e.g. 0x1->2718, 0x2->2719, 0x3->[2718,2719], 0x7->[2718,2719,2720], 0x17->[2718-2722], etc.
+#define PORTS_OPENED 0x1F
 
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
 #define Data_t_out ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0>

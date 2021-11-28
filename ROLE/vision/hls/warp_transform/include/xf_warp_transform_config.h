@@ -111,14 +111,15 @@ using hls::stream;
 
 // Function prototypes
 
-void warp_transform_accel( xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
+/*void warp_transform_accel( xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _src,
                         xf::cv::Mat<XF_8UC1, HEIGHT, WIDTH, NPIX>& _dst);
-
-void medianBlurAccelArray(  ap_uint<INPUT_PTR_WIDTH>* img_inp,
-                            ap_uint<OUTPUT_PTR_WIDTH>* img_out,
-                            int rows, int cols);
-
-void medianBlurAccelStream(
+*/ 
+void warptTransformAccelArray(
+    ap_uint<INPUT_PTR_WIDTH>* img_in,
+     float* transform, 
+     ap_uint<OUTPUT_PTR_WIDTH>* img_out, 
+     int rows, int cols);                 
+void warpTransformAccelStream(
     hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
     hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
     int rows, int cols);
@@ -129,7 +130,7 @@ void fakeWarpTransformAccelStream(
     unsigned int min_rx_loops,
     unsigned int min_tx_loops);
 
-void medianBlurAccelMem(    membus_t* img_inp,
+void warp_transformAccelMem(    membus_t* img_inp,
                             membus_t* img_out,
                             int rows, int cols);
 
