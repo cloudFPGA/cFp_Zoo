@@ -72,6 +72,7 @@
  *
  * @return Nothing.
  ******************************************************************************/
+/*
  template<const unsigned int counter_width=64>
  void pTHISProcessingData(
   stream<NetworkWord>                              &sRxpToProcp_Data,
@@ -158,7 +159,7 @@
         switch (netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT))
         {
         case TEST_INVLD_CMD:
-          /* FWD an echo of the invalid*/
+          // FWD an echo of the invalid
     #if DEBUG_LEVEL == TRACE_ALL
           printf("DEBUG processing the packet with invalid cmd\n");
     #endif
@@ -166,7 +167,7 @@
           processingFSM = FSM_PROCESSING_WAIT_FOR_META;
           break;
         case TEST_STOP_CMD:
-          /* call with stop (never started), unset, fwd the stop */
+        // call with stop (never started), unset, fwd the stop
     #if DEBUG_LEVEL == TRACE_ALL
          printf("DEBUG processing the packet with stop cmd\n");
     #endif
@@ -177,7 +178,7 @@
           processingFSM = FSM_PROCESSING_WAIT_FOR_META;
           break;    
         default:
-          /* Execute the test if not invalid or stop*/
+          // Execute the test if not invalid or stop
     #if DEBUG_LEVEL == TRACE_ALL
           printf("DEBUG processing the packet with the address within cmd\n");
     #endif
@@ -208,7 +209,7 @@
         switch (netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT))
         {
         case TEST_BURSTSIZE_CMD:
-          /* extract the busrt size*/
+          // extract the busrt size
           burst_size = netWord.tdata.range(MEMTEST_BURST_HIGH_BIT,MEMTEST_BURST_LOW_BIT);
 
     #if DEBUG_LEVEL == TRACE_ALL
@@ -219,7 +220,7 @@
 
 
         default:
-          /*unkown stuff hence using a burst with 1 beat*/
+          //unkown stuff hence using a burst with 1 beat
     #if DEBUG_LEVEL == TRACE_ALL
     #ifndef __SYNTHESIS__
           printf("DEBUG processing the packet with smth bad within cmd: %s\n",netWord.tdata.range(MEMTEST_COMMANDS_HIGH_BIT,MEMTEST_COMMANDS_LOW_BIT).to_string().c_str());
@@ -414,6 +415,7 @@
 
     }
 };
+*/
 
 
         
@@ -505,12 +507,12 @@ void pProcPath(
         #endif
         if (accel_called == false) {
 	    #ifdef ENABLE_DDR 
-            medianBlurAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT);
+            warp_transformAccelMem(lcl_mem0, lcl_mem1, WIDTH, HEIGHT);
 	    #else // ! ENABLE_DDR
 	    #ifdef FAKE_WarpTransform
             fakeWarpTransformAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS);
 	    #else // !FAKE_WarpTransform
-            medianBlurAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT);
+            warpTransformAccelStream(img_in_axi_stream, img_out_axi_stream, WIDTH, HEIGHT);
 	    #endif // FAKE_WarpTransform
 	    #endif // ENABLE_DDR
             accel_called = true;

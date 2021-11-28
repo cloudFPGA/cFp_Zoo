@@ -10,9 +10,9 @@
 # *
 # ******************************************************************************
 
-.PHONY: all clean mem_test_flash median_blur
+.PHONY: all clean mem_test_flash warp_transform
 
-all: mem_test_flash median_blur
+all: mem_test_flash warp_transform
 
 
 *:

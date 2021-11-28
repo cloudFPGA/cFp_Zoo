@@ -44,7 +44,7 @@ using namespace std;
  * @return Nothing.
  *****************************************************************************/
 //extern "C" {
-void medianBlurAccelStream(
+void warpTransformAccelStream(
     hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
     hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
     int rows, int cols) {
@@ -64,6 +64,8 @@ void medianBlurAccelStream(
     // clang-format off
     #pragma HLS DATAFLOW
     // clang-format on
+    //FIXME: not static matrix
+    float transform_matrix[9]={0.87,-0.5,0,0.5,0.87,0,0,0,1};
 
     accel_utils accel_utils_obj;
     
@@ -71,7 +73,9 @@ void medianBlurAccelStream(
 
     accel_utils_obj.hlsStrm2xfMat<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX, (HEIGHT * WIDTH) / NPIX>(img_in_axi_stream, imgInput, dstMat_cols_align_npc);
     
-    xf::cv::medianBlur<WINDOW_SIZE, XF_BORDER_REPLICATE, TYPE, HEIGHT, WIDTH, NPC1>(imgInput, imgOutput);    
+    // Run xfOpenCV kernel:
+    xf::cv::warpTransform<NUM_STORE_ROWS, START_PROC, TRANSFORM_TYPE, INTERPOLATION, TYPE, HEIGHT, WIDTH, NPC1,
+                          XF_USE_URAM>(imgInput, imgOutput, transform_matrix);  
     
     int srcMat_cols_align_npc = ((imgOutput.cols + (NPIX - 1)) >> XF_BITSHIFT(NPIX)) << XF_BITSHIFT(NPIX);
     
@@ -95,9 +99,6 @@ void fakeWarpTransformAccelStream(
     unsigned int min_tx_loops) {
 
   #pragma  HLS INLINE off
-  //#pragma HLS INTERFACE axis port=img_in_axi_stream
-  //#pragma HLS INTERFACE axis port=img_out_axi_stream
-  //#pragma HLS interface ap_ctrl_none port=return  // Special pragma for free-running kernel
 
   ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> tmp_in;
   ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> tmp_out;
@@ -165,7 +166,7 @@ void warp_transformAccelMem(membus_t* img_inp,
     
     #ifdef FAKE_WarpTransform
     // Feed ddr memory from a cv matrix
-    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out1);
+    xf::cv::xfMat2Array<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out);
     #else
     
     // Run xfOpenCV kernel:
