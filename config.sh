@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# @brief  A script for selecting the targeted cFp_Vitis domain and kernel
+# @brief  A script for selecting the targeted cFp_Zoo domain and kernel
 # @author DID
 # @date Nov. 2020
 
@@ -16,13 +16,13 @@ DIALOG="dialog --output-fd 1 "
 #if [ -x /usr/bin/gdialog ] ;then DIALOG="gdialog --output-fd 1 " ; fi
 #if [ -x /usr/bin/xdialog ] ;then DIALOG=xdialog ; fi
 
-$DIALOG --title "Hello cF Developer" --msgbox 'Through this utility you can quickly configure a cFp_Vitis project by selecting a domain and a kernel of this domain.' 20 60 
+$DIALOG --title "Hello cF Developer" --msgbox 'Through this utility you can quickly configure a cFp_Zoo project by selecting a domain and a kernel of this domain.' 20 60 
 
 
 
 ####################################################################################################
 # Cchecking if configuration file already exists
-CONF_FILE=./etc/cFp_Vitis.conf
+CONF_FILE=./etc/cFp_zoo.conf
 if [ -f "$CONF_FILE" ]; then
     echo "$CONF_FILE exists."
     i=0
@@ -72,7 +72,7 @@ if [ -f "$CONF_FILE" ]; then
       esac
       let "i++"
      done < $CONF_FILE
-     $DIALOG --title "Hello cF Developer" --msgbox "Successfully configured cFp_Vitis from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\nDDR    : $option6 \n" 20 50
+     $DIALOG --title "Hello cF Developer" --msgbox "Successfully configured cFp_zoo from $CONF_FILE with :\nROLE   : $option1 \nDomain : $option2 \nKernel : $option3 \nMTU    : $option4 \nPort   : $option5\nDDR    : $option6 \n" 20 50
     fi # load_conf = 1
 else
     echo "Configuration file $CONF_FILE does not exist."
@@ -247,8 +247,8 @@ confirm=$($DIALOG --yesno "Do you want to continue?" 0 0 )
 response=$?
 case $response in
 ${DIALOG_OK-0}) bash create_cfp_json.sh $option2 && source env/setenv.sh &&\
-python3 ./select_cfpvitis_kernel.py "$option1" $option2 $option3 $option4 $option5 $option6 &&\
-echo -e "Succesfully configured cFp_Vitis with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5', option6:'$option6'." &&\
+python3 ./select_cfpzoo_kernel.py "$option1" $option2 $option3 $option4 $option5 $option6 &&\
+echo -e "Succesfully configured cFp_Zoo with : option1:'$option1', option2:'$option2', option3:'$option3', option4:'$option4', option5:'$option5', option6:'$option6'." &&\
 echo -e "$option1\n$option2\n$option3\n$option4\n$option5\n$option6" > $CONF_FILE && echo -e "Configuration saved in $CONF_FILE\n\n";;
 ${DIALOG_CANCEL-1})  die "Aborting upon user selection";;
 ${DIALOG_ESC-255})   die "[ESC] key pressed.";;

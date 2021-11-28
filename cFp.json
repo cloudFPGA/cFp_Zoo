@@ -2,22 +2,8 @@
     "version": "This cFp was created by cFBuild 0.6",
     "cFpMOD": "FMKU60",
     "cFpSRAtype": "Themisto",
-    "usedRoleDir": "custom/",
+    "usedRoleDir": "vision/",
     "usedRoleDir2": "",
-    "roleName1": "custom",
-    "roleName2": "unused",
-    "lignin-conf": {
-        "version": 0.2,
-        "roles": [
-            {
-                "name": "default",
-                "path": ""
-            },
-            {
-                "name": "1st-role",
-                "path": "custom/"
-            }
-        ],
-        "active_role": "1st-role"
-    }
+    "roleName1": "vision",
+    "roleName2": "unused"
 }

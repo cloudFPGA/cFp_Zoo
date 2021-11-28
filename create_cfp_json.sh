@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# @brief  A simple script for writting a cFp.json file for a specific cFp_Vitis domain-role
+# @brief  A simple script for writting a cFp.json file for a specific cFp_Zoo domain-role
 #         The 1st argument is the domain-role
 # @author DID
 # @date Nov. 2020
