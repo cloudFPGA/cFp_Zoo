@@ -1,9 +1,23 @@
 {
-    "version": "This cFp was created by cFBuild 0.6",
+    "version": "This cFp was created by cFCreate 0.8",
     "cFpMOD": "FMKU60",
     "cFpSRAtype": "Themisto",
-    "usedRoleDir": "vision/",
-    "usedRoleDir2": "",
-    "roleName1": "vision",
-    "roleName2": "unused"
+    "usedRoleDir": "",
+    "usedRoleDir2": "to-be-defined",
+    "roleName1": "default",
+    "roleName2": "to-be-defined",
+    "srat-conf": {
+        "version": 0.3,
+        "roles": [
+            {
+                "name": "default",
+                "path": ""
+            },
+            {
+                "name": "1st-role",
+                "path": "vision/"
+            }
+        ],
+        "active_role": "1st-role"
+    }
 }

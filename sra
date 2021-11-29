@@ -24,19 +24,22 @@
 #  *     Description:
 #  *       Bash script to build and manage cloudFPGA project
 #  *
-#  *       The name is based on a very central polymers that form key
-#  *       structural materials in the support tissues of most plants
-#  *       (see further: https://en.wikipedia.org/wiki/Lignin).
 #  *
+
+# check for bash alias
+if [ "$0" == "./sra" ]; then
+  export SraToolShowHint="True"
+else
+  export SraToolShowHint="False"
+fi
 
 # 0. get current folder
 cur_dir=$(pwd)
-
 # so, some kind of bootstrapping
 # 1. source the cFp environment
 source $cur_dir/env/setenv.sh
 # 2. now, since the path are there:
 source $cFenv_path/bin/activate
 # 3. finally, invoke the script
-python3 $cur_dir/env/cf_lignin.py "$@"
+python3 $cur_dir/env/cf_sratool.py "$@"
 

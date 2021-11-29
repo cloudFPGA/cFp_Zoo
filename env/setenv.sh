@@ -40,8 +40,8 @@ done
 DIR="$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )"
 #echo $DIR
 
-export cFsysPy3_cmd_hint_0=$(which python3.8)
-export cFsysPy3_cmd_hint_1=$(which python3)
+export cFsysPy3_cmd_hint_0=$(hash -d python3.8 2>>/dev/null; which python3.8 2>>/dev/null || echo "failed")
+export cFsysPy3_cmd_hint_1=$(hash -d python3 2>>/dev/null; which python3 2>>/dev/null || echo "failed")
 
 # cFCreate also requires python3...so it should be there
 # will guarantee an up to date env file
