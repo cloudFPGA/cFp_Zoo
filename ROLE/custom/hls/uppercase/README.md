@@ -1,31 +1,17 @@
-## cFp_Uppercase
+# cFp Uppercase
 
-cloudFPGA project (cFp) for changing characters case of a user phrase. The purpose of this project 
-is to establish a starting point for a full-stack software developer with a usefull API for common 
-programming languanges and development frameworks.
+A cloudFPGA project (cFp) for converting a string to an upper-case one. The purpose of this project 
+is to act as a "HelloWorld" example of Themisto Shell. In adition it aims to provide a starting point 
+for a full-stack software developer with a usefull API for common programming languanges and development frameworks.
 
 
 ![Oveview of cFp_Uppercase](../../../../doc/cFp_Uppercase.png)
 
 
-### System configurattion
+## System configurattion
 
-#### Ubuntu
-
-Assuming Ubuntu >16.04 the folowing packages should be installed:
-```
-sudo apt-get install -y build-essential pkg-config libxml2-dev rename rpl python3-dev python3-venv swig curl
-```
-
-
-#### CentOS/EL7
-```
-sudo yum groupinstall 'Development Tools'
-sudo yum install cmake
-```
-
-
-### Full-stack software support
+[Same as cFp_Zoo](https://cloudfpga.github.io/Doc/pages/PROJECTS/cFp_Zoo_overview.html#system-configurattion) 
+## Full-stack software support
 
 The following programming languanges are currently supported (and are on the roadmap)
 
@@ -53,41 +39,22 @@ The following containerization software is currently supported (and is on the ro
 - [ ] [Kubernetes](https://kubernetes.io/)
 - [ ] [Red Hat OpenShift Community Distribution of Kubernetes](https://www.okd.io/)
 
-### Vivado tool support
+## Vivado tool support
 
-The versions below are supported by cFp_Uppercase. As of today we follow a hybrid development approach
-where a specific part of `SHELL` code is synthesized using `Vivado 2017.4`, while the rest of the 
-HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
+[Same with cFp_Zoo](https://cloudfpga.github.io/Doc/pages/PROJECTS/cFp_Zoo_overview.html#vivado-vitis-tool-support)
 
-#### For the SHELL (cFDK's code)
 
-- [x] 2017
-  - [x] 2017.4
-- [ ] 2018
-- [ ] 2019
-- [ ] 2020
-
-#### For the ROLE (user's code)
-
-- [ ] 2017
-- [ ] 2018
-- [x] 2019
-  - [x] 2019.1
-  - [x] 2019.2
-- [x] 2020
-  - [x] 2020.1
-
-  
-
-##### Repository and environment setup
+#### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Uppercase.git
-cd cFp_Uppercase
+git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Zoo.git
+cd cFp_Zoo
+bash config.sh
+<Navigate through menu and seect Custom->Uppercase>
 source ./env/setenv.sh
 ```
 
-##### Uppercase Simulation 
+#### Uppercase Simulation 
 
 The testbench is offered in two flavors:
 - HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Uppercase IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
@@ -105,9 +72,9 @@ The testbench is offered in two flavors:
   ```
 
 Basic files/modules:
-  1. [uppercase_host.cpp](https://github.ibm.com/cloudFPGA/cFp_Uppercase/blob/master/HOST/src/uppercase_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Uppercase function. This file is part of both the `HLS TB` and the `Host TB`
-  2. [uppercase_host_fw_tb.cpp](https://github.ibm.com/cloudFPGA/cFp_Uppercase/blob/master/HOST/src/uppercase_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
-  3. [test_uppercase.cpp](https://github.ibm.com/cloudFPGA/cFp_Uppercase/blob/master/ROLE/1/hls/uppercase/src/uppercase.cpp): The typical Vivado HLS testbench of Uppercase IP, when this is wrapped in a Themisto Shell.
+  1. [uppercase_host.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/HOST/custom/uppercase/languages/cplusplus/src/uppercase_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Uppercase function. This file is part of both the `HLS TB` and the `Host TB`
+  2. [uppercase_host_fw_tb.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/HOST/custom/uppercase/languages/cplusplus/src/uppercase_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
+  3. [test_uppercase.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/ROLE/custom/hls/uppercase/test/test_uppercase.cpp): The typical Vivado HLS testbench of Uppercase IP, when this is wrapped in a Themisto Shell.
   4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
   5. [cFp_Uppercase](https://github.ibm.com/cloudFPGA/cFp_Uppercase): The project that bridges Uppercase libraries with cF.
 
@@ -115,7 +82,7 @@ Basic files/modules:
   
 **Note:** Remember to run `make clean` every time you change those definitions.
   
-###### Run simulation
+##### Run simulation
 
 **HLS TB**
   
@@ -163,38 +130,27 @@ cd ./HOST/uppercase/build
 # You should expect the string output in the stdout.
 ```
 
-##### Uppercase Synthesis
+#### Uppercase Synthesis
 
-Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-steps synthesis 
-procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
-the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1. 
-
-###### The Themisto SHELL
 ```bash
-cd cFp_Uppercase/cFDK/SRA/LIB/SHELL/Themisto
-make all # with Vivado HLS == 2017.4
-```
-
-###### The complete cFp_Uppercase
-```bash
-cd cFp_Uppercase
+cd cFp_Zoo/
 make monolithic # with Vivado HLS >= 2019.1
 ```
 
 Optional HLS only for the Uppercase IP (e.g. to check synthesizability)
 ```bash
-cd cFp_Uppercase/ROLE/1/hls/uppercase
-make csynth # with Vivado HLS >= 2019.1
+cd cFp_Zoo/ROLE/custom/hls/uppercase/
+make csynth # with Vivado HLS >= 2019.1 and <= 2020.1
 ```
 
 
-##### Uppercase cF Demo
+#### Uppercase Demo (C++)
 
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
 
 ```bash
-cd ./HOST
+cd cFp_Zoo/HOST/custom/uppercase/languages/cplusplus/
 mkdir build && cd build
 cmake ../
 make -j 2
@@ -204,16 +160,14 @@ make -j 2
 ```
 
 **NOTE:** The cFp_Uppercase ROLE (FPGA part) is equipped with both the UDP and TCP offload engines. At 
-runtime, on host, to select one over the other, you simply need to change in [config.h](https://github.ibm.com/cloudFPGA/cFp_Uppercase/blob/master/HOST/1/uppercase/include/config.h) 
-file the define `#define NET_TYPE udp` (choose either udp or tcp).
+runtime, on host, to select one over the other, you simply need to change in [config.h](https://github.com/cloudFPGA/cFp_Zoo/blob/master/HOST/custom/uppercase/languages/cplusplus/include/config.h) file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
-###### JupyterLab example
+##### JupyterLab example
 
 ```bash
-cd HOST/langauges/python
-mkdir build
-cd build
+cd cFp_Zoo/HOST/custom/uppercase/languages/python/
+mkdir build && cd build
 cmake ../
 make -j 2
 python3 -m venv env     # to create a local dev environment
@@ -224,29 +178,7 @@ pip3 install -r ../requirements.txt # to be improved : some errors might occur d
 ```
 
 
-##### Usefull commands
-
-- Connect to ZYC2 network through openvpn:
-
-  `sudo openvpn --config zyc2-vpn-user.ovpn --auth-user-pass up-user`
-
-- Connect to a ZYC2 x86 node:
-
-  `ssh -Y ubuntu@10.12.2.100`
-
-- On Wireshark filter line:
-
-  `udp.port==2718` or `tcp.port==2718`
-  
-- Quick bitgen:
-
-  sometimes it accelerates the build process of `make monolithic` if:
-  execute after a successfull build `make save_mono_incr` and then build the new with `make monolithic_incr` or `make monolithic_debug_incr`
-
-- Docker:
-  `docker exec -it distracted_ishizaka /bin/bash`
-
-##### Working with ZYC2
+#### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
@@ -264,24 +196,3 @@ Which destination the packets will have is determined by the `node_id`/`node_ran
 
 The **Role can be configured to forward the packet always to `(node_rank + 1) % cluster_size`** 
 (for UDP and TCP packets), so this example works also for more or less then two FPGAs, actually.
-curretnly, the default example supports one CPU node and one FPGA node.
-
-
-For distributing the routing tables, **`POST /cluster`** must be used.
-The following depicts an example API call, assuming that the cFp_Uppercase bitfile was uploaded as 
-image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
-![POST /cluster example](../../../../doc/post_cluster.png)
-
-### Firewall issues
-
-Some firewalls may block network packets if there is not a connection to the remote machine/port.
-Hence, to get the Triangle example to work, the following commands may be necessary to be executed 
-(as root):
-
-```
-$ firewall-cmd --zone=public --add-port=2718-2750/udp --permanent
-$ firewall-cmd --zone=public --add-port=2718-2750/tcp --permanent
-$ firewall-cmd --reload
-```
-
-Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
