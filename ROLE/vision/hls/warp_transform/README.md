@@ -125,8 +125,8 @@ More info for the WarpTransform IP: https://xilinx.github.io/Vitis_Libraries/vis
   /lib64/libtbb.so.2: undefined reference to `__cxa_init_primary_exception@CXXABI_1.3.11'
   /lib64/libtbb.so.2: undefined reference to `std::__exception_ptr::exception_ptr::exception_ptr(void*)@CXXABI_1.3.11'
   ```
-  Fix: `csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
-
+  Red Hat Fix: `csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
+  Ubuntu Fix: `csim_design -ldflags "-L/usr/lib/x86_64-linux-gnu/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
 *
   ```
 /usr/include/features.h:367:12: fatal error: 'sys/cdefs.h' file not found # include <sys/cdefs.h>

@@ -142,8 +142,8 @@ const unsigned int num_outstanding_transactions = 256;//16;
   static bool ready_to_accept_new_data;
   static bool signal_init;
   const int tot_transfers = TOT_TRANSFERS;
-  const unsigned int loop_cnt = (BITS_PER_10GBITETHRNET_AXI_PACKET/INPUT_PTR_WIDTH);
-  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET/loop_cnt);
+  const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
+  const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
 
 #ifdef ENABLE_DDR
     static stream<membus_t> img_in_axi_stream ("img_in_axi_stream");
@@ -192,8 +192,7 @@ const unsigned int num_outstanding_transactions = 256;//16;
   
 #ifdef ENABLE_DDR
 
- pRXPathNetToStream<Axis<MEMDW_512>,
- membus_t, 
+ pRXPathNetToStream< membus_t, 
  loop_cnt,
  TRANSFERS_PER_CHUNK>(
         siSHL_This_Data,

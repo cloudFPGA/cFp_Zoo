@@ -189,7 +189,7 @@ void pRXPath(
  *
  * @return Nothing.
  ******************************************************************************/
-template<typename TStreamMemWrd, typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
+template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
 void pRXPathNetToStream(
     hls::stream<NetworkWord>                 &siSHL_This_Data,
     hls::stream<NetworkMetaStream>           &siNrc_meta,

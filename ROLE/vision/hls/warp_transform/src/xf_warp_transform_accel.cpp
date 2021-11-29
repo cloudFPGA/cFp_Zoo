@@ -201,7 +201,7 @@ void warp_transformAccelMem(membus_t* img_inp,
 
     // Copy transform data from global memory to local memory:
     //FIXME: not static matrix
-    float transform_matrix[9]={0.87,-0.5,0,0.5,0.87,0,0,0,1};
+    float transform_matrix[9]={0.87,-0.5,0,0.5,0.87,0,0,0,0};
 
     // Feed a cv matrix from ddr memory
     xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, imgInput);

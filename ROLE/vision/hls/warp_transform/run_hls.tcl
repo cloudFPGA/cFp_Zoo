@@ -115,7 +115,7 @@ config_interface -m_axi_addr64
 # Run C Simulation and Synthesis
 # ------------------------------------------------------------------------------
 if { $hlsSim } {
-  csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"
+  csim_design -ldflags "-L/usr/lib/x86_64-linux-gnu/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"
 } else {
 
   if { $hlsSyn } {
@@ -123,7 +123,7 @@ if { $hlsSim } {
   }
   
   if { $hlsCoSim } {
-    cosim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -trace_level all -argv "${SimFile}"
+    cosim_design -ldflags "-L/usr/lib/x86_64-linux-gnu/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -trace_level all -argv "${SimFile}"
   } else {
 
   # ------------------------------------------------------------------------------
