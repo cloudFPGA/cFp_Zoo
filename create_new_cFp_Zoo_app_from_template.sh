@@ -6,14 +6,14 @@
 
 
 # Choose the kernel which will be the "template" from which the new directries/files will be generated
-template_kernel="harris"
-template_kernel2="Harris"
-template_kernel3="HARRIS"
+template_kernel="sobel"
+template_kernel2="Sobel"
+template_kernel3="SOBEL"
 
 # Choose the name of the new kernel/files/dirs
-new_kernel="median_blur"
-new_kernel2="MedianBlur"
-new_kernel3="MEDIANBLUR"
+new_kernel="warp_transform"
+new_kernel2="WarpTransform"
+new_kernel3="WARPTRANSFORM"
 
 function replace() {
     files="$(find -L "$1" -type f)";
@@ -56,8 +56,8 @@ find ./ -type d -name ${template_kernel} -print 2>/dev/null | while read dir_src
     echo "Finding in "${newdir}" for "${pattern}
     find ${newdir} -type f -name "${pattern}" | while read FILE ; do
         echo "Renaming ${template_kernel} to ${new_kernel} in " ${FILE}
-        # rename 's/'${template_kernel}'/'${new_kernel}'/g' ${FILE} # This is the perl command rename
-        rename ${template_kernel} ${new_kernel} ${FILE} # This is the bash command rename
+        rename -e 's/'${template_kernel}'/'${new_kernel}'/g' ${FILE} # This is the perl command rename
+        #rename ${template_kernel} ${new_kernel} ${FILE} # This is the bash command rename
     done
     echo "Replacing recursively in the files of directory " ${newdir}
     replace ${newdir}

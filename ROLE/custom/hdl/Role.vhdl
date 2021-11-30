@@ -236,7 +236,7 @@ architecture Flash of Role_Themisto is
   --===========================================================================
   --== COMPONENT DECLARATIONS
   --===========================================================================
-  component MemtestApplication is
+  component UppercaseApplication is
     port (
       ------------------------------------------------------
       -- From SHELL / Clock and Reset
@@ -281,7 +281,7 @@ architecture Flash of Role_Themisto is
 
            poROL_NRC_Rx_ports_V        : out std_logic_vector (31 downto 0);
            poROL_NRC_Rx_ports_V_ap_vld : out std_logic;
-           --------------------------------------------------------
+    --------------------------------------------------------
     -- SHELL / Mem / Mp1 Interface / Start Component
     --------------------------------------------------------
     --m_axi_moMEM_Mp1_AWID                  : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
@@ -335,7 +335,7 @@ architecture Flash of Role_Themisto is
     -- SHELL / Mem / Mp1 Interface / End Component
     --------------------------------------------------------
          );
-  end component MemtestApplication;
+  end component UppercaseApplication;
 
 
 
@@ -396,7 +396,7 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: MemtestApplication
+  UAF: UppercaseApplication
   port map (
 
              ------------------------------------------------------
@@ -440,8 +440,8 @@ begin
              soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
 
              poROL_NRC_Rx_ports_V        => poROL_Nrc_Udp_Rx_ports,
-           --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
-           --------------------------------------------------------
+            --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
+            --------------------------------------------------------
              -- SHELL / Mem / Mp1 Interface / Start in UAF
              --------------------------------------------------------     
              m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
@@ -520,7 +520,7 @@ begin
   sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
   soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
 
--- auto excluding TAF             TAF: MemtestApplication
+-- auto excluding TAF             TAF: UppercaseApplication
 -- auto excluding TAF             port map (
 -- auto excluding TAF           
 -- auto excluding TAF                        ------------------------------------------------------

@@ -27,6 +27,9 @@
 #ifdef ROLE_IS_MEDIANBLUR
 #include "../../median_blur/include/median_blur.hpp"
 #endif
+#ifdef ROLE_IS_WARPTRANSFORM
+#include "../../warp_transform/include/warp_transform.hpp"
+#endif
 
 #include "common/xf_headers.hpp"
 
@@ -38,6 +41,11 @@
 #include "../../median_blur/include/xf_median_blur_config.h"
 #include "../../median_blur/include/xf_ocv_ref.hpp"
 #endif
+#ifdef ROLE_IS_WARPTRANSFORM
+#include "../../warp_transform/include/xf_warp_transform_config.h"
+#include "../../warp_transform/include/xf_ocv_ref.hpp"
+#endif
+
 
 
 //---------------------------------------------------------
