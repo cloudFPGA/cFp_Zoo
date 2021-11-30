@@ -1,4 +1,4 @@
-## cFp_Memtest
+# cFp_Memtest
 
 cloudFPGA project (cFp) for changing characters case of a user phrase. The purpose of this project 
 is to establish a starting point for a full-stack software developer with a usefull API for common 
@@ -8,9 +8,9 @@ programming languanges and development frameworks.
 ![Oveview of cFp_Memtest](../../../../doc/cFp_Memtest.png)
 
 
-### System configurattion
+## System configurattion
 
-#### Ubuntu
+### Ubuntu
 
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
@@ -18,14 +18,14 @@ sudo apt-get install -y build-essential pkg-config libxml2-dev rename rpl python
 ```
 
 
-#### CentOS/EL7
+### CentOS/EL7
 ```
 sudo yum groupinstall 'Development Tools'
 sudo yum install cmake
 ```
 
 
-### Full-stack software support
+## Full-stack software support
 
 The following programming languanges are currently supported (and are on the roadmap)
 
@@ -53,13 +53,13 @@ The following containerization software is currently supported (and is on the ro
 - [ ] [Kubernetes](https://kubernetes.io/)
 - [ ] [Red Hat OpenShift Community Distribution of Kubernetes](https://www.okd.io/)
 
-### Vivado tool support
+## Vivado tool support
 
 The versions below are supported by cFp_Memtest. As of today we follow a hybrid development approach
 where a specific part of `SHELL` code is synthesized using `Vivado 2017.4`, while the rest of the 
 HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 
-#### For the SHELL (cFDK's code)
+### For the SHELL (cFDK's code)
 
 - [x] 2017
   - [x] 2017.4
@@ -67,7 +67,7 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 - [ ] 2019
 - [ ] 2020
 
-#### For the ROLE (user's code)
+### For the ROLE (user's code)
 
 - [ ] 2017
 - [ ] 2018
@@ -79,7 +79,7 @@ HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
 
   
 
-##### Repository and environment setup
+#### Repository and environment setup
 
 ```bash
 git clone --recursive-submodules git@github.ibm.com:cloudFPGA/cFp_Vitis.git
@@ -87,7 +87,7 @@ cd cFp_Vitis
 source ./env/setenv.sh
 ```
 
-##### Memtest Simulation 
+#### Memtest Simulation 
 
 The testbench is offered in two flavors:
 - HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Memtest IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
@@ -109,7 +109,8 @@ The Makefile pass as argument to the TB the following params:
 2. `TEST_NUMBER` is the number of repetitions of the test 
 3. `BURST_SIZE` is the desired burst size
 
-###### Simulation example: 
+##### Simulation example: 
+
 ``` make csim INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 ```
 
 Basic files/modules:
@@ -184,7 +185,7 @@ source ./env/setenv.sh
 # You should expect the string output in the stdout.
 ```
 
-##### Memtest Synthesis
+#### Memtest Synthesis
 
 Since curretnly the cFDK supports only Vivado(HLS) 2017.4 we are following a 2-steps synthesis 
 procedure. Firstly we synthesize the Themisto SHELL with Vivado (HLS) 2017.4 and then we synthesize 
@@ -193,13 +194,15 @@ the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1.
 By default the Memory Test will come with `#define SIMPLER_BANDWIDTH_TEST` commented. Which means that you will use the complex memory test that can handle any variable burst size. 
 To change this just decomment the define.
 
-###### The Themisto SHELL
+##### The Themisto SHELL 
+
 ```bash
 cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
 make all # with Vivado HLS == 2017.4
 ```
 
-###### The complete cFp_Memtest
+##### The complete cFp_Memtest
+
 ```bash
 cd cFp_Vitis
 make monolithic # with Vivado HLS >= 2019.1
@@ -212,7 +215,7 @@ make csynth # with Vivado HLS >= 2019.1
 ```
 
 
-##### Memtest cF Demo
+#### Memtest cF Demo
 
 TODO: Flash a cF FPGA node with the generated bitstream and note down the IP of this FPGA node. e.g. assuming `10.12.200.153` and port `2718`
 
@@ -235,7 +238,8 @@ runtime, on host, to select one over the other, you simply need to change in [co
 file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
-###### JupyterLab example
+##### JupyterLab example
+
 NOT UP TO DATE
 ```bash
 cd HOST/langauges/python
@@ -251,7 +255,7 @@ pip3 install -r ../requirements.txt # to be improved : some errors might occur d
 ```
 
 
-##### Usefull commands
+#### Usefull commands
 
 - Connect to ZYC2 network through openvpn:
 
@@ -278,7 +282,7 @@ pip3 install -r ../requirements.txt # to be improved : some errors might occur d
   ` ulimit -c unlimited` to unlimit  "The maximum size of core files created" 
   ` ulimit -s unlimited` to unlimit "The maximum stack size."
 
-##### Working with ZYC2
+#### Working with ZYC2
 
 All communication goes over the *UDP/TCP port 2718*. Hence, the CPU should run:
 ```bash
@@ -304,7 +308,7 @@ The following depicts an example API call, assuming that the cFp_Memtest bitfile
 image`d8471f75-880b-48ff-ac1a-baa89cc3fbc9`:
 ![POST /cluster example](../../../../doc/post_cluster.png)
 
-### Firewall issues
+## Firewall issues
 
 Some firewalls may block network packets if there is not a connection to the remote machine/port.
 Hence, to get the Triangle example to work, the following commands may be necessary to be executed 
@@ -318,18 +322,18 @@ $ firewall-cmd --reload
 
 Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
 
-# Memory test Results 
+## Memory test Results 
 Follows some expected outputs of the memory test in the simple (i.e., free running) and the complex version (i.e., burst controlled).
 First some analysis of the burst controlled bandwidth for the read and the write.
 Analyzing power of two memory sizes starting from 64 bytes (i.e., one 512bits word)
-## Bandwidth Burst Control Results
+### Bandwidth Burst Control Results
 Burst: 1 -- > 512 (power of two)
 1. Read 
 2. Write
-### Bandwidth write results variable burst sizes
+#### Bandwidth write results variable burst sizes
 ![Memory Test Bandwidth Write Results](../../../../doc/membw_write.png)
-### Bandwidth read results variable burst sizes
+#### Bandwidth read results variable burst sizes
 ![Memory Test Bandwidth Read Results](../../../../doc/membw_read.png)
 
-## Bandwidth read and write results comparison simple and complex memory tests (i.e. free-running vs burst cntrlled)
+### Bandwidth read and write results comparison simple and complex memory tests (i.e. free-running vs burst cntrlled)
 ![Memory Test Bandwidth comparison simple and complex](../../../../doc/membw_performance_scaling_new.png)
