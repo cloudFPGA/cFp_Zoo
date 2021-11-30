@@ -5,7 +5,15 @@
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
- * @details      
+ * @details  The pattern library is a collection of functions to abstract employs different approach
+ *  to generate a sequence (useful to test particular bits of the current memory word of 512 bits);
+ * the way of reading: having run-time variable (controllable) data to read/write requires different methodologies.
+ * The write currently exploit a buffer of MAX_BURST (i.e., 4096) to accumulate the data to write and 
+ * then write exploitng memtest_library.hpp functions. 
+ * The read instead harvest the data and write to a stream, generate the gold value (based the sequence generation approach)
+ *  and then compare, collecting some information on how the memory test went (how many faults, where the first and the CC needed ONLY for AXI transactions)
+ * WARNING: HLS-based memory perf counters of AXI transactions accounts for the overall time of a read, while the write is considered finished when issuing the data 
+ * (while the AXI protocol considers the transaction closed when the slave answer with the ACK/BRESP)
  *
  * @deprecated   
  * 

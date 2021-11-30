@@ -110,6 +110,7 @@ The Makefile pass as argument to the TB the following params:
 3. `BURST_SIZE` is the desired burst size
 
 ##### Simulation example: 
+
 ``` make csim INPUT_STRING=4096 TEST_NUMBER=2 BURST_SIZE=512 ```
 
 Basic files/modules:
@@ -193,13 +194,15 @@ the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1.
 By default the Memory Test will come with `#define SIMPLER_BANDWIDTH_TEST` commented. Which means that you will use the complex memory test that can handle any variable burst size. 
 To change this just decomment the define.
 
-##### The Themisto SHELL
+##### The Themisto SHELL 
+
 ```bash
 cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
 make all # with Vivado HLS == 2017.4
 ```
 
 ##### The complete cFp_Memtest
+
 ```bash
 cd cFp_Vitis
 make monolithic # with Vivado HLS >= 2019.1
@@ -236,6 +239,7 @@ file the define `#define NET_TYPE udp` (choose either udp or tcp).
 
 
 ##### JupyterLab example
+
 NOT UP TO DATE
 ```bash
 cd HOST/langauges/python

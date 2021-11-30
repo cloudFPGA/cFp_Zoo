@@ -6,6 +6,7 @@
  *----------------------------------------------------------------------------
  *
  * @details      This application implements a UDP/TCP-oriented Memory test function.
+ * Mainly structural component (like a hw top)
  *
  * @deprecated   For the time being, we continue designing with the DEPRECATED
  *               directives because the new PRAGMAs do not work for us.
@@ -23,9 +24,6 @@
 #include "../include/memtest_library.hpp"
 #include "../../../../../HOST/custom/memtest/languages/cplusplus/include/config.h" //debug level define
 
-#ifdef USE_HLSLIB_STREAM
-using hlslib::Stream;
-#endif
 using hls::stream;
 
 #define Data_t_in  ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0>
@@ -103,11 +101,6 @@ const unsigned int MAX_BURST_LENGTH_512=64;//Theoretically is  64, 64*512bit = 4
   static stream<NetworkWord>       sProcpToTxp_Data("sProcpToTxp_Data"); 
  #pragma HLS STREAM variable=sProcpToTxp_Data depth=20 dim=1
   static stream<NetworkWord>       sRxpToProcp_Data("sRxpToProcp_Data");
-
- static hls::stream<ap_uint<64>> sPerfCounter_cmd("sPerfCounter_cmd"); 
- #pragma HLS STREAM variable=sPerfCounter_cmd depth=1 dim=1
- static hls::stream<ap_uint<64>> sPerfCounter_results("sPerfCounter_results"); 
- #pragma HLS STREAM variable=sPerfCounter_results depth=2 dim=1 //contain  ALL the output of this process
 
   static unsigned int processed_word_rx;
   static unsigned int processed_bytes_rx;

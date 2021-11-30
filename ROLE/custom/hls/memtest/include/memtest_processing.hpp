@@ -5,8 +5,19 @@
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
- * @details      A Memory test FSM for the processing of data
+ * @details      A Memory test FSM for the processing of data.
+ * It contains the big FSM that manages the input data, parse the commands and set up stuffs, and handles the new meta production from RX.
+ * After setting up, begins to processing (so real memory test) that reads and write (impl. details in the memtest_pattern_library.hpp file),
+ * concludes with the output send to the TX functions.
+ * Interesting MACROS: 
+ * FAULT_INJECTION (custom fault injection enable or not ifdef), 
+ * SIMPLER_BANDWIDTH_TEST (employ the complex/controllable or the simpler non controllable version)
+ * Various BITWIDTH are used to define the command format of the memory test
  *
+ * Current format
+ * 63-24 Trgt addrss; 23-8 Iterations; 7-0 start cmd
+ * 127-88 Empty; 87-72 Burst Size; 71-64 burst cmd (or if u prefer the second 64 bits)
+ * 
  * @deprecated   
  * 
  *----------------------------------------------------------------------------

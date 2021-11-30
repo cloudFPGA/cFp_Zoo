@@ -1,13 +1,37 @@
 /*****************************************************************************
  * @file       memtest_library.hpp
- * @brief      A library for some common functionalities
+ * @brief      A library for some common functionalities:
+ *              Network-Related
+ *              Memory interaction
+ *              Performance Counters
+ * 
  * @author     FAB, WEI, NGL, DID, DCO
  * @date       September 2021
  *----------------------------------------------------------------------------
  *
- * @details      This application implements a UDP/TCP-oriented Memory test function.
- *
- * @deprecated   
+ * @details      Implementations of library example functionalities
+ * Network-Related for
+ *    setting the cluster port destination
+ *    receiving(RX) some commands (generally data)
+ *    transmitting(TX) the test results back 
+ * 
+ * Memory interaction 
+ *    pMyMemtestMemCpy --> memcpy reimplementation
+ *    pMemCpyCircularBuff --> memcpy using a circular buffer (not optimized)
+ *    pReadAxiMemMapped2HlsStream --> read data and write on stream
+ *    pReadAxiMemMapped2HlsStreamCountFirst --> as before but with the activation of perf counter
+ *    pReadAxiMemMapped2HlsStreamCountActivated --> as before but with perf counter activated
+ *    pReadAxiMemMapped2HlsStreamCountExtern --> summary of two function before but with activation as input param
+ * 
+ * Performance Counters
+ *    perfCounterProc --> original function from Xilinx for perf counters that takes INIT and STOP (any)
+ *    perfCounterProc2Mem --> first iteration on the original function
+ *    perfCounterProc2MemCountOnly --> trimming unsued stuffs
+ *    perfCounterProc2MemCountIncremental --> as before but incrementing the output register not overwriting
+ *    perfCounterMultipleCounts --> as before but with multiple activations possible: INIT;ANY(repeat);STOP(0)
+ *    pCountClockCycles --> alternative implementations that does not behave correctly in hls
+ * 
+ * @deprecated pMemCpyCircularBuff; pCountClockCycles
  * 
  *----------------------------------------------------------------------------
  * 
@@ -106,8 +130,7 @@ void pRXPath(
       )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    //#pragma HLS DATAFLOW interval=1
-     #pragma  HLS INLINE 
+     #pragma  HLS INLINE  off
     //-- LOCAL VARIABLES ------------------------------------------------------
 
 
@@ -237,7 +260,7 @@ void pTXPath(
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
     //#pragma HLS DATAFLOW interval=1
-    #pragma  HLS INLINE
+    #pragma  HLS INLINE off
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
@@ -478,6 +501,34 @@ void pReadAxiMemMapped2HlsStreamCountActivated(Tin* main_mem, hls::stream<Tout> 
   cmd.write(1);
 }
 
+/*****************************************************************************
+ * @brief Copy a run-time variable amount of data to an hls stream with a given max
+ *  it assumes  "perfCounterMultipleCounts" function already initialized so it just incr
+ *
+ * @param[out] main_mem the src ptr to read
+ * @param[in]  sOut the dst hls stream
+ * @param[in]  elems the current amount of data to tx
+ * @param[in]  cmd the performance counter cmd stream
+ * @param[in]  Tin the input datatype
+ * @param[in]  Tout the output datatype
+ * @param[in]  burstsize the maxmimum amount of data
+ * @param[in]  Tcntr the cmd perf counter datatype
+ *
+ * @return Nothing.
+ *****************************************************************************/
+template<typename Tin, typename Tout, const unsigned int burstsize, typename Tcntr>
+void pReadAxiMemMapped2HlsStreamCountExtern(Tin* main_mem, hls::stream<Tout> &sOut, unsigned int elems, hls::stream<Tcntr>& cmd, bool activated){
+#pragma HLS INLINE
+  cmd.write(activated);
+  mmloop: for (unsigned int i = 0; i < elems; i++)
+  {
+#pragma HLS PIPELINE II=1
+#pragma HLS LOOP_TRIPCOUNT min = 1 max = burstsize
+    Tout tmp  = main_mem[i];
+    sOut.write(tmp);
+  }
+  cmd.write(1);
+}
 //////////////////////////////////////////////////////////////////////////////
 //////////////////End of Mem. Interaction Functions///////////////////////////
 //////////////////////////////////////////////////////////////////////////////
