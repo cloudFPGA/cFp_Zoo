@@ -25,6 +25,15 @@
 #include "config.h"
 #include "util.hpp"
 
+#if TRANSFORM_TYPE == 1
+#define TRMAT_DIM2 3
+#define TRMAT_DIM1 3
+#else
+#define TRMAT_DIM2 3
+#define TRMAT_DIM1 2
+#endif
+
+
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_NUMPI)
 #include "opencv2/opencv.hpp"
 #include "../../../../../../ROLE/vision/hls/warp_transform/include/xf_ocv_ref.hpp"  // For SW reference WarpTransform from OpenCV
@@ -159,7 +168,19 @@ int main(int argc, char * argv[]) {
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
    
     // ksize: aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
-    int ksize = WINDOW_SIZE ;
+    // int ksize = WINDOW_SIZE ;
+    /////////////////
+    // float identity_tx_mat [9] = {1,0,0,0,1,0,0,0,0};
+    // float xtranslation_tx_mat [9] = {1,0,2,0,1,0,0,0,0};// 1 0 vx 0 1 vy 000
+    // float ytranslation_tx_mat [9] = {1,0,0,0,1,2,0,0,0}; 
+    // float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
+    // float yscale_tx_mat [9] = {2,0,0,0,1,0,0,0,0}; //cx  0 0 0 cy 0 000
+    // float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};
+    // float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
+    // float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
+    float transformation_matrix_float [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0};
+    cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
+    /////////////////
     string out_img_file;
     string out_video_file;
     // Define the codec and create VideoWriter object.The output is stored in 'outcpp.avi' file. 
@@ -291,7 +312,7 @@ int main(int argc, char * argv[]) {
             //--------------------------------------------------------
             clock_t start_cycle_warp_transform_sw = clock();
             ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
-            ocv_ref(send, ocv_out_img, ksize);
+            ocv_ref(send, ocv_out_img, transformation_matrix);
             clock_t end_cycle_warp_transform_sw = clock();
             double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / 
                                             (double) CLOCKS_PER_SEC;

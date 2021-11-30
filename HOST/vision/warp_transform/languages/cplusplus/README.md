@@ -46,14 +46,14 @@ cd cFp_Vitis
 source ./env/setenv.sh
 cd ./HOST/vision/warp_transform/build
 # Usage: ./warp_transform_host <Server> <Server Port> <optional input image>
-./warp_transform_host localhost 1234 ../../../../ROLE/vision/hls/warp_transform/test/8x8.png
+./warp_transform_host localhost 1234 ../../../../../../ROLE/vision/hls/warp_transform/test/8x8.png
 
 # What happens is that the user application (warp_transform_host) is sending an input image file to 
 # intermediate listener (warp_transform_host_fwd_tb) through socket. The latter receives the payload and 
 # reconstructs the image. Then it is calling the HLS TB by firstly compiling the HLS TB files. The 
 # opposite data flow is realized for taking the results back and reconstruct the FPGA output image.
 # You should expect the output in the file <optional input image>_fpga_out_frame_#.png
-eog ../../../../ROLE/vision/hls/warp_transform/test/8x8.png_fpga_points_out_frame_1.png
+eog ../../../../../../ROLE/vision/hls/warp_transform/test/8x8.png_fpga_points_out_frame_1.png
 
 ```
 
@@ -70,9 +70,9 @@ cmake ../
 make -j 2
 cd cFp_Vitis/ROLE/vision/host/warp_transform/build
 # Usage: ./warp_transform_host <Server> <Server Port> <optional input image>
-./warp_transform_host 10.12.200.153 2718 ../../../../ROLE/vision/hls/warp_transform/test/8x8.png
+./warp_transform_host 10.12.200.153 2718 ../../../../../../ROLE/vision/hls/warp_transform/test/8x8.png
 # You should expect the output in the file <optional input image>_fpga_out_frame_#.png
-eog ../../../../ROLE/vision/hls/warp_transform/test/8x8.png_fpga_points_out_frame_1.png
+eog ../../../../../../ROLE/vision/hls/warp_transform/test/8x8.png_fpga_points_out_frame_1.png
 ```
 
 **NOTE:** The cFp_Vitis ROLE (FPGA part) is equipped with both the UDP and TCP offload engines. At 
