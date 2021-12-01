@@ -194,7 +194,9 @@ const unsigned int num_outstanding_transactions = 256;//16;
 
  pRXPathNetToStream< membus_t, 
  loop_cnt,
- TRANSFERS_PER_CHUNK>(
+ TRANSFERS_PER_CHUNK,
+ IMGSIZE,
+ BYTES_PER_10GBITETHRNET_AXI_PACKET>(
         siSHL_This_Data,
         siNrc_meta,
         sRxtoTx_Meta,

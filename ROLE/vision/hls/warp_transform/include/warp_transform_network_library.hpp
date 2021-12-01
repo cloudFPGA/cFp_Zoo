@@ -189,7 +189,7 @@ void pRXPath(
  *
  * @return Nothing.
  ******************************************************************************/
-template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk>
+template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk, const unsigned int max_img_size, const unsigned int cBytesPer10GbitEthAXIPckt>
 void pRXPathNetToStream(
     hls::stream<NetworkWord>                 &siSHL_This_Data,
     hls::stream<NetworkMetaStream>           &siNrc_meta,
@@ -206,7 +206,8 @@ void pRXPathNetToStream(
     // const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
     NetworkMetaStream   meta_tmp;
     static TMemWrd v = 0;
-    static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;      
+    static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;
+    static unsigned int processed_net_bytes_rx = 0;    
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_burst
     static PacketFsmType enqueueRxToStrFSM = WAIT_FOR_META;
@@ -226,31 +227,42 @@ void pRXPathNetToStream(
         }
         break;
 
-    case PROCESSING_PACKET:
-        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET\n");
+case PROCESSING_PACKET:
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
         if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full())
         {
             //-- Read incoming data chunk
             netWord = siSHL_This_Data.read();
             printf("DEBUG in pRXPathNetToStream: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
                netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());            
+            //enqueueRxToStrFSM = LOAD_IN_STREAM;
             if ((netWord.tkeep >> cnt_wr_stream) == 0) {
                 printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
+                //continue;
             }
             v(cnt_wr_stream*64, (cnt_wr_stream+1)*64-1) = netWord.tdata(0,63);
             if ((cnt_wr_stream++ == loop_cnt-1) || (netWord.tlast == 1)) {
+                // std::cout << std::hex << v << std::endl; // print hexadecimal value
                 std::cout << "DEBUG in pRXPathNetToStream: Pushing to img_in_axi_stream :" << std::hex << v << std::endl;
                 img_in_axi_stream.write(v);
-                if ((cnt_wr_burst++ == cTransfers_Per_Chunk-1) || (netWord.tlast == 1)) {
-                    if (!sMemBurstRx.full()) {
-                        sMemBurstRx.write(true);
-                    }
-                    cnt_wr_burst = 0;
+                if ((cnt_wr_burst++ == cTransfers_Per_Chunk-1) || 
+                    ((processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt) && 
+                     (netWord.tlast == 1))) {
+                        if (!sMemBurstRx.full()) {
+                            sMemBurstRx.write(true);
+                        }
+                        cnt_wr_burst = 0;
                 }
                 if (netWord.tlast == 1) {                
                     enqueueRxToStrFSM = WAIT_FOR_META;
                 }
                 cnt_wr_stream = 0;
+            }
+            if (processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt) {                
+                processed_net_bytes_rx = 0;
+            }
+            else {
+                processed_net_bytes_rx += cBytesPer10GbitEthAXIPckt;            
             }
         }
         break;

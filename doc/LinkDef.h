@@ -121,6 +121,59 @@
  */
 
 
+//*********** Sobel ********************
+/** \defgroup Sobel Sobel
+ *  @ingroup VitisVision
+ *
+ * \brief This is the Sobel accelerated function from Vitis Vision Open Source Library.
+ */
+
+/** \defgroup SobelTB Sobel Testbench
+ *  @ingroup Sobel
+ *
+ * \brief This is a subgroup of Sobel accelerated function with only testbench-related functions/classes.
+ */
+
+/** \defgroup SobelHLS Sobel HLS
+ *  @ingroup Sobel
+ *
+ * \brief This is a subgroup of Sobel accelerated function with only synthesizable (HLS) functions/classes.
+ */
+
+/** \defgroup SobelHost Sobel Host
+ *  @ingroup Sobel
+ *
+ * \brief This is a subgroup of Sobel accelerated function with only host code software.
+ */
+
+
+//*********** WarpTransform ********************
+/** \defgroup WarpTransform WarpTransform
+ *  @ingroup VitisVision
+ *
+ * \brief This is the WarpTransform accelerated function from Vitis Vision Open Source Library.
+ */
+
+/** \defgroup WarpTransformTB WarpTransform Testbench
+ *  @ingroup WarpTransform
+ *
+ * \brief This is a subgroup of WarpTransform accelerated function with only testbench-related functions/classes.
+ */
+
+/** \defgroup WarpTransformHLS WarpTransform HLS
+ *  @ingroup WarpTransform
+ *
+ * \brief This is a subgroup of WarpTransform accelerated function with only synthesizable (HLS) functions/classes.
+ */
+
+/** \defgroup WarpTransformHost WarpTransform Host
+ *  @ingroup WarpTransform
+ *
+ * \brief This is a subgroup of WarpTransform accelerated function with only host code software.
+ */
+
+
+
 /*****************************************************************************
  *
  *  cFDK / cFp / cFp_Zoo / VitisQuantitativeFinance : Submodules

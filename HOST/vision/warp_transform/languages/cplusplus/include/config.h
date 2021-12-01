@@ -23,11 +23,11 @@
 
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
-/** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 64
+/** The maximum width of frame in pixels   from 6x6 to 256x256 for debugging                      */
+#define FRAME_HEIGHT 128
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  64
+#define FRAME_WIDTH  128
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -45,7 +45,7 @@
 //  #define SHOW_WINDOWS  
   
 /** For HOST TB uncomment this. For normal host execution keep it commented                       */
-// #define TB_SIM_CFP_VITIS
+#define TB_SIM_CFP_VITIS
 
 /** Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
 //  #define INPUT_FROM_CAMERA
