@@ -456,6 +456,7 @@ void pRXPathNetToStream(
     NetworkMetaStream   meta_tmp;
     static ap_uint<MEMDW_512> v = 0;
     static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;
+    static unsigned int processed_net_bytes_rx = 0;
 //    static stream<ap_uint<MEMDW_512>> img_in_axi_stream ("img_in_axi_stream");
 //    const unsigned int img_in_axi_stream_depth = TRANSFERS_PER_CHUNK; // the AXI burst size
 //    #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth
@@ -478,7 +479,7 @@ void pRXPathNetToStream(
         break;
 
     case PROCESSING_PACKET:
-        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET\n");
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
         if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full())
         {
             //-- Read incoming data chunk
@@ -495,16 +496,24 @@ void pRXPathNetToStream(
                 // std::cout << std::hex << v << std::endl; // print hexadecimal value
                 std::cout << "DEBUG in pRXPathNetToStream: Pushing to img_in_axi_stream :" << std::hex << v << std::endl;
                 img_in_axi_stream.write(v);
-                if ((cnt_wr_burst++ == TRANSFERS_PER_CHUNK-1) || (netWord.tlast == 1)) {
-                    if (!sMemBurstRx.full()) {
-                        sMemBurstRx.write(true);
-                    }
-                    cnt_wr_burst = 0;
+                if ((cnt_wr_burst++ == TRANSFERS_PER_CHUNK-1) || 
+                    ((processed_net_bytes_rx == IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) && 
+                     (netWord.tlast == 1))) {
+                        if (!sMemBurstRx.full()) {
+                            sMemBurstRx.write(true);
+                        }
+                        cnt_wr_burst = 0;
                 }
                 if (netWord.tlast == 1) {                
                     enqueueRxToStrFSM = WAIT_FOR_META;
                 }
                 cnt_wr_stream = 0;
+            }
+            if (processed_net_bytes_rx == IMGSIZE-BYTES_PER_10GBITETHRNET_AXI_PACKET) {                
+                processed_net_bytes_rx = 0;
+            }
+            else {
+                processed_net_bytes_rx += BYTES_PER_10GBITETHRNET_AXI_PACKET;            
             }
         }
         break;
