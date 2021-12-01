@@ -6,18 +6,18 @@
 # @date Nov. 2020
 
 echo "{" > cFp.json
-echo "    \"version\": \"This cFp was created by cFBuild 0.8\"," >> cFp.json
+echo "    \"version\": \"This cFp was created by cFCreate 0.8\"," >> cFp.json
 echo "    \"cFpMOD\": \"FMKU60\"," >> cFp.json
 echo "    \"cFpSRAtype\": \"Themisto\"," >> cFp.json
 echo "    \"usedRoleDir\": \"$1/\"," >> cFp.json
 echo "    \"usedRoleDir2\": \"to-be-defined\"," >> cFp.json
 echo "    \"roleName1\": \"$1\"," >> cFp.json
-echo "    \"roleName2\": \"unused\"" >> cFp.json
+echo "    \"roleName2\": \"unused\"," >> cFp.json
 echo "    \"srat-conf\": {">> cFp.json
 echo "        \"version\": 0.3,">> cFp.json
 echo "        \"roles\": [">> cFp.json
 echo "        {">> cFp.json
-echo "                \"name\": "default",">> cFp.json
+echo "                \"name\": \"default\",">> cFp.json
 echo "                \"path\": \"\"">> cFp.json
 echo "            },">> cFp.json
 echo "            {">> cFp.json
