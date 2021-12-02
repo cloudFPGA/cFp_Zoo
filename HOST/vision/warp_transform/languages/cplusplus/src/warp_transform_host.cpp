@@ -178,7 +178,7 @@ int main(int argc, char * argv[]) {
     // float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};
     // float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
     // float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
-    float transformation_matrix_float [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0};
+    float transformation_matrix_float [9] = {1.5,0,0,0,1.8,0,0,0,0};
     cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     /////////////////
     string out_img_file;
