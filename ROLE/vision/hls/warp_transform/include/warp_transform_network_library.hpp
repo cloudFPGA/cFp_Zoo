@@ -67,7 +67,7 @@ using namespace hls;
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
-    hls::stream<NodeId>          &sDstNode_sig,
+    hls::stream<NodeId>     &sDstNode_sig,
     ap_uint<32>             *po_rx_ports
     )
 {
@@ -194,7 +194,7 @@ void pRXPathNetToStream(
     hls::stream<NetworkWord>                 &siSHL_This_Data,
     hls::stream<NetworkMetaStream>           &siNrc_meta,
     hls::stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    hls::stream<TMemWrd>            &img_in_axi_stream,
+    hls::stream<TMemWrd>                     &img_in_axi_stream,
     hls::stream<bool>                        &sMemBurstRx
     )
 {
@@ -210,6 +210,7 @@ void pRXPathNetToStream(
     static unsigned int processed_net_bytes_rx = 0;    
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_burst
+    #pragma HLS reset variable=processed_net_bytes_rx
     static PacketFsmType enqueueRxToStrFSM = WAIT_FOR_META;
     #pragma HLS reset variable=enqueueRxToStrFSM
 
@@ -503,8 +504,8 @@ void pTXPath(
   hls::stream<NetworkWord>         &sProcpToTxp_Data,
   hls::stream<NetworkMetaStream>   &sRxtoTx_Meta,
   hls::stream<NodeId>              &sDstNode_sig,
-  unsigned int                *processed_word_tx, 
-  ap_uint<32>                 *pi_rank
+  unsigned int                     *processed_word_tx, 
+  ap_uint<32>                      *pi_rank
 )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -515,11 +516,13 @@ void pTXPath(
     static NodeId dst_rank;
     static PacketFsmType dequeueFSM = WAIT_FOR_META;
     #pragma HLS reset variable=dequeueFSM
-    #pragma HLS reset variable=dst_rank
 
     //-- LOCAL VARIABLES ------------------------------------------------------
     NetworkWord      netWordTx;
     NetworkMeta  meta_in = NetworkMeta();
+    NetworkMetaStream meta_out_stream = NetworkMetaStream();
+
+    #pragma HLS reset variable=dst_rank
     #pragma HLS reset variable=netWordTx
   
   switch(dequeueFSM)
@@ -534,10 +537,10 @@ void pTXPath(
       }
       break;
     case WAIT_FOR_STREAM_PAIR:
-    #if DEBUG_LEVEL == TRACE_ALL
+    //#if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
-    #endif
+    // #endif
       //-- Forward incoming chunk to SHELL
       // *processed_word_tx = 0;
       //WarpTransform-related
@@ -558,7 +561,6 @@ void pTXPath(
         soTHIS_Shl_Data.write(netWordTx);
 
         meta_in = sRxtoTx_Meta.read().tdata;
-        NetworkMetaStream meta_out_stream = NetworkMetaStream();
         meta_out_stream.tlast = 1;
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
@@ -573,7 +575,7 @@ void pTXPath(
         soNrc_meta.write(meta_out_stream);
 
         (*processed_word_tx)++;
-	      printf("DEBUG: Checking netWordTx.tlast...\n");
+	    printf("DEBUG: Checking netWordTx.tlast...\n");
         if(netWordTx.tlast != 1)
         {
           dequeueFSM = PROCESSING_PACKET;
@@ -582,26 +584,23 @@ void pTXPath(
       break;
 
     case PROCESSING_PACKET: 
-    #if DEBUG_LEVEL == TRACE_ALL
+    //#if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
-    #endif
+    //#endif
       if( !sProcpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         netWordTx = sProcpToTxp_Data.read();
-        // This is a normal termination of the axi stream from vitis functions
-        if(netWordTx.tlast == 1)
-        {
-          dequeueFSM = WAIT_FOR_STREAM_PAIR;
-        }
-        
         // This is our own termination based on the custom MTU we have set in PACK_SIZE.
         // TODO: We can map PACK_SIZE to a dynamically assigned value either through MMIO or header
         //       in order to have a functional bitstream for any MTU size
         (*processed_word_tx)++;
-        if (((*processed_word_tx)*8) % PACK_SIZE == 0) 
+
+        // This is a normal termination of the axi stream from vitis functions
+        // This is a normal termination of the axi stream from vitis functions
+        if ((netWordTx.tlast == 1) || (((*processed_word_tx)*8) % PACK_SIZE == 0))
         {
-            netWordTx.tlast = 1;
+            netWordTx.tlast = 1; // in case it is the 2nd or
             printf("DEBUG: A netWordTx.tlast=1 ... sProcpToTxp_Data.empty()==%u \n", sProcpToTxp_Data.empty());
             dequeueFSM = WAIT_FOR_STREAM_PAIR;
         }

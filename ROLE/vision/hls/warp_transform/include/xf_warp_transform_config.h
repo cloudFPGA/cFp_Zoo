@@ -41,10 +41,10 @@
 using hls::stream;
 
 // Number of rows of input image to be stored
-#define NUM_STORE_ROWS 100
+#define NUM_STORE_ROWS 256
 
 // Number of rows of input image after which output image processing must start
-#define START_PROC 50
+#define START_PROC 200
 // transform type 0-NN 1-BILINEAR
 #define INTERPOLATION 0
 

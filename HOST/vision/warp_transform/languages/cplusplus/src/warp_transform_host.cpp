@@ -265,6 +265,8 @@ int main(int argc, char * argv[]) {
                 cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
                         << frame.rows << " to " << send.cols << "x" << send.rows << endl;
             }
+                imwrite("testimg.png", frame);
+
             assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
             // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
             assert(PACK_SIZE % 8 == 0);
