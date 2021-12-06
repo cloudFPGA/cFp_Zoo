@@ -48,7 +48,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   1
+#define TB_TRIALS   3
 
 // Enable delay in the response channel of DDR AXI controller
 #define ENABLE_DDR_EMULATE_DELAY_IN_TB
@@ -465,6 +465,8 @@ if (simCnt < 0)
         } else {
             printf ( "Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n" );
         }
+        const string outfilename = "hls_out-"+std::to_string(tb_trials)+".jpg";
+        xf::cv::imwrite(outfilename.c_str(), imgOutput);
 
         nrErr += rc1;
 
