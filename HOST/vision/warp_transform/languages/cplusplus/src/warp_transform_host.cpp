@@ -299,13 +299,13 @@ int main(int argc, char * argv[]) {
             //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
 	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack * sizeof (unsigned char));
 
-//            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
-//            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
-//            cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-//            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
-//            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
-//            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
-//            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: Total packets to send/receive = " << total_pack << endl;
+            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
+            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
+            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 	    
@@ -318,9 +318,9 @@ int main(int argc, char * argv[]) {
             clock_t end_cycle_warp_transform_sw = clock();
             double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / 
                                             (double) CLOCKS_PER_SEC;
-//            cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl;
-//            cout << "INFO: Effective FPS SW:" << (1 / duration_warp_transform_sw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_warp_transform_sw / 1024 * 8) << endl;
+            cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW:" << (1 / duration_warp_transform_sw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_warp_transform_sw / 1024 * 8) << endl;
 
             //------------------------------------------------------
             //-- STEP-5 : RUN WARPTRANSFORM DETECTOR FROM cF (HW)
@@ -352,13 +352,13 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                //delay(200);  
+                //delay(500);  
             }
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
-//                 total_pack / duration_tx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
+                 total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
         
         
@@ -367,7 +367,7 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------    
             clock_t last_cycle_rx = clock();
             unsigned int receiving_now = PACK_SIZE;
-//            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
             //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
@@ -388,23 +388,23 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
-                //delay(200);
+                //delay(500);
             }
-//            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
-//                    total_pack / duration_rx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
 
             clock_t end_cycle_warp_transform_hw = next_cycle_rx;
 
             double duration_warp_transform_hw = (end_cycle_warp_transform_hw - start_cycle_warp_transform_hw) / 
                                                 (double) CLOCKS_PER_SEC;
-//            cout << "INFO: HW exec. time:" << duration_warp_transform_hw << " seconds" << endl;
-//            cout << "INFO: Effective FPS HW:" << (1 / duration_warp_transform_hw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_warp_transform_hw / 1024 * 8) << endl;
+            cout << "INFO: HW exec. time:" << duration_warp_transform_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW:" << (1 / duration_warp_transform_hw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_warp_transform_hw / 1024 * 8) << endl;
                     
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 
@@ -460,9 +460,9 @@ int main(int argc, char * argv[]) {
 #endif // WRITE_OUTPUT_FILE
             waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
-//            cout << "\\___________________________________________________________________/" << endl
-//            << endl;
+            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
+            cout << "\\___________________________________________________________________/" << endl
+            << endl;
             //delete(longbuf);
 	    free (longbuf);
         } // while loop
