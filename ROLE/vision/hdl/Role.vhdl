@@ -754,17 +754,50 @@ begin
 
              poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
              --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
-           
+
+             
+             --------------------------------------------------------
+             -- SHELL / Mem / Mp0 Interface / Start in UAF
+             --------------------------------------------------------
+             , -- comma for syntax correctness when Mp1 is instantiated             
+
+--             ---- Stream Read Command ---------
+--             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
+--             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
+--             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
+--             ---- Stream Read Status ----------
+--             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
+--             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
+--             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
+--             ---- Stream Read Data ------------
+--             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
+--             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
+--             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
+--             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
+--             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
+             ---- Stream Write Command --------
+             soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
+             soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
+             soMemWrCmdP0_TREADY        => soMem_Mp0_WrCmd_tready,
+             ---- Stream Write Status ---------
+             siMemWrStsP0_TDATA         => siMem_Mp0_WrSts_tdata,
+             siMemWrStsP0_TVALID        => siMem_Mp0_WrSts_tvalid,
+             siMemWrStsP0_TREADY        => siMem_Mp0_WrSts_tready,
+             ---- Stream Write Data ---------
+             soMemWriteP0_TDATA         => soMem_Mp0_Write_tdata,
+             soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
+             soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
+             soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
+             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,             
+             
              --------------------------------------------------------
              -- SHELL / Mem / Mp1 Interface / Start in TAF
              --------------------------------------------------------     
-             , -- comma for syntax correctness when Mp1 is instantiated 
-
              m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
              m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
              m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
              m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
-             --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
+             --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
              m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
              m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
              m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
@@ -778,7 +811,7 @@ begin
              m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
              m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
              m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
-             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(7 downto 0);
+             --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
              m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
              m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
              m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
@@ -788,13 +821,13 @@ begin
              m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
              --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
              m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
-             --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
+             --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
              m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
              m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
              --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
              m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
              m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
-             --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(7 downto 0);
+             --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
              m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
              m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
              m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
