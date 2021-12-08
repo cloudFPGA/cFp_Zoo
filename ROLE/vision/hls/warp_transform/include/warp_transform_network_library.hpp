@@ -49,6 +49,20 @@ using namespace hls;
 #endif
 #endif
 
+//64 bits 8 for cmd, 40 rows/cols 3 channels = 51 missing 13
+//If  other info, we need to change how it is working many stuffs I think
+#define WARPTRANSFORM_CHNNEL_BITWIDTH 3
+#define WARPTRANSFORM_COLS_BITWIDTH 16
+#define WARPTRANSFORM_ROWS_BITWIDTH 16
+
+#define WARPTRANSFORM_ROWS_HIGH_BIT NETWORK_WORD_BIT_WIDTH-1 // 63
+#define WARPTRANSFORM_ROWS_LOW_BIT NETWORK_WORD_BIT_WIDTH-WARPTRANSFORM_ROWS_BITWIDTH //64-20 = 44
+
+#define WARPTRANSFORM_COLS_HIGH_BIT WARPTRANSFORM_ROWS_LOW_BIT-1 // 43
+#define WARPTRANSFORM_COLS_LOW_BIT WARPTRANSFORM_ROWS_LOW_BIT-WARPTRANSFORM_COLS_BITWIDTH //44-20 = 24
+
+#define WARPTRANSFORM_CHNNEL_HIGH_BIT WARPTRANSFORM_COLS_LOW_BIT-1 // 23
+#define WARPTRANSFORM_CHNNEL_LOW_BIT WARPTRANSFORM_COLS_LOW_BIT-WARPTRANSFORM_CHNNEL_BITWIDTH //24-3 = 21
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////Begin of Network-Related Functions//////////////////////////
@@ -65,10 +79,10 @@ using namespace hls;
  * @return Nothing.
  ******************************************************************************/
 void pPortAndDestionation(
-    ap_uint<32>             *pi_rank,
-    ap_uint<32>             *pi_size,
-    hls::stream<NodeId>     &sDstNode_sig,
-    ap_uint<32>             *po_rx_ports
+    ap_uint<32>                            *pi_rank,
+    ap_uint<32>                            *pi_size,
+    hls::stream<NodeId>                    &sDstNode_sig,
+    ap_uint<32>                            *po_rx_ports
     )
 {
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -117,15 +131,14 @@ void pPortAndDestionation(
  * @return Nothing.
  ******************************************************************************/
 void pRXPath(
-    hls::stream<NetworkWord>                 &siSHL_This_Data,
-    hls::stream<NetworkMetaStream>           &siNrc_meta,
-    hls::stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    //stream<Data_t_in>                   &img_in_axi_stream,
-    hls::stream<ap_uint<INPUT_PTR_WIDTH>>      &img_in_axi_stream,    
-    NetworkMetaStream                   meta_tmp,
-    unsigned int                        *processed_word_rx,
-    unsigned int                        *processed_bytes_rx,
-    hls::stream<bool>                        &sImageLoaded
+    hls::stream<NetworkWord>               &siSHL_This_Data,
+    hls::stream<NetworkMetaStream>         &siNrc_meta,
+    hls::stream<NetworkMetaStream>         &sRxtoTx_Meta,
+    hls::stream<ap_uint<INPUT_PTR_WIDTH>>  &img_in_axi_stream,    
+    NetworkMetaStream                      meta_tmp,
+    unsigned int                           *processed_word_rx,
+    unsigned int                           *processed_bytes_rx,
+    hls::stream<bool>                      &sImageLoaded
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -190,11 +203,18 @@ void pRXPath(
  ******************************************************************************/
 template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk, const unsigned int max_img_size, const unsigned int cBytesPer10GbitEthAXIPckt>
 void pRXPathNetToStream(
-    hls::stream<NetworkWord>                 &siSHL_This_Data,
-    hls::stream<NetworkMetaStream>           &siNrc_meta,
-    hls::stream<NetworkMetaStream>           &sRxtoTx_Meta,
-    hls::stream<TMemWrd>                     &img_in_axi_stream,
-    hls::stream<bool>                        &sMemBurstRx
+    hls::stream<NetworkWord>               &siSHL_This_Data,
+    hls::stream<NetworkMetaStream>         &siNrc_meta,
+    hls::stream<NetworkMetaStream>         &sRxtoTx_Meta,
+    hls::stream<TMemWrd>                   &img_in_axi_stream,
+    hls::stream<bool>                      &sMemBurstRx,
+    hls::stream<img_meta_t>                &sImgRows,
+    hls::stream<img_meta_t>                &sImgCols,
+    hls::stream<img_meta_t>                &sImgChan,
+    hls::stream<img_meta_t>                &sOTxImgRows,
+    hls::stream<img_meta_t>                &sOTxImgCols,
+    hls::stream<img_meta_t>                &sOTxImgChan,
+    float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -207,6 +227,8 @@ void pRXPathNetToStream(
     static TMemWrd v = 0;
     static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;
     static unsigned int processed_net_bytes_rx = 0;    
+    static unsigned int tx_mat_idx = 0;
+    #pragma HLS reset variable=tx_mat_idx
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_burst
     #pragma HLS reset variable=processed_net_bytes_rx
@@ -229,16 +251,47 @@ void pRXPathNetToStream(
 
 case PROCESSING_PACKET:
         printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
+        if ( !siSHL_This_Data.empty())
+        {
+            //-- Read incoming data chunk
+            netWord = siSHL_This_Data.read();
+            switch(netWord.tdata.range(WARPTRANSFORM_COMMANDS_HIGH_BIT,WARPTRANSFORM_COMMANDS_LOW_BIT))//the command is in the first 8 bits
+           {
+            case(WRPTX_TXMAT_CMD):
+                enqueueRxToStrFSM = PROCESSING_PACKET_TXMAT;
+                tx_mat_idx = 0;
+                break;
+            case(WRPTX_IMG_CMD):
+                img_meta_t rows = netWord.tdata.range(WARPTRANSFORM_ROWS_HIGH_BIT, WARPTRANSFORM_ROWS_LOW_BIT);
+                img_meta_t cols = netWord.tdata.range(WARPTRANSFORM_COLS_HIGH_BIT, WARPTRANSFORM_COLS_LOW_BIT);
+                img_meta_t chan = netWord.tdata.range(WARPTRANSFORM_CHNNEL_HIGH_BIT, WARPTRANSFORM_CHNNEL_LOW_BIT);
+                sImgRows.write(rows);
+                sImgCols.write(cols);
+                sImgChan.write(chan);
+
+                sOTxImgRows.write(rows);
+                sOTxImgCols.write(cols);
+                sOTxImgChan.write(chan);
+                enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
+                break;
+            //TODO: fix the default case
+            // default: // invalid cmd
+            //     break;
+            //     //might be consume data? dk
+           }
+        }
+        break;
+
+case PROCESSING_PACKET_IMGMAT:
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
         if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full())
         {
             //-- Read incoming data chunk
             netWord = siSHL_This_Data.read();
             printf("DEBUG in pRXPathNetToStream: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
                netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());            
-            //enqueueRxToStrFSM = LOAD_IN_STREAM;
             if ((netWord.tkeep >> cnt_wr_stream) == 0) {
                 printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
-                //continue;
             }
             v(cnt_wr_stream*64, (cnt_wr_stream+1)*64-1) = netWord.tdata(0,63);
             if ((cnt_wr_stream++ == loop_cnt-1) || (netWord.tlast == 1)) {
@@ -253,8 +306,15 @@ case PROCESSING_PACKET:
                         }
                         cnt_wr_burst = 0;
                 }
-                if (netWord.tlast == 1) {                
-                    enqueueRxToStrFSM = WAIT_FOR_META;
+                if (netWord.tlast == 1) {
+                    //Next state logic
+                    if (processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt)
+                   {
+                        enqueueRxToStrFSM = WAIT_FOR_META;
+                    }else{
+                        enqueueRxToStrFSM = WAIT_FOR_META_IMGMAT;
+
+                    }
                 }
                 cnt_wr_stream = 0;
             }
@@ -263,6 +323,47 @@ case PROCESSING_PACKET:
             }
             else {
                 processed_net_bytes_rx += cBytesPer10GbitEthAXIPckt;            
+            }
+        }
+        break;
+case WAIT_FOR_META_IMGMAT:
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - WAIT_FOR_META\n");
+        
+        if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
+        {
+            meta_tmp = siNrc_meta.read();
+            meta_tmp.tlast = 1; //just to be sure...
+            sRxtoTx_Meta.write(meta_tmp);
+            enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
+        }
+        break;
+case PROCESSING_PACKET_TXMAT:
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET_TXMAT, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
+        if ( !siSHL_This_Data.empty())
+        {
+            //-- Read incoming data chunk
+            netWord = siSHL_This_Data.read();
+            printf("DEBUG in pRXPathNetToStream: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+               netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());
+            float tmp1 = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32);
+            float tmp2 = netWord.tdata.range(32-1,0);
+            //always write one float
+            tx_matrix[tx_mat_idx]=tmp1;
+            tx_mat_idx++;
+            if ((tx_mat_idx == TRANSFORM_MATRIX_DIM-1) || (netWord.tlast == 1)) {
+                std::cout << "DEBUG in pRXPathNetToStream: end of matrix rx  communication" << std::endl;
+                //end of rx --> w8 for something; else there is the image after the tx matrix
+                if (netWord.tlast == 1) {          
+                    enqueueRxToStrFSM = WAIT_FOR_META;
+                }else{
+                    enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
+                }
+                tx_mat_idx = 0;
+
+            } else { //not at the end of the matrix nor the tlast two float to write
+
+                tx_matrix[tx_mat_idx]=tmp2;
+                tx_mat_idx++;
             }
         }
         break;
@@ -284,14 +385,20 @@ case PROCESSING_PACKET:
  ******************************************************************************/
 template <typename TStreamMemWrd, typename TMemWrd,const unsigned int loop_cnt,const unsigned int bytes_per_loop>
 void pRXPathStreamToDDR(
-    hls::stream<TMemWrd>         &img_in_axi_stream,
+    hls::stream<TMemWrd>                   &img_in_axi_stream,
     hls::stream<bool>                      &sMemBurstRx,    
     //---- P0 Write Path (S2MM) -----------
     hls::stream<DmCmd>                     &soMemWrCmdP0,
     hls::stream<DmSts>                     &siMemWrStsP0,
     hls::stream<TStreamMemWrd>             &soMemWriteP0,
     //---- P1 Memory mapped ---------------
-    hls::stream<bool>                      &sImageLoaded
+    hls::stream<bool>                      &sImageLoaded,
+    hls::stream<img_meta_t>                &sInImgRows,
+    hls::stream<img_meta_t>                &sInImgCols,
+    hls::stream<img_meta_t>                &sInImgChan,
+    hls::stream<img_meta_t>                &sOutImgRows,
+    hls::stream<img_meta_t>                &sOutImgCols,
+    hls::stream<img_meta_t>                &sOutImgChan
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -300,8 +407,6 @@ void pRXPathStreamToDDR(
     
     //-- LOCAL VARIABLES ------------------------------------------------------
     static TMemWrd v = 0;
-    // const unsigned int loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
-    // const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
     static unsigned int cur_transfers_per_chunk;
     static unsigned int cnt_wr_stream, cnt_wr_img_loaded;
     static unsigned int ddr_addr_in; 
@@ -324,6 +429,13 @@ void pRXPathStreamToDDR(
     #pragma HLS reset variable=memP0
     #pragma HLS reset variable=memWrStsP0    
     
+    static img_meta_t img_rows=0; 
+    static img_meta_t img_cols=0; 
+    static img_meta_t img_chan=0; 
+    #pragma HLS reset variable=img_rows    
+    #pragma HLS reset variable=img_cols    
+    #pragma HLS reset variable=img_chan    
+
     switch(enqueueStrToDdrFSM)
     {
     case WAIT_FOR_META:
@@ -347,6 +459,9 @@ void pRXPathStreamToDDR(
                 memWrStsP0.decerr = 0;
                 memWrStsP0.slverr = 0;
                 memWrStsP0.okay = 0;
+                img_rows  = sInImgRows.read();
+                img_cols  = sInImgCols.read();
+                img_chan  = sInImgChan.read();
             }
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
         }
@@ -475,6 +590,9 @@ case FSM_WR_PAT_STS_C:
     printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - FSM_WR_PAT_STS_C\n");    
         if((processed_bytes_rx) == 0) {
             enqueueStrToDdrFSM = WAIT_FOR_META;
+            sOutImgRows.write(img_rows);
+            sOutImgCols.write(img_cols);
+            sOutImgChan.write(img_chan);
         }
         else {
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
@@ -498,13 +616,16 @@ case FSM_WR_PAT_STS_C:
  * @return Nothing.
  *****************************************************************************/
 void pTXPath(
-  hls::stream<NetworkWord>         &soTHIS_Shl_Data,
-  hls::stream<NetworkMetaStream>   &soNrc_meta,
-  hls::stream<NetworkWord>         &sProcpToTxp_Data,
-  hls::stream<NetworkMetaStream>   &sRxtoTx_Meta,
-  hls::stream<NodeId>              &sDstNode_sig,
-  unsigned int                     *processed_word_tx, 
-  ap_uint<32>                      *pi_rank
+  hls::stream<NetworkWord>               &soTHIS_Shl_Data,
+  hls::stream<NetworkMetaStream>         &soNrc_meta,
+  hls::stream<NetworkWord>               &sProcpToTxp_Data,
+  hls::stream<NetworkMetaStream>         &sRxtoTx_Meta,
+  hls::stream<NodeId>                    &sDstNode_sig,
+  unsigned int                           *processed_word_tx, 
+  ap_uint<32>                            *pi_rank,
+  hls::stream<img_meta_t>                &sInImgRows,
+  hls::stream<img_meta_t>                &sInImgCols,
+  hls::stream<img_meta_t>                &sInImgChan
 )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -523,6 +644,14 @@ void pTXPath(
 
     #pragma HLS reset variable=dst_rank
     #pragma HLS reset variable=netWordTx
+
+    static img_meta_t img_rows=0;   
+    static img_meta_t img_cols=0; 
+    static img_meta_t img_chan=0; 
+    #pragma HLS reset variable=img_rows    
+    #pragma HLS reset variable=img_cols    
+    #pragma HLS reset variable=img_chan
+    static bool tx_ongoing = false;
   
   switch(dequeueFSM)
   {
@@ -541,10 +670,10 @@ void pTXPath(
        dequeueFSM, *processed_word_tx);
     // #endif
       //-- Forward incoming chunk to SHELL
-      // *processed_word_tx = 0;
       //WarpTransform-related
       if (*processed_word_tx == MIN_TX_LOOPS) {
         *processed_word_tx = 0;
+        tx_ongoing = false;
       }
 
       if (( !sProcpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
@@ -587,6 +716,14 @@ void pTXPath(
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
     //#endif
+      if (!tx_ongoing && !sInImgRows.empty() && !sInImgCols.empty() && !sInImgChan.empty())
+      {
+        img_rows  = sInImgRows.read();
+        img_cols  = sInImgCols.read();
+        img_chan  = sInImgChan.read();
+        tx_ongoing = true;
+      }
+
       if( !sProcpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {
         netWordTx = sProcpToTxp_Data.read();

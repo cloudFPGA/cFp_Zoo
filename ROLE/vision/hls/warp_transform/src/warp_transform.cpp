@@ -181,14 +181,35 @@ const unsigned int num_outstanding_transactions = 16;
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
 #endif
 
+static float tx_matrix[TRANSFORM_MATRIX_DIM] = {1.5,0,0,0,1.8,0,0,0,0}; //scaling (reduction) left corner!!!
+#pragma HLS reset variable=tx_matrix
+static stream<img_meta_t> sImgRows_FromNet ("sImgRows_FromNet");
+static stream<img_meta_t> sImgRows_FromRX ("sImgRows_FromRX");
+static stream<img_meta_t> sImgRows_FromNetToTX ("sImgRows_FromNetToTX");
+static stream<img_meta_t> sImgCols_FromNet ("sImgCols_FromNet");
+static stream<img_meta_t> sImgCols_FromRX ("sImgCols_FromRX");
+static stream<img_meta_t> sImgCols_FromNetToTX ("sImgCols_FromNetToTX");
+static stream<img_meta_t> sImgChan_FromNet ("sImgChan_FromNet");
+static stream<img_meta_t> sImgChan_FromRX ("sImgChan_FromRX");
+static stream<img_meta_t> sImgChan_FromNetToTX ("sImgChan_FromNetToTX");
 
-  
- pPortAndDestionation(
+
+#pragma HLS stream variable=sImgRows_FromNet depth=1
+#pragma HLS stream variable=sImgRows_FromRX depth=1
+#pragma HLS stream variable=sImgRows_FromNetToTX depth=1
+#pragma HLS stream variable=sImgCols_FromNet depth=1
+#pragma HLS stream variable=sImgCols_FromRX depth=1
+#pragma HLS stream variable=sImgCols_FromNetToTX depth=1
+#pragma HLS stream variable=sImgChan_FromNet depth=1
+#pragma HLS stream variable=sImgChan_FromRX depth=1
+#pragma HLS stream variable=sImgChan_FromNetToTX depth=1
+
+pPortAndDestionation(
         pi_rank, 
         pi_size, 
         sDstNode_sig, 
         po_rx_ports
-        );
+);
   
 #ifdef ENABLE_DDR
 
@@ -201,7 +222,14 @@ const unsigned int num_outstanding_transactions = 16;
         siNrc_meta,
         sRxtoTx_Meta,
         img_in_axi_stream,
-        sMemBurstRx
+        sMemBurstRx,
+        sImgRows_FromNet,
+        sImgCols_FromNet,
+        sImgChan_FromNet,
+        sImgRows_FromNetToTX,
+        sImgCols_FromNetToTX,
+        sImgChan_FromNetToTX,
+        tx_matrix
     );
  
  pRXPathStreamToDDR< Axis<MEMDW_512>, 
@@ -216,7 +244,13 @@ const unsigned int num_outstanding_transactions = 16;
         soMemWriteP0,
         //---- P1 Memory mapped ---------------
         //&processed_bytes_rx,
-        sImageLoaded
+        sImageLoaded,
+        sImgRows_FromNet,
+        sImgCols_FromNet,
+        sImgChan_FromNet,
+        sImgRows_FromRX,
+        sImgCols_FromRX,
+        sImgChan_FromRX
     );
  
  
@@ -245,7 +279,11 @@ const unsigned int num_outstanding_transactions = 16;
         img_in_axi_stream,
         img_out_axi_stream,
 #endif
-        sImageLoaded
+        sImageLoaded,
+        sImgRows_FromRX,
+        sImgCols_FromRX,
+        sImgChan_FromRX,
+        tx_matrix
         );
 
   pTXPath(
@@ -255,7 +293,10 @@ const unsigned int num_outstanding_transactions = 16;
         sRxtoTx_Meta,
         sDstNode_sig,
         &processed_word_tx,
-        pi_rank
+        pi_rank,
+        sImgRows_FromNetToTX,
+        sImgCols_FromNetToTX,
+        sImgChan_FromNetToTX
         );
 }
 
