@@ -249,7 +249,7 @@ int main(int argc, char** argv) {
         nrErr  = 0;
 
 #if NO
-        if ( !dumpImgToFile ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt ) ) {
+        if ( !dumpImgToFileWarpTransform ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt, transformation_matrix_float ) ) {
             nrErr++;
         }
 #endif

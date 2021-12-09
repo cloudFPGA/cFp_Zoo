@@ -47,6 +47,24 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
+
+/********************************************
+ * Internal WarpTransform accelerator command
+ ********************************************/
+enum MemTestCmd {
+    WRPTX_IMG_CMD = 2,
+    WRPTX_TXMAT_CMD  = 1,
+    WRPTX_INVLD_CMD = 0
+};
+
+//CMD 8 bitwdith up to 255 commands (0 is invalid)
+#define WARPTRANSFORM_COMMANDS_HIGH_BIT WARPTRANSFORM_COMMANDS_BITWIDTH-1
+#define WARPTRANSFORM_COMMANDS_LOW_BIT 0
+#define WARPTRANSFORM_COMMANDS_BITWIDTH 8
+typedef unsigned int  img_meta_t; 
+#define TRANSFORM_MATRIX_DIM 9
+
+
 #define ROLE_IS_WARPTRANSFORM
 
 #define WAIT_FOR_META             0
@@ -68,6 +86,10 @@ enum EchoCtrl {
 #define FSM_WR_PAT_STS_A            16
 #define FSM_WR_PAT_STS_B            17
 #define FSM_WR_PAT_STS_C            18
+#define PROCESSING_PACKET_TXMAT     19           
+#define PROCESSING_PACKET_IMGMAT    20           
+#define WAIT_FOR_META_IMGMAT        21           
+
 #define PacketFsmType uint8_t
 
 
