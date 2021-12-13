@@ -62,7 +62,7 @@ enum MemTestCmd {
 #define WARPTRANSFORM_COMMANDS_BITWIDTH 8
 typedef unsigned int  img_meta_t; 
 #define TRANSFORM_MATRIX_DIM 9
-
+const unsigned int const_tx_matrix_dim=TRANSFORM_MATRIX_DIM;
 #define ROLE_IS_WARPTRANSFORM
 
 #define WAIT_FOR_META             0

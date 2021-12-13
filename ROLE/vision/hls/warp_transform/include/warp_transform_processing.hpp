@@ -64,7 +64,8 @@ void pProcPath(
         img_meta_t *                           img_rows,
         img_meta_t *                           img_cols,
         img_meta_t *                           img_chan,
-        float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
+        // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
+        hls::stream<float>                     &sTxMatrix
         )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -136,7 +137,7 @@ void pProcPath(
         #endif
         if (accel_called == false) {
 	    #ifdef ENABLE_DDR 
-            warp_transformAccelMem(lcl_mem0, lcl_mem1, *img_rows, *img_cols, tx_matrix);
+            warp_transformAccelMem(lcl_mem0, lcl_mem1, *img_rows, *img_cols, sTxMatrix);
 	    #else // ! ENABLE_DDR
 	    #ifdef FAKE_WarpTransform
             fakeWarpTransformAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS, tx_matrix);
@@ -227,4 +228,5 @@ void pProcPath(
   } // end switch
  
 }
+
 #endif //_ROLE_WARPTRANSFORM_PROCESSING_HPP_

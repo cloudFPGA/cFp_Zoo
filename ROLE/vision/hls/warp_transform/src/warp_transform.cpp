@@ -181,8 +181,11 @@ const unsigned int num_outstanding_transactions = 256;
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
 #endif
 
-static float tx_matrix[TRANSFORM_MATRIX_DIM] = {1.5,0,0,0,1.8,0,0,0,0}; //scaling (reduction) left corner!!!
-#pragma HLS reset variable=tx_matrix
+static stream<float> sTxMatrix("sTxMatrix");
+#pragma HLS stream variable=sTxMatrix depth=const_tx_matrix_dim
+
+// static float tx_matrix[TRANSFORM_MATRIX_DIM] = {1.5,0,0,0,1.8,0,0,0,0}; //scaling (reduction) left corner!!!
+// #pragma HLS reset variable=tx_matrix
 img_meta_t img_rows = FRAME_HEIGHT;
 img_meta_t img_cols = FRAME_WIDTH;
 img_meta_t img_chan = NPC1;
@@ -212,7 +215,8 @@ pPortAndDestionation(
         &img_rows,
         &img_cols,
         &img_chan,
-        tx_matrix
+        // tx_matrix
+        sTxMatrix
     );
  
  pRXPathStreamToDDR< Axis<MEMDW_512>, 
@@ -263,7 +267,8 @@ pPortAndDestionation(
         &img_rows,
         &img_cols,
         &img_chan,
-        tx_matrix
+        // tx_matrix
+        sTxMatrix
         );
 
   pTXPath(

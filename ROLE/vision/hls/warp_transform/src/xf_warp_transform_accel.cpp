@@ -33,6 +33,21 @@ using namespace std;
 
 //{0.87,−0.5,0,0.5,0.87,0,0,0,1}
 
+void setUpTxMatrixFromStream(
+  float transform_matrix[TRANSFORM_MATRIX_DIM],
+  hls::stream<float> &sTxMatrix  
+  ){ 
+
+    if(!sTxMatrix.empty()){
+      for(int i=0; i<TRANSFORM_MATRIX_DIM; i++){
+        #pragma HLS PIPELINE
+        transform_matrix[i] = sTxMatrix.read();
+      }
+    }
+
+}
+
+
 /*****************************************************************************
  * @brief   Top-level accelerated function of the WarptTransform Application with 
  * array I/F used only for simulation/TB purposes
@@ -183,7 +198,9 @@ void warp_transformAccelMem(membus_t* img_inp,
                             membus_t* img_out,
                             // membus_t* img_out2,
                             int rows, int cols,
-                            float transform_mat[TRANSFORM_MATRIX_DIM]) {
+                            // float transform_mat[TRANSFORM_MATRIX_DIM]
+                            hls::stream<float> &sTxMatrix   
+                            ) {
     // clang-format on
     #pragma  HLS INLINE off
 
@@ -205,13 +222,25 @@ void warp_transformAccelMem(membus_t* img_inp,
 
     // Copy transform data from global memory to local memory:
     //FIXME: not static matrix
-    float transform_matrix[9];
+    static float transform_matrix[TRANSFORM_MATRIX_DIM];// = {1.5,0,0,0,1.8,0,0,0,0};
 
-    for(int i=0; i < TRANSFORM_MATRIX_DIM; i++){
-#pragma HLS PIPELINE
-      transform_matrix[i]=transform_mat[i];
-    }
+    // #if HLS_VERSION <= 20201
+    // #pragma HLS RESOURCE variable=transform_matrix core=RAM_2P
+    // #elif HLS_VERSION >= 20211
+    // #pragma HLS bind_storage variable=transform_matrix type=RAM_T2P
+    // //#pragma HLS bind_storage variable=transform_matrix type=RAM_2P
+    // #else
+    //     printf("ERROR: Invalid HLS_VERSION=%s\n", HLS_VERSION);
+    //     exit(-1);
+    // #endif
 
+//     for(int i=0; i < TRANSFORM_MATRIX_DIM; i++){
+// #pragma HLS PIPELINE
+//       transform_matrix[i]=transform_mat[i];
+//     }
+  //prepare the tx matrix
+    setUpTxMatrixFromStream(transform_matrix,sTxMatrix );
+  
     // Feed a cv matrix from ddr memory
     xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, imgInput);
     

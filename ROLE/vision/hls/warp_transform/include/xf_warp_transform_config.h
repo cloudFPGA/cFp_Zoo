@@ -133,8 +133,10 @@ void fakeWarpTransformAccelStream(
 
 void warp_transformAccelMem(    membus_t* img_inp,
                             membus_t* img_out,
-                            int rows, int cols, 
-                            float transform_matrix[TRANSFORM_MATRIX_DIM]);
+                            int rows, int cols,
+                            hls::stream<float>& sTxMatrix
+                            // float transform_matrix[TRANSFORM_MATRIX_DIM]
+                            );
 
 
 #endif // end of _XF_MEDIAN_BLUR_CONFIG_H_

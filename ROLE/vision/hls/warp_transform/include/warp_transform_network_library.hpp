@@ -211,7 +211,8 @@ void pRXPathNetToStream(
     img_meta_t *                           img_rows,
     img_meta_t *                           img_cols,
     img_meta_t *                           img_chan,
-    float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
+    // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
+    hls::stream<float>                     &sTxMatrix   
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -346,12 +347,12 @@ case PROCESSING_PACKET_TXMAT:
             // unsigned int tmp2 = netWord.tdata.range(32-1,0);
             tmp2.i = netWord.tdata.range(32-1,0);
             //always write one float
-            tx_matrix[tx_mat_idx]=tmp1.f;
-            // memcpy(tx_matrix+tx_mat_idx, (float *)&(tmp1),4);
+            // tx_matrix[tx_mat_idx]=tmp1.f;
+            sTxMatrix.write(tmp1.f);
             // std::cout << "DEBUG in pRXPathNetToStream: tmp1=" << tmp1 << " tmp2=" << tmp2 << std::endl;
             // std::cout << "DEBUG in pRXPathNetToStream: tmp1=" << std::hex << netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32) << " tmp2=" << netWord.tdata.range(32-1,0) << std::dec << std::endl;
 
-            std::cout << "DEBUG in pRXPathNetToStream: tx matrix =" << tx_matrix[tx_mat_idx] << std::endl;
+            std::cout << "DEBUG in pRXPathNetToStream: tx matrix =" << tmp1.f << std::endl;
             tx_mat_idx++;
             std::cout << "DEBUG in pRXPathNetToStream: tx matrix id=" << tx_mat_idx << std::endl;
             
@@ -367,8 +368,8 @@ case PROCESSING_PACKET_TXMAT:
 
             } else { //not at the end of the matrix nor the tlast two float to write
 
-                tx_matrix[tx_mat_idx]=tmp2.f;
-                // memcpy(tx_matrix+tx_mat_idx, (float *)&(tmp2),4);
+                // tx_matrix[tx_mat_idx]=tmp2.f;
+                sTxMatrix.write(tmp2.f);
 
                 tx_mat_idx++;
             }
