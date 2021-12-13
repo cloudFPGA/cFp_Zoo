@@ -183,19 +183,19 @@ void warp_transformAccelMem(membus_t* img_inp,
                             membus_t* img_out,
                             // membus_t* img_out2,
                             int rows, int cols,
-                            float transform_matrix[TRANSFORM_MATRIX_DIM]) {
+                            float transform_mat[TRANSFORM_MATRIX_DIM]) {
     // clang-format on
     #pragma  HLS INLINE off
 
     xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> imgInput(rows, cols);
     // clang-format off
-    #pragma HLS stream variable=imgInput.data depth=2
+    #pragma HLS stream variable=imgInput.data depth=4
     // clang-format on
 
     #ifndef FAKE_WarpTransform
     xf::cv::Mat<TYPE, HEIGHT, WIDTH, NPIX> imgOutput(rows, cols);
     // clang-format off
-    #pragma HLS stream variable=imgOutput.data depth=2
+    #pragma HLS stream variable=imgOutput.data depth=4
     // clang-format on
     #endif
     
@@ -205,7 +205,12 @@ void warp_transformAccelMem(membus_t* img_inp,
 
     // Copy transform data from global memory to local memory:
     //FIXME: not static matrix
-    //float transform_matrix[9]={1.5,0,0,0,1.8,0,0,0,0};
+    float transform_matrix[9];
+
+    for(int i=0; i < TRANSFORM_MATRIX_DIM; i++){
+#pragma HLS PIPELINE
+      transform_matrix[i]=transform_mat[i];
+    }
 
     // Feed a cv matrix from ddr memory
     xf::cv::Array2xfMat<MEMDW_512, XF_8UC1, HEIGHT, WIDTH, NPIX>(img_inp, imgInput);

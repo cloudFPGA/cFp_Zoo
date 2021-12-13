@@ -208,12 +208,9 @@ void pRXPathNetToStream(
     hls::stream<NetworkMetaStream>         &sRxtoTx_Meta,
     hls::stream<TMemWrd>                   &img_in_axi_stream,
     hls::stream<bool>                      &sMemBurstRx,
-    hls::stream<img_meta_t>                &sImgRows,
-    hls::stream<img_meta_t>                &sImgCols,
-    hls::stream<img_meta_t>                &sImgChan,
-    hls::stream<img_meta_t>                &sOTxImgRows,
-    hls::stream<img_meta_t>                &sOTxImgCols,
-    hls::stream<img_meta_t>                &sOTxImgChan,
+    img_meta_t *                           img_rows,
+    img_meta_t *                           img_cols,
+    img_meta_t *                           img_chan,
     float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
     )
 {
@@ -265,13 +262,10 @@ case PROCESSING_PACKET:
                 img_meta_t rows = netWord.tdata.range(WARPTRANSFORM_ROWS_HIGH_BIT, WARPTRANSFORM_ROWS_LOW_BIT);
                 img_meta_t cols = netWord.tdata.range(WARPTRANSFORM_COLS_HIGH_BIT, WARPTRANSFORM_COLS_LOW_BIT);
                 img_meta_t chan = netWord.tdata.range(WARPTRANSFORM_CHNNEL_HIGH_BIT, WARPTRANSFORM_CHNNEL_LOW_BIT);
-                sImgRows.write(rows);
-                sImgCols.write(cols);
-                sImgChan.write(chan);
-
-                sOTxImgRows.write(rows);
-                sOTxImgCols.write(cols);
-                sOTxImgChan.write(chan);
+                std::cout << "DEBUG pRXPathNetToStream - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
+                *img_rows = rows;
+                *img_cols = cols;
+                *img_chan = chan;
                 enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
                 break;
             //TODO: fix the default case
@@ -283,7 +277,7 @@ case PROCESSING_PACKET:
         break;
 
 case PROCESSING_PACKET_IMGMAT:
-        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PROCESSING_PACKET_IMGMAT, processed_net_bytes_rx=%u\n", processed_net_bytes_rx);
         if ( !siSHL_This_Data.empty() && !img_in_axi_stream.full())
         {
             //-- Read incoming data chunk
@@ -327,7 +321,7 @@ case PROCESSING_PACKET_IMGMAT:
         }
         break;
 case WAIT_FOR_META_IMGMAT:
-        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - WAIT_FOR_META\n");
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - WAIT_FOR_META_IMGMAT\n");
         
         if ( !siNrc_meta.empty() && !sRxtoTx_Meta.full() )
         {
@@ -345,24 +339,37 @@ case PROCESSING_PACKET_TXMAT:
             netWord = siSHL_This_Data.read();
             printf("DEBUG in pRXPathNetToStream: Data write = {D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
                netWord.tdata.to_long(), netWord.tkeep.to_int(), netWord.tlast.to_int());
-            float tmp1 = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32);
-            float tmp2 = netWord.tdata.range(32-1,0);
+            float_bits_u tmp1;
+            float_bits_u tmp2;
+            tmp1.i = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32);
+            // unsigned int tmp1 = netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32);
+            // unsigned int tmp2 = netWord.tdata.range(32-1,0);
+            tmp2.i = netWord.tdata.range(32-1,0);
             //always write one float
-            tx_matrix[tx_mat_idx]=tmp1;
+            tx_matrix[tx_mat_idx]=tmp1.f;
+            // memcpy(tx_matrix+tx_mat_idx, (float *)&(tmp1),4);
+            // std::cout << "DEBUG in pRXPathNetToStream: tmp1=" << tmp1 << " tmp2=" << tmp2 << std::endl;
+            // std::cout << "DEBUG in pRXPathNetToStream: tmp1=" << std::hex << netWord.tdata.range(NETWORK_WORD_BIT_WIDTH-1,32) << " tmp2=" << netWord.tdata.range(32-1,0) << std::dec << std::endl;
+
+            std::cout << "DEBUG in pRXPathNetToStream: tx matrix =" << tx_matrix[tx_mat_idx] << std::endl;
             tx_mat_idx++;
-            if ((tx_mat_idx == TRANSFORM_MATRIX_DIM-1) || (netWord.tlast == 1)) {
+            std::cout << "DEBUG in pRXPathNetToStream: tx matrix id=" << tx_mat_idx << std::endl;
+            
+            if ((tx_mat_idx == TRANSFORM_MATRIX_DIM) || (netWord.tlast == 1)) {
                 std::cout << "DEBUG in pRXPathNetToStream: end of matrix rx  communication" << std::endl;
                 //end of rx --> w8 for something; else there is the image after the tx matrix
                 if (netWord.tlast == 1) {          
                     enqueueRxToStrFSM = WAIT_FOR_META;
                 }else{
-                    enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
+                    enqueueRxToStrFSM = PROCESSING_PACKET;
                 }
                 tx_mat_idx = 0;
 
             } else { //not at the end of the matrix nor the tlast two float to write
 
-                tx_matrix[tx_mat_idx]=tmp2;
+                tx_matrix[tx_mat_idx]=tmp2.f;
+                // memcpy(tx_matrix+tx_mat_idx, (float *)&(tmp2),4);
+
                 tx_mat_idx++;
             }
         }
@@ -393,12 +400,9 @@ void pRXPathStreamToDDR(
     hls::stream<TStreamMemWrd>             &soMemWriteP0,
     //---- P1 Memory mapped ---------------
     hls::stream<bool>                      &sImageLoaded,
-    hls::stream<img_meta_t>                &sInImgRows,
-    hls::stream<img_meta_t>                &sInImgCols,
-    hls::stream<img_meta_t>                &sInImgChan,
-    hls::stream<img_meta_t>                &sOutImgRows,
-    hls::stream<img_meta_t>                &sOutImgCols,
-    hls::stream<img_meta_t>                &sOutImgChan
+    img_meta_t *                           img_rows,
+    img_meta_t *                           img_cols,
+    img_meta_t *                           img_chan
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -429,12 +433,12 @@ void pRXPathStreamToDDR(
     #pragma HLS reset variable=memP0
     #pragma HLS reset variable=memWrStsP0    
     
-    static img_meta_t img_rows=0; 
-    static img_meta_t img_cols=0; 
-    static img_meta_t img_chan=0; 
-    #pragma HLS reset variable=img_rows    
-    #pragma HLS reset variable=img_cols    
-    #pragma HLS reset variable=img_chan    
+    static img_meta_t lcl_img_rows=0; 
+    static img_meta_t lcl_img_cols=0; 
+    static img_meta_t lcl_img_chan=0; 
+    #pragma HLS reset variable=lcl_img_rows    
+    #pragma HLS reset variable=lcl_img_cols    
+    #pragma HLS reset variable=lcl_img_chan    
 
     switch(enqueueStrToDdrFSM)
     {
@@ -459,9 +463,9 @@ void pRXPathStreamToDDR(
                 memWrStsP0.decerr = 0;
                 memWrStsP0.slverr = 0;
                 memWrStsP0.okay = 0;
-                img_rows  = sInImgRows.read();
-                img_cols  = sInImgCols.read();
-                img_chan  = sInImgChan.read();
+                lcl_img_rows  = *img_rows;
+                lcl_img_cols  = *img_cols;
+                lcl_img_chan  = *img_chan;
             }
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
         }
@@ -473,7 +477,7 @@ void pRXPathStreamToDDR(
             (processed_bytes_rx) += bytes_per_loop;
         }
         else {
-            printf("DEBUG in pRXPathStreamToDDR: WARNING - you've reached the max depth of img. Will put processed_bytes_rx = 0.\n");
+            printf("DEBUG in pRXPathStreamToDDR: WARNING - you have reached the max depth of img. Will put processed_bytes_rx = 0.\n");
             processed_bytes_rx = 0;
         }
         enqueueStrToDdrFSM = FSM_WR_PAT_CMD;
@@ -590,9 +594,6 @@ case FSM_WR_PAT_STS_C:
     printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - FSM_WR_PAT_STS_C\n");    
         if((processed_bytes_rx) == 0) {
             enqueueStrToDdrFSM = WAIT_FOR_META;
-            sOutImgRows.write(img_rows);
-            sOutImgCols.write(img_cols);
-            sOutImgChan.write(img_chan);
         }
         else {
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
@@ -623,9 +624,9 @@ void pTXPath(
   hls::stream<NodeId>                    &sDstNode_sig,
   unsigned int                           *processed_word_tx, 
   ap_uint<32>                            *pi_rank,
-  hls::stream<img_meta_t>                &sInImgRows,
-  hls::stream<img_meta_t>                &sInImgCols,
-  hls::stream<img_meta_t>                &sInImgChan
+  img_meta_t *                           img_rows,
+  img_meta_t *                           img_cols,
+  img_meta_t *                           img_chan
 )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -645,12 +646,12 @@ void pTXPath(
     #pragma HLS reset variable=dst_rank
     #pragma HLS reset variable=netWordTx
 
-    static img_meta_t img_rows=0;   
-    static img_meta_t img_cols=0; 
-    static img_meta_t img_chan=0; 
-    #pragma HLS reset variable=img_rows    
-    #pragma HLS reset variable=img_cols    
-    #pragma HLS reset variable=img_chan
+    static img_meta_t lcl_img_rows=0;   
+    static img_meta_t lcl_img_cols=0; 
+    static img_meta_t lcl_img_chan=0; 
+    #pragma HLS reset variable=lcl_img_rows    
+    #pragma HLS reset variable=lcl_img_cols    
+    #pragma HLS reset variable=lcl_img_chan
     static bool tx_ongoing = false;
   
   switch(dequeueFSM)
@@ -716,11 +717,18 @@ void pTXPath(
       printf("DEBUG in pTXPath: dequeueFSM=%d - PROCESSING_PACKET, *processed_word_tx=%u\n", 
        dequeueFSM, *processed_word_tx);
     //#endif
-      if (!tx_ongoing && !sInImgRows.empty() && !sInImgCols.empty() && !sInImgChan.empty())
+    //   if (!tx_ongoing && !sInImgRows.empty() && !sInImgCols.empty() && !sInImgChan.empty())
+    //   {
+    //     img_rows  = sInImgRows.read();
+    //     img_cols  = sInImgCols.read();
+    //     img_chan  = sInImgChan.read();
+    //     tx_ongoing = true;
+    //   }
+    if (!tx_ongoing)
       {
-        img_rows  = sInImgRows.read();
-        img_cols  = sInImgCols.read();
-        img_chan  = sInImgChan.read();
+        lcl_img_rows  = *img_rows;
+        lcl_img_cols  = *img_cols;
+        lcl_img_chan  = *img_chan;
         tx_ongoing = true;
       }
 

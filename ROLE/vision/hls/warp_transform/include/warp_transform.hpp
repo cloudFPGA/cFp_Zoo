@@ -37,7 +37,6 @@ using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
 #define ENABLE_DDR
-
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
  ********************************************/
@@ -63,7 +62,6 @@ enum MemTestCmd {
 #define WARPTRANSFORM_COMMANDS_BITWIDTH 8
 typedef unsigned int  img_meta_t; 
 #define TRANSFORM_MATRIX_DIM 9
-
 
 #define ROLE_IS_WARPTRANSFORM
 

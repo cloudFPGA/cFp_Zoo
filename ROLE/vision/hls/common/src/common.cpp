@@ -344,14 +344,16 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         outFileStream.close();
         return(rc);
     }
-    int off = 0;
+    int off = 4;
     for (int i = 0; i < 8; i++)
     {
-        memcpy(value+off, (char*)transform_matrix+i, 4);
+        memcpy(value+off, (float*)transform_matrix+i, 4);
         off += 4;
         off = off % bytes_per_line;
+        std::cout << "[DEBUG] off=" << off << " tx mat=" << transform_matrix[i] << " idx=" << i << " flt val=" << value[off] << " " <<  value[off+1] << " " << value[off+2] << " "  << value[off+3]<< std::endl;
         if (i%2 && i!=0)
         {
+            std::cout << "[DEBUG] packing the valua :D" << std::endl;
             udpWord.tdata = pack_ap_uint_64_(value);
             udpWord.tkeep = 255;
             udpWord.tlast = 0;

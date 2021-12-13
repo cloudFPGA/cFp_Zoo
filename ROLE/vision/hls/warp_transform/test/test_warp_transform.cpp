@@ -236,6 +236,13 @@ int main(int argc, char** argv) {
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
     #endif
+
+    // L2 Vitis WarpTransform
+    warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
+    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    if ( !dumpImgToFile ( imgOutputTb, "verify_UAF_Shl_Data.dat", simCnt) ) {
+        nrErr++;
+    }
     
     while (tb_trials++ < TB_TRIALS) {
    
@@ -303,7 +310,7 @@ int main(int argc, char** argv) {
 
             // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions
             // (Rx-Proc-Tx)
-            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10
+            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10 + 2 + 4
 #ifdef ENABLE_DDR
 #ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB 
                 + (TYPICAL_DDR_LATENCY + EXTRA_DDR_LATENCY_DUE_II + DDR_LATENCY) * MEMORY_LINES_512
@@ -492,22 +499,22 @@ if (simCnt < 0)
 
     /**************		HLS Function	  *****************/
 
-    #if NO
+    // #if NO
 
-    // L2 Vitis WarpTransform
-    warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
-    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    // // L2 Vitis WarpTransform
+    // warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
+    // xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
-    // L1 Vitis WarpTransform 
-    //warp_transform_accel(imgInput, imgOutput, Thresh, k);
+    // // L1 Vitis WarpTransform 
+    // //warp_transform_accel(imgInput, imgOutput, Thresh, k);
 	
-    #endif
+    // #endif
 
-    #if RO
+    // #if RO
 
-    warp_transform_accel(imgInput, imgOutputTb);
+    // warp_transform_accel(imgInput, imgOutputTb);
 
-    #endif
+    // #endif
 
     /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
     xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);

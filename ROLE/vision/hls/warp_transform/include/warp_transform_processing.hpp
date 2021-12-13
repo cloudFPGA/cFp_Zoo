@@ -61,9 +61,9 @@ void pProcPath(
         stream<TimgOut>                        &img_out_axi_stream,
         #endif // ENABLE_DDR	       
         stream<bool>                           &sImageLoaded,
-        hls::stream<img_meta_t>                &sInImgRows,
-        hls::stream<img_meta_t>                &sInImgCols,
-        hls::stream<img_meta_t>                &sInImgChan,
+        img_meta_t *                           img_rows,
+        img_meta_t *                           img_cols,
+        img_meta_t *                           img_chan,
         float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
         )
 {
@@ -98,12 +98,12 @@ void pProcPath(
     #pragma HLS reset variable=tmp  
     #pragma HLS reset variable=temp 
 
-    static img_meta_t img_rows=0; 
-    static img_meta_t img_cols=0; 
-    static img_meta_t img_chan=0; 
-    #pragma HLS reset variable=img_rows    
-    #pragma HLS reset variable=img_cols    
-    #pragma HLS reset variable=img_chan  
+    static img_meta_t lcl_img_rows=0;   
+    static img_meta_t lcl_img_cols=0; 
+    static img_meta_t lcl_img_chan=0; 
+    #pragma HLS reset variable=lcl_img_rows    
+    #pragma HLS reset variable=lcl_img_cols    
+    #pragma HLS reset variable=lcl_img_chan
 
     
   switch(WarpTransformFSM)
@@ -121,9 +121,9 @@ void pProcPath(
                 timeoutCntAbs = 0;
                 cnt_i = 0;
                 #endif
-                img_rows  = sInImgRows.read();
-                img_cols  = sInImgCols.read();
-                img_chan  = sInImgChan.read();
+                lcl_img_rows  = *img_rows;
+                lcl_img_cols  = *img_cols;
+                lcl_img_chan  = *img_chan;
             }
         }
     break;
@@ -136,7 +136,7 @@ void pProcPath(
         #endif
         if (accel_called == false) {
 	    #ifdef ENABLE_DDR 
-            warp_transformAccelMem(lcl_mem0, lcl_mem1, img_rows, img_cols, tx_matrix);
+            warp_transformAccelMem(lcl_mem0, lcl_mem1, *img_rows, *img_cols, tx_matrix);
 	    #else // ! ENABLE_DDR
 	    #ifdef FAKE_WarpTransform
             fakeWarpTransformAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS, tx_matrix);

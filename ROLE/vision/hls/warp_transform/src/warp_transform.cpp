@@ -183,26 +183,12 @@ const unsigned int num_outstanding_transactions = 256;
 
 static float tx_matrix[TRANSFORM_MATRIX_DIM] = {1.5,0,0,0,1.8,0,0,0,0}; //scaling (reduction) left corner!!!
 #pragma HLS reset variable=tx_matrix
-static stream<img_meta_t> sImgRows_FromNet ("sImgRows_FromNet");
-static stream<img_meta_t> sImgRows_FromRX ("sImgRows_FromRX");
-static stream<img_meta_t> sImgRows_FromNetToTX ("sImgRows_FromNetToTX");
-static stream<img_meta_t> sImgCols_FromNet ("sImgCols_FromNet");
-static stream<img_meta_t> sImgCols_FromRX ("sImgCols_FromRX");
-static stream<img_meta_t> sImgCols_FromNetToTX ("sImgCols_FromNetToTX");
-static stream<img_meta_t> sImgChan_FromNet ("sImgChan_FromNet");
-static stream<img_meta_t> sImgChan_FromRX ("sImgChan_FromRX");
-static stream<img_meta_t> sImgChan_FromNetToTX ("sImgChan_FromNetToTX");
-
-
-#pragma HLS stream variable=sImgRows_FromNet depth=1
-#pragma HLS stream variable=sImgRows_FromRX depth=1
-#pragma HLS stream variable=sImgRows_FromNetToTX depth=1
-#pragma HLS stream variable=sImgCols_FromNet depth=1
-#pragma HLS stream variable=sImgCols_FromRX depth=1
-#pragma HLS stream variable=sImgCols_FromNetToTX depth=1
-#pragma HLS stream variable=sImgChan_FromNet depth=1
-#pragma HLS stream variable=sImgChan_FromRX depth=1
-#pragma HLS stream variable=sImgChan_FromNetToTX depth=1
+img_meta_t img_rows = FRAME_HEIGHT;
+img_meta_t img_cols = FRAME_WIDTH;
+img_meta_t img_chan = NPC1;
+#pragma HLS reset variable=img_rows
+#pragma HLS reset variable=img_cols
+#pragma HLS reset variable=img_chan
 
 pPortAndDestionation(
         pi_rank, 
@@ -223,12 +209,9 @@ pPortAndDestionation(
         sRxtoTx_Meta,
         img_in_axi_stream,
         sMemBurstRx,
-        sImgRows_FromNet,
-        sImgCols_FromNet,
-        sImgChan_FromNet,
-        sImgRows_FromNetToTX,
-        sImgCols_FromNetToTX,
-        sImgChan_FromNetToTX,
+        &img_rows,
+        &img_cols,
+        &img_chan,
         tx_matrix
     );
  
@@ -245,12 +228,9 @@ pPortAndDestionation(
         //---- P1 Memory mapped ---------------
         //&processed_bytes_rx,
         sImageLoaded,
-        sImgRows_FromNet,
-        sImgCols_FromNet,
-        sImgChan_FromNet,
-        sImgRows_FromRX,
-        sImgCols_FromRX,
-        sImgChan_FromRX
+        &img_rows,
+        &img_cols,
+        &img_chan
     );
  
  
@@ -280,9 +260,9 @@ pPortAndDestionation(
         img_out_axi_stream,
 #endif
         sImageLoaded,
-        sImgRows_FromRX,
-        sImgCols_FromRX,
-        sImgChan_FromRX,
+        &img_rows,
+        &img_cols,
+        &img_chan,
         tx_matrix
         );
 
@@ -294,9 +274,9 @@ pPortAndDestionation(
         sDstNode_sig,
         &processed_word_tx,
         pi_rank,
-        sImgRows_FromNetToTX,
-        sImgCols_FromNetToTX,
-        sImgChan_FromNetToTX
+        &img_rows,
+        &img_cols,
+        &img_chan
         );
 }
 
