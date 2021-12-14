@@ -138,7 +138,8 @@ int main(int argc, char * argv[]) {
 	    // the first time.
 	    clean_cmd = " ";
 	    if (num_frame == 1) {
-	      clean_cmd = "make clean && ";
+	      clean_cmd = "";
+	      //clean_cmd = "make clean && ";
 	    }
 	    string str_command = "cd ../../../../../../ROLE/vision/hls/warp_transform/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
