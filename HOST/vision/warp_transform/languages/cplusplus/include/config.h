@@ -64,9 +64,10 @@
 //-------------------  AUTOMATICALLY DEFINED OR AUXILILIARY OPTIONS  -------------------------------
 
 #define FRAME_TOTAL FRAME_HEIGHT * FRAME_WIDTH //* 3
+#define WARP_TRANSFORM_TOTAL FRAME_TOTAL + 8 * 2 + 5 * 8 // 8 bytes x 2 commands, and the tx matrix
 
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
-#define TOT_TRANSFERS CEIL(FRAME_TOTAL, PACK_SIZE)  
+#define TOT_TRANSFERS CEIL(WARP_TRANSFORM_TOTAL, PACK_SIZE)
 
 #define tcp 0
 #define udp 1
