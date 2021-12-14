@@ -221,24 +221,9 @@ void warp_transformAccelMem(membus_t* img_inp,
     // clang-format on
 
     // Copy transform data from global memory to local memory:
-    //FIXME: not static matrix
-    static float transform_matrix[TRANSFORM_MATRIX_DIM];// = {1.5,0,0,0,1.8,0,0,0,0};
+    static float transform_matrix[TRANSFORM_MATRIX_DIM];
 
-    // #if HLS_VERSION <= 20201
-    // #pragma HLS RESOURCE variable=transform_matrix core=RAM_2P
-    // #elif HLS_VERSION >= 20211
-    // #pragma HLS bind_storage variable=transform_matrix type=RAM_T2P
-    // //#pragma HLS bind_storage variable=transform_matrix type=RAM_2P
-    // #else
-    //     printf("ERROR: Invalid HLS_VERSION=%s\n", HLS_VERSION);
-    //     exit(-1);
-    // #endif
-
-//     for(int i=0; i < TRANSFORM_MATRIX_DIM; i++){
-// #pragma HLS PIPELINE
-//       transform_matrix[i]=transform_mat[i];
-//     }
-  //prepare the tx matrix
+    //prepare the tx matrix
     setUpTxMatrixFromStream(transform_matrix,sTxMatrix );
   
     // Feed a cv matrix from ddr memory
