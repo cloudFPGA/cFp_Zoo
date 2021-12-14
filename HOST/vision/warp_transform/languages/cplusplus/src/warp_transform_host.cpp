@@ -290,7 +290,7 @@ int main(int argc, char * argv[]) {
         }
         
 #endif // INPUT_FROM_CAMERA
-        string warptx_cmd = prepareWarpTransformCommand(FRAME_WIDTH, FRAME_HEIGHT, send.channels(), transformation_matrix_float);
+        std::string warptx_cmd = prepareWarpTransformCommand(FRAME_WIDTH, FRAME_HEIGHT, send.channels(), transformation_matrix_float);
         
         //frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         unsigned int num_frame = 0;
@@ -387,9 +387,13 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------
 
             // Anchor a pointer on cvMat raw data
-            unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
-
-
+            unsigned char * sendarr_img = send.isContinuous()? send.data: send.clone().data;
+            // unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
+            // warptx_cmd = warptx_cmd.append(sendarr_img, send_total * send_channels);
+	        unsigned char * sendarr = (unsigned char *) malloc (send_total * send_channels +  warptx_cmd_size);
+            memcpy(sendarr,warptx_cmd.c_str(), warptx_cmd_size);
+            memcpy(sendarr+warptx_cmd_size,sendarr_img, send_total * send_channels);
+            
 #endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
     
             clock_t start_cycle_warp_transform_hw = clock();
