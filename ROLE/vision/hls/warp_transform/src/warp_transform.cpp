@@ -141,7 +141,7 @@ const unsigned int num_outstanding_transactions = 256;
   static bool write_chunk_to_ddr_pending;
   static bool ready_to_accept_new_data;
   static bool signal_init;
-  const int tot_transfers = TOT_TRANSFERS;
+  const int tot_transfers = TOT_TRANSFERS_TX;
   const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
 

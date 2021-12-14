@@ -288,7 +288,8 @@ int main(int argc, char** argv) {
 
             //there are TOT_TRANSFERS streams from the the App to the Role
             NetworkMeta tmp_meta = NetworkMeta ( 1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0 );
-            for ( int i=0; i<TOT_TRANSFERS; i++ ) {
+            std::cout << "DEBUG: tx transfer=" << TOT_TRANSFERS_TX << " rx=" << TOT_TRANSFERS_RX << std::endl;
+            for ( int i=0; i<TOT_TRANSFERS_TX; i++ ) {
                 siUdp_meta.write ( NetworkMetaStream ( tmp_meta ) );
             }
             //set correct node_rank and cluster_size
@@ -446,7 +447,7 @@ if (simCnt < 0)
                 assert ( tmp_meta.tdata.dst_rank == ( ( tmp_meta.tdata.src_rank + 1 ) % cluster_size ) );
             }
             //printf("DEBUG: i=%u\tTOT_TRANSFERS=%u\n", i, TOT_TRANSFERS);
-            assert ( i == TOT_TRANSFERS );
+            assert ( i == TOT_TRANSFERS_RX );
         } else {
             printf ( "Error No metadata received...\n" );
             nrErr++;

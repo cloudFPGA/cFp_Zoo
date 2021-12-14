@@ -221,17 +221,25 @@ void pRXPathNetToStream(
     //-- LOCAL VARIABLES ------------------------------------------------------
     static NetworkWord  netWord;
     // const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
-    NetworkMetaStream   meta_tmp;
+    static NetworkMetaStream   meta_tmp;
     static TMemWrd v = 0;
     static unsigned int cnt_wr_stream = 0, cnt_wr_burst = 0;
     static unsigned int processed_net_bytes_rx = 0;    
     static unsigned int tx_mat_idx = 0;
+    #pragma HLS reset variable=meta_tmp
     #pragma HLS reset variable=tx_mat_idx
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_burst
     #pragma HLS reset variable=processed_net_bytes_rx
     static PacketFsmType enqueueRxToStrFSM = WAIT_FOR_META;
     #pragma HLS reset variable=enqueueRxToStrFSM
+    unsigned int expected_input_meta = TOT_TRANSFERS_TX;
+    unsigned int expected_output_meta = TOT_TRANSFERS_RX;
+    unsigned int received_and_fwded_meta = 0;
+    #pragma HLS reset variable=expected_input_meta
+    #pragma HLS reset variable=expected_output_meta
+    #pragma HLS reset variable=received_and_fwded_meta
+
 
     switch(enqueueRxToStrFSM)
     {
@@ -242,8 +250,10 @@ void pRXPathNetToStream(
         {
             meta_tmp = siNrc_meta.read();
             meta_tmp.tlast = 1; //just to be sure...
-            sRxtoTx_Meta.write(meta_tmp);
+            //sRxtoTx_Meta.write(meta_tmp);
             enqueueRxToStrFSM = PROCESSING_PACKET;
+            expected_output_meta = TOT_TRANSFERS_RX;
+            received_and_fwded_meta = 0;
         }
         break;
 
@@ -263,6 +273,7 @@ case PROCESSING_PACKET:
                 img_meta_t rows = netWord.tdata.range(WARPTRANSFORM_ROWS_HIGH_BIT, WARPTRANSFORM_ROWS_LOW_BIT);
                 img_meta_t cols = netWord.tdata.range(WARPTRANSFORM_COLS_HIGH_BIT, WARPTRANSFORM_COLS_LOW_BIT);
                 img_meta_t chan = netWord.tdata.range(WARPTRANSFORM_CHNNEL_HIGH_BIT, WARPTRANSFORM_CHNNEL_LOW_BIT);
+                expected_output_meta = rows * cols;
                 std::cout << "DEBUG pRXPathNetToStream - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
                 *img_rows = rows;
                 *img_cols = cols;
@@ -305,7 +316,13 @@ case PROCESSING_PACKET_IMGMAT:
                     //Next state logic
                     if (processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt)
                    {
-                        enqueueRxToStrFSM = WAIT_FOR_META;
+                       if( received_and_fwded_meta < expected_output_meta){
+                            sRxtoTx_Meta.write(meta_tmp);
+                            received_and_fwded_meta++;
+                            enqueueRxToStrFSM = PUSH_REMAINING_META;
+                       }else{
+                            enqueueRxToStrFSM = WAIT_FOR_META;
+                       }
                     }else{
                         enqueueRxToStrFSM = WAIT_FOR_META_IMGMAT;
 
@@ -329,6 +346,7 @@ case WAIT_FOR_META_IMGMAT:
             meta_tmp = siNrc_meta.read();
             meta_tmp.tlast = 1; //just to be sure...
             sRxtoTx_Meta.write(meta_tmp);
+            received_and_fwded_meta++;
             enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
         }
         break;
@@ -372,6 +390,20 @@ case PROCESSING_PACKET_TXMAT:
                 sTxMatrix.write(tmp2.f);
 
                 tx_mat_idx++;
+            }
+        }
+        break;
+case PUSH_REMAINING_META:
+        printf("DEBUG in pRXPathNetToStream: enqueueRxToStrFSM - PUSH_REMAINING__META\n");
+        
+        if ( !sRxtoTx_Meta.full() )
+        {
+            if( received_and_fwded_meta < expected_output_meta){
+                sRxtoTx_Meta.write(meta_tmp);
+                received_and_fwded_meta++;
+                enqueueRxToStrFSM = PUSH_REMAINING_META;
+            }else{
+                enqueueRxToStrFSM = WAIT_FOR_META;
             }
         }
         break;
