@@ -1,19 +1,16 @@
 # cFp_Zoo Overview
 
-[![Doc Build Status](https://travis.ibm.com/cloudFPGA/cFp_Vitis.svg?token=8sgWzx3xuqu53CzFUy8K&branch=master)](https://travis.ibm.com/cloudFPGA/cFp_Vitis)  [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
 cFp_Zoo is a cloudFPGA project (cFp) featuring domain-specific accelerators for the hybrid multi-cloud era.
 
-- [Project documentation](https://pages.github.ibm.com/cloudFPGA/Doc/pages/project_repository.html#cfp-vitis)
+- [Project documentation](https://cloudfpga.github.io/Doc/pages/PROJECTS/cFp_Zoo_overview.html)
 - [Code documentation](https://cloudfpga.github.io/Dox/group__cFp__Zoo.html)
 
-**Idea**: The `cFp_Zoo` project develops numerous domain-specific accelerators, incuding those from the open source library [Vitis Libraries](https://github.com/Xilinx/Vitis_Libraries) to the [cloudFPGA](https://pages.github.ibm.com/cloudFPGA/Doc/index.html) platform.
-```
-   CPU(OpenCL/OpenCV)  -->  FPGA (Vitis HLS C++)  -->  FPGA (Vitis HLS C++)
-    /\__________________________________________________|
-```
+**Idea**: The `cFp_Zoo` project develops numerous domain-specific accelerators, incuding those from the open source library [Vitis Libraries](https://github.com/Xilinx/Vitis_Libraries) to the [cloudFPGA](https://cloudfpga.github.io/Doc/index.html) platform.
 
-![Oveview of cFp_Zoo](./doc/cFp_Vitis.png)
+
+![Oveview of cFp_Zoo](./doc/cFp_Zoo.png)
 
 
 ## System configurattion
@@ -41,9 +38,7 @@ sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wi
 
 ## Vivado/Vitis tool support
 
-The versions below are supported by cFp_Vitis. As of today we follow a hybrid development approach
-where a specific part of `SHELL` code is synthesized using `Vivado 2017.4`, while the rest of the 
-HLS, Synthesis, P&R and bitgen are carried over with `Vivado 2019.x`.
+The versions below are supported by cFp_Zoo.
 
 #### For the SHELL (cFDK's code)
 
@@ -95,12 +90,15 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
 ## Quick cFp_Zoo configuration
 ![Step 1 - Terminal](./doc/config1.png)
 ![Step 2 - Info](./doc/config2.png)
-![Step 3 - Select TCP/UDP](./doc/config3.png)
-![Step 4 - Select Domain](./doc/config4.png)
-![Step 5 - Select Kernel](./doc/config5.png)
-![Step 6 - Select MTU](./doc/config6.png)
-![Step 7 - Select Port](./doc/config7.png)
-![Step 8 - Confirm](./doc/config8.png)
+![Step 3 - Load configuration](./doc/config3.png)
+![Step 4 - Select TCP/UDP](./doc/config4.png)
+![Step 5 - Select Domain](./doc/config5.png)
+![Step 6 - Select Kernel](./doc/config6.png)
+![Step 7 - Select MTU](./doc/config7.png)
+![Step 8 - Select Port](./doc/config8.png)
+![Step 9 - Select DDR](./doc/config9.png)
+![Step 10 - Confirm](./doc/config10.png)
+![Step 11 - Finish](./doc/config11.png)
 
 ### Usefull commands
 

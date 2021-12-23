@@ -70,7 +70,7 @@
 #define INPUT_TYPE_HOST CV_8UC1
 
 /** The network socket type: tcp or udp                                                           */
-#define NET_TYPE udp //tcp
+#define NET_TYPE udp
 
 /** The level of debugging.
  *  0->None, 1-> Light Debug, 2-> Medium Debug , 3-> Insane Debug
