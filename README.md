@@ -100,6 +100,25 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
 ![Step 10 - Confirm](./doc/config10.png)
 ![Step 11 - Finish](./doc/config11.png)
 
+
+## cFp_Zoo Essentials
+
+#### Firewall issues
+
+Some firewalls may block network packets if there is not a connection to the remote machine/port.
+Hence, to get the Triangle example to work, the following commands may be necessary to be executed 
+(as root):
+
+```
+$ firewall-cmd --zone=public --add-port=2718-2750/udp --permanent
+$ firewall-cmd --zone=public --add-port=2718-2750/tcp --permanent
+$ firewall-cmd --reload
+```
+
+Also, ensure that the network secuirty group settings are updated (e.g. in case of the ZYC2 OpenStack).
+
+
+
 ### Usefull commands
 
 - Connect to ZYC2 network through openvpn:

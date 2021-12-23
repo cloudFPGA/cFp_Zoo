@@ -9,8 +9,8 @@ The Harris IP is privided by the open source Xilinx ® Vitis™ Vision library, 
 #### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Vitis.git
-cd cFp_Vitis
+git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Zoo.git
+cd cFp_Zoo
 source ./env/setenv.sh
 ```
 
@@ -23,7 +23,7 @@ In the following figure it is shown how straightforward is to intergrate a funct
 
 Since most of Vitis libraries (in L1) are offered with a AXI stream I/F in dataflow mode, the most obvious approach to connect them to cF is to wrap this 
 I/F with anohter I/F that takes care of carefully feeding (as well as sending the results back) to (from) the Harris IP from the network. 
-For cFp_Vitis we are using the Themisto Shell already equipeed with a network streaming I/F for the user application. 
+For cFp_Zoo we are using the Themisto Shell already equipeed with a network streaming I/F for the user application. 
 A small FSM takes care of the data casting between network and AXI streams.
 
 
@@ -34,21 +34,21 @@ The testbench of Harris is highlighted below:
 ![Oveview of Vitis Vision Harris Testbench](../../../../doc/harris_tb.png)
 
 The testbench is offered in two flavors:
-- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
+- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Harris IP when this is wrapped in a [cF Themisto Shell](https://github.com/cloudFPGA/cFDK/blob/main/DOC/Themisto.md).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
 
 This folder contains the mandatory files to proceed withthe 1st option, i.e. HLS TB
   
 Basic files/module for the HLS TB:
-  3. [test_harris_app.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/hls/harris_app/src/harris_app.cpp): The typical Vivado HLS testbench of Harris IP, when this is wrapped in a Themisto Shell.
-  4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
-  5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
+  3. [test_harris.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/master/ROLE/vision/hls/harris/test/test_harris.cpp): The typical Vivado HLS testbench of Harris IP, when this is wrapped in a Themisto Shell.
+  4. [Themisto Shell](https://github.com/cloudFPGA/cFDK/blob/main/DOC/Themisto.md): The SHELL-ROLE architecture of cF.
+  5. [cFp_Zoo](https://github.com/cloudFPGA/cFp_Zoo): The project that bridges Vitis libraries with cF.
 
   
 ##### Harris image size 
 
-The maximum image size, that the Harris IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/harris/include/config.h 
+The maximum image size, that the Harris IP is configured, is defined at https://github.com/cloudFPGA/cFp_Zoo/blob/master/HOST/vision/harris/languages/cplusplus/include/config.h 
 through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
 provided has other dimensions, the `cv::resize` function will be used to adjust the image (scale) to `FRAME_HEIGHT x FRAME_WIDTH`.
   
@@ -84,29 +84,29 @@ the rest of the project (including P&R and bitgen) with Vivado (HLS) > 2019.1.
 ##### The Harris IP
 This is only for the HLS of Harris (e.g. to check synthesizability)
 ```bash
-cd cFp_Vitis/ROLE/vision/hls
+cd cFp_Zoo/ROLE/vision/hls
 make harris # with Vivado HLS >= 2019.1
 ```
 or 
 ```bash
-cd cFp_Vitis/ROLE/vision/hls/harris
+cd cFp_Zoo/ROLE/vision/hls/harris
 make csynth # with Vivado HLS >= 2019.1
 ```
 or
 ```bash
-cd cFp_Vitis/ROLE/vision/hls/harris
+cd cFp_Zoo/ROLE/vision/hls/harris
 vivado_hls -f run_hls.tcl # with Vivado HLS >= 2019.1
 ```
 
 ##### The Themisto SHELL
 ```bash
-cd cFp_Vitis/cFDK/SRA/LIB/SHELL/Themisto
-make all # with Vivado HLS == 2017.4
+cd cFp_Zoo/cFDK/SRA/LIB/SHELL/Themisto
+make all # with Vivado HLS == 2019.1
 ```
 
-##### The complete cFp_Vitis
+##### The complete cFp_Zoo
 ```bash
-cd cFp_Vitis
+cd cFp_Zoo
 make monolithic # with Vivado HLS >= 2019.1
 ```
 

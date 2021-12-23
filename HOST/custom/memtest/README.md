@@ -41,4 +41,4 @@ To emulate your application layer, employ a machine where you can have Vivado HL
 6. Find the updated data in the `plots` folder :)
 
 ## Acknowledgement and Copyright
-This project is built upon various open-sourced libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/) and [OpenCV 3](http://opencv.org/) ; please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.
+This project is built upon various open-sourced libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/); please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.
