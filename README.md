@@ -72,7 +72,7 @@ cFp_Zoo features several accelerated functionalities in the form of libraries wh
 * the C++ code that can be synthesized through Xilinx Vivado HLS tool into RTL code and further implemented into a network-attached FPGA through [cFDK](https://github.com/cloudFPGA/cFDK/). This code is under the [ROLE](https://github.com/cloudFPGA/cFp_Zoo/tree/master/ROLE) directory.
 * the C++ and/or Python host code, which can be executed on a bare-metal or VM-based host, which is in the same network with the aforementioned network-attached FPGA, and interact with it using network sockets. This code is under the [HOST](https://github.com/cloudFPGA/cFp_Zoo/tree/master/HOST) directory.
 
-We provide support for  
+We provide support for the following libraries: 
 
 ### IBM ZRL libraries support
 
@@ -110,7 +110,7 @@ The following Vitis accelerated libraries are supported by cFp_Zoo:
 
 ## Getting started
   
-We provide a 
+We provide a 6-steps flow to create an FPGA bitstream with a cFp_Zoo accelerated application and and launch it on cloudFPGA platform. 
 
 ### Step-1: Clone the project
 
