@@ -21,7 +21,6 @@
  * @date       Sept 2021
  * @author     DID, DCO
  * 
- * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
  * 
  * @ingroup Memtest

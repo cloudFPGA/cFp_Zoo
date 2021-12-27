@@ -50,21 +50,20 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-void print_cFpVitis(void)
+                                                                                                    
+void print_cFpZoo(void)
 {
         cout <<  "                                                          " << endl;
 	cout <<  "...build with:                                            " << endl;
-	cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
-	cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
-	cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
-	cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
-	cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
-	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███████╗ ██████╗  ██████╗      " << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ╚══███╔╝██╔═══██╗██╔═══██╗     " << endl;
+	cout <<  "██║     █████╗  ██████╔╝     ███╔╝ ██║   ██║██║   ██║     " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝     ███╔╝  ██║   ██║██║   ██║     " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
 	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
-                                                                                                    
-
 
 #ifdef PY_WRAP
 void mceuropeanengine(DtUsedInt loop_nm, DtUsed *outarg, char *s_servAddress, char *s_servPort, 
@@ -131,7 +130,7 @@ int main(int argc, char *argv[])
     //UDPSocket *udpsock_p;
     //TCPSocket *tcpsock_p;
   
-    print_cFpVitis();
+    print_cFpZoo();
     
     try {
           

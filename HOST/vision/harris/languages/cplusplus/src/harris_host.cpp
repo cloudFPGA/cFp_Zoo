@@ -54,18 +54,18 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-void print_cFpVitis(void)
+void print_cFpZoo(void)
 {
-    cout <<  "                                                          " << endl;
-    cout <<  "...build with:                                            " << endl;
-    cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
-    cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
-    cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
-    cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
-    cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
-    cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
-    cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-    cout <<  "                                                          " << endl;
+        cout <<  "                                                          " << endl;
+	cout <<  "...build with:                                            " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███████╗ ██████╗  ██████╗      " << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ╚══███╔╝██╔═══██╗██╔═══██╗     " << endl;
+	cout <<  "██║     █████╗  ██████╔╝     ███╔╝ ██║   ██║██║   ██║     " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝     ███╔╝  ██║   ██║██║   ██║     " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
+	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
 
 /*****************************************************************************
@@ -236,7 +236,7 @@ int main(int argc, char * argv[]) {
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_HARRIS_FILENAME) 
 
-    print_cFpVitis();
+    print_cFpZoo();
     
     try {
           
