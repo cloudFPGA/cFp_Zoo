@@ -164,7 +164,7 @@ Here we cover the 2nd option, i.e. cFSP.
   ```
     $ ./cfsp image post --image_file=<path>/cFp_Zoo/4_topFMKU60_impl_vision_monolithic.bit
   ```
-  ![cFSP-Image-Post-Upload-Res](https://github.com/cloudFPGA/cFSP/blob/master/doc/img/4.png#center)
+  ![cFSP-Image-Post-Upload-Res](https://github.com/cloudFPGA/cFSP/blob/master/doc/img/4.png?raw=true#center)
 
   Write down the image "*id*" for use in the next step, e.g. `74462cd5-20e3-4228-a47d-258b7e5e583a`.
 
@@ -179,7 +179,7 @@ Assuming you want to create a cluster with
 ```
 ./cfsp cluster post --image_id=74462cd5-20e3-4228-a47d-258b7e5e583a --node_ip=10.12.2.100
 ```
-![cFSP-Image-Post-Upload-Res](https://github.com/cloudFPGA/cFSP/blob/master/doc/img/6.png#center)
+![cFSP-Cluster-Post-Create-Res](https://github.com/cloudFPGA/cFSP/blob/master/doc/img/6.png?raw=true#center)
 
 Write down the "*role_ip*" for later accessing your cluster's FPGA. e.g. 10.12.200.184
 
