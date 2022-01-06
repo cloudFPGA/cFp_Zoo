@@ -342,11 +342,12 @@ int main(int argc, char * argv[]) {
             unsigned int total_pack  = 1 + (send_total * send_channels - 1 +  warptx_cmd_size) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
             unsigned int bytes_in_last_pack = send_total * send_channels +  warptx_cmd_size - (total_pack - 1) * PACK_SIZE;
-            assert(total_pack == TOT_TRANSFERS);
+            assert(total_pack == TOT_TRANSFERS_TX);
 
             unsigned int total_pack_rx  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
             unsigned int total_bytes_rx = total_pack_rx * PACK_SIZE;
             unsigned int bytes_in_last_pack_rx = send_total * send_channels - (total_pack_rx- 1) * PACK_SIZE;
+            assert(total_pack_rx == TOT_TRANSFERS_RX);
 
             //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
 	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack_rx * sizeof (unsigned char));
@@ -525,6 +526,7 @@ int main(int argc, char * argv[]) {
             cout << "\\___________________________________________________________________/" << endl
             << endl;
             //delete(longbuf);
+	    free (sendarr);
 	    free (longbuf);
         } // while loop
 	

@@ -21,6 +21,27 @@
 
 using namespace cv;
 
+/*****************************************************************************
+ * @brief print the binary representation of a target pointer buffer of a given size.
+ *      Assumes little endian.
+ * @param[in]  size the bytesize to print from ptr.
+ * @param[in] ptr the buffer pointer.
+ * @return nothing, print to stdout.
+ ******************************************************************************/
+void printBits(size_t const size, void const * const ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}
 
   /**
    *   Main testbench for the user-application for WarpTransform on host. Server
@@ -74,8 +95,10 @@ int main(int argc, char * argv[]) {
         while (1) {
             // Block until receive message from a client
     
-	    int total_pack = 1 + (FRAME_TOTAL - 1) / PACK_SIZE;
-            int bytes_in_last_pack = (FRAME_TOTAL) - (total_pack - 1) * PACK_SIZE;	    
+	    int total_pack_back2Host = 1 + (FRAME_TOTAL - 1) / PACK_SIZE;
+        int bytes_in_last_pack_back2Host = (FRAME_TOTAL) - (total_pack_back2Host - 1) * PACK_SIZE;
+		int total_pack = 1 + (WARP_TRANSFORM_TOTAL - 1) / PACK_SIZE;
+        int bytes_in_last_pack = (WARP_TRANSFORM_TOTAL) - (total_pack - 1) * PACK_SIZE;	    
 	    int receiving_now = PACK_SIZE;
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
@@ -101,8 +124,22 @@ int main(int argc, char * argv[]) {
             }
 
             cout << "INFO: Received packet from " << sourceAddress << ":" << servPort << endl;
- 
-            cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
+			std::cout << "INFO: recevied the CMD=";// << std::endl;
+			printBits(8, longbuf);
+			std::cout << "INFO: tx matrix0-1=    ";//<< std::endl;
+			printBits(8, longbuf+(1 * 8));
+			std::cout << "INFO: tx matrix2-3=    ";//<< std::endl;
+			printBits(8, longbuf+(2 * 8));
+			std::cout << "INFO: tx matrix4-5=    ";//<< std::endl;
+			printBits(8, longbuf+(3 * 8));
+			std::cout << "INFO: tx matrix6-7=    ";//<< std::endl;
+			printBits(8, longbuf+(4 * 8));
+			std::cout << "INFO: tx matrix8=      ";//<< std::endl;
+			printBits(4, longbuf+(5 * 8));
+			std::cout << "INFO: IMG CMD=         ";// << std::endl;
+			printBits(8, longbuf+(6 * 8));
+			std::cout << std::endl;
+            cv::Mat frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf+CMD_OVERHEAD_BYTES); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
@@ -138,8 +175,8 @@ int main(int argc, char * argv[]) {
 	    // the first time.
 	    clean_cmd = " ";
 	    if (num_frame == 1) {
-	      clean_cmd = "";
-	      //clean_cmd = "make clean && ";
+	      //clean_cmd = "";
+	      clean_cmd = "make clean && ";
 	    }
 	    string str_command = "cd ../../../../../../ROLE/vision/hls/warp_transform/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
@@ -178,9 +215,9 @@ int main(int argc, char * argv[]) {
 	    // TX Loop
 	    unsigned int sending_now = PACK_SIZE;
 	    clock_t last_cycle_tx = clock();
-            for (int i = 0; i < total_pack; i++) {
-                if ( i == total_pack - 1 ) {
-                    sending_now = bytes_in_last_pack;
+            for (int i = 0; i < total_pack_back2Host; i++) {
+                if ( i == total_pack_back2Host - 1 ) {
+                    sending_now = bytes_in_last_pack_back2Host;
 		}
 		#if NET_TYPE == udp
 		sock.sendTo( & frame.data[i * PACK_SIZE], sending_now, sourceAddress, servPort);

@@ -6,14 +6,14 @@
 
 
 # Choose the kernel which will be the "template" from which the new directries/files will be generated
-template_kernel="sobel"
-template_kernel2="Sobel"
-template_kernel3="SOBEL"
+template_kernel="median_blur"
+template_kernel2="MedianBlur"
+template_kernel3="MEDIANBLUR"
 
 # Choose the name of the new kernel/files/dirs
-new_kernel="warp_transform"
-new_kernel2="WarpTransform"
-new_kernel3="WARPTRANSFORM"
+new_kernel="warp_transform_custom"
+new_kernel2="WarpTransformCustom"
+new_kernel3="WARPTRANSFORMCUSTOM"
 
 function replace() {
     files="$(find -L "$1" -type f)";
