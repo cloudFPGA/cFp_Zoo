@@ -209,6 +209,28 @@ img_meta_t img_chan = NPC1;
 #pragma HLS reset variable=img_cols
 #pragma HLS reset variable=img_chan
 
+static stream<img_meta_t> sRowsToRx("sRowsToRx");
+static stream<img_meta_t> sColsToRx("sColsToRx");
+static stream<img_meta_t> sChanToRx("sChanToRx");
+#pragma HLS stream variable=sRowsToRx depth=2
+#pragma HLS stream variable=sColsToRx depth=2
+#pragma HLS stream variable=sChanToRx depth=2
+
+static stream<img_meta_t> sRowsToProc("sRowsToProc");
+static stream<img_meta_t> sColsToProc("sColsToProc");
+static stream<img_meta_t> sChanToProc("sChanToProc");
+#pragma HLS stream variable=sRowsToProc depth=2
+#pragma HLS stream variable=sColsToProc depth=2
+#pragma HLS stream variable=sChanToProc depth=2
+
+static stream<img_meta_t> sRowsToTx("sRowsToTx");
+static stream<img_meta_t> sColsToTx("sColsToTx");
+static stream<img_meta_t> sChanToTx("sChanToTx");
+#pragma HLS stream variable=sRowsToTx depth=2
+#pragma HLS stream variable=sColsToTx depth=2
+#pragma HLS stream variable=sChanToTx depth=2
+
+
 pPortAndDestionation(
         pi_rank, 
         pi_size, 
@@ -232,7 +254,16 @@ pPortAndDestionation(
         &img_cols,
         &img_chan,
         // tx_matrix
-        sTxMatrix
+        sTxMatrix,
+        sRowsToRx,
+        sColsToRx,
+        sChanToRx,
+        sRowsToProc,
+        sColsToProc,
+        sChanToProc,
+        sRowsToTx,
+        sColsToTx,
+        sChanToTx
     );
  
  pRXPathStreamToDDR< Axis<MEMDW_512>, 
@@ -250,7 +281,10 @@ pPortAndDestionation(
         sImageLoaded,
         &img_rows,
         &img_cols,
-        &img_chan
+        &img_chan,
+        sRowsToRx,
+        sColsToRx,
+        sChanToRx
     );
  
  
@@ -284,7 +318,10 @@ pPortAndDestionation(
         &img_cols,
         &img_chan,
         // tx_matrix
-        sTxMatrix
+        sTxMatrix,
+        sRowsToProc,
+        sColsToProc,
+        sChanToProc
         );
 
   pTXPath(
@@ -297,7 +334,10 @@ pPortAndDestionation(
         pi_rank,
         &img_rows,
         &img_cols,
-        &img_chan
+        &img_chan,
+        sRowsToTx,
+        sColsToTx,
+        sChanToTx
         );
 }
 

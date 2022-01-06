@@ -104,7 +104,8 @@ const unsigned int const_tx_matrix_dim=TRANSFORM_MATRIX_DIM;
 #define PROCESSING_PACKET_TXMAT     19           
 #define PROCESSING_PACKET_IMGMAT    20           
 #define WAIT_FOR_META_IMGMAT        21           
-#define PUSH_REMAINING_META        22           
+#define PUSH_REMAINING_META         22
+#define WAIT_FOR_IMAGE_DIMENSIONS   23           
 
 #define PacketFsmType uint8_t
 

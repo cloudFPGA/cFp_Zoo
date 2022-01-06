@@ -229,7 +229,16 @@ void pRXPathNetToStream(
     img_meta_t *                           img_cols,
     img_meta_t *                           img_chan,
     // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
-    hls::stream<float>                     &sTxMatrix   
+    hls::stream<float>                     &sTxMatrix ,
+    hls::stream<img_meta_t>                &soRowsToRx,
+    hls::stream<img_meta_t>                &soColsToRx,
+    hls::stream<img_meta_t>                &soChanToRx,
+    hls::stream<img_meta_t>                &soRowsToProc,
+    hls::stream<img_meta_t>                &soColsToProc,
+    hls::stream<img_meta_t>                &soChanToProc,
+    hls::stream<img_meta_t>                &soRowsToTx,
+    hls::stream<img_meta_t>                &soColsToTx,
+    hls::stream<img_meta_t>                &soChanToTx
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -299,6 +308,15 @@ case PROCESSING_PACKET:
                 *img_rows = rows;
                 *img_cols = cols;
                 *img_chan = chan;
+                soRowsToRx.write(rows);
+                soColsToRx.write(cols);
+                soChanToRx.write(chan);
+                soRowsToProc.write(rows);
+                soColsToProc.write(cols);
+                soChanToProc.write(chan);
+                soRowsToTx.write(rows);
+                soColsToTx.write(cols);
+                soChanToTx.write(chan);
                 enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
                 break;
             //TODO: fix the default case
@@ -457,7 +475,10 @@ void pRXPathStreamToDDR(
     hls::stream<bool>                      &sImageLoaded,
     img_meta_t *                           img_rows,
     img_meta_t *                           img_cols,
-    img_meta_t *                           img_chan
+    img_meta_t *                           img_chan,
+    hls::stream<img_meta_t>                &siRows,
+    hls::stream<img_meta_t>                &siCols,
+    hls::stream<img_meta_t>                &siChan
     )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -518,9 +539,12 @@ void pRXPathStreamToDDR(
                 memWrStsP0.decerr = 0;
                 memWrStsP0.slverr = 0;
                 memWrStsP0.okay = 0;
-                lcl_img_rows  = *img_rows;
-                lcl_img_cols  = *img_cols;
-                lcl_img_chan  = *img_chan;
+                // lcl_img_rows  = *img_rows;
+                // lcl_img_cols  = *img_cols;
+                // lcl_img_chan  = *img_chan;
+                lcl_img_rows  = siRows.read();
+                lcl_img_cols  = siCols.read();
+                lcl_img_chan  = siChan.read();
             }
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
         }
@@ -681,7 +705,10 @@ void pTXPath(
   ap_uint<32>                            *pi_rank,
   img_meta_t *                           img_rows,
   img_meta_t *                           img_cols,
-  img_meta_t *                           img_chan
+  img_meta_t *                           img_chan,
+  hls::stream<img_meta_t>                &siRows,
+  hls::stream<img_meta_t>                &siCols,
+  hls::stream<img_meta_t>                &siChan
 )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -708,18 +735,33 @@ void pTXPath(
     #pragma HLS reset variable=lcl_img_cols    
     #pragma HLS reset variable=lcl_img_chan
     static bool tx_ongoing = false;
+    #pragma HLS reset variable=tx_ongoing
+
+    static unsigned int word_to_tx = MIN_TX_LOOPS;
+    #pragma HLS reset variable=word_to_tx
   
   switch(dequeueFSM)
   {
     default:
     case WAIT_FOR_META:
+      printf("DEBUG in pTXPath: dequeueFSM - WAIT_FOR_META\n");
       if(!sDstNode_sig.empty())
       {
         dst_rank = sDstNode_sig.read();
-        dequeueFSM = WAIT_FOR_STREAM_PAIR;
+        dequeueFSM = WAIT_FOR_IMAGE_DIMENSIONS;
         //WarpTransform app needs to be reset to process new rank
       }
       break;
+    case WAIT_FOR_IMAGE_DIMENSIONS:
+        printf("DEBUG in pTXPath: dequeueFSM - WAIT_FOR_IMAGE_DIMENSIONS\n");
+        if(!siRows.empty() && !siCols.empty()  && !siChan.empty()){
+        lcl_img_rows  = siRows.read();
+        lcl_img_cols  = siCols.read();
+        lcl_img_chan  = siChan.read();
+        word_to_tx = lcl_img_rows * lcl_img_cols * lcl_img_chan / BYTES_PER_10GBITETHRNET_AXI_PACKET;
+        dequeueFSM=WAIT_FOR_STREAM_PAIR;
+        }
+        break;
     case WAIT_FOR_STREAM_PAIR:
     //#if DEBUG_LEVEL == TRACE_ALL
       printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
@@ -727,9 +769,10 @@ void pTXPath(
     // #endif
       //-- Forward incoming chunk to SHELL
       //WarpTransform-related
-      if (*processed_word_tx == MIN_TX_LOOPS) {
+      if (*processed_word_tx == word_to_tx) {
         *processed_word_tx = 0;
         tx_ongoing = false;
+        dequeueFSM = WAIT_FOR_IMAGE_DIMENSIONS;
       }
 
       if (( !sProcpToTxp_Data.empty() && !sRxtoTx_Meta.empty() 
@@ -779,13 +822,13 @@ void pTXPath(
     //     img_chan  = sInImgChan.read();
     //     tx_ongoing = true;
     //   }
-    if (!tx_ongoing)
-      {
-        lcl_img_rows  = *img_rows;
-        lcl_img_cols  = *img_cols;
-        lcl_img_chan  = *img_chan;
-        tx_ongoing = true;
-      }
+    // if (!tx_ongoing)
+    //   {
+    //     lcl_img_rows  = *img_rows;
+    //     lcl_img_cols  = *img_cols;
+    //     lcl_img_chan  = *img_chan;
+    //     tx_ongoing = true;
+    //   }
 
       if( !sProcpToTxp_Data.empty() && !soTHIS_Shl_Data.full())
       {

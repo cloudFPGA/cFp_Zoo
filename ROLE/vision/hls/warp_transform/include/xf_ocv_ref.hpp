@@ -70,7 +70,9 @@ void ocv_ref(cv::Mat image_input, cv::Mat& opencv_image, cv::Mat transformation_
 #endif
         }
     }
-
+#ifdef FAKE_WarpTransform
+    image_input.copyTo(opencv_image);
+#else
 #if TRANSFORM_TYPE == 1
 #if INTERPOLATION == 1
     cv::warpPerspective(image_input, opencv_image, transformation_matrix,
@@ -80,7 +82,7 @@ void ocv_ref(cv::Mat image_input, cv::Mat& opencv_image, cv::Mat transformation_
     cv::warpPerspective(image_input, opencv_image, transformation_matrix,
                         cv::Size(image_input.cols, image_input.rows), cv::INTER_NEAREST + cv::WARP_INVERSE_MAP,
                         cv::BORDER_TRANSPARENT, 80);
-#endif
+#endif//INTERPOLATION == 1
 #else
 #if INTERPOLATION == 1
     cv::warpAffine(image_input, opencv_image, transformation_matrix, cv::Size(image_input.cols, image_input.rows),
@@ -88,8 +90,9 @@ void ocv_ref(cv::Mat image_input, cv::Mat& opencv_image, cv::Mat transformation_
 #else
     cv::warpAffine(image_input, opencv_image, transformation_matrix, cv::Size(image_input.cols, image_input.rows),
                    cv::INTER_NEAREST + cv::WARP_INVERSE_MAP, cv::BORDER_TRANSPARENT, 80);
-#endif
-#endif
+#endif//INTERPOLATION == 1
+#endif//TRANSFORM_TYPE == 1
+#endif //FAKE_WarpTransform
 
     cv::imwrite("opencv_output.png", opencv_image);
 }

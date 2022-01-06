@@ -81,7 +81,10 @@ void pProcPath(
         img_meta_t *                           img_cols,
         img_meta_t *                           img_chan,
         // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
-        hls::stream<float>                     &sTxMatrix
+        hls::stream<float>                     &sTxMatrix,
+        hls::stream<img_meta_t>                &siRows,
+        hls::stream<img_meta_t>                &siCols,
+        hls::stream<img_meta_t>                &siChan
         )
 {
     //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -138,9 +141,12 @@ void pProcPath(
                 timeoutCntAbs = 0;
                 cnt_i = 0;
                 #endif
-                lcl_img_rows  = *img_rows;
-                lcl_img_cols  = *img_cols;
-                lcl_img_chan  = *img_chan;
+                // lcl_img_rows  = *img_rows;
+                // lcl_img_cols  = *img_cols;
+                // lcl_img_chan  = *img_chan;
+                lcl_img_rows  = siRows.read();
+                lcl_img_cols  = siCols.read();
+                lcl_img_chan  = siChan.read();
             }
         }
     break;

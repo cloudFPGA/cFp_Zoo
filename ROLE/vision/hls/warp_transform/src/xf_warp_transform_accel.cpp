@@ -108,11 +108,16 @@ void warptTransformAccelArray(
         // clang-format on
         transform_matrix[i] = transform[i];
     }
-
+    #ifndef FAKE_WarpTransform
     xf::cv::Array2xfMat<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPC1>(img_in, imgInput);
     xf::cv::warpTransform<NUM_STORE_ROWS, START_PROC, TRANSFORM_TYPE, INTERPOLATION, TYPE, HEIGHT, WIDTH, NPC1,
                           XF_USE_URAM>(imgInput, imgOutput, transform_matrix);  
     xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgOutput, img_out);
+    #else
+    xf::cv::Array2xfMat<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPC1>(img_in, imgInput);
+    xf::cv::xfMat2Array<OUTPUT_PTR_WIDTH, XF_8UC1, HEIGHT, WIDTH, NPIX>(imgInput, img_out);
+    #endif // FAKE_WarpTransform
+
 }
 
 #ifndef FAKE_WarpTransform
