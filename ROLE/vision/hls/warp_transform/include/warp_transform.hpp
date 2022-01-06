@@ -53,6 +53,7 @@ using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
 #define ENABLE_DDR
+#define FAKE_WarpTransform
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
  ********************************************/

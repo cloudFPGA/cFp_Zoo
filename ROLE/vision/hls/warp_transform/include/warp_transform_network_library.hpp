@@ -67,18 +67,19 @@ using namespace hls;
 
 //64 bits 8 for cmd, 40 rows/cols 3 channels = 51 missing 13
 //If  other info, we need to change how it is working many stuffs I think
-#define WARPTRANSFORM_CHNNEL_BITWIDTH 3
+#define WARPTRANSFORM_CHNNEL_BITWIDTH 8
 #define WARPTRANSFORM_COLS_BITWIDTH 16
 #define WARPTRANSFORM_ROWS_BITWIDTH 16
 
 #define WARPTRANSFORM_ROWS_HIGH_BIT NETWORK_WORD_BIT_WIDTH-1 // 63
-#define WARPTRANSFORM_ROWS_LOW_BIT NETWORK_WORD_BIT_WIDTH-WARPTRANSFORM_ROWS_BITWIDTH //64-20 = 44
+#define WARPTRANSFORM_ROWS_LOW_BIT NETWORK_WORD_BIT_WIDTH-WARPTRANSFORM_ROWS_BITWIDTH //64-16 = 48
 
-#define WARPTRANSFORM_COLS_HIGH_BIT WARPTRANSFORM_ROWS_LOW_BIT-1 // 43
-#define WARPTRANSFORM_COLS_LOW_BIT WARPTRANSFORM_ROWS_LOW_BIT-WARPTRANSFORM_COLS_BITWIDTH //44-20 = 24
+#define WARPTRANSFORM_COLS_HIGH_BIT WARPTRANSFORM_ROWS_LOW_BIT-1 // 47
+#define WARPTRANSFORM_COLS_LOW_BIT WARPTRANSFORM_ROWS_LOW_BIT-WARPTRANSFORM_COLS_BITWIDTH //48-16 = 32
 
-#define WARPTRANSFORM_CHNNEL_HIGH_BIT WARPTRANSFORM_COLS_LOW_BIT-1 // 23
-#define WARPTRANSFORM_CHNNEL_LOW_BIT WARPTRANSFORM_COLS_LOW_BIT-WARPTRANSFORM_CHNNEL_BITWIDTH //24-3 = 21
+// #define WARPTRANSFORM_CHNNEL_HIGH_BIT WARPTRANSFORM_COLS_LOW_BIT-1 // 31
+#define WARPTRANSFORM_CHNNEL_HIGH_BIT 16-1 // 15
+#define WARPTRANSFORM_CHNNEL_LOW_BIT 16-WARPTRANSFORM_CHNNEL_BITWIDTH //16-8 = 8
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////Begin of Network-Related Functions//////////////////////////
@@ -249,10 +250,10 @@ void pRXPathNetToStream(
     #pragma HLS reset variable=processed_net_bytes_rx
     static PacketFsmType enqueueRxToStrFSM = WAIT_FOR_META;
     #pragma HLS reset variable=enqueueRxToStrFSM
-    unsigned int expected_input_meta = TOT_TRANSFERS_TX;
-    unsigned int expected_output_meta = TOT_TRANSFERS_RX;
-    unsigned int received_and_fwded_meta = 0;
-    #pragma HLS reset variable=expected_input_meta
+    // static unsigned int expected_input_meta = TOT_TRANSFERS_TX;
+    static unsigned int expected_output_meta = TOT_TRANSFERS_RX;
+    static unsigned int received_and_fwded_meta = 0;
+    // #pragma HLS reset variable=expected_input_meta
     #pragma HLS reset variable=expected_output_meta
     #pragma HLS reset variable=received_and_fwded_meta
 
@@ -269,6 +270,7 @@ void pRXPathNetToStream(
             //sRxtoTx_Meta.write(meta_tmp);
             enqueueRxToStrFSM = PROCESSING_PACKET;
             expected_output_meta = TOT_TRANSFERS_RX;
+            std::cout << "DEBUG compile time tx " << TOT_TRANSFERS_RX << std::endl;
             received_and_fwded_meta = 0;
         }
         break;
@@ -289,8 +291,11 @@ case PROCESSING_PACKET:
                 img_meta_t rows = netWord.tdata.range(WARPTRANSFORM_ROWS_HIGH_BIT, WARPTRANSFORM_ROWS_LOW_BIT);
                 img_meta_t cols = netWord.tdata.range(WARPTRANSFORM_COLS_HIGH_BIT, WARPTRANSFORM_COLS_LOW_BIT);
                 img_meta_t chan = netWord.tdata.range(WARPTRANSFORM_CHNNEL_HIGH_BIT, WARPTRANSFORM_CHNNEL_LOW_BIT);
-                expected_output_meta = rows * cols;
                 std::cout << "DEBUG pRXPathNetToStream - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
+                unsigned long long int img_pixels = rows * cols * chan;
+                unsigned int meta_by_images = img_pixels/PACK_SIZE;
+                expected_output_meta = img_pixels%PACK_SIZE == 0 ? meta_by_images : meta_by_images +1;
+                std::cout << "DEBUG pRXPathNetToStream pixels " << img_pixels << " expected meta " << expected_output_meta << " just modulo " << meta_by_images << std::endl;
                 *img_rows = rows;
                 *img_cols = cols;
                 *img_chan = chan;
@@ -414,6 +419,7 @@ case PUSH_REMAINING_META:
         
         if ( !sRxtoTx_Meta.full() )
         {
+            printf("DEBUG in pRXPathNetToStream: received_and_fwded_meta= %d, expected_output_meta=%d\n",received_and_fwded_meta,expected_output_meta);
             if( received_and_fwded_meta < expected_output_meta){
                 sRxtoTx_Meta.write(meta_tmp);
                 received_and_fwded_meta++;
