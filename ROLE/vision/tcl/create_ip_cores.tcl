@@ -353,8 +353,8 @@ my_puts ""
 # [HOWTO] #    [0]   : TUSER Width (bits)
 # [HOWTO] #    [No]  : Enable ACLKEN
 # [HOWTO] #------------------------------------------------------------------------------
-set ipModName "Warp_TransformApplication"
-set ipName "warp_transform"
+set ipModName "Median_BlurApplication"
+set ipName "median_blur"
 # [HOWTO] set ipVendor  "xilinx.com"
 # [HOWTO] set ipLibrary "ip"
 # [HOWTO] set ipVersion "1.1"
@@ -381,10 +381,10 @@ set_property      ip_repo_paths ${hlsDir} [ current_fileset ]
 update_ip_catalog
 
 #------------------------------------------------------------------------------  
-# IBM-HSL-IP : Warp_Transform Application Flash
+# IBM-HSL-IP : Median_Blur Application Flash
 #------------------------------------------------------------------------------
-set ipModName "Warp_TransformApplication"
-set ipName "warp_transform"
+set ipModName "Median_BlurApplication"
+set ipName "median_blur"
 set ipVendor  "IBM"
 set ipLibrary "hls"
 set ipVersion "1.0"
