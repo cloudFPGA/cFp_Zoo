@@ -78,7 +78,7 @@ void print_cFpMemtest(void)
 	cout <<  "╚██████╗██║     ██║███████╗██║ ╚═╝ ██║███████╗██║ ╚═╝ ██║   ██║   ███████╗███████║   ██║   " << endl;
 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝╚══════╝╚═╝     ╚═╝   ╚═╝   ╚══════╝╚══════╝   ╚═╝   " << endl;
 	cout <<  "A cloudFPGA project from IBM ZRL               v0.1 --dco " << endl;
-	cout <<  "                                                          " << endl;
+	cout <<  "Memory mapped test of cloudFPGA main memory               " << endl;
 }
 
 

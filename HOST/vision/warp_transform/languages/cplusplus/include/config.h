@@ -17,7 +17,7 @@
 /*****************************************************************************
  * @file       config.h
  * @brief      The configuration of a WarpTransform Example application (UDP or TCP)
- * @author     FAB, WEI, NGL, DID
+ * @author     FAB, WEI, NGL, DID, DCO
  * @date       June 2020
  *----------------------------------------------------------------------------
  *

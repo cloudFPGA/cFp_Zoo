@@ -65,7 +65,7 @@ void print_cFpZoo(void)
 	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
 	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
-	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
+	cout <<  "Harris Corner Detection                                   " << endl;
 }
 
 /*****************************************************************************

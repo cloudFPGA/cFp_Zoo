@@ -18,8 +18,8 @@
  * @file       warp_transform_host.cpp
  * @brief      WarpTransform userspace application for cF (x86, ppc64).
  *
- * @date       May 2020
- * @author     DID
+ * @date       Nov 2021
+ * @author     DID,DCO
  * 
  * @note       Copyright 2015-2020 - IBM Research - All Rights Reserved.
  * @note       http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/UDPEchoClient.cpp
@@ -74,7 +74,7 @@ void print_cFpZoo(void)
 	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
 	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
-	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
+	cout <<  "Warp transform kernel                                     " << endl;
 }
 
 /*****************************************************************************
