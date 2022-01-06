@@ -13,5 +13,5 @@ make -j 2
 # You should expect the output in the stdout
 
 ```
-## Acknowledgement and Copyright
-This project is built upon various open-sourced libraries, like [Practical C++ Sockets](http://cs.ecs.baylor.edu/~donahoo/practical/CSockets/practical/) and [OpenCV 3](http://opencv.org/) ; please refer to their original license accordingly (GPL/BSD). Code of this project is puslished under Apache v2 License.
+
+
