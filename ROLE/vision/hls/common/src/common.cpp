@@ -295,6 +295,141 @@ bool dumpImgToFile(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img,
 
 
 /*****************************************************************************
+ * @brief Fill an output file with data from an image.
+ * 
+ * @param[in] sDataStream    the input image in xf::cv::Mat format.
+ * @param[in] outFileName    the name of the output file to write to.
+ * @return OK if successful, otherwise KO.
+ ******************************************************************************/
+bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img,
+           const string   outFileName, int simCnt, float * transform_matrix)
+{
+    string      strLine;
+    ofstream    outFileStream;
+    string      datFile = "../../../../test/" + outFileName;
+    UdpWord     udpWord;
+    bool        rc = OK;
+    unsigned int bytes_per_line = 8;
+    
+    //-- STEP-1 : OPEN FILE
+    outFileStream.open(datFile.c_str());
+    if ( !outFileStream ) {
+        cout << "### ERROR : Could not open the output data file " << datFile << endl;
+        return(KO);
+    }
+    printf("came to dumpImgToFile: _img.rows=%u, img.cols=%u\n", _img.rows, _img.cols);
+    
+    ap_uint<8> value[bytes_per_line];
+    ap_uint<8> tx_cmd[bytes_per_line];
+    ap_uint<8> img_cmd[bytes_per_line];
+    //init tx and img cmd
+    for (unsigned int k = 0; k < bytes_per_line; k++) {
+       value[k]    = (char)0;
+        if (k != 0) {
+            tx_cmd[k] = (char)0;
+            img_cmd[k] = (char)0;
+        }
+        else {
+            tx_cmd[k] = (char)1; 
+            img_cmd[k] = (char)2;
+        }
+     }
+
+     //dump tx cmd
+    udpWord.tdata = pack_ap_uint_64_(tx_cmd);
+    udpWord.tkeep = 255;
+    udpWord.tlast = 0;
+    if (!dumpDataToFile(&udpWord, outFileStream)) {
+        rc = KO;
+        outFileStream.close();
+        return(rc);
+    }
+    int off = 4;
+    for (int i = 0; i < 8; i++)
+    {
+        memcpy(value+off, (float*)transform_matrix+i, 4);
+        off += 4;
+        off = off % bytes_per_line;
+        std::cout << "[DEBUG] off=" << off << " tx mat=" << transform_matrix[i] << " idx=" << i << " flt val=" << value[off] << " " <<  value[off+1] << " " << value[off+2] << " "  << value[off+3]<< std::endl;
+        if (i%2 && i!=0)
+        {
+            std::cout << "[DEBUG] packing the valua :D" << std::endl;
+            udpWord.tdata = pack_ap_uint_64_(value);
+            udpWord.tkeep = 255;
+            udpWord.tlast = 0;
+            if (!dumpDataToFile(&udpWord, outFileStream)) {
+                rc = KO;
+                outFileStream.close();
+                return(rc);
+            }
+        }
+
+    }
+
+    //dump last value
+    unsigned int zero_constant = 0;
+    memcpy(value, (char*)transform_matrix+8, 4);
+    memcpy(value, (char*)&zero_constant, 4);
+    udpWord.tdata = pack_ap_uint_64_(value);
+    udpWord.tkeep = 255;
+    udpWord.tlast = 0;
+    if (!dumpDataToFile(&udpWord, outFileStream)) {
+        rc = KO;
+        outFileStream.close();
+        return(rc);
+    }
+
+    //creating img mat cmd
+    memcpy(img_cmd+6, (char*)&_img.rows, 2);
+    memcpy(img_cmd+4, (char*)&_img.cols, 2);
+    img_cmd[1]=_img.channels();
+
+    udpWord.tdata = pack_ap_uint_64_(img_cmd);
+    udpWord.tkeep = 255;
+    udpWord.tlast = 0;
+    if (!dumpDataToFile(&udpWord, outFileStream)) {
+        rc = KO;
+        outFileStream.close();
+        return(rc);
+    }
+    //-- STEP-2 : DUMP IMAGE DATA TO FILE
+    for (unsigned int total_bytes = 0, chan =0 ; chan < _img.channels(); chan++) {
+    for (unsigned int j = 0; j < _img.rows; j++) {
+      int l = 0;
+    for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line) {
+      //if (NPIX == XF_NPPC8) {
+        for (unsigned int k = 0; k < bytes_per_line; k++) {
+          value[k] = _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i + k);
+        }
+        udpWord.tdata = pack_ap_uint_64_(value);
+        udpWord.tkeep = 255;
+        // We are signaling a packet termination either at the end of the image or the end of MTU
+        if ((total_bytes >= (_img.rows * _img.cols * _img.channels() - bytes_per_line)) || 
+            ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
+          udpWord.tlast = 1;
+        }
+        else {
+          udpWord.tlast = 0;
+        }
+            printf("[%4.4d] IMG TB is dumping image to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+                    simCnt, datFile.c_str(), total_bytes, value,
+                    udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
+        if (!dumpDataToFile(&udpWord, outFileStream)) {
+          rc = KO;
+              break;
+        }
+      //}
+    }
+    }
+    }
+    //-- STEP-3: CLOSE FILE
+    outFileStream.close();
+
+    return(rc);
+}
+
+
+/*****************************************************************************
  * @brief Write the corners found by Harris into a file.
  * 
  * @return 0 if successful, otherwise 1.

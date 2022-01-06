@@ -156,3 +156,20 @@ Fix: ```LDFLAGS += `pkg-config --libs opencv` `xml2-config --cflags --libs```
 -D BUILD_EXAMPLES=ON \
 -D OPENCV_GENERATE_PKGCONFIG=ON ../opencv ..
 ```
+
+* Gmph issue.
+  ```
+  /tools/Xilinx/Vivado/2020.1/include/mpfr.h:181:9: error: ‘__gmp_const’ does not name a type
+  typedef __gmp_const __mpfr_struct *mpfr_srcptr;
+  ```
+  Fix: add the following lines to mpfr.h header of Vivado
+`
+#ifndef __GMP_H__
+  #include <gmp.h>
+#else
+  #include "/home/hoangt/TOOLS/xilinx/Vivado/2020.1/include/gmp.h"
+  #ifndef __gmp_const
+    #define __gmp_const const
+  #endif
+#endif
+'

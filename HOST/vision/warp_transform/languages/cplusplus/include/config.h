@@ -39,11 +39,11 @@
 
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
-/** The maximum width of frame in pixels                                                          */
-#define FRAME_HEIGHT 64
+/** The maximum width of frame in pixels   from 6x6 to 256x256 for debugging                      */
+#define FRAME_HEIGHT 32
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  64
+#define FRAME_WIDTH  32
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -61,7 +61,7 @@
 //  #define SHOW_WINDOWS  
   
 /** For HOST TB uncomment this. For normal host execution keep it commented                       */
-// #define TB_SIM_CFP_VITIS
+#define TB_SIM_CFP_VITIS
 
 /** Keep it uncommented of you want the input to be from camera frames else, for images comment it*/
 //  #define INPUT_FROM_CAMERA
@@ -80,9 +80,10 @@
 //-------------------  AUTOMATICALLY DEFINED OR AUXILILIARY OPTIONS  -------------------------------
 
 #define FRAME_TOTAL FRAME_HEIGHT * FRAME_WIDTH //* 3
+#define WARP_TRANSFORM_TOTAL FRAME_TOTAL + 8 * 2 + 5 * 8 // 8 bytes x 2 commands, and the tx matrix
 
 /** The total TxRx transfers for a predefined MTU=PACK_SIZE                                       */
-#define TOT_TRANSFERS CEIL(FRAME_TOTAL, PACK_SIZE)  
+#define TOT_TRANSFERS CEIL(WARP_TRANSFORM_TOTAL, PACK_SIZE)
 
 #define tcp 0
 #define udp 1

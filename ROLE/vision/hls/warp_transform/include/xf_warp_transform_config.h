@@ -66,10 +66,10 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using hls::stream;
 
 // Number of rows of input image to be stored
-#define NUM_STORE_ROWS 100
+#define NUM_STORE_ROWS 256
 
 // Number of rows of input image after which output image processing must start
-#define START_PROC 50
+#define START_PROC 200
 // transform type 0-NN 1-BILINEAR
 #define INTERPOLATION 0
 
@@ -147,17 +147,21 @@ void warptTransformAccelArray(
 void warpTransformAccelStream(
     hls::stream<ap_uint<INPUT_PTR_WIDTH>>& img_in_axi_stream,
     hls::stream<ap_uint<OUTPUT_PTR_WIDTH>>& img_out_axi_stream,
-    int rows, int cols);
+    int rows, int cols,float transform_matrix[TRANSFORM_MATRIX_DIM]);
 
 void fakeWarpTransformAccelStream(
     hls::stream<ap_axiu<INPUT_PTR_WIDTH, 0, 0, 0> >& img_in_axi_stream,
     hls::stream<ap_axiu<OUTPUT_PTR_WIDTH, 0, 0, 0> >& img_out_axi_stream,
     unsigned int min_rx_loops,
-    unsigned int min_tx_loops);
+    unsigned int min_tx_loops,
+    float transform_matrix[TRANSFORM_MATRIX_DIM]);
 
 void warp_transformAccelMem(    membus_t* img_inp,
                             membus_t* img_out,
-                            int rows, int cols);
+                            int rows, int cols,
+                            hls::stream<float>& sTxMatrix
+                            // float transform_matrix[TRANSFORM_MATRIX_DIM]
+                            );
 
 
 #endif // end of _XF_MEDIAN_BLUR_CONFIG_H_
