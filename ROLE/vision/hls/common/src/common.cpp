@@ -322,6 +322,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
     ap_uint<8> value[bytes_per_line];
     ap_uint<8> tx_cmd[bytes_per_line];
     ap_uint<8> img_cmd[bytes_per_line];
+    unsigned int total_bytes = 0;
     //init tx and img cmd
     for (unsigned int k = 0; k < bytes_per_line; k++) {
        value[k]    = (char)0;
@@ -344,6 +345,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         outFileStream.close();
         return(rc);
     }
+    total_bytes += bytes_per_line;
     int off = 4;
     for (int i = 0; i < 8; i++)
     {
@@ -362,6 +364,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
                 outFileStream.close();
                 return(rc);
             }
+            total_bytes += bytes_per_line;
         }
 
     }
@@ -378,6 +381,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         outFileStream.close();
         return(rc);
     }
+    total_bytes += bytes_per_line;
 
     //creating img mat cmd
     memcpy(img_cmd+6, (char*)&_img.rows, 2);
@@ -392,8 +396,10 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         outFileStream.close();
         return(rc);
     }
+    total_bytes += bytes_per_line;
+
     //-- STEP-2 : DUMP IMAGE DATA TO FILE
-    for (unsigned int total_bytes = 0, chan =0 ; chan < _img.channels(); chan++) {
+    for (unsigned int chan =0 ; chan < _img.channels(); chan++) {
     for (unsigned int j = 0; j < _img.rows; j++) {
       int l = 0;
     for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line) {
@@ -407,6 +413,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         if ((total_bytes >= (_img.rows * _img.cols * _img.channels() - bytes_per_line)) || 
             ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
           udpWord.tlast = 1;
+          total_bytes = 0;
         }
         else {
           udpWord.tlast = 0;
