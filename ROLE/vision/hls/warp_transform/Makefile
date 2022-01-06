@@ -15,7 +15,7 @@
 # *----------------------------------------------------------------------------
 #
 # * Created : Apr 2020
-# * Authors : Dionysios Diamantopoulos
+# * Authors : Dionysios Diamantopoulos, Davide Conficconi
 # *
 # * Description : A makefile that synthesizes and packages the current HLS core
 # *     as an IP.

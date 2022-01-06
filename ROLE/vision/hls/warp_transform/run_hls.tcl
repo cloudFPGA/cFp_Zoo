@@ -15,7 +15,7 @@
 # *----------------------------------------------------------------------------
 #
 # * Created : Sep 2018
-# * Authors : Francois Abel, Dionysios Diamantopoulos
+# * Authors : Francois Abel, Dionysios Diamantopoulos, Davide Conficconi
 # *
 # * Description : A Tcl script for the HLS batch syhthesis of the UDP applica-
 # *   tion embedded into the Flash of the cloudFPGA ROLE.
@@ -31,6 +31,7 @@
 # *  Fab: Jan-18-2018 Adds header and environment variables.
 # *  Fab: Feb-15-2018 Changed the export procedure.
 # *  Did: Apr-22-2020 Added xf:cv:warp_transform example from Xilinx Vitis
+# *  Dco: Dec-13-2021 updates for ubuntu libraries
 # ******************************************************************************
 
 # ------------------------------------------------------------------------------

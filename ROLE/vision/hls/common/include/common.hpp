@@ -3,7 +3,7 @@
  * @brief      Common functions for testbenches - headers.
  *
  * @date       June 2020
- * @author     FAB, WEI, NGL, DID
+ * @author     FAB, WEI, NGL, DID, DCO
  * 
  * Copyright 2009-2015 - Xilinx Inc.  - All rights reserved.
  * Copyright 2015-2020 - IBM Research - All Rights Reserved.
