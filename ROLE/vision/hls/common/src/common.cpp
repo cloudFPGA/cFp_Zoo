@@ -346,6 +346,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         return(rc);
     }
     total_bytes += bytes_per_line;
+    // std::cout << "[DEBUG] total bytes written " << total_bytes << std::endl;
     int off = 4;
     for (int i = 0; i < 8; i++)
     {
@@ -355,7 +356,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         std::cout << "[DEBUG] off=" << off << " tx mat=" << transform_matrix[i] << " idx=" << i << " flt val=" << value[off] << " " <<  value[off+1] << " " << value[off+2] << " "  << value[off+3]<< std::endl;
         if (i%2 && i!=0)
         {
-            std::cout << "[DEBUG] packing the valua :D" << std::endl;
+            // std::cout << "[DEBUG] packing the valua :D" << std::endl;
             udpWord.tdata = pack_ap_uint_64_(value);
             udpWord.tkeep = 255;
             udpWord.tlast = 0;
@@ -365,6 +366,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
                 return(rc);
             }
             total_bytes += bytes_per_line;
+            // std::cout << "[DEBUG] total bytes written " << total_bytes << std::endl;
         }
 
     }
@@ -382,6 +384,7 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         return(rc);
     }
     total_bytes += bytes_per_line;
+    //std::cout << "[DEBUG] total bytes written " << total_bytes << std::endl;
 
     //creating img mat cmd
     memcpy(img_cmd+6, (char*)&_img.rows, 2);
@@ -397,37 +400,39 @@ bool dumpImgToFileWarpTransform(xf::cv::Mat<OUT_TYPE, HEIGHT, WIDTH, NPIX>& _img
         return(rc);
     }
     total_bytes += bytes_per_line;
+    //std::cout << "[DEBUG] total bytes written after tx matrix and img cmd " << total_bytes << std::endl;
 
     //-- STEP-2 : DUMP IMAGE DATA TO FILE
+    unsigned int written_image = 0;
     for (unsigned int chan =0 ; chan < _img.channels(); chan++) {
-    for (unsigned int j = 0; j < _img.rows; j++) {
-      int l = 0;
-    for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line) {
-      //if (NPIX == XF_NPPC8) {
-        for (unsigned int k = 0; k < bytes_per_line; k++) {
-          value[k] = _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i + k);
-        }
-        udpWord.tdata = pack_ap_uint_64_(value);
-        udpWord.tkeep = 255;
-        // We are signaling a packet termination either at the end of the image or the end of MTU
-        if ((total_bytes >= (_img.rows * _img.cols * _img.channels() - bytes_per_line)) || 
-            ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
-          udpWord.tlast = 1;
-          total_bytes = 0;
-        }
-        else {
-          udpWord.tlast = 0;
-        }
-            printf("[%4.4d] IMG TB is dumping image to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
+        for (unsigned int j = 0; j < _img.rows; j++) {
+        int l = 0;
+        for (unsigned int i = 0; i < (_img.cols >> XF_BITSHIFT(NPIX)); i+=bytes_per_line, total_bytes+=bytes_per_line, written_image+=bytes_per_line) {
+            //if (NPIX == XF_NPPC8) {
+                for (unsigned int k = 0; k < bytes_per_line; k++) {
+                value[k] = _img.read(j * (_img.cols >> XF_BITSHIFT(NPIX)) + i + k);
+                }
+                udpWord.tdata = pack_ap_uint_64_(value);
+                udpWord.tkeep = 255;
+                // We are signaling a packet termination either at the end of the image or the end of MTU
+                if ((total_bytes >= (_img.rows * _img.cols * _img.channels() - bytes_per_line + (2+5)*bytes_per_line)) || 
+                    ((total_bytes + bytes_per_line) % PACK_SIZE == 0)) {
+                    udpWord.tlast = 1;
+                }
+                else {
+                    udpWord.tlast = 0;
+                }
+                printf("[%4.4d] IMG TB is dumping image to file [%s] - Data read [%u] = {val=%u, D=0x%16.16llX, K=0x%2.2X, L=%d} \n",
                     simCnt, datFile.c_str(), total_bytes, value,
                     udpWord.tdata.to_long(), udpWord.tkeep.to_int(), udpWord.tlast.to_int());
-        if (!dumpDataToFile(&udpWord, outFileStream)) {
-          rc = KO;
-              break;
+                if (!dumpDataToFile(&udpWord, outFileStream)) {
+                    rc = KO;
+                    break;
+                }
+                //}
+                //std::cout << "[DEBUG] total bytes written " << total_bytes << std::endl;
+            }
         }
-      //}
-    }
-    }
     }
     //-- STEP-3: CLOSE FILE
     outFileStream.close();
