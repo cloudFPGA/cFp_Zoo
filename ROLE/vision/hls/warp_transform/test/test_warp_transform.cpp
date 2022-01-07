@@ -240,10 +240,14 @@ int main(int argc, char** argv) {
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgInput(in_img.rows, in_img.cols);
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutput(in_img.rows, in_img.cols);
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> local_mem_0(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> local_mem_1(in_img.rows, in_img.cols);
+    static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> dumptest(in_img.rows, in_img.cols);
     imgInput.copyTo(in_img.data);
     ap_uint<INPUT_PTR_WIDTH>  *imgInputArray    = (ap_uint<INPUT_PTR_WIDTH>*)  malloc(in_img.rows * in_img.cols * sizeof(ap_uint<INPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArrayTb = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
     ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArray   = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
+    ap_uint<OUTPUT_PTR_WIDTH> *imgOutputArray_test   = (ap_uint<OUTPUT_PTR_WIDTH>*) malloc(in_img.rows * in_img.cols * sizeof(ap_uint<OUTPUT_PTR_WIDTH>));
     xf::cv::xfMat2Array<INPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgInput, imgInputArray);
     #endif
 
@@ -273,6 +277,12 @@ int main(int argc, char** argv) {
 
 #if NO
         if ( !dumpImgToFileWarpTransform ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt, transformation_matrix_float ) ) {
+            nrErr++;
+        }
+        if ( !dumpImgToFile( imgInput, "ifsSHL_Uaf_Data_test.dat", simCnt) ) {
+            nrErr++;
+        }
+        if ( !dumpFileToArrayWarpTransform("ifsSHL_Uaf_Data.dat", imgOutputArray_test, simCnt)){
             nrErr++;
         }
 #endif
@@ -477,6 +487,9 @@ if (simCnt < 0)
             nrErr++;
         }
         xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX> ( imgOutputArray, imgOutput );
+        xf::cv::Array2xfMat<MEMDW_512, TYPE, HEIGHT, WIDTH, NPIX> ( lcl_mem0, local_mem_0 );
+        xf::cv::Array2xfMat<MEMDW_512, TYPE, HEIGHT, WIDTH, NPIX> ( lcl_mem1, local_mem_1 );
+        xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX> ( imgOutputArray_test, dumptest );
 
 
         //------------------------------------------------------
@@ -490,7 +503,14 @@ if (simCnt < 0)
             printf ( "Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n" );
         }
         const string outfilename = "hls_out-"+std::to_string(tb_trials)+".jpg";
+        const string outfilename_lcl0 = "lcl0-"+std::to_string(tb_trials)+".jpg";
+        const string outfilename_lcl1 = "lcl1-"+std::to_string(tb_trials)+".jpg";
+        const string outfilename_test = "dumptest-"+std::to_string(tb_trials)+".jpg";
         xf::cv::imwrite(outfilename.c_str(), imgOutput);
+        xf::cv::imwrite(outfilename_lcl0.c_str(), local_mem_0);
+        xf::cv::imwrite(outfilename_lcl1.c_str(), local_mem_1);
+        xf::cv::imwrite(outfilename_test.c_str(), dumptest);
+
 
         nrErr += rc1;
 
