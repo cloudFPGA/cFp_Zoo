@@ -77,9 +77,9 @@ void pProcPath(
         stream<TimgOut>                        &img_out_axi_stream,
         #endif // ENABLE_DDR	       
         stream<bool>                           &sImageLoaded,
-        img_meta_t *                           img_rows,
-        img_meta_t *                           img_cols,
-        img_meta_t *                           img_chan,
+        // img_meta_t *                           img_rows,
+        // img_meta_t *                           img_cols,
+        // img_meta_t *                           img_chan,
         // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
         hls::stream<float>                     &sTxMatrix,
         hls::stream<img_meta_t>                &siRows,
@@ -159,7 +159,7 @@ void pProcPath(
         #endif
         if (accel_called == false) {
 	    #ifdef ENABLE_DDR 
-            warp_transformAccelMem(lcl_mem0, lcl_mem1, *img_rows, *img_cols, sTxMatrix);
+            warp_transformAccelMem(lcl_mem0, lcl_mem1, lcl_img_rows, lcl_img_cols, sTxMatrix);
 	    #else // ! ENABLE_DDR
 	    #ifdef FAKE_WarpTransform
             fakeWarpTransformAccelStream(img_in_axi_stream, img_out_axi_stream, MIN_RX_LOOPS, MIN_TX_LOOPS, tx_matrix);

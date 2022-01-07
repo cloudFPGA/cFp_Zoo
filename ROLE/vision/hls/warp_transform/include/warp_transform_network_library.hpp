@@ -132,8 +132,12 @@ void pPortAndDestionation(
 
 }
 
-
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS.
  * FIXME: never checked, just substitute this one from DID
@@ -205,7 +209,12 @@ void pRXPath(
   }
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 /*****************************************************************************
  * @brief Receive Path - From SHELL to THIS. Function for accumulating a memory word and write it
  *  Not ready for complete parametrization
@@ -225,9 +234,9 @@ void pRXPathNetToStream(
     hls::stream<NetworkMetaStream>         &sRxtoTx_Meta,
     hls::stream<TMemWrd>                   &img_in_axi_stream,
     hls::stream<bool>                      &sMemBurstRx,
-    img_meta_t *                           img_rows,
-    img_meta_t *                           img_cols,
-    img_meta_t *                           img_chan,
+    // img_meta_t *                           img_rows,
+    // img_meta_t *                           img_cols,
+    // img_meta_t *                           img_chan,
     // float                                  tx_matrix[TRANSFORM_MATRIX_DIM]
     hls::stream<float>                     &sTxMatrix ,
     hls::stream<img_meta_t>                &soRowsToRx,
@@ -265,6 +274,8 @@ void pRXPathNetToStream(
     // #pragma HLS reset variable=expected_input_meta
     #pragma HLS reset variable=expected_output_meta
     #pragma HLS reset variable=received_and_fwded_meta
+    static unsigned int img_pixels=max_img_size;
+    #pragma HLS reset variable=img_pixels
 
 
     switch(enqueueRxToStrFSM)
@@ -281,6 +292,7 @@ void pRXPathNetToStream(
             expected_output_meta = TOT_TRANSFERS_RX;
             std::cout << "DEBUG compile time tx " << TOT_TRANSFERS_RX << std::endl;
             received_and_fwded_meta = 0;
+            img_pixels=max_img_size;
         }
         break;
 
@@ -301,13 +313,13 @@ case PROCESSING_PACKET:
                 img_meta_t cols = netWord.tdata.range(WARPTRANSFORM_COLS_HIGH_BIT, WARPTRANSFORM_COLS_LOW_BIT);
                 img_meta_t chan = netWord.tdata.range(WARPTRANSFORM_CHNNEL_HIGH_BIT, WARPTRANSFORM_CHNNEL_LOW_BIT);
                 std::cout << "DEBUG pRXPathNetToStream - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
-                unsigned long long int img_pixels = rows * cols * chan;
+                img_pixels = rows * cols * chan;
                 unsigned int meta_by_images = img_pixels/PACK_SIZE;
                 expected_output_meta = img_pixels%PACK_SIZE == 0 ? meta_by_images : meta_by_images +1;
-                std::cout << "DEBUG pRXPathNetToStream pixels " << img_pixels << " expected meta " << expected_output_meta << " just modulo " << meta_by_images << std::endl;
-                *img_rows = rows;
-                *img_cols = cols;
-                *img_chan = chan;
+                std::cout << "DEBUG pRXPathNetToStream pixels " << img_pixels << " expected output meta " << expected_output_meta << std::endl;
+                // *img_rows = rows;
+                // *img_cols = cols;
+                // *img_chan = chan;
                 soRowsToRx.write(rows);
                 soColsToRx.write(cols);
                 soChanToRx.write(chan);
@@ -320,7 +332,9 @@ case PROCESSING_PACKET:
                 enqueueRxToStrFSM = PROCESSING_PACKET_IMGMAT;
                 break;
             //TODO: fix the default case
-            // default: // invalid cmd
+            // default: 
+            //     // invalid cmd
+            //     enqueueRxToStrFSM = WAIT_FOR_META;
             //     break;
             //     //might be consume data? dk
            }
@@ -344,7 +358,7 @@ case PROCESSING_PACKET_IMGMAT:
                 std::cout << "DEBUG in pRXPathNetToStream: Pushing to img_in_axi_stream :" << std::hex << v << std::endl;
                 img_in_axi_stream.write(v);
                 if ((cnt_wr_burst++ == cTransfers_Per_Chunk-1) || 
-                    ((processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt) && 
+                    ((processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt) && 
                      (netWord.tlast == 1))) {
                         if (!sMemBurstRx.full()) {
                             sMemBurstRx.write(true);
@@ -353,7 +367,7 @@ case PROCESSING_PACKET_IMGMAT:
                 }
                 if (netWord.tlast == 1) {
                     //Next state logic
-                    if (processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt)
+                    if (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt)
                    {
                        if( received_and_fwded_meta < expected_output_meta){
                             sRxtoTx_Meta.write(meta_tmp);
@@ -369,7 +383,7 @@ case PROCESSING_PACKET_IMGMAT:
                 }
                 cnt_wr_stream = 0;
             }
-            if (processed_net_bytes_rx == max_img_size-cBytesPer10GbitEthAXIPckt) {                
+            if (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt) {                
                 processed_net_bytes_rx = 0;
             }
             else {
@@ -450,7 +464,12 @@ case PUSH_REMAINING_META:
     }
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 /*****************************************************************************
  * @brief Receive Path - From RX path stream word aligned to store towards the DDR
  *
@@ -463,7 +482,9 @@ case PUSH_REMAINING_META:
  *
  * @return Nothing.
  ******************************************************************************/
-template <typename TStreamMemWrd, typename TMemWrd,const unsigned int loop_cnt,const unsigned int bytes_per_loop>
+template <typename TStreamMemWrd, typename TMemWrd,
+const unsigned int loop_cnt,const unsigned int bytes_per_loop,
+const unsigned int max_img_size=IMGSIZE, const unsigned int memword_bytes>
 void pRXPathStreamToDDR(
     hls::stream<TMemWrd>                   &img_in_axi_stream,
     hls::stream<bool>                      &sMemBurstRx,    
@@ -473,9 +494,9 @@ void pRXPathStreamToDDR(
     hls::stream<TStreamMemWrd>             &soMemWriteP0,
     //---- P1 Memory mapped ---------------
     hls::stream<bool>                      &sImageLoaded,
-    img_meta_t *                           img_rows,
-    img_meta_t *                           img_cols,
-    img_meta_t *                           img_chan,
+    // img_meta_t *                           img_rows,
+    // img_meta_t *                           img_cols,
+    // img_meta_t *                           img_chan,
     hls::stream<img_meta_t>                &siRows,
     hls::stream<img_meta_t>                &siCols,
     hls::stream<img_meta_t>                &siChan
@@ -490,7 +511,7 @@ void pRXPathStreamToDDR(
     static unsigned int cur_transfers_per_chunk;
     static unsigned int cnt_wr_stream, cnt_wr_img_loaded;
     static unsigned int ddr_addr_in; 
-    static PacketFsmType enqueueStrToDdrFSM = WAIT_FOR_META;
+    static PacketFsmType enqueueStrToDdrFSM = WAIT_FOR_IMAGE_DIMENSIONS;
     #pragma HLS reset variable=enqueueStrToDdrFSM
 
     static ap_uint<32> patternWriteNum;
@@ -499,7 +520,9 @@ void pRXPathStreamToDDR(
     static TStreamMemWrd     memP0;
     static DmSts             memWrStsP0;    
     static unsigned int      processed_bytes_rx;
+    static unsigned int      processed_bytes_for_reset=0;
      
+    #pragma HLS reset variable=processed_bytes_for_reset
     #pragma HLS reset variable=cur_transfers_per_chunk
     #pragma HLS reset variable=cnt_wr_stream
     #pragma HLS reset variable=cnt_wr_img_loaded    
@@ -512,16 +535,36 @@ void pRXPathStreamToDDR(
     static img_meta_t lcl_img_rows=0; 
     static img_meta_t lcl_img_cols=0; 
     static img_meta_t lcl_img_chan=0; 
+    static img_meta_t local_img_size=max_img_size;
     #pragma HLS reset variable=lcl_img_rows    
     #pragma HLS reset variable=lcl_img_cols    
     #pragma HLS reset variable=lcl_img_chan    
 
     switch(enqueueStrToDdrFSM)
     {
+    case WAIT_FOR_IMAGE_DIMENSIONS:
+        printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - WAIT_FOR_IMAGE_DIMENSIONS\n");
+        if(!siRows.empty() && !siCols.empty()  && !siChan.empty()){
+            // lcl_img_rows  = *img_rows;
+            // lcl_img_cols  = *img_cols;
+            // lcl_img_chan  = *img_chan;
+            lcl_img_rows  = siRows.read();
+            lcl_img_cols  = siCols.read();
+            lcl_img_chan  = siChan.read();
+            local_img_size = lcl_img_rows * lcl_img_cols * lcl_img_chan;
+            processed_bytes_for_reset=0;
+            printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - img_size=%u vs original=%u\n",local_img_size, IMGSIZE);
+            enqueueStrToDdrFSM=WAIT_FOR_META;
+        }
+        break;
     case WAIT_FOR_META:
         printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - WAIT_FOR_META, processed_bytes_rx=%u\n",
                processed_bytes_rx);
-        
+        if(processed_bytes_for_reset>=local_img_size){
+        printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - complete the img transmission");
+            enqueueStrToDdrFSM = WAIT_FOR_IMAGE_DIMENSIONS;
+            break;
+        }
         if ( !img_in_axi_stream.empty() )
         {
             if ((processed_bytes_rx) == 0) {
@@ -539,12 +582,6 @@ void pRXPathStreamToDDR(
                 memWrStsP0.decerr = 0;
                 memWrStsP0.slverr = 0;
                 memWrStsP0.okay = 0;
-                // lcl_img_rows  = *img_rows;
-                // lcl_img_cols  = *img_cols;
-                // lcl_img_chan  = *img_chan;
-                lcl_img_rows  = siRows.read();
-                lcl_img_cols  = siCols.read();
-                lcl_img_chan  = siChan.read();
             }
             enqueueStrToDdrFSM = FSM_CHK_PROC_BYTES;
         }
@@ -552,7 +589,7 @@ void pRXPathStreamToDDR(
 
     case FSM_CHK_PROC_BYTES:
         printf("DEBUG in pRXPathStreamToDDR: enqueueStrToDdrFSM - FSM_CHK_PROC_BYTES, processed_bytes_rx=%u\n", processed_bytes_rx);
-        if (processed_bytes_rx < IMGSIZE-bytes_per_loop) {
+        if (processed_bytes_rx < local_img_size-bytes_per_loop) {
             (processed_bytes_rx) += bytes_per_loop;
         }
         else {
@@ -607,8 +644,9 @@ case FSM_WR_PAT_DATA:
         //-- Write a memory word to DRAM
         if (!img_in_axi_stream.empty()) {
             memP0.tdata = img_in_axi_stream.read();
+            processed_bytes_for_reset += memword_bytes;
             ap_uint<8> keepVal = 0xFF;
-            memP0.tkeep = (ap_uint<64>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
+            memP0.tkeep = (ap_uint<memword_bytes>) (keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal, keepVal);
             if (patternWriteNum++ == cur_transfers_per_chunk - 1) {
                 printf("DEBUG: (patternWriteNum == cur_transfers_per_chunk -1) \n");
                 memP0.tlast = 1;
@@ -682,7 +720,12 @@ case FSM_WR_PAT_STS_C:
 
 }
 
-
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////////////////////////////////////
 /*****************************************************************************
  * @brief Transmit Path - From THIS to SHELL.
  *
@@ -703,9 +746,9 @@ void pTXPath(
   hls::stream<NodeId>                    &sDstNode_sig,
   unsigned int                           *processed_word_tx, 
   ap_uint<32>                            *pi_rank,
-  img_meta_t *                           img_rows,
-  img_meta_t *                           img_cols,
-  img_meta_t *                           img_chan,
+//   img_meta_t *                           img_rows,
+//   img_meta_t *                           img_cols,
+//   img_meta_t *                           img_chan,
   hls::stream<img_meta_t>                &siRows,
   hls::stream<img_meta_t>                &siCols,
   hls::stream<img_meta_t>                &siChan
@@ -759,6 +802,8 @@ void pTXPath(
         lcl_img_cols  = siCols.read();
         lcl_img_chan  = siChan.read();
         word_to_tx = lcl_img_rows * lcl_img_cols * lcl_img_chan / BYTES_PER_10GBITETHRNET_AXI_PACKET;
+        printf("DEBUG in pTXPath: dequeueFSM - word_to_tx=%u, vs original=%u\n",word_to_tx,MIN_TX_LOOPS);
+
         dequeueFSM=WAIT_FOR_STREAM_PAIR;
         }
         break;

@@ -250,9 +250,9 @@ pPortAndDestionation(
         sRxtoTx_Meta,
         img_in_axi_stream,
         sMemBurstRx,
-        &img_rows,
-        &img_cols,
-        &img_chan,
+        // &img_rows,
+        // &img_cols,
+        // &img_chan,
         // tx_matrix
         sTxMatrix,
         sRowsToRx,
@@ -268,8 +268,10 @@ pPortAndDestionation(
  
  pRXPathStreamToDDR< Axis<MEMDW_512>, 
  membus_t,
-  loop_cnt,
- bytes_per_loop>(
+loop_cnt,
+ bytes_per_loop,
+ IMGSIZE,
+BPERMDW_512>(
         img_in_axi_stream,
         sMemBurstRx,
         //---- P0 Write Path (S2MM) -----------
@@ -279,9 +281,9 @@ pPortAndDestionation(
         //---- P1 Memory mapped ---------------
         //&processed_bytes_rx,
         sImageLoaded,
-        &img_rows,
-        &img_cols,
-        &img_chan,
+        // &img_rows,
+        // &img_cols,
+        // &img_chan,
         sRowsToRx,
         sColsToRx,
         sChanToRx
@@ -314,9 +316,9 @@ pPortAndDestionation(
         img_out_axi_stream,
 #endif
         sImageLoaded,
-        &img_rows,
-        &img_cols,
-        &img_chan,
+        // &img_rows,
+        // &img_cols,
+        // &img_chan,
         // tx_matrix
         sTxMatrix,
         sRowsToProc,
@@ -332,9 +334,9 @@ pPortAndDestionation(
         sDstNode_sig,
         &processed_word_tx,
         pi_rank,
-        &img_rows,
-        &img_cols,
-        &img_chan,
+        // &img_rows,
+        // &img_cols,
+        // &img_chan,
         sRowsToTx,
         sColsToTx,
         sChanToTx

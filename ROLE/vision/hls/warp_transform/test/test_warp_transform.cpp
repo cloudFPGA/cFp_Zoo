@@ -64,7 +64,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   3
+#define TB_TRIALS   1
 
 // Enable delay in the response channel of DDR AXI controller
 #define ENABLE_DDR_EMULATE_DELAY_IN_TB
