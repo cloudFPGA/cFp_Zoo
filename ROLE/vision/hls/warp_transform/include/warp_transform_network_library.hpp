@@ -227,7 +227,7 @@ void pRXPath(
  *
  * @return Nothing.
  ******************************************************************************/
-template<typename TMemWrd, const unsigned int  loop_cnt, const unsigned int cTransfers_Per_Chunk, const unsigned int max_img_size, const unsigned int cBytesPer10GbitEthAXIPckt>
+template<typename TMemWrd, const unsigned int  loop_cnt_for_512bitword, const unsigned int cTransfers_Per_Chunk, const unsigned int max_img_size, const unsigned int cBytesPer10GbitEthAXIPckt>
 void pRXPathNetToStream(
     hls::stream<NetworkWord>               &siSHL_This_Data,
     hls::stream<NetworkMetaStream>         &siNrc_meta,
@@ -353,35 +353,39 @@ case PROCESSING_PACKET_IMGMAT:
                 printf("WARNING: value with tkeep=0 at cnt_wr_stream=%u\n", cnt_wr_stream);
             }
             v(cnt_wr_stream*64, (cnt_wr_stream+1)*64-1) = netWord.tdata(0,63);
-            if ((cnt_wr_stream++ == loop_cnt-1) || (netWord.tlast == 1)) {
+            bool is_tlast = netWord.tlast == 1;
+            bool rx_whole_img = (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt);
+            if ( (cnt_wr_stream++ == loop_cnt_for_512bitword-1) || (is_tlast && rx_whole_img) ) {
                 // std::cout << std::hex << v << std::endl; // print hexadecimal value
                 std::cout << "DEBUG in pRXPathNetToStream: Pushing to img_in_axi_stream :" << std::hex << v << std::endl;
                 img_in_axi_stream.write(v);
                 if ((cnt_wr_burst++ == cTransfers_Per_Chunk-1) || 
-                    ((processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt) && 
-                     (netWord.tlast == 1))) {
+                    (rx_whole_img && is_tlast)) {
                         if (!sMemBurstRx.full()) {
                             sMemBurstRx.write(true);
                         }
                         cnt_wr_burst = 0;
                 }
-                if (netWord.tlast == 1) {
-                    //Next state logic
-                    if (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt)
-                   {
-                       if( received_and_fwded_meta < expected_output_meta){
-                            sRxtoTx_Meta.write(meta_tmp);
-                            received_and_fwded_meta++;
-                            enqueueRxToStrFSM = PUSH_REMAINING_META;
-                       }else{
-                            enqueueRxToStrFSM = WAIT_FOR_META;
-                       }
-                    }else{
-                        enqueueRxToStrFSM = WAIT_FOR_META_IMGMAT;
-
-                    }
-                }
                 cnt_wr_stream = 0;
+            }
+            if (is_tlast) {
+                //Next state logic
+                if (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt)
+                {
+                    if( received_and_fwded_meta < expected_output_meta){
+                        sRxtoTx_Meta.write(meta_tmp);
+                        received_and_fwded_meta++;
+                        enqueueRxToStrFSM = PUSH_REMAINING_META;
+                        std::cout <<  "pRXPathNetToStream: enqueueRxToStrFSM - CLOSED META moving to pushing remaining meta" << std::endl;
+                    }else{
+                        enqueueRxToStrFSM = WAIT_FOR_META;
+                        std::cout <<  "pRXPathNetToStream: enqueueRxToStrFSM - CLOSED META end. waiting for new meta" << std::endl;
+                    }
+                }else{
+                    enqueueRxToStrFSM = WAIT_FOR_META_IMGMAT;
+                    std::cout <<  "pRXPathNetToStream: enqueueRxToStrFSM - CLOSED META max mtu reached, need a new meta for completing the img" << std::endl;
+
+                }
             }
             if (processed_net_bytes_rx == img_pixels-cBytesPer10GbitEthAXIPckt) {                
                 processed_net_bytes_rx = 0;
