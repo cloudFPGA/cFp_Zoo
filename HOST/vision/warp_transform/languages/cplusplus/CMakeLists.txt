@@ -18,6 +18,7 @@ cmake_minimum_required(VERSION 2.8)
 project( cFpvitis_Vision_WarpTransform )
 find_package( OpenCV REQUIRED )
 find_package( LibXml2 REQUIRED)
+find_package(Boost COMPONENTS system filesystem)
 
 include_directories(${LIBXML2_INCLUDE_DIR})
 
@@ -44,6 +45,13 @@ set(INCLUDES_HOST       "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
                         "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/"
                         "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
 
+set(SOURCES_HOST_SW_PURE        src/warp_transform_host_sw_pure.cpp
+"$ENV{cFpRootDir}HOST/common/langs/cpp/src/util.cpp"
+"$ENV{cFpRootDir}HOST/common/langs/cpp/src/ologger.cpp")
+
+set(INCLUDES_SW_PURE    "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
+                        "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/")
+
 add_executable( warp_transform_host_fwd_tb ${SOURCES_HOST_FWD_TB} )
 target_include_directories(warp_transform_host_fwd_tb PRIVATE ${INCLUDES_HOST})
 target_link_libraries( warp_transform_host_fwd_tb ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
@@ -52,3 +60,10 @@ add_executable( warp_transform_host ${SOURCES_HOST} )
 target_include_directories(warp_transform_host PRIVATE ${INCLUDES_HOST})
 target_link_libraries( warp_transform_host ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
+
+set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -fopenmp -lboost_system -lboost_filesystem")
+add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
+add_definitions(-DBOOST_SYSTEM_NO_DEPRECATED)
+add_executable( warp_transform_host_sw_pure ${SOURCES_HOST_SW_PURE} )
+target_include_directories(warp_transform_host_sw_pure PRIVATE ${INCLUDES_SW_PURE})
+target_link_libraries( warp_transform_host_sw_pure ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} ${Boost_LIBRARIES})
