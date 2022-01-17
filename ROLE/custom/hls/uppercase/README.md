@@ -47,7 +47,7 @@ The following containerization software is currently supported (and is on the ro
 #### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Zoo.git
+git clone --recursive git@github.com:cloudFPGA/cFp_Zoo.git
 cd cFp_Zoo
 bash config.sh
 <Navigate through menu and seect Custom->Uppercase>
@@ -57,7 +57,7 @@ source ./env/setenv.sh
 #### Uppercase Simulation 
 
 The testbench is offered in two flavors:
-- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Uppercase IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
+- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Uppercase IP when this is wrapped in a [cF Themisto Shell](https://pages.github.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives strings over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
   
@@ -75,8 +75,8 @@ Basic files/modules:
   1. [uppercase_host.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/HOST/custom/uppercase/languages/cplusplus/src/uppercase_host.cpp): The end-user application. This is the application that a user can execute on a x86 host and send a string to the FPGA for processing with Uppercase function. This file is part of both the `HLS TB` and the `Host TB`
   2. [uppercase_host_fw_tb.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/HOST/custom/uppercase/languages/cplusplus/src/uppercase_host_fwd_tb.cpp): The intermediate listener for socket connections from an end-user application. This file is part only of the `Host TB`.
   3. [test_uppercase.cpp](https://github.com/cloudFPGA/cFp_Zoo/blob/HEAD/ROLE/custom/hls/uppercase/test/test_uppercase.cpp): The typical Vivado HLS testbench of Uppercase IP, when this is wrapped in a Themisto Shell.
-  4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
-  5. [cFp_Uppercase](https://github.ibm.com/cloudFPGA/cFp_Uppercase): The project that bridges Uppercase libraries with cF.
+  4. [Themisto Shell](https://pages.github.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
+  5. [cFp_Uppercase](https://github.com/cloudFPGA/cFp_Uppercase): The project that bridges Uppercase libraries with cF.
 
   
   

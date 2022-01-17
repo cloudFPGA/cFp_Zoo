@@ -5,7 +5,7 @@ The testbench of WarpTransform is highlighted below:
 ![Oveview of Vitis Vision WarpTransform Testbench](../../../doc/warp_transform_tb.png)
 
 The testbench is offered in two flavors:
-- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of WarpTransform IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
+- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of WarpTransform IP when this is wrapped in a [cF Themisto Shell](https://pages.github.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
   

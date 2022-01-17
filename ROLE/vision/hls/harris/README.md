@@ -9,7 +9,7 @@ The Harris IP is privided by the open source Xilinx ® Vitis™ Vision library, 
 #### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Zoo.git
+git clone --recursive git@github.com:cloudFPGA/cFp_Zoo.git
 cd cFp_Zoo
 source ./env/setenv.sh
 ```

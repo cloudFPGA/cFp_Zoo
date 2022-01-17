@@ -9,7 +9,7 @@ The Sobel IP is privided by the open source Xilinx ® Vitis™ Vision library, w
 #### Repository and environment setup
 
 ```bash
-git clone --recursive git@github.ibm.com:cloudFPGA/cFp_Vitis.git
+git clone --recursive git@github.com:cloudFPGA/cFp_Vitis.git
 cd cFp_Vitis
 source ./env/setenv.sh
 ```
@@ -34,21 +34,21 @@ The testbench of Sobel is highlighted below:
 ![Oveview of Vitis Vision Sobel Testbench](../../../../doc/sobel_tb.png)
 
 The testbench is offered in two flavors:
-- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Sobel IP when this is wrapped in a [cF Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
+- HLS TB: The testbench of the C++/RTL. This is a typical Vivado HLS testbench but it includes the testing of Sobel IP when this is wrapped in a [cF Themisto Shell](https://pages.github.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra).
 - Host TB: This includes the testing of a a host apllication (C++) that send/receives images over Ethernet (TCP/UDP) with a cF FPGA. This testbench establishes a socket-based connection with an intermediate listener which further calls the previous testbench. So practically, the 2nd tb is a wrapper of the 1st tb, but passing the I/O data over socket streams.
   For example this is the `system command` inside `Host TB` that calls the `HLS TB`:
 
 This folder contains the mandatory files to proceed withthe 1st option, i.e. HLS TB
   
 Basic files/module for the HLS TB:
-  3. [test_sobel_app.cpp](https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/hls/sobel_app/src/sobel_app.cpp): The typical Vivado HLS testbench of Sobel IP, when this is wrapped in a Themisto Shell.
-  4. [Themisto Shell](https://pages.github.ibm.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
-  5. [cFp_Vitis](https://github.ibm.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
+  3. [test_sobel_app.cpp](https://github.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/hls/sobel_app/src/sobel_app.cpp): The typical Vivado HLS testbench of Sobel IP, when this is wrapped in a Themisto Shell.
+  4. [Themisto Shell](https://pages.github.com/cloudFPGA/Doc/pages/cfdk.html#the-themisto-sra): The SHELL-ROLE architecture of cF.
+  5. [cFp_Vitis](https://github.com/cloudFPGA/cFp_Vitis): The project that bridges Vitis libraries with cF.
 
   
 ##### Sobel image size 
 
-The maximum image size, that the Sobel IP is configured, is defined at https://github.ibm.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/sobel/include/config.h 
+The maximum image size, that the Sobel IP is configured, is defined at https://github.com/cloudFPGA/cFp_Vitis/blob/master/ROLE/vision/host/sobel/include/config.h 
 through the `FRAME_HEIGHT` and `FRAME_WIDTH` definitions. These definitions have an impact of the FPGA resources. In the following simulations if the image 
 provided has other dimensions, the `cv::resize` function will be used to adjust the image (scale) to `FRAME_HEIGHT x FRAME_WIDTH`.
   
