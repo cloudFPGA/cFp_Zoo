@@ -66,10 +66,10 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 using hls::stream;
 
 // Number of rows of input image to be stored
-#define NUM_STORE_ROWS 256
+#define NUM_STORE_ROWS 175
 
 // Number of rows of input image after which output image processing must start
-#define START_PROC 200
+#define START_PROC 150
 // transform type 0-NN 1-BILINEAR
 #define INTERPOLATION 0
 

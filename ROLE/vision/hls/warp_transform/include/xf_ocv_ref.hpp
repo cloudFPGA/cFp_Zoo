@@ -94,7 +94,7 @@ void ocv_ref(cv::Mat image_input, cv::Mat& opencv_image, cv::Mat transformation_
 #endif//TRANSFORM_TYPE == 1
 #endif //FAKE_WarpTransform
 
-    cv::imwrite("opencv_output.png", opencv_image);
+    //cv::imwrite("opencv_output.png", opencv_image);
 }
 
 
