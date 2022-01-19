@@ -180,7 +180,7 @@ std::string cf_ip, std::string cf_port){
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
-        std::string str_command = "./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr;
+        std::string str_command = "./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " &";
         const char *command = str_command.c_str(); 
   	    cout << "Calling CF with command:" << command << endl; 
 	    system(command); 
@@ -222,12 +222,15 @@ int main(int argc, char * argv[]) {
 
 
     string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="";
-    vector<string> ipsVect({"localhost",
-    "localhost","localhost","localhost",
-    "localhost","localhost","localhost","localhost"});
-    vector<string> portsVect({"1234",
-    "5678","9101","1121",
-    "3141","5161","7181","9202"});
+    vector<string> ipsVect({"10.12.200.167","10.12.200.221","10.12.200.29","10.12.200.19"});
+    //vector<string> ipsVect({"10.12.200.145"});
+    //vector<string> ipsVect({"localhost",
+    //"localhost","localhost","localhost",
+    //"localhost","localhost","localhost","localhost"});
+    vector<string> portsVect({"2718", "2718", "2718", "2718"});
+    //vector<string> portsVect({"1234",
+    //"5678","9101","1121",
+    //"3141","5161","7181","9202"});
     strInFldr.assign(argv[1]);
     strOutFldr.assign(argv[2]);
     strExeMode.assign(argv[3]);
@@ -327,7 +330,7 @@ int main(int argc, char * argv[]) {
     clock_t start_cycle_warp_transform_sw = clock();
     int img_per_threads = dataset_imgs.size() / thread_number;
     std::vector<fs::path> tmp;
-#pragma omp parallel default(shared) private(tmp,iam,startcntr) num_threads(thread_number)
+#pragma omp parallel default(shared) private(tmp,iam,startcntr) num_threads(thread_number) 
     {
         iam = omp_get_thread_num();
         startcntr = img_per_threads*iam-1;
@@ -338,7 +341,7 @@ int main(int argc, char * argv[]) {
             cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
         }
-    }
+	}
     clock_t end_cycle_warp_transform_sw = clock();
     double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / (double) CLOCKS_PER_SEC;
     std::cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl; 
