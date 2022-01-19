@@ -168,6 +168,26 @@ void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, c
 }
 
 
+//TODO: write here the images or wait to write em after the execution?
+// as well as the reading phase.
+// TBD
+// template <typename T>
+void cf_wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs,
+cv::Mat transformation_matrix, std::string strOutFldr, int start_cntr,
+std::string cf_ip, std::string cf_port){
+    Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
+
+    int cntr=start_cntr;
+    for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
+        //if vec of images this will change
+        std::string str_command = "./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr;
+        const char *command = str_command.c_str(); 
+  	    cout << "Calling CF with command:" << command << endl; 
+	    system(command); 
+}
+}
+
+
 void print_cFpZoo(void)
 {
         cout <<  "                                                          " << endl;
@@ -188,8 +208,8 @@ void print_cFpZoo(void)
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
-    if ((argc < 3) || (argc > 5)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <optional number of threads> <optional warp-transform mode>\n";
+    if ((argc < 4) || (argc > 6)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <0|1 sw|cf> <optional number of threads> <optional warp-transform mode>\n";
         //TODO: maybe not having optional but let the code read always the tx matrix
         exit(1);
     }
@@ -197,23 +217,38 @@ int main(int argc, char * argv[]) {
     //-- STEP-1 : Init
     //------------------------------------------------------
     
-    assert ((argc == 3) || (argc == 4) || (argc == 5));
+    assert ((argc == 6) || (argc == 4) || (argc == 5) );
 
 
-    string strInFldr, strOutFldr, strNrThrd="", strWaxMode="";
 
+    string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="";
+    vector<string> ipsVect({"localhost",
+    "localhost","localhost","localhost",
+    "localhost","localhost","localhost","localhost"});
+    vector<string> portsVect({"1234",
+    "5678","9101","1121",
+    "3141","5161","7181","9202"});
     strInFldr.assign(argv[1]);
     strOutFldr.assign(argv[2]);
-    if(argc>=4){
-        strNrThrd.assign(argv[3]);
-    }
+    strExeMode.assign(argv[3]);
     if(argc>=5){
-        strWaxMode.assign(argv[4]);
+        strNrThrd.assign(argv[4]);
+    }
+    if(argc>=6){
+        strWaxMode.assign(argv[5]);
     }
 
     unsigned int thread_number = 4;
     unsigned int wax_mode = 1;
-//Setup   
+    unsigned int exe_mode = 0;
+//Setup
+	try{
+		exe_mode = stoul(strExeMode);
+	} catch  (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		cout << "WARNING something bad happened in the execution insertion, hence CPU used" << endl;
+		exe_mode = 0;
+	}
 	try{
 		thread_number = stoul(strNrThrd);
 	} catch  (const std::exception& e) {
@@ -241,6 +276,8 @@ int main(int argc, char * argv[]) {
     float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
     float identity [9] = {1,0,0,0,1,0,0,0,0};
 
+// on the TX have a look of a visual comparison to opencv results. the same will be applied to this kernel
+// moreover, opencv matrixes seems column-wise format.
     switch (wax_mode)
     {
     case 1:
@@ -295,7 +332,12 @@ int main(int argc, char * argv[]) {
         iam = omp_get_thread_num();
         startcntr = img_per_threads*iam-1;
         tmp = imgs_splitted.at(iam);
-        wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr);
+        if(exe_mode != 1){
+            wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr);
+        }else{
+            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr,
+            ipsVect.at(iam), portsVect.at(iam));
+        }
     }
     clock_t end_cycle_warp_transform_sw = clock();
     double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / (double) CLOCKS_PER_SEC;

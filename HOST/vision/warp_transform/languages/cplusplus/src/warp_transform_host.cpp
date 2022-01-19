@@ -147,6 +147,15 @@ string prepareWarpTransformCommand(unsigned int rows, unsigned int cols, unsigne
     return string(out);
 }
 
+std::string get_inImgName(std::string inStr, std::string delimiter){
+    size_t pos = 0;
+    std::string token;
+    while ((pos = inStr.find(delimiter)) != std::string::npos) {
+        token = inStr.substr(0, pos);
+        inStr.erase(0, pos + delimiter.length());
+    }
+    return token;
+}
 
 
 #ifdef PY_WRAP
@@ -162,8 +171,8 @@ void warp_transform(int total_size, unsigned char *input_img, int total_size2, u
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
-    if ((argc < 3) || (argc > 4)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image>\n";
+    if ((argc < 3) || (argc > 5)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image> <optional output folder>\n";
         exit(1);
     }
 #endif // PY_WRAP
@@ -173,7 +182,7 @@ int main(int argc, char * argv[]) {
     //------------------------------------------------------
     
     #ifndef PY_WRAP
-    assert ((argc == 3) || (argc == 4));
+    assert ((argc == 3) || (argc == 4)|| (argc == 5));
     string s_servAddress = argv[1]; // First arg: server address
     char *s_servPort = argv[2];
     #endif
@@ -193,7 +202,7 @@ int main(int argc, char * argv[]) {
     
     unsigned char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
-    string input_string;
+    string input_string, out_folder_string, out_filename;
 #ifdef INPUT_FROM_CAMERA
     int input_num;
 #ifdef PY_WRAP
@@ -220,8 +229,16 @@ int main(int argc, char * argv[]) {
         // Give a default image
         input_string.assign("../../../../../../ROLE/vision/hls/warp_transform/test/8x8.png");
     }
-    else if (argc == 4) {
+    else if (argc >= 4) {
         input_string.assign(argv[3]);
+    }
+    if(argc == 5) {
+       out_folder_string.assign(argv[4]);
+       //reasonably (hopefully :) assuming no / in the filename)
+       out_filename = out_folder_string + get_inImgName(input_string, "/");
+    }else{
+        out_folder_string.assign(input_string);
+        out_filename.assign(input_string);
     }
 #endif // PY_WRAP
 #endif // INPUT_FROM_CAMERA
@@ -249,7 +266,8 @@ int main(int argc, char * argv[]) {
     //#ifdef PY_WRAP
     //out_video_file.assign(output_str);
     //#else // !PY_WRAP
-    out_video_file.assign(input_string);
+    //out_video_file.assign(input_string);
+    out_video_file.assign(out_img_file);
     out_video_file += "_fpga_video_out.avi";
     //#endif // PY_WRAP
 #if CV_MAJOR_VERSION < 4
@@ -328,7 +346,9 @@ int main(int argc, char * argv[]) {
                 cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
                         << frame.rows << " to " << send.cols << "x" << send.rows << endl;
             }
+                if(argc < 5){
                 imwrite("testimg.png", frame);
+                }
 
             assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
             // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
@@ -507,8 +527,8 @@ int main(int argc, char * argv[]) {
             //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
             if (num_frame == 1) {
-                out_img_file.assign(input_string);
-                out_img_file += "_fpga_image_out_frame_" + to_string(num_frame) + ".png";
+                out_img_file.assign(out_filename);
+                out_img_file += "_fpga_out_frame_" + to_string(num_frame) + ".png";
 #if defined(PY_WRAP) && (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 
                 if (!strcpy(output_img_str, &out_img_file[0])) {
