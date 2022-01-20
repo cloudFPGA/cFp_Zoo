@@ -35,6 +35,7 @@
 #include <string>                       // For to_string
 #include <string.h>                     // For memcpy()
 #include "config.h"
+#include "warp_transform_api.hpp"
 #include "util.hpp"
 #include <omp.h>
 
@@ -85,39 +86,7 @@ std::vector<fs::path> get_all(fs::path const & root, std::string const & ext)
     return paths;
 }  
 
-
-/*****************************************************************************
- * @brief Resize an image and crop if necessary in order to keep a rectangle 
- * area in the middle of the image
- *
- * @param[in]  input          A pointer to the cv::Mat input image
- * @param[out] output         A pointer to the cv::Mat output image
- * @param[in]  Size           A pointer to the cv::Size of the output image (width, height)
- * @param[in]  interpolation  Enumerator for interpolation algorithm (imgproc.hpp)
- *
- * @return Nothing.
- ******************************************************************************/
-void resizeCropSquare(const cv::Mat &input, const cv::Mat &output, const cv::Size &dstSize, int interpolation = INTER_LINEAR)
-{
-    int h = input.rows;
-    int w = input.cols;
-    int min_size = min(h, w);
-    int x = w/2-min_size/2;
-    int y = h/2-min_size/2;
-    // printf("w=%d, h=%d, min_size=%d, x=%d, y=%d, width=%d, height=%d\n", w, h, min_size, x, y, width, height);
-    cv::Mat crop_img = input(Rect(x, y, min_size, min_size));
-    resize(crop_img, output, Size(dstSize.width, dstSize.height), 0, 0, interpolation);
-}
-
-// template<typename T>
-// std::vector<T> extract_subvector(std::vector<T> myVec,int start, int end)
-// {
-//     std::vector<T>::const_iterator first = myVec.begin() + start;
-//     std::vector<T>::const_iterator last = myVec.begin() + end;
-//     std::vector<T> subVec(first, last);
-//     return subVec;
-// }
-
+//TODO: template
 std::vector<fs::path> extract_subvector(std::vector<fs::path> myVec,int start, int end)
 {
     std::vector<fs::path>::const_iterator first = myVec.begin() + start;
@@ -126,6 +95,7 @@ std::vector<fs::path> extract_subvector(std::vector<fs::path> myVec,int start, i
     return subVec;
 }
 
+//TODO: template
 std::vector<std::vector<fs::path>> split_images(int thr_nr, std::vector<fs::path> dataset_images){
     std::vector<fs::path> tmp;
     std::vector<std::vector<fs::path>> out;
@@ -147,8 +117,9 @@ std::vector<std::vector<fs::path>> split_images(int thr_nr, std::vector<fs::path
 // as well as the reading phase.
 // TBD
 // template <typename T>
-void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, cv::Mat transformation_matrix, std::string strOutFldr, int start_cntr){
+void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, float* transformation_matrix_float, std::string strOutFldr, int start_cntr){
     Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
+    cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
 
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
@@ -173,7 +144,7 @@ void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, c
 // TBD
 // template <typename T>
 void cf_wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs,
-cv::Mat transformation_matrix, std::string strOutFldr, int start_cntr,
+float* transformation_matrix_float, std::string strOutFldr, int start_cntr,
 std::string cf_ip, std::string cf_port){
     Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
 
@@ -185,6 +156,33 @@ std::string cf_ip, std::string cf_port){
   	    cout << "Calling CF with command:" << command << endl; 
 	    system(command); 
 }
+}
+
+
+//TODO: write here the images or wait to write em after the execution?
+// as well as the reading phase.
+// TBD
+// template <typename T>
+void cf_wax_on_vec_imgs_apis( std::string strInFldr, std::vector<fs::path> input_imgs,
+float* transformation_matrix_float, std::string strOutFldr, int start_cntr,
+std::string cf_ip, std::string cf_port){
+
+    Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
+    int cntr=start_cntr;
+    for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
+        //if vec of images this will change
+        frame = cv::imread(strInFldr+(*it).string()); //, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
+#if CV_MAJOR_VERSION < 4
+            cv::cvtColor(frame,frame,CV_BGR2GRAY);
+#else
+            cv::cvtColor(frame,frame,cv::COLOR_BGR2GRAY);
+#endif
+            resizeCropSquare(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), INTER_LINEAR);
+            ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
+            cF_host_warp_transform(cf_ip, cf_port, send, transformation_matrix_float, ocv_out_img);
+            const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
+            imwrite(outfilename, ocv_out_img);
+    }
 }
 
 
@@ -320,7 +318,7 @@ int main(int argc, char * argv[]) {
         std::copy(std::begin(identity), std::end(identity), std::begin(transformation_matrix_float));
         break;
     }
-    cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
+    // cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     
     /////////////////
     std::vector<fs::path> dataset_imgs = get_all(strInFldr, ".png");
@@ -336,10 +334,12 @@ int main(int argc, char * argv[]) {
         startcntr = img_per_threads*iam-1;
         tmp = imgs_splitted.at(iam);
         if(exe_mode != 1){
-            wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr);
+            wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
         }else{
-            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix, strOutFldr, startcntr,
+            // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
+
         }
 	}
     clock_t end_cycle_warp_transform_sw = clock();

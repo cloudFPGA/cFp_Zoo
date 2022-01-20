@@ -154,7 +154,7 @@ std::string get_inImgName(std::string inStr, std::string delimiter){
         token = inStr.substr(0, pos);
         inStr.erase(0, pos + delimiter.length());
     }
-    return token;
+    return inStr;
 }
 
 
