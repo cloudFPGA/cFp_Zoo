@@ -172,16 +172,10 @@ std::string cf_ip, std::string cf_port){
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
         frame = cv::imread(strInFldr+(*it).string()); //, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
-#if CV_MAJOR_VERSION < 4
-            cv::cvtColor(frame,frame,CV_BGR2GRAY);
-#else
-            cv::cvtColor(frame,frame,cv::COLOR_BGR2GRAY);
-#endif
-            resizeCropSquare(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), INTER_LINEAR);
-            ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
-            cF_host_warp_transform(cf_ip, cf_port, send, transformation_matrix_float, ocv_out_img);
-            const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
-            imwrite(outfilename, ocv_out_img);
+        ocv_out_img.create(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST); // create memory for opencv output image
+        cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img);
+        const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
+        imwrite(outfilename, ocv_out_img);
     }
 }
 
