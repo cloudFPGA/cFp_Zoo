@@ -265,8 +265,8 @@ int main(int argc, char * argv[]) {
 		wax_mode = stoul(strWaxMode);
 	} catch  (const std::exception& e) {
 		std::cerr << e.what() << '\n';
-		cout << "WARNING something bad happened in the thread insertion, hence default used" << endl;
-		thread_number = 1;
+		cout << "WARNING something bad happened in the wax mode insertion, hence default used" << endl;
+		wax_mode = 1;
 	}
     print_cFpZoo();
     float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
