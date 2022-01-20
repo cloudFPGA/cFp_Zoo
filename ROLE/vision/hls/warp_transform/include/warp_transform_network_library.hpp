@@ -116,7 +116,10 @@ void pPortAndDestionation(
         //WarpTransform app needs to be reset to process new rank
         if(!sDstNode_sig.full())
         {
-          NodeId dst_rank = (*pi_rank + 1) % *pi_size;
+        //point to the following
+        // NodeId dst_rank = (*pi_rank + 1) % *pi_size;
+        //always back to 0
+        NodeId dst_rank = 0;//(*pi_rank + 1) % *pi_size;
     #if DEBUG_LEVEL == TRACE_ALL
           printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
     #endif
