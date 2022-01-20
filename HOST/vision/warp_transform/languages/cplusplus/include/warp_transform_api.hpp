@@ -143,8 +143,50 @@ std::string get_inImgName(std::string inStr, std::string delimiter){
     return inStr;
 }
 
+// template <typename T=UDPSocket >
+// int  open_connection(std::string s_servAddress, std::string s_servPort, T& sock){
+//     //------------------------------------------------------
+//     //-- STEP-1 : Socket and variables definition
+//     //------------------------------------------------------
 
-void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, cv::Mat input_im, float* transformation_matrix_float, cv::Mat &output_im)
+//     string servAddress = s_servAddress;
+//     unsigned short servPort;
+//     bool net_type = NET_TYPE;
+//     if (net_type == udp) {
+//         servPort = Socket::resolveService(s_servPort, "udp");
+//     }
+//     else if (net_type == tcp) {
+//         servPort = atoi(s_servPort.c_str());
+//     }
+//     else {
+//      cout << "ERROR: Invalid type of socket type provided: " << net_type  << " Choosed one of (tcp=0 or udp=1)" << endl;
+//     }    
+    
+//     try {
+          
+//         //------------------------------------------------------
+//         //-- STEP-2 : Initialize socket connection
+//         //------------------------------------------------------      
+// #if NET_TYPE == udp
+// #ifndef TB_SIM_CFP_VITIS
+//            sock(servPort); // NOTE: It is very important to set port here in order to call 
+//                                       // bind() in the UDPSocket constructor
+// #else // TB_SIM_CFP_VITIS
+//             sock; // NOTE: In HOST TB the port is already binded by warp_transform_host_fwd_tb.cpp
+// #endif // TB_SIM_CFP_VITIS
+// #else // tcp
+//            sock(servAddress, servPort);
+// #endif // udp/tcp
+//     // Destructor closes the socket
+//     } catch (SocketException & e) {
+//         cerr << e.what() << endl;
+//         exit(1);
+//     }
+//     return servPort;
+// }
+
+// template <typename T=UDPSocket >
+void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, cv::Mat input_im, float* transformation_matrix_float, cv::Mat &output_im)//, T sock, unsigned short servPort)
 {
 
     //------------------------------------------------------
@@ -286,11 +328,14 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
         output_im =  frame.clone();
 	    free (sendarr);
 	    free (longbuf);
+        delete &sock;
 
     // Destructor closes the socket
     } catch (SocketException & e) {
         cerr << e.what() << endl;
         exit(1);
     }
+    cout<< "Exiting" << endl;
+    
 }
 /*! \} */

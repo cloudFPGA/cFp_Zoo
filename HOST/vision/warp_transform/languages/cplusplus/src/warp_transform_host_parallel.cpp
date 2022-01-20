@@ -36,6 +36,7 @@
 #include <string.h>                     // For memcpy()
 #include "config.h"
 #include "warp_transform_api.hpp"
+#include "PracticalSockets.h" // For UDPSocket and SocketException
 #include "util.hpp"
 #include <omp.h>
 
@@ -166,14 +167,22 @@ std::string cf_ip, std::string cf_port){
 void cf_wax_on_vec_imgs_apis( std::string strInFldr, std::vector<fs::path> input_imgs,
 float* transformation_matrix_float, std::string strOutFldr, int start_cntr,
 std::string cf_ip, std::string cf_port){
-
+    // unsigned short servPort;
+    // #if NET_TYPE == udp
+    // UDPSocket my_socket;
+    // servPort= open_connection<UDPSocket>(cf_ip, cf_port,my_socket);
+    // #else // tcp
+    // TCPSocket my_socket;
+    // servPort= open_connection<TCPSocket>(cf_ip, cf_port,my_socket);
+    // #endif 
     Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
+        std::cout << "Thread " << cf_ip << " proc " << cntr << std::endl;
         frame = cv::imread(strInFldr+(*it).string()); //, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         ocv_out_img.create(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST); // create memory for opencv output image
-        cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img);
+        cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img);//, my_socket ,servPort);
         const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
         imwrite(outfilename, ocv_out_img);
     }
