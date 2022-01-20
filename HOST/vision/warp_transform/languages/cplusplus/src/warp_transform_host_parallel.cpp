@@ -223,7 +223,7 @@ int main(int argc, char * argv[]) {
 
 
     string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="";
-    vector<string> ipsVect({"10.12.200.167","10.12.200.221","10.12.200.29","10.12.200.19"});
+    vector<string> ipsVect({"10.12.200.62","10.12.200.136","10.12.200.172","10.12.200.250"});
     //vector<string> ipsVect({"10.12.200.145"});
     //vector<string> ipsVect({"localhost",
     //"localhost","localhost","localhost",
