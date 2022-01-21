@@ -153,7 +153,8 @@ std::string cf_ip, std::string cf_port){
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
-        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " </dev/null >/dev/null 2>&1 &";
+        //std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " </dev/null >/dev/null 2>&1 &";
+        std::string str_command = "nohup ./warp_transform_host_lighweight " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " </dev/null >/dev/null 2>&1 &";
         //std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " &>/dev/null & > /dev/null 2>&1";
         const char *command = str_command.c_str(); 
   	    //cout << "Calling CF with command:" << command << endl; 
