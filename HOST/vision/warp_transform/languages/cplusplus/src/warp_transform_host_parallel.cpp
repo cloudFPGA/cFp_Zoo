@@ -185,6 +185,8 @@ std::string cf_ip, std::string cf_port){
         cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img);//, my_socket ,servPort);
         const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
         imwrite(outfilename, ocv_out_img);
+        std::cout << "Thread " << cf_ip << " done processing " << std::endl;
+        
     }
 }
 

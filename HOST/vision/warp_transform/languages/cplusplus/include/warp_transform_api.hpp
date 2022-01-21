@@ -233,6 +233,8 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
     Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
 
     std::string warptx_cmd = prepareWarpTransformCommand(FRAME_WIDTH, FRAME_HEIGHT, send.channels(), transformation_matrix_float);
+    unsigned int num_frame=0;
+    cout << "INFO: Frame # " << ++num_frame << endl;
         
 #if CV_MAJOR_VERSION < 4
             cv::cvtColor(input_im,frame,CV_BGR2GRAY);
@@ -240,7 +242,10 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             cv::cvtColor(input_im,frame,cv::COLOR_BGR2GRAY);
 #endif
             resizeCropSquare(frame, send, Size(FRAME_WIDTH, FRAME_HEIGHT), INTER_LINEAR);
-
+            if ((frame.cols != FRAME_WIDTH) || (frame.rows != FRAME_HEIGHT)) {
+                cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
+                        << frame.rows << " to " << send.cols << "x" << send.rows << endl;
+            }
 
             assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
             // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
@@ -267,6 +272,18 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
 	        unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack_rx * sizeof (unsigned char));
 
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: Total packets to send= " << total_pack << endl;
+            cout << "INFO: Total packets to receive = " << total_pack_rx << endl;
+            cout << "INFO: Total bytes to send   = " << send_total * send_channels +  warptx_cmd_size << endl;
+            cout << "INFO: Total bytes to receive   = " << send_total * send_channels << endl;
+            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
+            cout << "INFO: Total bytes in " << total_pack_rx << " packets = "  << total_bytes_rx << endl;
+            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+            cout << "INFO: Bytes in last packet to receive    = " << bytes_in_last_pack_rx << endl;
+            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
+
             //--------------------------------------------------------
             //-- STEP-4 : RUN WARPTRANSFORM DETECTOR FROM OpenCV LIBRARY (SW)
             //--------------------------------------------------------
@@ -282,7 +299,7 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             memcpy(sendarr+warptx_cmd_size,sendarr_img, send_total * send_channels);
             
     
-
+            cout << "INFO: setup everything for sending" << endl;
             //------------------------------------------------------
             //-- STEP-5.2 : TX Loop
             //------------------------------------------------------
@@ -304,6 +321,7 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             //------------------------------------------------------    
             unsigned int loopi=0;
             unsigned int receiving_now = PACK_SIZE;
+            cout << "INFO: Expecting length of packs:" << total_pack_rx << " from " <<  servAddress << ":" << servPort << endl;
             for (unsigned int i = 0; i < send_total; ) {
                 #if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
@@ -319,6 +337,7 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
                 i += recvMsgSize;
                 //delay(500);
             }
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
             frame = cv::Mat(FRAME_HEIGHT, FRAME_WIDTH, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
             if (frame.size().width == 0) {
@@ -328,8 +347,8 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
         output_im =  frame.clone();
 	    free (sendarr);
 	    free (longbuf);
-        delete &sock;
-
+        //delete &sock;
+        cout << "here hsould be deleted the socket" << endl;
     // Destructor closes the socket
     } catch (SocketException & e) {
         cerr << e.what() << endl;
