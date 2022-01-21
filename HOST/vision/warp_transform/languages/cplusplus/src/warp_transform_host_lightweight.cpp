@@ -456,7 +456,7 @@ int main(int argc, char * argv[]) {
             //-- STEP-4 : RUN WARPTRANSFORM DETECTOR FROM OpenCV LIBRARY (SW)
             //--------------------------------------------------------
             // clock_t start_cycle_warp_transform_sw = clock();
-            ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
+            // ocv_out_img.create(send.rows, send.cols, INPUT_TYPE_HOST); // create memory for opencv output image
             // ocv_ref(send, ocv_out_img, transformation_matrix);
             // clock_t end_cycle_warp_transform_sw = clock();
             // double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / 
