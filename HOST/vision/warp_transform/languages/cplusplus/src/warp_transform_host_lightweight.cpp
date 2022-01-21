@@ -328,7 +328,7 @@ int main(int argc, char * argv[]) {
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME) 
 
-    print_cFpZoo();
+    //print_cFpZoo();
     
     try {
           
@@ -385,7 +385,8 @@ int main(int argc, char * argv[]) {
             if(frame.size().width==0) continue; //simple integrity check; skip erroneous data...
             // cout << " ___________________________________________________________________ " << endl;
             // cout << "/                                                                   \\" << endl;
-            // cout << "INFO: Frame # " << ++num_frame << endl;
+            //cout << "INFO: Frame # " << ++num_frame << endl;
+             ++num_frame;
 #if CV_MAJOR_VERSION < 4
             cv::cvtColor(frame,frame,CV_BGR2GRAY);
 #else
@@ -585,7 +586,7 @@ int main(int argc, char * argv[]) {
                     cerr << "ERROR: Cannot write to output image string." << endl;
                 }
 #endif // defined(PY_WRAP) && (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
-                cout << "INFO: The output image file is stored at : " << out_img_file << endl; 
+                //cout << "INFO: The output image file is stored at : " << out_img_file << endl; 
                 // We save the image received from network after being processed by WarpTransform HW or HOST TB
                 imwrite(out_img_file, frame);
             }
@@ -607,10 +608,10 @@ int main(int argc, char * argv[]) {
 #endif // WRITE_OUTPUT_FILE
             waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
-            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
-            cout << "\\___________________________________________________________________/" << endl
-            << endl;
-            //delete(longbuf);
+            //cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
+            //cout << "\\___________________________________________________________________/" << endl
+            // << endl;
+	    //delete(longbuf);
 	    free (sendarr);
 	    free (longbuf);
         } // while loop
