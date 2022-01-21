@@ -39,6 +39,7 @@
 #include "PracticalSockets.h" // For UDPSocket and SocketException
 #include "util.hpp"
 #include <omp.h>
+#include <chrono>
 
 // transform type 0-NN 1-BILINEAR
 #define INTERPOLATION 0
@@ -145,14 +146,14 @@ void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, f
 // TBD
 // template <typename T>
 void cf_wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs,
-float* transformation_matrix_float, std::string strOutFldr, int start_cntr,
+float* transformation_matrix_float, std::string strOutFldr, int start_cntr, unsigned int  wax_mode,
 std::string cf_ip, std::string cf_port){
     Mat frame, send(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST, Scalar(0)), ocv_out_img;
 
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
-        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " &>/dev/null &";
+        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " &>/dev/null &";
         const char *command = str_command.c_str(); 
   	    cout << "Calling CF with command:" << command << endl; 
 	    system(command); 
@@ -245,7 +246,7 @@ int main(int argc, char * argv[]) {
     }
 
     unsigned int thread_number = 4;
-    unsigned int wax_mode = 1;
+    unsigned int wax_mode = 2;
     unsigned int exe_mode = 0;
 //Setup
 	try{
@@ -268,7 +269,7 @@ int main(int argc, char * argv[]) {
 	} catch  (const std::exception& e) {
 		std::cerr << e.what() << '\n';
 		cout << "WARNING something bad happened in the wax mode insertion, hence default used" << endl;
-		wax_mode = 1;
+		wax_mode = 2;
 	}
     print_cFpZoo();
     float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
@@ -333,6 +334,7 @@ int main(int argc, char * argv[]) {
     clock_t start_cycle_warp_transform_sw = clock();
     int img_per_threads = dataset_imgs.size() / thread_number;
     std::vector<fs::path> tmp;
+    auto sTime = std::chrono::high_resolution_clock::now();
 #pragma omp parallel default(shared) private(tmp,iam,startcntr) num_threads(thread_number) 
     {
         iam = omp_get_thread_num();
@@ -343,12 +345,14 @@ int main(int argc, char * argv[]) {
         }else{
             // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
-            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
             ipsVect.at(iam), portsVect.at(iam));
 
         }
 	}
     clock_t end_cycle_warp_transform_sw = clock();
+    auto sfinish = std::chrono::high_resolution_clock::now();
+    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(sfinish-sTime).count()<<"\n";
     double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / (double) CLOCKS_PER_SEC;
     std::cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl; 
     

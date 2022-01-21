@@ -171,8 +171,8 @@ void warp_transform(int total_size, unsigned char *input_img, int total_size2, u
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
-    if ((argc < 3) || (argc > 5)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image> <optional output folder>\n";
+    if ((argc < 3) || (argc > 6)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <Server> <Server Port> <optional input image> <optional output folder> <optional wax mode> \n";
         exit(1);
     }
 #endif // PY_WRAP
@@ -182,7 +182,7 @@ int main(int argc, char * argv[]) {
     //------------------------------------------------------
     
     #ifndef PY_WRAP
-    assert ((argc == 3) || (argc == 4)|| (argc == 5));
+    assert ((argc == 3) || (argc == 4) || (argc == 5) || (argc == 6));
     string s_servAddress = argv[1]; // First arg: server address
     char *s_servPort = argv[2];
     #endif
@@ -202,7 +202,7 @@ int main(int argc, char * argv[]) {
     
     unsigned char buffer[BUF_LEN]; // Buffer for echo string
     unsigned int recvMsgSize; // Size of received message
-    string input_string, out_folder_string, out_filename;
+    string input_string, out_folder_string, out_filename,strWaxMode;
 #ifdef INPUT_FROM_CAMERA
     int input_num;
 #ifdef PY_WRAP
@@ -232,32 +232,82 @@ int main(int argc, char * argv[]) {
     else if (argc >= 4) {
         input_string.assign(argv[3]);
     }
-    if(argc == 5) {
+    if(argc >= 5) {
        out_folder_string.assign(argv[4]);
        //reasonably (hopefully :) assuming no / in the filename)
        out_filename = out_folder_string + get_inImgName(input_string, "/");
+        if(argc>=6){
+            strWaxMode.assign(argv[5]);
+        }
     }else{
         out_folder_string.assign(input_string);
         out_filename.assign(input_string);
     }
 #endif // PY_WRAP
 #endif // INPUT_FROM_CAMERA
-    
+    unsigned int wax_mode = 2;
+    try{
+		wax_mode = stoul(strWaxMode);
+	} catch  (const std::exception& e) {
+		std::cerr << e.what() << '\n';
+		cout << "WARNING something bad happened in the wax mode insertion, hence default used" << endl;
+		wax_mode = 2;
+	}
    
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
    
-    // ksize: aperture linear size; it must be odd and greater than 1, for example: 3, 5, 7 ...
-    // int ksize = WINDOW_SIZE ;
-    /////////////////
-    // float identity_tx_mat [9] = {1,0,0,0,1,0,0,0,0};
-    // float xtranslation_tx_mat [9] = {1,0,2,0,1,0,0,0,0};// 1 0 vx 0 1 vy 000
-    // float ytranslation_tx_mat [9] = {1,0,0,0,1,2,0,0,0}; 
-    // float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
-    // float yscale_tx_mat [9] = {2,0,0,0,1,0,0,0,0}; //cx  0 0 0 cy 0 000
-    // float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};
-    // float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
-    // float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
-    float transformation_matrix_float [9] = {1.5,0,0,0,1.8,0,0,0,0};
+    float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
+    float square_reduction [9] = {1.5,0,0,0,1.8,0,0,0,0};
+    float yscale_tx_mat [9] = {2,0,0,0,1,0,0,0,0};////cx  0 0 0 cy 0 000
+    float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};////cx  0 0 0 cy 0 000
+    float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
+    float xtranslation_tx_mat [9] = {1,0,2,0,1,0,0,0,0};// 1 0 vx 0 1 vy 000
+    float ytranslation_tx_mat [9] = {1,0,0,0,1,2,0,0,0};// 1 0 vx 0 1 vy 000
+    float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
+    float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
+    float identity [9] = {1,0,0,0,1,0,0,0,0};
+
+// on the TX have a look of a visual comparison to opencv results. the same will be applied to this kernel
+// moreover, opencv matrixes seems column-wise format.
+    switch (wax_mode)
+    {
+    case 1:
+    //square_reduction
+        std::copy(std::begin(square_reduction), std::end(square_reduction), std::begin(transformation_matrix_float));
+        break;
+    case 2:
+    //yscale_tx_mat
+        std::copy(std::begin(yscale_tx_mat), std::end(yscale_tx_mat), std::begin(transformation_matrix_float));
+        break;
+    case 3:
+    //xscale_tx_mat
+        std::copy(std::begin(xscale_tx_mat), std::end(xscale_tx_mat), std::begin(transformation_matrix_float));
+        break;
+    case 4:
+    //rotation_30degree_tx_mat
+        std::copy(std::begin(rotation_30degree_tx_mat), std::end(rotation_30degree_tx_mat), std::begin(transformation_matrix_float));
+        break;
+    case 5:
+    //xtranslation_tx_mat
+        std::copy(std::begin(xtranslation_tx_mat), std::end(xtranslation_tx_mat), std::begin(transformation_matrix_float));
+        break;
+    case 6:
+    //ytranslation_tx_mat
+        std::copy(std::begin(ytranslation_tx_mat), std::end(ytranslation_tx_mat), std::begin(transformation_matrix_float));
+        break;
+    case 7:
+    //shearing_tx_mat
+        std::copy(std::begin(shearing_tx_mat), std::end(shearing_tx_mat), std::begin(transformation_matrix_float));
+        break;                
+    case 8:
+    //reflection_tx_mat
+        std::copy(std::begin(reflection_tx_mat), std::end(reflection_tx_mat), std::begin(transformation_matrix_float));
+        break;     
+    default:
+    //identity
+        std::copy(std::begin(identity), std::end(identity), std::begin(transformation_matrix_float));
+        break;
+    }
     cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     /////////////////
     string out_img_file;
