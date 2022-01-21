@@ -45,13 +45,22 @@ set(INCLUDES_HOST       "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
                         "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/"
                         "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
 
-set(SOURCES_HOST_SW_PURE        src/warp_transform_host_parallel.cpp
+set(SOURCES_HOST_LIGHT  src/warp_transform_host_lightweight.cpp
+                        "$ENV{cFpRootDir}HOST/common/langs/cpp/src/util.cpp"
+                        "$ENV{cFpRootDir}HOST/common/langs/cpp/src/ologger.cpp"                        
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
+set(INCLUDES_HOST_LIGHT "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
+                        "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/"
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
+
+set(SOURCES_HOST_SW_PARALLEL        src/warp_transform_host_parallel.cpp
                       "$ENV{cFpRootDir}HOST/common/langs/cpp/src/util.cpp"
                       "$ENV{cFpRootDir}HOST/common/langs/cpp/src/ologger.cpp"
                       "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
 
 
-set(INCLUDES_SW_PURE    "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
+set(INCLUDES_SW_PARALLEL    "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
                         "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/"
                         "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
 
@@ -63,10 +72,13 @@ add_executable( warp_transform_host ${SOURCES_HOST} )
 target_include_directories(warp_transform_host PRIVATE ${INCLUDES_HOST})
 target_link_libraries( warp_transform_host ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
+add_executable( warp_transform_host_lightweight ${SOURCES_HOST_LIGHT} )
+target_include_directories(warp_transform_host_lightweight PRIVATE ${INCLUDES_HOST_LIGHT})
+target_link_libraries( warp_transform_host_lightweight ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
 set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -fopenmp -lboost_system -lboost_filesystem")
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 add_definitions(-DBOOST_SYSTEM_NO_DEPRECATED)
-add_executable( warp_transform_host_parallel ${SOURCES_HOST_SW_PURE} )
-target_include_directories(warp_transform_host_parallel PRIVATE ${INCLUDES_SW_PURE})
+add_executable( warp_transform_host_parallel ${SOURCES_HOST_SW_PARALLEL} )
+target_include_directories(warp_transform_host_parallel PRIVATE ${INCLUDES_SW_PARALLEL})
 target_link_libraries( warp_transform_host_parallel ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} ${Boost_LIBRARIES})
