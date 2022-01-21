@@ -152,7 +152,7 @@ std::string cf_ip, std::string cf_port){
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
-        std::string str_command = "./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " &";
+        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " &>/dev/null &";
         const char *command = str_command.c_str(); 
   	    cout << "Calling CF with command:" << command << endl; 
 	    system(command); 
@@ -225,7 +225,7 @@ int main(int argc, char * argv[]) {
 
 
     string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="";
-    vector<string> ipsVect({"10.12.200.62","10.12.200.136","10.12.200.172","10.12.200.250"});
+    vector<string> ipsVect({"10.12.200.126","10.12.200.96","10.12.200.212","10.12.200.57"});
     //vector<string> ipsVect({"10.12.200.145"});
     //vector<string> ipsVect({"localhost",
     //"localhost","localhost","localhost",
@@ -342,7 +342,8 @@ int main(int argc, char * argv[]) {
             wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
         }else{
             // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
-            cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
 
         }
