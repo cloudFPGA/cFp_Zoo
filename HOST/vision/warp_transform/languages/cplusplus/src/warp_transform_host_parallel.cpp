@@ -153,9 +153,10 @@ std::string cf_ip, std::string cf_port){
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
-        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " &>/dev/null &";
+        std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " </dev/null >/dev/null 2>&1 &";
+        //std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " &>/dev/null & > /dev/null 2>&1";
         const char *command = str_command.c_str(); 
-  	    cout << "Calling CF with command:" << command << endl; 
+  	    //cout << "Calling CF with command:" << command << endl; 
 	    system(command); 
 }
 }
@@ -352,7 +353,7 @@ int main(int argc, char * argv[]) {
 	}
     clock_t end_cycle_warp_transform_sw = clock();
     auto sfinish = std::chrono::high_resolution_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::nanoseconds>(sfinish-sTime).count()<<"\n";
+    std::cout << "INFO: chrono time [ms] =" <<  std::chrono::duration_cast<std::chrono::milliseconds>(sfinish-sTime).count()<<"\n";
     double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / (double) CLOCKS_PER_SEC;
     std::cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl; 
     
