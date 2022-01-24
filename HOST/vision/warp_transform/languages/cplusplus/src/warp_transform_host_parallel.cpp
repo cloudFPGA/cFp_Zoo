@@ -114,6 +114,20 @@ std::vector<std::vector<fs::path>> split_images(int thr_nr, std::vector<fs::path
     return out;   
 }
 
+void splitString(string s, vector<string> &outVect, char separator){
+	string temp = "";
+	for(int i=0;i<s.length();i++){
+		if(s[i]==separator){
+			outVect.push_back(temp);
+			temp = "";
+		}
+		else{
+			temp.push_back(s[i]);
+		}
+		
+	}
+	outVect.push_back(temp);
+}
 
 //TODO: write here the images or wait to write em after the execution?
 // as well as the reading phase.
@@ -193,6 +207,71 @@ std::string cf_ip, std::string cf_port){
     }
 }
 
+void setupTxMatrix(float transformation_matrix_float [9],unsigned int wax_mode)
+{
+    float square_reduction [9] = {1.5,0,0,0,1.8,0,0,0,0};
+    float yscale_tx_mat [9] = {2,0,0,0,1,0,0,0,0};////cx  0 0 0 cy 0 000
+    float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};////cx  0 0 0 cy 0 000
+    float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
+    float xtranslation_tx_mat [9] = {1,0,2,0,1,0,0,0,0};// 1 0 vx 0 1 vy 000
+    float ytranslation_tx_mat [9] = {1,0,0,0,1,2,0,0,0};// 1 0 vx 0 1 vy 000
+    float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
+    float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
+    float identity [9] = {1,0,0,0,1,0,0,0,0};
+
+// on the TX have a look of a visual comparison to opencv results. the same will be applied to this kernel
+// moreover, opencv matrixes seems column-wise format.
+    switch (wax_mode)
+    {
+    case 1:
+    //square_reduction
+        // std::copy(std::begin(square_reduction), std::end(square_reduction), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 2:
+    //yscale_tx_mat
+        // std::copy(std::begin(yscale_tx_mat), std::end(yscale_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 3:
+    //xscale_tx_mat
+        // std::copy(std::begin(xscale_tx_mat), std::end(xscale_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 4:
+    //rotation_30degree_tx_mat
+        // std::copy(std::begin(rotation_30degree_tx_mat), std::end(rotation_30degree_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 5:
+    //xtranslation_tx_mat
+        // std::copy(std::begin(xtranslation_tx_mat), std::end(xtranslation_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 6:
+    //ytranslation_tx_mat
+        // std::copy(std::begin(ytranslation_tx_mat), std::end(ytranslation_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    case 7:
+    //shearing_tx_mat
+        // std::copy(std::begin(shearing_tx_mat), std::end(shearing_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;                
+    case 8:
+    //reflection_tx_mat
+        // std::copy(std::begin(reflection_tx_mat), std::end(reflection_tx_mat), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;     
+    default:
+    //identity
+        // std::copy(std::begin(identity), std::end(identity), std::begin(transformation_matrix_float));
+        memcpy(transformation_matrix_float,square_reduction, sizeof(float)*9);
+        break;
+    }
+    // cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
+}
+
 
 void print_cFpZoo(void)
 {
@@ -214,8 +293,9 @@ void print_cFpZoo(void)
    *   @return O on success, 1 on fail 
    */
 int main(int argc, char * argv[]) {
-    if ((argc < 4) || (argc > 6)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <0|1 sw|cf> <optional number of threads> <optional warp-transform mode>\n";
+    if ((argc < 4) || (argc > 8)) { // Test for correct number of arguments
+        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <0|1 sw|cf> <optional number of threads> \n";
+        cerr << " <optional warp-transform mode> <port list 1234:5678:...> <ip list 10.12.200.222:10.12.200.54:10.12.200.128:10.12.200.127> \n";
         //TODO: maybe not having optional but let the code read always the tx matrix
         exit(1);
     }
@@ -223,28 +303,45 @@ int main(int argc, char * argv[]) {
     //-- STEP-1 : Init
     //------------------------------------------------------
     
-    assert ((argc == 6) || (argc == 4) || (argc == 5) );
+    assert ((argc  >= 4) ||  (argc <= 8) );
 
+    
 
-
-    string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="";
-    vector<string> ipsVect({"10.12.200.222","10.12.200.54","10.12.200.128","10.12.200.127"});
+    string strInFldr, strOutFldr, strExeMode, strNrThrd="", strWaxMode="", strPorts="", strIps="";
+    vector<string> ipsVect;
+    vector<string> portsVect;
+    //vector<string> ipsVect({"10.12.200.222","10.12.200.54","10.12.200.128","10.12.200.127"});
     //vector<string> ipsVect({"10.12.200.145"});
-    //vector<string> ipsVect({"localhost",
-    //"localhost","localhost","localhost",
-    //"localhost","localhost","localhost","localhost"});
-    vector<string> portsVect({"2718", "2718", "2718", "2718"});
-    //vector<string> portsVect({"1234",
-    //"5678","9101","1121",
-    //"3141","5161","7181","9202"});
+    // vector<string> ipsVect({"localhost","localhost","localhost","localhost",
+    // "localhost","localhost","localhost","localhost"});
+    //vector<string> portsVect({"2718", "2718", "2718", "2718"});
+    //vector<string> portsVect({"1234", "5678","9101","1121",
+    // "3141","5161","7181","9202"});
     strInFldr.assign(argv[1]);
     strOutFldr.assign(argv[2]);
     strExeMode.assign(argv[3]);
     if(argc>=5){
         strNrThrd.assign(argv[4]);
+        if(argc>=6){
+            strWaxMode.assign(argv[5]);
+        }
+
     }
-    if(argc>=6){
-        strWaxMode.assign(argv[5]);
+    if(argc >= 7){
+        strPorts.assign(argv[6]);
+        splitString(strPorts, portsVect, ':');
+        if(argc == 8){
+            strIps.assign(argv[7]);
+            splitString(strIps, ipsVect, ':');
+        }else{
+            vector<string> tmp({"10.12.200.63","10.12.200.135","10.12.200.19","10.12.200.216"});
+            ipsVect = tmp;
+        }
+    }else{
+        vector<string> tmp1({"2718", "2718", "2718", "2718"});
+        vector<string> tmp2({"10.12.200.63","10.12.200.135","10.12.200.19","10.12.200.216"});
+        portsVect = tmp1;
+        ipsVect = tmp2;
     }
 
     unsigned int thread_number = 4;
@@ -275,58 +372,7 @@ int main(int argc, char * argv[]) {
 	}
     print_cFpZoo();
     float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
-    float square_reduction [9] = {1.5,0,0,0,1.8,0,0,0,0};
-    float yscale_tx_mat [9] = {2,0,0,0,1,0,0,0,0};////cx  0 0 0 cy 0 000
-    float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};////cx  0 0 0 cy 0 000
-    float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
-    float xtranslation_tx_mat [9] = {1,0,2,0,1,0,0,0,0};// 1 0 vx 0 1 vy 000
-    float ytranslation_tx_mat [9] = {1,0,0,0,1,2,0,0,0};// 1 0 vx 0 1 vy 000
-    float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
-    float reflection_tx_mat [9] = {-1,0,0,0,1,0,0,0,0};
-    float identity [9] = {1,0,0,0,1,0,0,0,0};
-
-// on the TX have a look of a visual comparison to opencv results. the same will be applied to this kernel
-// moreover, opencv matrixes seems column-wise format.
-    switch (wax_mode)
-    {
-    case 1:
-    //square_reduction
-        std::copy(std::begin(square_reduction), std::end(square_reduction), std::begin(transformation_matrix_float));
-        break;
-    case 2:
-    //yscale_tx_mat
-        std::copy(std::begin(yscale_tx_mat), std::end(yscale_tx_mat), std::begin(transformation_matrix_float));
-        break;
-    case 3:
-    //xscale_tx_mat
-        std::copy(std::begin(xscale_tx_mat), std::end(xscale_tx_mat), std::begin(transformation_matrix_float));
-        break;
-    case 4:
-    //rotation_30degree_tx_mat
-        std::copy(std::begin(rotation_30degree_tx_mat), std::end(rotation_30degree_tx_mat), std::begin(transformation_matrix_float));
-        break;
-    case 5:
-    //xtranslation_tx_mat
-        std::copy(std::begin(xtranslation_tx_mat), std::end(xtranslation_tx_mat), std::begin(transformation_matrix_float));
-        break;
-    case 6:
-    //ytranslation_tx_mat
-        std::copy(std::begin(ytranslation_tx_mat), std::end(ytranslation_tx_mat), std::begin(transformation_matrix_float));
-        break;
-    case 7:
-    //shearing_tx_mat
-        std::copy(std::begin(shearing_tx_mat), std::end(shearing_tx_mat), std::begin(transformation_matrix_float));
-        break;                
-    case 8:
-    //reflection_tx_mat
-        std::copy(std::begin(reflection_tx_mat), std::end(reflection_tx_mat), std::begin(transformation_matrix_float));
-        break;     
-    default:
-    //identity
-        std::copy(std::begin(identity), std::end(identity), std::begin(transformation_matrix_float));
-        break;
-    }
-    // cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
+    setupTxMatrix(transformation_matrix_float, wax_mode);
     
     /////////////////
     std::vector<fs::path> dataset_imgs = get_all(strInFldr, ".png");
@@ -346,9 +392,9 @@ int main(int argc, char * argv[]) {
             wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
         }else{
             // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
-            //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
-            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
+            cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
+            //cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
 
         }
 	}

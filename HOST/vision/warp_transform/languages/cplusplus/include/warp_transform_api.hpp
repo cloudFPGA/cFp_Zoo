@@ -317,8 +317,8 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                cout << "DEBUG: iteration " << i << " sending " << sending_now;
-                //delay(500);  
+                // cout << "DEBUG: iteration " << i << " sending " << sending_now << endl;
+                //delay(50);  
             }
 
             //------------------------------------------------------
@@ -340,7 +340,8 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
                 }
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 i += recvMsgSize;
-                //delay(500);
+                // cout << "DEBUG: iteration " << i << " receiving " << receiving_now << endl;
+                //delay(50);
             }
             // cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
