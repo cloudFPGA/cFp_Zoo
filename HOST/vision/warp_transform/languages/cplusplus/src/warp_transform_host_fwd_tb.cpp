@@ -116,11 +116,11 @@ int main(int argc, char * argv[]) {
 		int total_pack = 1 + (WARP_TRANSFORM_TOTAL - 1) / PACK_SIZE;
         int bytes_in_last_pack = (WARP_TRANSFORM_TOTAL) - (total_pack - 1) * PACK_SIZE;	    
 	    int receiving_now = PACK_SIZE;
-            cout << " ___________________________________________________________________ " << endl;
-            cout << "/                                                                   \\" << endl;
-	    cout << "INFO: Proxy tb Frame # " << ++num_frame << endl;	    
-            cout << "INFO: Expecting length of packs:" << total_pack << endl;
-            char * longbuf = new char[PACK_SIZE * total_pack];
+		cout << " ___________________________________________________________________ " << endl;
+		cout << "/                                                                   \\" << endl;
+		cout << "INFO: Proxy tb Frame # " << ++num_frame << endl;	    
+		cout << "INFO: Expecting length of packs:" << total_pack << endl;
+		char * longbuf = new char[PACK_SIZE * total_pack];
 	    
 	    // RX Loop
             for (int i = 0; i < total_pack; i++) {
@@ -191,8 +191,8 @@ int main(int argc, char * argv[]) {
 	    // the first time.
 	    clean_cmd = " ";
 	    if (num_frame == 1) {
-	      //clean_cmd = "";
-	      clean_cmd = "make clean && ";
+	      clean_cmd = "";
+	      //clean_cmd = "make clean && ";
 	    }
 	    string str_command = "cd ../../../../../../ROLE/vision/hls/warp_transform/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \
@@ -201,7 +201,7 @@ int main(int argc, char * argv[]) {
   	    cout << "Calling TB with command:" << command << endl; 
 	    system(command); 
 
-            free(longbuf);
+        free(longbuf);
 
 	    clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
@@ -221,8 +221,9 @@ int main(int argc, char * argv[]) {
 	    }
 	        
 	    assert(frame.total() == FRAME_WIDTH * FRAME_HEIGHT);
-	    
-            imshow("tb_send", frame);
+	#ifdef SHOW_WINDOWS
+		imshow("tb_send", frame);
+	#endif //SHOW_WINDOWS
 	    
 	    // Ensure that the send Mat is in continuous memory space. Typically, imread or resize 
 	    // will return such a continuous Mat, but we should check it.
@@ -249,7 +250,8 @@ int main(int argc, char * argv[]) {
                     total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx; 
             cout << "\\___________________________________________________________________/" << endl;
-        break;} // while loop
+        //break;
+		} // while loop
         #if NET_TYPE == tcp
         delete servsock;
 	#endif
