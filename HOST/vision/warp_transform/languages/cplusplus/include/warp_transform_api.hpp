@@ -188,7 +188,9 @@ std::string get_inImgName(std::string inStr, std::string delimiter){
 // template <typename T=UDPSocket >
 void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, cv::Mat input_im, float* transformation_matrix_float, cv::Mat &output_im)//, T sock, unsigned short servPort)
 {
-
+    std::cout << "Recevied addr= " << s_servAddress << " port= " << s_servPort << endl;
+    //std::cout << " Inpt matrix " << input_im << endl << " tx mat[0] " << transformation_matrix_float[0] << endl;
+    // cout <<  " Out img " << output_im <<endl;
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
@@ -260,6 +262,7 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             unsigned int send_total = send.total();
             unsigned int send_channels = send.channels();
             unsigned int warptx_cmd_size = warptx_cmd.length();
+            std::cout << "Stuffs to send tot-chan-waxcmd " << send_total << " " << send_channels << " " << warptx_cmd_size <<endl;
 
             unsigned int total_pack  = 1 + (send_total * send_channels - 1 +  warptx_cmd_size) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
@@ -300,7 +303,7 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
             memcpy(sendarr+warptx_cmd_size,sendarr_img, send_total * send_channels);
             
     
-            cout << "INFO: setup everything for sending" << endl;
+            cout << "INFO: setup everything for sending " << total_pack << " packs with total bytes of " << to_string(send_total * send_channels +  warptx_cmd_size) << endl;
             //------------------------------------------------------
             //-- STEP-5.2 : TX Loop
             //------------------------------------------------------
@@ -314,15 +317,16 @@ void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, c
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
+                cout << "DEBUG: iteration " << i << " sending " << sending_now;
                 //delay(500);  
             }
-        
+
             //------------------------------------------------------
             //-- STEP-5.3 : RX Loop
             //------------------------------------------------------    
             unsigned int loopi=0;
             unsigned int receiving_now = PACK_SIZE;
-            // cout << "INFO: Expecting length of packs:" << total_pack_rx << " from " <<  servAddress << ":" << servPort << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack_rx << " from " <<  servAddress << ":" << servPort << endl;
             for (unsigned int i = 0; i < send_total; ) {
                 #if NET_TYPE == udp                
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, servAddress, servPort);
