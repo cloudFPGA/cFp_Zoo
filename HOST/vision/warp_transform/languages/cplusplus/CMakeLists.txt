@@ -76,7 +76,7 @@ add_executable( warp_transform_host_lightweight ${SOURCES_HOST_LIGHT} )
 target_include_directories(warp_transform_host_lightweight PRIVATE ${INCLUDES_HOST_LIGHT})
 target_link_libraries( warp_transform_host_lightweight ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
-set(CMAKE_CXX_FLAGS "-Wall -std=c++11 -fopenmp -lboost_system -lboost_filesystem")
+set(CMAKE_CXX_FLAGS "-ggdb3 -fstack-check -Wall -std=c++11 -fopenmp -lboost_system -lboost_filesystem")
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)
 add_definitions(-DBOOST_SYSTEM_NO_DEPRECATED)
 add_executable( warp_transform_host_parallel ${SOURCES_HOST_SW_PARALLEL} )

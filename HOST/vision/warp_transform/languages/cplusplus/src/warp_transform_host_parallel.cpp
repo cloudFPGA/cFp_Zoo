@@ -171,7 +171,7 @@ std::string cf_ip, std::string cf_port){
         std::string str_command = "./warp_transform_host_lightweight " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + "";
         //std::string str_command = "nohup ./warp_transform_host " + cf_ip + " " + cf_port +  " " + strInFldr+(*it).string() +  " " +  strOutFldr + " " + to_string(wax_mode)  + " &>/dev/null & > /dev/null 2>&1";
         const char *command = str_command.c_str(); 
-        cout << "Calling CF with command:" << command << endl; 
+        //cout << "Calling CF with command:" << command << endl; 
 	system(command); 
      }
 }
@@ -294,7 +294,7 @@ void print_cFpZoo(void)
    */
 int main(int argc, char * argv[]) {
     if ((argc < 4) || (argc > 8)) { // Test for correct number of arguments
-        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <0|1 sw|cf> <optional number of threads> \n";
+        cerr << "Usage: " << argv[0] << " <input folder> <output folder> <0|1|2 sw|cf api|cf exec> <optional number of threads> \n";
         cerr << " <optional warp-transform mode> <port list 1234:5678:...> <ip list 10.12.200.222:10.12.200.54:10.12.200.128:10.12.200.127> \n";
         //TODO: maybe not having optional but let the code read always the tx matrix
         exit(1);
@@ -382,19 +382,23 @@ int main(int argc, char * argv[]) {
     clock_t start_cycle_warp_transform_sw = clock();
     int img_per_threads = dataset_imgs.size() / thread_number;
     std::vector<fs::path> tmp;
+    omp_set_dynamic(0);
     auto sTime = std::chrono::high_resolution_clock::now();
-#pragma omp parallel default(shared) private(tmp,iam,startcntr) num_threads(thread_number) 
+#pragma omp parallel default(shared) private(tmp,iam,startcntr, img_per_threads, transformation_matrix_float) num_threads(thread_number) 
     {
         iam = omp_get_thread_num();
         startcntr = img_per_threads*iam-1;
         tmp = imgs_splitted.at(iam);
-        if(exe_mode != 1){
+        if(exe_mode == 0){
             wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
-        }else{
-            // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+        }else if(exe_mode == 1){
             cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
-            //cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
+	}else{
+            // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
+            ipsVect.at(iam), portsVect.at(iam));
 
         }
 	}
