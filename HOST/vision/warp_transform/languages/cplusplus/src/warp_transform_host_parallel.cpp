@@ -370,6 +370,10 @@ int main(int argc, char * argv[]) {
 		cout << "WARNING something bad happened in the wax mode insertion, hence default used" << endl;
 		wax_mode = 2;
 	}
+    if(exe_mode!= 0){
+        assert(portsVect.size() == ipsVect.size());
+        assert(ipsVect.size() >= thread_number);
+    }
     print_cFpZoo();
     float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
     setupTxMatrix(transformation_matrix_float, wax_mode);
@@ -394,7 +398,7 @@ int main(int argc, char * argv[]) {
         }else if(exe_mode == 1){
             cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             ipsVect.at(iam), portsVect.at(iam));
-	}else{
+	    }else{
             // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
             cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
