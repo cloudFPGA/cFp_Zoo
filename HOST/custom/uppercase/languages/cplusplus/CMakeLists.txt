@@ -25,9 +25,23 @@ foreach(dir ${dirs})
   message(STATUS "Included dir='${dir}'")
 endforeach()
 
-set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11")
+set (CMAKE_CXX_FLAGS "-ggdb3 -Wall -fstack-check -std=c++11")
 
-add_executable( uppercase_host_fwd_tb ./src/uppercase_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+set(SOURCES_HOST_FWD_TB src/uppercase_host_fwd_tb.cpp
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
+
+set(SOURCES_HOST        src/uppercase_host.cpp
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
+set(INCLUDES_HOST       "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
+                        "$ENV{cFpRootDir}HOST/custom/uppercase/languages/cplusplus/include/"
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
+
+add_executable( uppercase_host_fwd_tb ${SOURCES_HOST_FWD_TB} )
+target_include_directories(uppercase_host_fwd_tb PRIVATE ${INCLUDES_HOST})
 target_link_libraries( uppercase_host_fwd_tb ${LIBXML2_LIBRARIES} )
-add_executable( uppercase_host ./src/uppercase_host.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
+
+add_executable( uppercase_host ${SOURCES_HOST} )
+target_include_directories(uppercase_host PRIVATE ${INCLUDES_HOST})
 target_link_libraries( uppercase_host ${LIBXML2_LIBRARIES} )

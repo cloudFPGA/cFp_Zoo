@@ -36,7 +36,7 @@
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
 #include <string.h>
-#include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
+#include "PracticalSockets.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 
 using namespace std;

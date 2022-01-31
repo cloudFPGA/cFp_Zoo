@@ -21,15 +21,8 @@ project( cFpUppercase )
 find_package(LibXml2 REQUIRED)
 find_package(SWIG REQUIRED)
 
-#set(PYTHON_INCLUDE_PATH /usr/include/python3.5m)
-#set(PYTHON_LIBRARIES /usr/lib/x86_64-linux-gnu/libpython3.5m.so)
-#set(PYTHON_EXECUTABLE /usr/bin/python3.5m)
-#set(PYTHON_INCLUDE_DIR  /usr/include/python3.5m)
-#set(Python_ADDITIONAL_VERSIONS 3.5)
-#find_package(PythonInterp 3 REQUIRED)
-set(PYTHON_LIBRARIES /usr/lib64/libpython3.8.so)
-set (CMAKE_MODULE_PATH "$ENV{cFpRootDir}/HOST/custom/uppercase/languages/python/")
 find_package(PythonLibs 3 REQUIRED)
+set (CMAKE_MODULE_PATH "$ENV{cFpRootDir}/HOST/vision/median_blur/languages/python/")
 
 include_directories(${LIBXML2_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
 include(${SWIG_USE_FILE})
@@ -39,14 +32,35 @@ foreach(dir ${dirs})
   message(STATUS "Included dir='${dir}'")
 endforeach()
 
-set (CMAKE_CXX_FLAGS "-g -Wall -fstack-check -std=c++11 -DPY_WRAP")
 
-add_executable( uppercase_host_fwd_tb ../cplusplus/src/uppercase_host_fwd_tb.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
-target_link_libraries( uppercase_host_fwd_tb ${LIBXML2_LIBRARIES} )
+
+set(SOURCES_HOST_FWD_TB ../cplusplus/src/uppercase_host_fwd_tb.cpp
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
+
+set(SOURCES_HOST        ../cplusplus/src/uppercase_host.cpp
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
+set(INCLUDES_HOST       "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
+                        "$ENV{cFpRootDir}HOST/custom/uppercase/languages/cplusplus/include/"
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
+
 
 #this sets the output directory of anything SWIG generates
 set (CMAKE_SWIG_OUTDIR  ./swig_trieres_output)
 
+#set_source_files_properties (./trieres_median_blur_numpi.i PROPERTIES SWIG_FLAGS "-threads")
+
+set (CMAKE_CXX_FLAGS "-ggdb3 -Wall -fstack-check -std=c++11 -DPY_WRAP")
+
 set_property(SOURCE ./trieres.i PROPERTY CPLUSPLUS ON)
-swig_add_module(trieres python ./trieres.i ../../../../PracticalSockets/src/PracticalSockets.cpp ../cplusplus/src/uppercase_host.cpp)
+swig_add_module(trieres python ./trieres.i ${SOURCES_HOST})
+include_directories(${INCLUDES_HOST})
+#set_property(TARGET trieres_median_blur_numpi PROPERTY SWIG_USE_LIBRARY_INCLUDE_DIRECTORIES TRUE)
+
 swig_link_libraries (trieres ${PYTHON_LIBRARIES})
+
+add_executable( uppercase_host_fwd_tb ${SOURCES_HOST_FWD_TB} )
+target_include_directories(uppercase_host_fwd_tb PRIVATE ${INCLUDES_HOST})
+target_link_libraries( uppercase_host_fwd_tb ${LIBXML2_LIBRARIES} )
+

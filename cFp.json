@@ -4,18 +4,18 @@
     "cFpSRAtype": "Themisto",
     "usedRoleDir": "",
     "usedRoleDir2": "to-be-defined",
-    "roleName1": "vision",
+    "roleName1": "custom",
     "roleName2": "unused",
     "srat-conf": {
         "version": 0.3,
         "roles": [
         {
-                "name": "vision",
+                "name": "custom",
                 "path": ""
             },
             {
                 "name": "1st-role",
-                "path": "vision/"
+                "path": "custom/"
             }
         ],
         "active_role": "1st-role"

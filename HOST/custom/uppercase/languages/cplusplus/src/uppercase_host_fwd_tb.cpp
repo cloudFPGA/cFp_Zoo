@@ -38,7 +38,7 @@
 #include <string.h>
 #include <array>
 #include <sys/stat.h>
-#include "../../../../../PracticalSockets/src/PracticalSockets.h"
+#include "PracticalSockets.h"
 #include "../include/config.h"
 
 
