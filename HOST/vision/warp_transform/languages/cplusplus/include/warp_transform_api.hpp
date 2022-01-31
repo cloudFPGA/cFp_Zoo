@@ -185,8 +185,10 @@ std::string get_inImgName(std::string inStr, std::string delimiter){
 //     return servPort;
 // }
 
-// template <typename T=UDPSocket >
+template <typename T=UDPSocket >
 void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, cv::Mat input_im, float* transformation_matrix_float, cv::Mat &output_im)//, T sock, unsigned short servPort)
+// template <typename T=UDPSocket >
+// void cF_host_warp_transform(std::string s_servAddress, std::string s_servPort, cv::Mat input_im, float* transformation_matrix_float, cv::Mat &output_im, T sock, unsigned short servPort)
 {
     std::cout << "Recevied addr= " << s_servAddress << " port= " << s_servPort << endl;
     //std::cout << " Inpt matrix " << input_im << endl << " tx mat[0] " << transformation_matrix_float[0] << endl;

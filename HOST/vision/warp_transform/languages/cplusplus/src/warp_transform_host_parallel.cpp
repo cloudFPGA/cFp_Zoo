@@ -40,7 +40,10 @@
 #include "util.hpp"
 #include <omp.h>
 #include <chrono>
+#include <thread>         // std::thread
 
+//decide wether use thread or openmp runtimes
+// #define USE_OPENMP
 // transform type 0-NN 1-BILINEAR
 #define INTERPOLATION 0
 
@@ -94,6 +97,7 @@ std::vector<fs::path> extract_subvector(std::vector<fs::path> myVec,int start, i
     std::vector<fs::path>::const_iterator first = myVec.begin() + start;
     std::vector<fs::path>::const_iterator last = myVec.begin() + end;
     std::vector<fs::path> subVec(first, last);
+    // std::cout << start << " " << end << std::endl;
     return subVec;
 }
 
@@ -140,6 +144,7 @@ void wax_on_vec_imgs( std::string strInFldr, std::vector<fs::path> input_imgs, f
     int cntr=start_cntr;
     for(std::vector<fs::path>::const_iterator it = input_imgs.begin(); it != input_imgs.end(); ++it, cntr++){
         //if vec of images this will change
+        // std::cout << "Start cntr= "<< start_cntr << " img " << (*it).string() << std::endl;
         frame = cv::imread(strInFldr+(*it).string()); //, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
 #if CV_MAJOR_VERSION < 4
             cv::cvtColor(frame,frame,CV_BGR2GRAY);
@@ -199,6 +204,7 @@ std::string cf_ip, std::string cf_port){
         std::cout << "Thread " << cf_ip << " proc " << cntr << std::endl;
         frame = cv::imread(strInFldr+(*it).string()); //, cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         ocv_out_img.create(FRAME_WIDTH, FRAME_HEIGHT, INPUT_TYPE_HOST); // create memory for opencv output image
+        // cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img, std::move(my_socket) ,servPort);
         cF_host_warp_transform(cf_ip, cf_port, frame, transformation_matrix_float, ocv_out_img);//, my_socket ,servPort);
         const string outfilename = strOutFldr + "wax-cfout-"+std::to_string(cntr)+".jpg";
         imwrite(outfilename, ocv_out_img);
@@ -355,6 +361,7 @@ int main(int argc, char * argv[]) {
 		cout << "WARNING something bad happened in the execution insertion, hence CPU used" << endl;
 		exe_mode = 0;
 	}
+    assert((exe_mode == 0) || (exe_mode >= 2));
 	try{
 		thread_number = stoul(strNrThrd);
 	} catch  (const std::exception& e) {
@@ -375,6 +382,11 @@ int main(int argc, char * argv[]) {
         assert(ipsVect.size() >= thread_number);
     }
     print_cFpZoo();
+    #ifdef USE_OPENMP
+    std::cout << "Using openmp runtime" << std::endl;
+    #else
+    std::cout << "Using the threads runtime" << std::endl;
+    #endif // USE_OPENMP
     float transformation_matrix_float [9]= {1,0,0,0,1,0,0,0,0};
     setupTxMatrix(transformation_matrix_float, wax_mode);
     
@@ -386,13 +398,44 @@ int main(int argc, char * argv[]) {
     clock_t start_cycle_warp_transform_sw = clock();
     int img_per_threads = dataset_imgs.size() / thread_number;
     std::vector<fs::path> tmp;
-    omp_set_dynamic(0);
     auto sTime = std::chrono::high_resolution_clock::now();
-#pragma omp parallel default(shared) private(tmp,iam,startcntr, img_per_threads, transformation_matrix_float) num_threads(thread_number) 
+#ifndef USE_OPENMP
+    std::vector<std::thread> vectThreads;
+    for (size_t i = 0; i < thread_number; i++)
+    {   
+        iam = i;
+        startcntr =  iam!=0 ? img_per_threads*iam: 0;
+        tmp = imgs_splitted.at(iam);
+        if(exe_mode == 0){
+            std::thread tmpThr(wax_on_vec_imgs,strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
+            vectThreads.push_back(std::move(tmpThr));
+        }else if(exe_mode == 1){
+            std::thread tmpThr(cf_wax_on_vec_imgs_apis,strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            ipsVect.at(iam), portsVect.at(iam));
+            vectThreads.push_back(std::move(tmpThr));
+	    }else{
+            // cf_wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            //cf_wax_on_vec_imgs_apis(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr,
+            std::thread tmpThr(cf_wax_on_vec_imgs,strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr, wax_mode,
+            ipsVect.at(iam), portsVect.at(iam));
+            vectThreads.push_back(std::move(tmpThr));
+        }   
+    }
+    for (size_t i = 0; i < thread_number; i++)
+    {
+        if(vectThreads.at(i).joinable()) {
+            vectThreads.at(i).join();
+        }
+    }
+#else
+    omp_set_dynamic(0);
+#pragma omp parallel default(shared) private(tmp,iam,startcntr) num_threads(thread_number) 
     {
         iam = omp_get_thread_num();
-        startcntr = img_per_threads*iam-1;
+        // std::cout << " How many images allocated " << img_per_threads << std::endl;
+        startcntr =  iam!=0 ? img_per_threads*iam: 0;
         tmp = imgs_splitted.at(iam);
+        // std::cout << " Iam " << iam << " cntr " << startcntr << " size of vec " << tmp.size() <<   std::endl;
         if(exe_mode == 0){
             wax_on_vec_imgs(strInFldr, tmp, transformation_matrix_float, strOutFldr, startcntr);
         }else if(exe_mode == 1){
@@ -406,6 +449,7 @@ int main(int argc, char * argv[]) {
 
         }
 	}
+#endif //USE_OPENMP
     clock_t end_cycle_warp_transform_sw = clock();
     auto sfinish = std::chrono::high_resolution_clock::now();
     std::cout << "INFO: chrono time [ms] =" <<  std::chrono::duration_cast<std::chrono::milliseconds>(sfinish-sTime).count()<<"\n";
