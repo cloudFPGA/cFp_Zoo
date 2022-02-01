@@ -40,10 +40,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels   from 6x6 to 256x256 for debugging                      */
-#define FRAME_HEIGHT 1024
+#define FRAME_HEIGHT 256 
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  1024
+#define FRAME_WIDTH  256
 
 #define FRAME_INTERVAL (1000/30)
 

@@ -39,6 +39,8 @@
 #include "PracticalSockets.h" // For UDPSocket and SocketException
 #include "config.h"
 #include "util.hpp"
+#include <chrono>
+#include <thread>
 
 #if TRANSFORM_TYPE == 1
 #define TRMAT_DIM2 3
@@ -61,6 +63,10 @@ void delay(unsigned int mseconds)
 {
     clock_t goal = mseconds + clock();
     while (goal > clock());
+}
+
+void sleep_chrono(unsigned int useconds){
+	std::this_thread::sleep_for(std::chrono::microseconds(useconds));
 }
 
 void print_cFpZoo(void)
@@ -499,7 +505,8 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                //delay(5);  
+                //sleep_chrono(1);
+		//delay(5);  
             }
             
             // clock_t next_cycle_tx = clock();
@@ -535,6 +542,7 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
+                //sleep_chrono(1);
                //delay(5);
             }
             // cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;

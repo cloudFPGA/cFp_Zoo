@@ -1,4 +1,7 @@
 #!/bin/bash
+ping_fpga(){
+	ping -c 20 $1
+}
 
 warm_up_fpga () {
 	ip_list=$1
@@ -14,11 +17,17 @@ warm_up_fpga () {
 	updated_len=$((len-1))
 	for i in $(seq 0 $updated_len )
 	do
+		echo ${FPGAS[$i]}
+		ping_fpga ${FPGAS[$i]}
+	done
+	for i in $(seq 0 $updated_len )
+	do
 		echo "Warming up $i thread"
+		#ping_fpga ${FPGAS[$i]}
 		echo ${FPGAS[$i]}
 		echo ${PORTS[$i]}
 		./warp_transform_host_lightweight ${FPGAS[$i]} ${PORTS[$i]} ./128x128.png ./ 2
-		sleep 5
+		sleep 2 
 	done
 	echo ""
 	echo "Done warm up"
@@ -50,7 +59,7 @@ else
 	thr_list=$(seq 1 $max_power_threads)
 	warm_up_fpga $IPs $PORTs
 fi
-
+#exit
 echo $logfile
 echo ${thr_list[@]}
 echo "$IPs $PORTs"
