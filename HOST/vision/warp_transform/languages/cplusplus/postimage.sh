@@ -1,0 +1,1 @@
+cfsp image post --image_file=$1
