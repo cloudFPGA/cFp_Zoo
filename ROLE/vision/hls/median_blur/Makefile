@@ -62,7 +62,7 @@ CHECK_VITIS := $(shell command -v vitis 2> /dev/null)
 VITISBINDIR := `dirname ${CHECK_VITIS}`
 
 #INPUT_IMAGE = ./test/128x128.png
-INPUT_IMAGE ?= ./test/8x8.png
+INPUT_IMAGE ?= ./test/512x512.png
 
 src = ./src/${ipName}.cpp \
 			./src/xf_median_blur_accel.cpp \

@@ -502,7 +502,214 @@ begin
   sMetaInTlastAsVector_Udp(0) <= siNRC_Role_Udp_Meta_TLAST;
   soROLE_Nrc_Udp_Meta_TLAST <=  sMetaOutTlastAsVector_Udp(0);
 
-  UAF: Warp_TransformApplication
+-- auto excluding UAF             UAF: Warp_TransformApplication
+-- auto excluding UAF             port map (
+-- auto excluding UAF           
+-- auto excluding UAF                        ------------------------------------------------------
+-- auto excluding UAF                        -- From SHELL / Clock and Reset
+-- auto excluding UAF                        ------------------------------------------------------
+-- auto excluding UAF                        ap_clk                      => piSHL_156_25Clk,
+-- auto excluding UAF                        ap_rst_n                    => (not piMMIO_Ly7_Rst),
+-- auto excluding UAF                        ap_start                    => piMMIO_Ly7_En,
+-- auto excluding UAF                       
+-- auto excluding UAF                        piFMC_ROL_rank_V         => piFMC_ROLE_rank,
+-- auto excluding UAF                        --piFMC_ROL_rank_V_ap_vld  => '1',
+-- auto excluding UAF                        piFMC_ROL_size_V         => piFMC_ROLE_size,
+-- auto excluding UAF                        --piFMC_ROL_size_V_ap_vld  => '1',
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        -- From SHELL / Udp Data Interfaces
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        siSHL_This_Data_tdata     => siNRC_Udp_Data_tdata,
+-- auto excluding UAF                        siSHL_This_Data_tkeep     => siNRC_Udp_Data_tkeep,
+-- auto excluding UAF                        siSHL_This_Data_tlast     => siNRC_Udp_Data_tlast,
+-- auto excluding UAF                        siSHL_This_Data_tvalid    => siNRC_Udp_Data_tvalid,
+-- auto excluding UAF                        siSHL_This_Data_tready    => siNRC_Udp_Data_tready,
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        -- To SHELL / Udp Data Interfaces
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        soTHIS_Shl_Data_tdata     => soNRC_Udp_Data_tdata,
+-- auto excluding UAF                        soTHIS_Shl_Data_tkeep     => soNRC_Udp_Data_tkeep,
+-- auto excluding UAF                        soTHIS_Shl_Data_tlast     => soNRC_Udp_Data_tlast,
+-- auto excluding UAF                        soTHIS_Shl_Data_tvalid    => soNRC_Udp_Data_tvalid,
+-- auto excluding UAF                        soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready, 
+-- auto excluding UAF           
+-- auto excluding UAF                        siNrc_meta_TDATA          =>  siNRC_Role_Udp_Meta_TDATA,
+-- auto excluding UAF                        siNrc_meta_TVALID         =>  siNRC_Role_Udp_Meta_TVALID,
+-- auto excluding UAF                        siNrc_meta_TREADY         =>  siNRC_Role_Udp_Meta_TREADY,
+-- auto excluding UAF                        siNrc_meta_TKEEP          =>  siNRC_Role_Udp_Meta_TKEEP,
+-- auto excluding UAF                        siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Udp,
+-- auto excluding UAF           
+-- auto excluding UAF                        soNrc_meta_TDATA          =>  soROLE_Nrc_Udp_Meta_TDATA,
+-- auto excluding UAF                        soNrc_meta_TVALID         =>  soROLE_Nrc_Udp_Meta_TVALID,
+-- auto excluding UAF                        soNrc_meta_TREADY         =>  soROLE_Nrc_Udp_Meta_TREADY,
+-- auto excluding UAF                        soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP,
+-- auto excluding UAF                        soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
+-- auto excluding UAF           
+-- auto excluding UAF                        poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports
+-- auto excluding UAF                      --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
+-- auto excluding UAF           
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        -- SHELL / Mem / Mp0 Interface / Start in UAF
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        , -- comma for syntax correctness when Mp1 is instantiated             
+-- auto excluding UAF           --             m_axi_card_mem0_araddr       => moMEM_Mp0_ARADDR,
+-- auto excluding UAF           --             m_axi_card_mem0_arburst      => moMEM_Mp0_ARBURST,
+-- auto excluding UAF           --             m_axi_card_mem0_arcache      => open, -- m_axi_card_mem0_arcache,
+-- auto excluding UAF           --             m_axi_card_mem0_arid         => moMEM_Mp0_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding UAF           --             m_axi_card_mem0_arlen        => moMEM_Mp0_ARLEN,
+-- auto excluding UAF           --             m_axi_card_mem0_arlock       => open, -- m_axi_card_mem0_arlock,
+-- auto excluding UAF           --             m_axi_card_mem0_arprot       => open, -- m_axi_card_mem0_arprot,
+-- auto excluding UAF           --             m_axi_card_mem0_arqos        => open, -- m_axi_card_mem0_arqos,
+-- auto excluding UAF           --             m_axi_card_mem0_arready      => moMEM_Mp0_ARREADY,
+-- auto excluding UAF           --             m_axi_card_mem0_arregion     => open, -- m_axi_card_mem0_arregion,
+-- auto excluding UAF           --             m_axi_card_mem0_arsize       => moMEM_Mp0_ARSIZE,
+-- auto excluding UAF           --             m_axi_card_mem0_aruser       => open, -- m_axi_card_mem0_aruser,
+-- auto excluding UAF           --             m_axi_card_mem0_arvalid      => moMEM_Mp0_ARVALID,
+-- auto excluding UAF           --             m_axi_card_mem0_awaddr       => moMEM_Mp0_AWADDR,
+-- auto excluding UAF           --             m_axi_card_mem0_awburst      => moMEM_Mp0_AWBURST,
+-- auto excluding UAF           --             m_axi_card_mem0_awcache      => open, -- m_axi_card_mem0_awcache,
+-- auto excluding UAF           --             m_axi_card_mem0_awid         => moMEM_Mp0_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
+-- auto excluding UAF           --             m_axi_card_mem0_awlen        => moMEM_Mp0_AWLEN,
+-- auto excluding UAF           --             m_axi_card_mem0_awlock       => open, -- m_axi_card_mem0_awlock,
+-- auto excluding UAF           --             m_axi_card_mem0_awprot       => open, -- m_axi_card_mem0_awprot,
+-- auto excluding UAF           --             m_axi_card_mem0_awqos        => open, -- m_axi_card_mem0_awqos,
+-- auto excluding UAF           --             m_axi_card_mem0_awready      => moMEM_Mp0_AWREADY,
+-- auto excluding UAF           --             m_axi_card_mem0_awregion     => open, -- m_axi_card_mem0_awregion,
+-- auto excluding UAF           --             m_axi_card_mem0_awsize       => moMEM_Mp0_AWSIZE,
+-- auto excluding UAF           --             m_axi_card_mem0_awuser       => open, -- m_axi_card_mem0_awuser,
+-- auto excluding UAF           --             m_axi_card_mem0_awvalid      => moMEM_Mp0_AWVALID,
+-- auto excluding UAF           --             m_axi_card_mem0_bid          => moMEM_Mp0_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding UAF           --             m_axi_card_mem0_bready       => moMEM_Mp0_BREADY,
+-- auto excluding UAF           --             m_axi_card_mem0_bresp        => moMEM_Mp0_BRESP,
+-- auto excluding UAF           --             m_axi_card_mem0_buser        =>open, --  m_axi_card_mem0_buser,
+-- auto excluding UAF           --             m_axi_card_mem0_bvalid       => moMEM_Mp0_BVALID,
+-- auto excluding UAF           --             m_axi_card_mem0_rdata        => moMEM_Mp0_RDATA,
+-- auto excluding UAF           --             m_axi_card_mem0_rid          => moMEM_Mp0_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
+-- auto excluding UAF           --             m_axi_card_mem0_rlast        => moMEM_Mp0_RLAST,
+-- auto excluding UAF           --             m_axi_card_mem0_rready       => moMEM_Mp0_RREADY,
+-- auto excluding UAF           --             m_axi_card_mem0_rresp        => moMEM_Mp0_RRESP,
+-- auto excluding UAF           --             m_axi_card_mem0_ruser        => open, -- m_axi_card_mem0_ruser,
+-- auto excluding UAF           --             m_axi_card_mem0_rvalid       => moMEM_Mp0_RVALID,
+-- auto excluding UAF           --             m_axi_card_mem0_wdata        => moMEM_Mp0_WDATA,
+-- auto excluding UAF           --             m_axi_card_mem0_wid          => open,
+-- auto excluding UAF           --             m_axi_card_mem0_wlast        => moMEM_Mp0_WLAST,
+-- auto excluding UAF           --             m_axi_card_mem0_wready       => moMEM_Mp0_WREADY,
+-- auto excluding UAF           --             m_axi_card_mem0_wstrb        => moMEM_Mp0_WSTRB,
+-- auto excluding UAF           --             m_axi_card_mem0_wuser        => open, -- m_axi_card_mem0_wuser,
+-- auto excluding UAF           --             m_axi_card_mem0_wvalid       => moMEM_Mp0_WVALID,
+-- auto excluding UAF           
+-- auto excluding UAF           --             ---- Stream Read Command ---------
+-- auto excluding UAF           --             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
+-- auto excluding UAF           --             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
+-- auto excluding UAF           --             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
+-- auto excluding UAF           --             ---- Stream Read Status ----------
+-- auto excluding UAF           --             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
+-- auto excluding UAF           --             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
+-- auto excluding UAF           --             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
+-- auto excluding UAF           --             ---- Stream Read Data ------------
+-- auto excluding UAF           --             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
+-- auto excluding UAF           --             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
+-- auto excluding UAF           --             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
+-- auto excluding UAF           --             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
+-- auto excluding UAF           --             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
+-- auto excluding UAF                        ---- Stream Write Command --------
+-- auto excluding UAF                        soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
+-- auto excluding UAF                        soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
+-- auto excluding UAF                        soMemWrCmdP0_TREADY        => soMem_Mp0_WrCmd_tready,
+-- auto excluding UAF                        ---- Stream Write Status ---------
+-- auto excluding UAF                        siMemWrStsP0_TDATA         => siMem_Mp0_WrSts_tdata,
+-- auto excluding UAF                        siMemWrStsP0_TVALID        => siMem_Mp0_WrSts_tvalid,
+-- auto excluding UAF                        siMemWrStsP0_TREADY        => siMem_Mp0_WrSts_tready,
+-- auto excluding UAF                        ---- Stream Write Data ---------
+-- auto excluding UAF                        soMemWriteP0_TDATA         => soMem_Mp0_Write_tdata,
+-- auto excluding UAF                        soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
+-- auto excluding UAF                        soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
+-- auto excluding UAF                        soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
+-- auto excluding UAF                        soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,
+-- auto excluding UAF           
+-- auto excluding UAF           
+-- auto excluding UAF            
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        -- SHELL / Mem / Mp1 Interface / Start in UAF
+-- auto excluding UAF                        --------------------------------------------------------     
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARQOS        => open, -- m_axi_card_mem0_arqos,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARREADY      => moMEM_Mp1_ARREADY,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARREGION     => open, -- m_axi_card_mem0_arregion,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARSIZE       => moMEM_Mp1_ARSIZE,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_ARUSER       => open, -- m_axi_card_mem0_aruser,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_ARVALID      => moMEM_Mp1_ARVALID,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWADDR(32 DOWNTO 0)  => moMEM_Mp1_AWADDR,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWQOS        => open, -- m_axi_card_mem0_awqos,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWREADY      => moMEM_Mp1_AWREADY,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWREGION     => open, -- m_axi_card_mem0_awregion,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
+-- auto excluding UAF                        m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
+-- auto excluding UAF                        m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_RUSER        => open, -- m_axi_card_mem0_ruser,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_RVALID       => moMEM_Mp1_RVALID,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_WDATA        => moMEM_Mp1_WDATA,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_WID          => moMEM_Mp1_WID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
+-- auto excluding UAF                        m_axi_moMEM_Mp1_WLAST        => moMEM_Mp1_WLAST,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_WREADY       => moMEM_Mp1_WREADY,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_WSTRB        => moMEM_Mp1_WSTRB,
+-- auto excluding UAF                        --m_axi_moMEM_Mp1_WUSER        => open, -- m_axi_card_mem0_wuser,
+-- auto excluding UAF                        m_axi_moMEM_Mp1_WVALID       => moMEM_Mp1_WVALID,
+-- auto excluding UAF           
+-- auto excluding UAF                        lcl_mem0_v                     => x"0000000000000000",
+-- auto excluding UAF                        lcl_mem1_v                     => x"8000000000000000"
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        -- SHELL / Mem / Mp1 Interface / End in UAF
+-- auto excluding UAF                        --------------------------------------------------------
+-- auto excluding UAF                        
+-- auto excluding UAF                      );
+
+  --end generate;
+  
+  
+  --################################################################################
+  --#                                                                              #
+  --#    #######    ####   ######     #####                                        #
+  --#       #      #       #     #   #     # #####   #####                         #
+  --#       #     #        #     #   #     # #    #  #    #                        #
+  --#       #     #        ######    ####### #####   #####                         #
+  --#       #      #       #         #     # #       #                             #
+  --#       #       ####   #         #     # #       #                             #
+  --#                                                                              #
+  --################################################################################
+
+  -- gUdpAppFlashDepre : if cUSE_DEPRECATED_DIRECTIVES generate --TODO
+
+  --  begin 
+
+  sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
+  soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
+
+  TAF: Warp_TransformApplication
   port map (
 
              ------------------------------------------------------
@@ -511,92 +718,48 @@ begin
              ap_clk                      => piSHL_156_25Clk,
              ap_rst_n                    => (not piMMIO_Ly7_Rst),
              ap_start                    => piMMIO_Ly7_En,
-            
+          
              piFMC_ROL_rank_V         => piFMC_ROLE_rank,
              --piFMC_ROL_rank_V_ap_vld  => '1',
              piFMC_ROL_size_V         => piFMC_ROLE_size,
              --piFMC_ROL_size_V_ap_vld  => '1',
              --------------------------------------------------------
-             -- From SHELL / Udp Data Interfaces
+             -- From SHELL / Tcp Data Interfaces
              --------------------------------------------------------
-             siSHL_This_Data_tdata     => siNRC_Udp_Data_tdata,
-             siSHL_This_Data_tkeep     => siNRC_Udp_Data_tkeep,
-             siSHL_This_Data_tlast     => siNRC_Udp_Data_tlast,
-             siSHL_This_Data_tvalid    => siNRC_Udp_Data_tvalid,
-             siSHL_This_Data_tready    => siNRC_Udp_Data_tready,
+             siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
+             siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
+             siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
+             siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
+             siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
              --------------------------------------------------------
-             -- To SHELL / Udp Data Interfaces
+             -- To SHELL / Tcp Data Interfaces
              --------------------------------------------------------
-             soTHIS_Shl_Data_tdata     => soNRC_Udp_Data_tdata,
-             soTHIS_Shl_Data_tkeep     => soNRC_Udp_Data_tkeep,
-             soTHIS_Shl_Data_tlast     => soNRC_Udp_Data_tlast,
-             soTHIS_Shl_Data_tvalid    => soNRC_Udp_Data_tvalid,
-             soTHIS_Shl_Data_tready    => soNRC_Udp_Data_tready, 
+             soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
+             soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
+             soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
+             soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
+             soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
 
-             siNrc_meta_TDATA          =>  siNRC_Role_Udp_Meta_TDATA,
-             siNrc_meta_TVALID         =>  siNRC_Role_Udp_Meta_TVALID,
-             siNrc_meta_TREADY         =>  siNRC_Role_Udp_Meta_TREADY,
-             siNrc_meta_TKEEP          =>  siNRC_Role_Udp_Meta_TKEEP,
-             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Udp,
+             siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
+             siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
+             siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
+             siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
+             siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
 
-             soNrc_meta_TDATA          =>  soROLE_Nrc_Udp_Meta_TDATA,
-             soNrc_meta_TVALID         =>  soROLE_Nrc_Udp_Meta_TVALID,
-             soNrc_meta_TREADY         =>  soROLE_Nrc_Udp_Meta_TREADY,
-             soNrc_meta_TKEEP          =>  soROLE_Nrc_Udp_Meta_TKEEP,
-             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Udp,
+             soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
+             soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
+             soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
+             soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
+             soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
 
-             poROL_NRC_Rx_ports_V      => poROL_Nrc_Udp_Rx_ports
-           --poROL_NRC_Udp_Rx_ports_V_ap_vld => '1'
+             poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
+             --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
 
+             
              --------------------------------------------------------
              -- SHELL / Mem / Mp0 Interface / Start in UAF
              --------------------------------------------------------
              , -- comma for syntax correctness when Mp1 is instantiated             
---             m_axi_card_mem0_araddr       => moMEM_Mp0_ARADDR,
---             m_axi_card_mem0_arburst      => moMEM_Mp0_ARBURST,
---             m_axi_card_mem0_arcache      => open, -- m_axi_card_mem0_arcache,
---             m_axi_card_mem0_arid         => moMEM_Mp0_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_arlen        => moMEM_Mp0_ARLEN,
---             m_axi_card_mem0_arlock       => open, -- m_axi_card_mem0_arlock,
---             m_axi_card_mem0_arprot       => open, -- m_axi_card_mem0_arprot,
---             m_axi_card_mem0_arqos        => open, -- m_axi_card_mem0_arqos,
---             m_axi_card_mem0_arready      => moMEM_Mp0_ARREADY,
---             m_axi_card_mem0_arregion     => open, -- m_axi_card_mem0_arregion,
---             m_axi_card_mem0_arsize       => moMEM_Mp0_ARSIZE,
---             m_axi_card_mem0_aruser       => open, -- m_axi_card_mem0_aruser,
---             m_axi_card_mem0_arvalid      => moMEM_Mp0_ARVALID,
---             m_axi_card_mem0_awaddr       => moMEM_Mp0_AWADDR,
---             m_axi_card_mem0_awburst      => moMEM_Mp0_AWBURST,
---             m_axi_card_mem0_awcache      => open, -- m_axi_card_mem0_awcache,
---             m_axi_card_mem0_awid         => moMEM_Mp0_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_awlen        => moMEM_Mp0_AWLEN,
---             m_axi_card_mem0_awlock       => open, -- m_axi_card_mem0_awlock,
---             m_axi_card_mem0_awprot       => open, -- m_axi_card_mem0_awprot,
---             m_axi_card_mem0_awqos        => open, -- m_axi_card_mem0_awqos,
---             m_axi_card_mem0_awready      => moMEM_Mp0_AWREADY,
---             m_axi_card_mem0_awregion     => open, -- m_axi_card_mem0_awregion,
---             m_axi_card_mem0_awsize       => moMEM_Mp0_AWSIZE,
---             m_axi_card_mem0_awuser       => open, -- m_axi_card_mem0_awuser,
---             m_axi_card_mem0_awvalid      => moMEM_Mp0_AWVALID,
---             m_axi_card_mem0_bid          => moMEM_Mp0_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_bready       => moMEM_Mp0_BREADY,
---             m_axi_card_mem0_bresp        => moMEM_Mp0_BRESP,
---             m_axi_card_mem0_buser        =>open, --  m_axi_card_mem0_buser,
---             m_axi_card_mem0_bvalid       => moMEM_Mp0_BVALID,
---             m_axi_card_mem0_rdata        => moMEM_Mp0_RDATA,
---             m_axi_card_mem0_rid          => moMEM_Mp0_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(3 downto 0);
---             m_axi_card_mem0_rlast        => moMEM_Mp0_RLAST,
---             m_axi_card_mem0_rready       => moMEM_Mp0_RREADY,
---             m_axi_card_mem0_rresp        => moMEM_Mp0_RRESP,
---             m_axi_card_mem0_ruser        => open, -- m_axi_card_mem0_ruser,
---             m_axi_card_mem0_rvalid       => moMEM_Mp0_RVALID,
---             m_axi_card_mem0_wdata        => moMEM_Mp0_WDATA,
---             m_axi_card_mem0_wid          => open,
---             m_axi_card_mem0_wlast        => moMEM_Mp0_WLAST,
---             m_axi_card_mem0_wready       => moMEM_Mp0_WREADY,
---             m_axi_card_mem0_wstrb        => moMEM_Mp0_WSTRB,
---             m_axi_card_mem0_wuser        => open, -- m_axi_card_mem0_wuser,
---             m_axi_card_mem0_wvalid       => moMEM_Mp0_WVALID,
 
 --             ---- Stream Read Command ---------
 --             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
@@ -625,12 +788,10 @@ begin
              soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
              soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
              soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
-             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,
-
-
- 
+             soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,             
+             
              --------------------------------------------------------
-             -- SHELL / Mem / Mp1 Interface / Start in UAF
+             -- SHELL / Mem / Mp1 Interface / Start in TAF
              --------------------------------------------------------     
              m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
              m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
@@ -673,7 +834,7 @@ begin
              --m_axi_moMEM_Mp1_RUSER        => open, -- m_axi_card_mem0_ruser,
              m_axi_moMEM_Mp1_RVALID       => moMEM_Mp1_RVALID,
              m_axi_moMEM_Mp1_WDATA        => moMEM_Mp1_WDATA,
-             --m_axi_moMEM_Mp1_WID          => moMEM_Mp1_WID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
+             --m_axi_moMEM_Mp1_WID          => open,
              m_axi_moMEM_Mp1_WLAST        => moMEM_Mp1_WLAST,
              m_axi_moMEM_Mp1_WREADY       => moMEM_Mp1_WREADY,
              m_axi_moMEM_Mp1_WSTRB        => moMEM_Mp1_WSTRB,
@@ -683,171 +844,10 @@ begin
              lcl_mem0_v                     => x"0000000000000000",
              lcl_mem1_v                     => x"8000000000000000"
              --------------------------------------------------------
-             -- SHELL / Mem / Mp1 Interface / End in UAF
+             -- SHELL / Mem / Mp1 Interface / End in TAF
              --------------------------------------------------------
-             
+           
            );
-
-  --end generate;
-  
-  
-  --################################################################################
-  --#                                                                              #
-  --#    #######    ####   ######     #####                                        #
-  --#       #      #       #     #   #     # #####   #####                         #
-  --#       #     #        #     #   #     # #    #  #    #                        #
-  --#       #     #        ######    ####### #####   #####                         #
-  --#       #      #       #         #     # #       #                             #
-  --#       #       ####   #         #     # #       #                             #
-  --#                                                                              #
-  --################################################################################
-
-  -- gUdpAppFlashDepre : if cUSE_DEPRECATED_DIRECTIVES generate --TODO
-
-  --  begin 
-
-  sMetaInTlastAsVector_Tcp(0) <= siNRC_Role_Tcp_Meta_TLAST;
-  soROLE_Nrc_Tcp_Meta_TLAST <=  sMetaOutTlastAsVector_Tcp(0);
-
--- auto excluding TAF             TAF: Warp_TransformApplication
--- auto excluding TAF             port map (
--- auto excluding TAF           
--- auto excluding TAF                        ------------------------------------------------------
--- auto excluding TAF                        -- From SHELL / Clock and Reset
--- auto excluding TAF                        ------------------------------------------------------
--- auto excluding TAF                        ap_clk                      => piSHL_156_25Clk,
--- auto excluding TAF                        ap_rst_n                    => (not piMMIO_Ly7_Rst),
--- auto excluding TAF                        ap_start                    => piMMIO_Ly7_En,
--- auto excluding TAF                     
--- auto excluding TAF                        piFMC_ROL_rank_V         => piFMC_ROLE_rank,
--- auto excluding TAF                        --piFMC_ROL_rank_V_ap_vld  => '1',
--- auto excluding TAF                        piFMC_ROL_size_V         => piFMC_ROLE_size,
--- auto excluding TAF                        --piFMC_ROL_size_V_ap_vld  => '1',
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        -- From SHELL / Tcp Data Interfaces
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        siSHL_This_Data_tdata     => siNRC_Tcp_Data_tdata,
--- auto excluding TAF                        siSHL_This_Data_tkeep     => siNRC_Tcp_Data_tkeep,
--- auto excluding TAF                        siSHL_This_Data_tlast     => siNRC_Tcp_Data_tlast,
--- auto excluding TAF                        siSHL_This_Data_tvalid    => siNRC_Tcp_Data_tvalid,
--- auto excluding TAF                        siSHL_This_Data_tready    => siNRC_Tcp_Data_tready,
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        -- To SHELL / Tcp Data Interfaces
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        soTHIS_Shl_Data_tdata     => soNRC_Tcp_Data_tdata,
--- auto excluding TAF                        soTHIS_Shl_Data_tkeep     => soNRC_Tcp_Data_tkeep,
--- auto excluding TAF                        soTHIS_Shl_Data_tlast     => soNRC_Tcp_Data_tlast,
--- auto excluding TAF                        soTHIS_Shl_Data_tvalid    => soNRC_Tcp_Data_tvalid,
--- auto excluding TAF                        soTHIS_Shl_Data_tready    => soNRC_Tcp_Data_tready, 
--- auto excluding TAF           
--- auto excluding TAF                        siNrc_meta_TDATA          =>  siNRC_Role_Tcp_Meta_TDATA    ,
--- auto excluding TAF                        siNrc_meta_TVALID         =>  siNRC_Role_Tcp_Meta_TVALID   ,
--- auto excluding TAF                        siNrc_meta_TREADY         =>  siNRC_Role_Tcp_Meta_TREADY   ,
--- auto excluding TAF                        siNrc_meta_TKEEP          =>  siNRC_Role_Tcp_Meta_TKEEP    ,
--- auto excluding TAF                        siNrc_meta_TLAST          =>  sMetaInTlastAsVector_Tcp,
--- auto excluding TAF           
--- auto excluding TAF                        soNrc_meta_TDATA          =>  soROLE_Nrc_Tcp_Meta_TDATA  ,
--- auto excluding TAF                        soNrc_meta_TVALID         =>  soROLE_Nrc_Tcp_Meta_TVALID ,
--- auto excluding TAF                        soNrc_meta_TREADY         =>  soROLE_Nrc_Tcp_Meta_TREADY ,
--- auto excluding TAF                        soNrc_meta_TKEEP          =>  soROLE_Nrc_Tcp_Meta_TKEEP  ,
--- auto excluding TAF                        soNrc_meta_TLAST          =>  sMetaOutTlastAsVector_Tcp,
--- auto excluding TAF           
--- auto excluding TAF                        poROL_NRC_Rx_ports_V        => poROL_Nrc_Tcp_Rx_ports
--- auto excluding TAF                        --poROL_NRC_Tcp_Rx_ports_V_ap_vld => '1'
--- auto excluding TAF           
--- auto excluding TAF                        
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        -- SHELL / Mem / Mp0 Interface / Start in UAF
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        , -- comma for syntax correctness when Mp1 is instantiated             
--- auto excluding TAF           
--- auto excluding TAF           --             ---- Stream Read Command ---------
--- auto excluding TAF           --             soMemRdCmdP0_TDATA         => soMem_Mp0_RdCmd_tdata,
--- auto excluding TAF           --             soMemRdCmdP0_TVALID        => soMem_Mp0_RdCmd_tvalid,
--- auto excluding TAF           --             soMemRdCmdP0_TREADY        => soMem_Mp0_RdCmd_tready,
--- auto excluding TAF           --             ---- Stream Read Status ----------
--- auto excluding TAF           --             siMemRdStsP0_TDATA         => siMem_Mp0_RdSts_tdata,
--- auto excluding TAF           --             siMemRdStsP0_TVALID        => siMem_Mp0_RdSts_tvalid,
--- auto excluding TAF           --             siMemRdStsP0_TREADY        => siMem_Mp0_RdSts_tready,
--- auto excluding TAF           --             ---- Stream Read Data ------------
--- auto excluding TAF           --             siMemReadP0_TDATA          => siMem_Mp0_Read_tdata,
--- auto excluding TAF           --             siMemReadP0_TVALID         => siMem_Mp0_Read_tvalid,
--- auto excluding TAF           --             siMemReadP0_TREADY         => siMem_Mp0_Read_tready,
--- auto excluding TAF           --             siMemReadP0_TKEEP          => siMem_Mp0_Read_tkeep,
--- auto excluding TAF           --             siMemReadP0_TLAST          => fVectorize(siMem_Mp0_Read_tlast),
--- auto excluding TAF                        ---- Stream Write Command --------
--- auto excluding TAF                        soMemWrCmdP0_TDATA         => soMem_Mp0_WrCmd_tdata,
--- auto excluding TAF                        soMemWrCmdP0_TVALID        => soMem_Mp0_WrCmd_tvalid,
--- auto excluding TAF                        soMemWrCmdP0_TREADY        => soMem_Mp0_WrCmd_tready,
--- auto excluding TAF                        ---- Stream Write Status ---------
--- auto excluding TAF                        siMemWrStsP0_TDATA         => siMem_Mp0_WrSts_tdata,
--- auto excluding TAF                        siMemWrStsP0_TVALID        => siMem_Mp0_WrSts_tvalid,
--- auto excluding TAF                        siMemWrStsP0_TREADY        => siMem_Mp0_WrSts_tready,
--- auto excluding TAF                        ---- Stream Write Data ---------
--- auto excluding TAF                        soMemWriteP0_TDATA         => soMem_Mp0_Write_tdata,
--- auto excluding TAF                        soMemWriteP0_TVALID        => soMem_Mp0_Write_tvalid,
--- auto excluding TAF                        soMemWriteP0_TREADY        => soMem_Mp0_Write_tready,
--- auto excluding TAF                        soMemWriteP0_TKEEP         => soMem_Mp0_Write_tkeep,
--- auto excluding TAF                        soMemWriteP0_TLAST         => soMem_Mp0_Write_tlast,             
--- auto excluding TAF                        
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        -- SHELL / Mem / Mp1 Interface / Start in TAF
--- auto excluding TAF                        --------------------------------------------------------     
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARADDR(32 DOWNTO 0)  => moMEM_Mp1_ARADDR,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARADDR(63 DOWNTO 33) => open,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARBURST      => moMEM_Mp1_ARBURST,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARCACHE      => open, -- m_axi_card_mem0_arcache,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_ARID         => moMEM_Mp1_ARID( 0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARLEN        => moMEM_Mp1_ARLEN,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARLOCK       => open, -- m_axi_card_mem0_arlock,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARPROT       => open, -- m_axi_card_mem0_arprot,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARQOS        => open, -- m_axi_card_mem0_arqos,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARREADY      => moMEM_Mp1_ARREADY,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARREGION     => open, -- m_axi_card_mem0_arregion,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARSIZE       => moMEM_Mp1_ARSIZE,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_ARUSER       => open, -- m_axi_card_mem0_aruser,
--- auto excluding TAF                        m_axi_moMEM_Mp1_ARVALID      => moMEM_Mp1_ARVALID,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWADDR(32 DOWNTO 0)  => moMEM_Mp1_AWADDR,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWADDR(63 DOWNTO 33) => open,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWBURST      => moMEM_Mp1_AWBURST,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWCACHE      => open, -- m_axi_card_mem0_awcache,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_AWID         => moMEM_Mp1_AWID(0 DOWNTO 0),--SR# 10394170 : out   std_ulogic_vector(gAxiIdWidth-1 downto 0);
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWLEN        => moMEM_Mp1_AWLEN,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWLOCK       => open, -- m_axi_card_mem0_awlock,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWPROT       => open, -- m_axi_card_mem0_awprot,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWQOS        => open, -- m_axi_card_mem0_awqos,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWREADY      => moMEM_Mp1_AWREADY,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWREGION     => open, -- m_axi_card_mem0_awregion,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWSIZE       => moMEM_Mp1_AWSIZE,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_AWUSER       => open, -- m_axi_card_mem0_awuser,
--- auto excluding TAF                        m_axi_moMEM_Mp1_AWVALID      => moMEM_Mp1_AWVALID,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_BID          => moMEM_Mp1_BID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
--- auto excluding TAF                        m_axi_moMEM_Mp1_BREADY       => moMEM_Mp1_BREADY,
--- auto excluding TAF                        m_axi_moMEM_Mp1_BRESP        => moMEM_Mp1_BRESP,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_BUSER  m_axi_card_mem0_buser,
--- auto excluding TAF                        m_axi_moMEM_Mp1_BVALID       => moMEM_Mp1_BVALID,
--- auto excluding TAF                        m_axi_moMEM_Mp1_RDATA        => moMEM_Mp1_RDATA,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_RID          => moMEM_Mp1_RID(0 DOWNTO 0),--SR# 10394170 : in    std_ulogic_vector(gAxiIdWidth-1 downto 0);
--- auto excluding TAF                        m_axi_moMEM_Mp1_RLAST        => moMEM_Mp1_RLAST,
--- auto excluding TAF                        m_axi_moMEM_Mp1_RREADY       => moMEM_Mp1_RREADY,
--- auto excluding TAF                        m_axi_moMEM_Mp1_RRESP        => moMEM_Mp1_RRESP,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_RUSER        => open, -- m_axi_card_mem0_ruser,
--- auto excluding TAF                        m_axi_moMEM_Mp1_RVALID       => moMEM_Mp1_RVALID,
--- auto excluding TAF                        m_axi_moMEM_Mp1_WDATA        => moMEM_Mp1_WDATA,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_WID          => open,
--- auto excluding TAF                        m_axi_moMEM_Mp1_WLAST        => moMEM_Mp1_WLAST,
--- auto excluding TAF                        m_axi_moMEM_Mp1_WREADY       => moMEM_Mp1_WREADY,
--- auto excluding TAF                        m_axi_moMEM_Mp1_WSTRB        => moMEM_Mp1_WSTRB,
--- auto excluding TAF                        --m_axi_moMEM_Mp1_WUSER        => open, -- m_axi_card_mem0_wuser,
--- auto excluding TAF                        m_axi_moMEM_Mp1_WVALID       => moMEM_Mp1_WVALID,
--- auto excluding TAF           
--- auto excluding TAF                        lcl_mem0_v                     => x"0000000000000000",
--- auto excluding TAF                        lcl_mem1_v                     => x"8000000000000000"
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                        -- SHELL / Mem / Mp1 Interface / End in TAF
--- auto excluding TAF                        --------------------------------------------------------
--- auto excluding TAF                      
--- auto excluding TAF                      );
 
   --end generate;
 

@@ -116,20 +116,23 @@ More info for the WarpTransform IP: https://xilinx.github.io/Vitis_Libraries/vis
 
 ##### Troubleshooting
 
+* Possible resources/stack limitation on Linux-based systems:
+  ` ulimit -a` to see the current limitations
+  ` ulimit -c unlimited` to unlimit  "The maximum size of core files created" 
+  ` ulimit -s unlimited` to unlimit "The maximum stack size."
+
 * ```
   Vivado libstdc++.so.6: version CXXABI_1.3.11 not found (required by /lib64/libtbb.so.2)`
   ```
   Fix: `cp /usr/lib64/libstdc++.so.6 /tools/Xilinx/Vivado/2020.1/lib/lnx64.o/Default/libstdc++.so.6`
 
-*
-  ```
+* ```
   /lib64/libtbb.so.2: undefined reference to `__cxa_init_primary_exception@CXXABI_1.3.11'
   /lib64/libtbb.so.2: undefined reference to `std::__exception_ptr::exception_ptr::exception_ptr(void*)@CXXABI_1.3.11'
   ```
   Red Hat Fix: `csim_design -ldflags "-L/usr/lib/gcc/x86_64-redhat-linux/8/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
   Ubuntu Fix: `csim_design -ldflags "-L/usr/lib/x86_64-linux-gnu/ ${OPENCV_LIB_FLAGS} ${OPENCV_LIB_REF}" -clean -argv "${SimFile}"`
-*
-  ```
+* ```
 /usr/include/features.h:367:12: fatal error: 'sys/cdefs.h' file not found # include <sys/cdefs.h>
 ```
 Fix: `sudo apt-get install gcc-multilib g++-multilib`
