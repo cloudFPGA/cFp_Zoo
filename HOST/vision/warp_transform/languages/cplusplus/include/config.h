@@ -40,10 +40,10 @@
 
 //--------------------------------  USER DEFINED OPTIONS ------------------------------------------
 /** The maximum width of frame in pixels   from 6x6 to 256x256 for debugging                      */
-#define FRAME_HEIGHT 256 
+#define FRAME_HEIGHT 8 
 
 /** The maximum height of frame in pixels                                                         */
-#define FRAME_WIDTH  256
+#define FRAME_WIDTH  8
 
 #define FRAME_INTERVAL (1000/30)
 
@@ -70,7 +70,7 @@
 #define INPUT_TYPE_HOST CV_8UC1
 
 /** The network socket type: tcp or udp                                                           */
-#define NET_TYPE tcp
+#define NET_TYPE udp
 
 /** The level of debugging.
  *  0->None, 1-> Light Debug, 2-> Medium Debug , 3-> Insane Debug
