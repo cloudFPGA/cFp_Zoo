@@ -105,7 +105,7 @@ void pPortAndDestionation(
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS INLINE off
   //-- STATIC VARIABLES (with RESET) ------------------------------------------
-  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
+  static PortFsmType port_fsm = FSM_DONE;
 #pragma HLS reset variable=port_fsm
 
   switch(port_fsm)
@@ -123,7 +123,7 @@ void pPortAndDestionation(
     #if DEBUG_LEVEL == TRACE_ALL
           printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
     #endif
-        //   sDstNode_sig.write(dst_rank);
+          sDstNode_sig.write(dst_rank);
           port_fsm = FSM_DONE;
         }
         break;
