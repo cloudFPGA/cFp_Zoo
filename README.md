@@ -116,8 +116,6 @@ We provide a 6-steps flow to create an FPGA bitstream with a cFp_Zoo accelerated
 
 ```
 git clone --recursive https://github.com/cloudFPGA/cFp_Zoo.git
-cd cFp_Zoo/cFDK
-git checkout main
 ```
 
 ### Step-2: Setup your environment
