@@ -76,7 +76,7 @@ We provide support for the following libraries:
 
 ### IBM ZRL libraries support
 
-The following accelerated libraries are developed from IBB ZRL and are supported by cFp_Zoo:
+The following accelerated libraries are developed from IBM ZRL and are supported by cFp_Zoo:
 
 - [x] [Uppercase](./ROLE/custom/hls/uppercase)
 - [x] [Memory Test](./ROLE/custom/hls/memtest)
