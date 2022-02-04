@@ -105,7 +105,7 @@ void pPortAndDestionation(
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS INLINE off
   //-- STATIC VARIABLES (with RESET) ------------------------------------------
-  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
+  static PortFsmType port_fsm = FSM_DONE;
 #pragma HLS reset variable=port_fsm
 
   switch(port_fsm)
@@ -118,7 +118,7 @@ void pPortAndDestionation(
         {
         //point to the following
         // NodeId dst_rank = (*pi_rank + 1) % *pi_size;
-        //always back to 0
+        //always back to 0 //wrong if CPU cluster does not set 
         NodeId dst_rank = 0;//(*pi_rank + 1) % *pi_size;
     #if DEBUG_LEVEL == TRACE_ALL
           printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
@@ -767,7 +767,7 @@ void pTXPath(
 
     //-- STATIC DATAFLOW VARIABLES ------------------------------------------
     static NodeId dst_rank;
-    static PacketFsmType dequeueFSM = WAIT_FOR_META;
+    static PacketFsmType dequeueFSM = WAIT_FOR_IMAGE_DIMENSIONS;
     #pragma HLS reset variable=dequeueFSM
 
     //-- LOCAL VARIABLES ------------------------------------------------------
@@ -846,7 +846,7 @@ void pTXPath(
         //WarpTransform-related Forcing the SHELL to wait for tlast
         meta_out_stream.tdata.len = 0;
 
-        meta_out_stream.tdata.dst_rank = dst_rank;
+        meta_out_stream.tdata.dst_rank = meta_in.src_rank;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
         meta_out_stream.tdata.dst_port = meta_in.src_port;
         meta_out_stream.tdata.src_port = meta_in.dst_port;
