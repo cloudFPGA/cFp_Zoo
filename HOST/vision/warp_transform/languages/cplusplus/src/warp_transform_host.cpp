@@ -498,7 +498,7 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                //delay(5);  
+                delay(50);  
             }
             
             clock_t next_cycle_tx = clock();
@@ -532,9 +532,9 @@ int main(int argc, char * argv[]) {
                     //continue;
                 }
                 memcpy( & longbuf[i], buffer, recvMsgSize);
-                //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
+                cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
-                //delay(5);
+                delay(50);
             }
             cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
