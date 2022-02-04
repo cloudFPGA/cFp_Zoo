@@ -403,13 +403,13 @@ int main(int argc, char * argv[]) {
             //     cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
             //             << frame.rows << " to " << send.cols << "x" << send.rows << endl;
             // }
-                if(argc < 5){
+   /*             if(argc < 5){
                 imwrite("testimg.png", frame);
                 }
-
+*/
             assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
             // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
-            assert(PACK_SIZE % 8 == 0);
+ //           assert(PACK_SIZE % 8 == 0);
 
 #ifdef SHOW_WINDOWS	    
             // namedWindow("host_send", CV_WINDOW_NORMAL);
@@ -534,11 +534,11 @@ int main(int argc, char * argv[]) {
                 #else
                 recvMsgSize = sock.recv(buffer, BUF_LEN);
                 #endif
-                if (recvMsgSize != receiving_now) {
-                    cerr << "WARNING: at i=" << i << " received unexpected size pack:" << recvMsgSize << ". Expected: " << 
-                            receiving_now << endl;
+                //if (recvMsgSize != receiving_now) {
+                   // cerr << "WARNING: at i=" << i << " received unexpected size pack:" << recvMsgSize << ". Expected: " << 
+                   //         receiving_now << endl;
                     //continue;
-                }
+                //}
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
@@ -578,10 +578,10 @@ int main(int argc, char * argv[]) {
             //-- STEP-6 : Write output files and show in windows
             //------------------------------------------------------
 
-            ostringstream oss;
+//            ostringstream oss;
 //            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_warp_transform_hw) << 
 //                   " \tkbps:" << (PACK_SIZE * total_pack / duration_warp_transform_hw / 1024 * 8);
-            string windowName = "cFp_Vitis End2End"; //oss.str();
+//            string windowName = "cFp_Vitis End2End"; //oss.str();
 
             //moveWindow(windowName, 0, 0);
 #ifdef WRITE_OUTPUT_FILE
@@ -598,24 +598,24 @@ int main(int argc, char * argv[]) {
                 // We save the image received from network after being processed by WarpTransform HW or HOST TB
                 imwrite(out_img_file, frame);
             }
-            else if (num_frame > 1) {
-                // If the frame is empty, break immediately
+  /*          else if (num_frame > 1) {
+               // If the frame is empty, break immediately
                 if (frame.empty()) {
                     break;
-                }
-                cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
-                Mat tovideo;
+                }*/
+                //cout << "INFO: The output video file is stored at  : " << out_video_file << endl;
+                /*Mat tovideo;
                 if (frame.channels() != 1) {
                     tovideo = frame;
                 }
                 else {
                     cvtColor(frame, tovideo, COLOR_GRAY2BGR);        
                 }
-                video.write(tovideo);
+                video.write(tovideo);*/
             }
 #endif // WRITE_OUTPUT_FILE
-            waitKey(FRAME_INTERVAL);
-            double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
+            //waitKey(FRAME_INTERVAL);
+            //double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
             //cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
             //cout << "\\___________________________________________________________________/" << endl
             // << endl;
@@ -629,7 +629,7 @@ int main(int argc, char * argv[]) {
         video.release();
 
         // Closes all the windows
-        destroyAllWindows();
+        //destroyAllWindows();
 
 #else  // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
         //output_img = longbuf;

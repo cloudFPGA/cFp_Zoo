@@ -66,8 +66,9 @@ echo "$IPs $PORTs"
 
 
 
+echo -e "\n************ Benchmark Begins :) *******************\n"
 echo "thr[#],thread[ms],openmp[ms]" > $logfile
-echo "Logging everythong"
+echo "Logging everything"
 for i in ${thr_list[@]}
 do
 	echo "Clean the out folders of $i"
@@ -81,5 +82,11 @@ do
 	thrres=$(./warp_transform_host_parallel_thread ../dataset/ $THR-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
 	echo "$i,$thrres,$ompres" >> $logfile
 	sleep 5 
-	warm_up_fpga $IPs $PORTs
+	if [[ EXE_MODE -ne 0 ]]
+	then
+		warm_up_fpga $IPs $PORTs
+	fi
+	echo -e "\n Done with iteration $i\n"
 done
+
+echo -e "\n************ Benchmark Completed :) *******************\n"
