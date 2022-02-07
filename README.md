@@ -40,7 +40,7 @@ sudo yum install cmake opencv-devel dialog python-numpy libxml2-devel python3 wi
 
 The versions below are supported by cFp_Zoo.
 
-#### For the SHELL (cFDK's code)
+### For the SHELL (cFDK's code)
 
 - [x] 2017
   - [x] 2017.4
