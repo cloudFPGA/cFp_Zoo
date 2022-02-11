@@ -64,6 +64,12 @@ set(INCLUDES_SW_PARALLEL    "$ENV{cFpRootDir}HOST/common/langs/cpp/include/"
                         "$ENV{cFpRootDir}HOST/vision/warp_transform/languages/cplusplus/include/"
                         "$ENV{cFpRootDir}HOST/PracticalSockets/src/")
 
+
+set(SOURCES_CPU_SERVER        src/warp_transform_srvr_cpu.cpp
+                        "$ENV{cFpRootDir}HOST/common/langs/cpp/src/util.cpp"
+                        "$ENV{cFpRootDir}HOST/common/langs/cpp/src/ologger.cpp"
+                        "$ENV{cFpRootDir}HOST/PracticalSockets/src/PracticalSockets.cpp")
+
 add_executable( warp_transform_host_fwd_tb ${SOURCES_HOST_FWD_TB} )
 target_include_directories(warp_transform_host_fwd_tb PRIVATE ${INCLUDES_HOST})
 target_link_libraries( warp_transform_host_fwd_tb ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
@@ -75,6 +81,10 @@ target_link_libraries( warp_transform_host ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 add_executable( warp_transform_host_lightweight ${SOURCES_HOST_LIGHT} )
 target_include_directories(warp_transform_host_lightweight PRIVATE ${INCLUDES_HOST_LIGHT})
 target_link_libraries( warp_transform_host_lightweight ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
+
+add_executable( warp_transform_srvr_cpu ${SOURCES_CPU_SERVER} )
+target_include_directories(warp_transform_srvr_cpu PRIVATE ${INCLUDES_SW_PARALLEL})
+target_link_libraries( warp_transform_srvr_cpu ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
 set(CMAKE_CXX_FLAGS "-ggdb3 -fstack-check -Wall -std=c++11 -fopenmp -lboost_system -lboost_filesystem")
 add_definitions(-DBOOST_ERROR_CODE_HEADER_ONLY)

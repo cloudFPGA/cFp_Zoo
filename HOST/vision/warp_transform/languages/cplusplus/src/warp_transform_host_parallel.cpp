@@ -44,22 +44,8 @@
 
 //decide wether use thread or openmp runtimes
 // #define USE_OPENMP
-// transform type 0-NN 1-BILINEAR
-#define INTERPOLATION 0
+#include "cv_warp_transform_config.hpp"
 
-// transform type 0-AFFINE 1-PERSPECTIVE
-#define TRANSFORM_TYPE 0
-
-#if TRANSFORM_TYPE == 1
-#define TRMAT_DIM2 3
-#define TRMAT_DIM1 3
-#else
-#define TRMAT_DIM2 3
-#define TRMAT_DIM1 2
-#endif
-
-#include "opencv2/opencv.hpp"
-#include "../../../../../../ROLE/vision/hls/warp_transform/include/xf_ocv_ref.hpp"  // For SW reference WarpTransform from OpenCV
 using namespace cv;
 using namespace std;
 
