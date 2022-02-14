@@ -70,121 +70,6 @@ void printBits(size_t const size, void const * const ptr)
     puts("");
 }
 
-/*****************************************************************************
- * @brief parsing received data
- *
- * @param[in]  longbuf the data rx from network
- * @param[out] img_rows row meta 
- * @param[out] img_cols cols meta
- * @param[out] img_chan chan meta
- * @param[out] tx_matrix tx matrix
- * @param[out] out_buff_ptr how many bites consumed
- *
- * @return int value -1|0 fail|ok.
- ******************************************************************************/
-int parseRXData(
-    char	    longbuf[CMD_OVERHEAD_BYTES],
-    img_meta_t *    img_rows,
-    img_meta_t *    img_cols,
-    img_meta_t *    img_chan,
-    float           tx_matrix[TRANSFORM_MATRIX_DIM],
-    size_t *        out_buff_ptr,
-    const unsigned int max_img_size
-    )
-{
-    
-    //-- LOCAL VARIABLES ------------------------------------------------------
-    char netWord[1];
-
-    unsigned int tx_mat_idx = 0;
-    CPUPacketFsmType parseFSM = RESET;
-    char lcl_longbuf[CMD_OVERHEAD_BYTES];
-    unsigned int expected_output_meta = TOT_TRANSFERS_RX;
-    unsigned int img_pixels=max_img_size;
-    size_t buff_ptr = 0;
-
-    memcpy(lcl_longbuf, longbuf, sizeof(char)*CMD_OVERHEAD_BYTES);
-    img_meta_t rows = 0;
-    img_meta_t cols = 0;
-    img_meta_t chan = 0;
-
-    switch(parseFSM)
-    {
-    case RESET:
-        printf("DEBUG in parseRXData: parseFSM - RESET\n");
-        parseFSM = PROCESSING_PACKET;
-        expected_output_meta = TOT_TRANSFERS_RX;
-        std::cout << "DEBUG compile time tx " << TOT_TRANSFERS_RX << std::endl;
-        img_pixels=max_img_size;
-        buff_ptr=0;
-
-    case PROCESSING_PACKET:
-        printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
-        //-- Read incoming data chunk
-        memcpy(netWord, lcl_longbuf, sizeof(char));
-       	print("Read some data\n");
-       	buff_ptr+=sizeof(char);
-        switch(*netWord)//the command is in the first 8 bits
-        {
-        case(WRPTX_TXMAT_CMD):{
- 	    print("TX MAT CMD\n");
-            parseFSM = PROCESSING_PACKET_TXMAT;
-            tx_mat_idx = 0;
-            break;
-        }
-        case(WRPTX_IMG_CMD):{
- 	    print("IMG CMD\n");
-            memcpy(&rows, lcl_longbuf+buff_ptr, sizeof(char)*2);
-            buff_ptr+=sizeof(char)*2;
-            memcpy(&cols, lcl_longbuf+buff_ptr, sizeof(char)*2);
-            buff_ptr+=sizeof(char)*2;
-            memcpy(&chan, lcl_longbuf+buff_ptr, sizeof(char)*1);
-            buff_ptr+=sizeof(char)*1;
-
-            std::cout << "DEBUG parseRXData - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
-            img_pixels = rows * cols * chan;
-            unsigned int meta_by_images = img_pixels/PACK_SIZE;
-            expected_output_meta = img_pixels%PACK_SIZE == 0 ? meta_by_images : meta_by_images +1;
-            std::cout << "DEBUG parseRXData pixels " << img_pixels << " expected output meta " << expected_output_meta << std::endl;
-            *img_rows = rows;
-            *img_cols = cols;
-            *img_chan = chan;
-            //break;
-	    return 0;
-
-        }
-        //TODO: fix the default case
-        default:{
-             return -1;
-        }
-            //     // invalid cmd
-            //     enqueueRxToStrFSM = WAIT_FOR_META;
-            //     break;
-            //     //might be consume data? dk
-        }
-
-    case PROCESSING_PACKET_TXMAT:
-        printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET_TXMAT\n");
-        //-- Read incoming data chunk
-        for(int i =0; i<TRANSFORM_MATRIX_DIM; i++){
-            float_bits_u tmp1;
-            // float_bits_u tmp2;
-            memcpy(&tmp1, longbuf+buff_ptr , sizeof(float));
-            buff_ptr+=sizeof(float);
-            tx_matrix[tx_mat_idx]=tmp1.f;
-            tx_mat_idx++; // it seems equal to i
-            // memccpy(&tmp2, longbuf+buff_ptr , sizeof(float));
-            // buff_ptr+=sizeof(float);
-        }
-        buff_ptr+=sizeof(float);
-        *out_buff_ptr=buff_ptr;
-        //break;
-	return 0;
-        }
-
-    return 0;
-}
-
   /**
    *   Main testbench for the user-application for WarpTransform on host. Server
    *   @return O on success, 1 on fail 
@@ -233,16 +118,16 @@ int main(int argc, char * argv[]) {
 	#endif
 	img_meta_t img_rows, img_cols,img_chan, img_pixels;
 	float tx_matrix[TRANSFORM_MATRIX_DIM];
-	size_t out_buff_ptr;
+	size_t buff_ptr;
 	int min_pack_to_recevie = 1;
     	char init_buff [PACK_SIZE*min_pack_to_recevie];
 	int receiving_now = PACK_SIZE;
 
         // RX Step
         while (1) {
-        cout << " ___________________________________________________________________ " << endl;
-		cout << "/                                                                   \\" << endl;
-		cout << "INFO: Proxy tb Frame # " << ++num_frame << endl;	    
+        std::cout << " ___________________________________________________________________ " << std::endl;
+		std::cout << "/                                                                   \\" << std::endl;
+		std::cout << "INFO: Proxy tb Frame # " << ++num_frame << std::endl;	    
             // Block until receive message from a client
         //init
         img_rows =FRAME_HEIGHT;
@@ -251,7 +136,7 @@ int main(int argc, char * argv[]) {
         memset(tx_matrix,  0x0, sizeof(tx_matrix));
         memset(init_buff,  0x0, sizeof(init_buff));
         memset(buffer4Commands,  0x0, sizeof(buffer4Commands));
-        out_buff_ptr = 0;
+        buff_ptr = 0;
         //variables
         receiving_now = PACK_SIZE;
         #if NET_TYPE == udp
@@ -260,28 +145,95 @@ int main(int argc, char * argv[]) {
 		recvMsgSize = servsock->recv(buffer, receiving_now);
 		#endif
         memcpy(init_buff, buffer, receiving_now);
-       	//memcpy( 
-	if( parseRXData(init_buff,&img_rows, &img_cols, &img_chan,tx_matrix,&out_buff_ptr, FRAME_TOTAL) == -1 ){
-            cout << "ERROR command not ok" << endl;
-            cerr << "Command input Error" << endl;
-            return -1;
-        }
 
+            // cout << "INFO: Received packet from " << sourceAddress << ":" << servPort << endl;
+			// std::cout << "INFO: recevied the CMD=";// << std::endl;
+			// printBits(8, init_buff);
+			// std::cout << "INFO: tx matrix0-1=    ";//<< std::endl;
+			// printBits(8, init_buff+(1 * 8));
+			// std::cout << "INFO: tx matrix2-3=    ";//<< std::endl;
+			// printBits(8, init_buff+(2 * 8));
+			// std::cout << "INFO: tx matrix4-5=    ";//<< std::endl;
+			// printBits(8, init_buff+(3 * 8));
+			// std::cout << "INFO: tx matrix6-7=    ";//<< std::endl;
+			// printBits(8, init_buff+(4 * 8));
+			// std::cout << "INFO: tx matrix8=      ";//<< std::endl;
+			// printBits(4, init_buff+(5 * 8));
+			// std::cout << "INFO: IMG CMD=         ";// << std::endl;
+			// printBits(8, init_buff+(6 * 8));
+			// std::cout << std::endl;
+
+
+        char readWord[1];
+        unsigned int tx_mat_idx = 0;
+        CPUPacketFsmType parseFSM = PROCESSING_PACKET;
+        unsigned int img_pixels=FRAME_TOTAL;
+        switch(parseFSM)
+        {
+        case PROCESSING_PACKET:
+            printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
+            //-- Read incoming data chunk
+            memcpy(readWord, init_buff, sizeof(char));
+            printf("Read some data %s\n",readWord);
+            buff_ptr+=sizeof(char);
+            switch(*readWord)//the command is in the first 8 bits
+            {
+            case(WRPTX_TXMAT_CMD):{
+                printf("TX MAT CMD\n");
+                parseFSM = PROCESSING_PACKET_TXMAT;
+                tx_mat_idx = 0;
+                break;
+                }
+            case(WRPTX_IMG_CMD):{
+                printf("IMG CMD\n");
+                memcpy(&img_rows, init_buff+buff_ptr, sizeof(char)*2);
+                buff_ptr+=sizeof(char)*2;
+                memcpy(&img_cols, init_buff+buff_ptr, sizeof(char)*2);
+                buff_ptr+=sizeof(char)*2;
+                memcpy(&img_chan, init_buff+buff_ptr, sizeof(char)*1);
+                buff_ptr+=sizeof(char)*1;
+
+                std::cout << "DEBUG parseRXData - img rows =" << img_rows << " cols=" << img_cols << " chan=" << img_chan << std::endl; 
+                img_pixels = img_rows * img_cols * img_chan;
+                unsigned int meta_by_images = img_pixels/PACK_SIZE;
+                std::cout << "DEBUG parseRXData pixels " << img_pixels << std::endl;
+                }
+            //TODO: fix the default case
+            default:{
+                cerr << "ERROR  skipping iteration" << std::endl;
+                continue;
+                }
+
+            }
+
+        case PROCESSING_PACKET_TXMAT:
+            printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET_TXMAT\n");
+            //-- Read incoming data chunk
+            for(int i =0; i<TRANSFORM_MATRIX_DIM; i++){
+                float_bits_u tmp1;
+                // float_bits_u tmp2;
+                memcpy(&tmp1, init_buff+buff_ptr , sizeof(float));
+                buff_ptr+=sizeof(float);
+                tx_matrix[tx_mat_idx]=tmp1.f;
+                tx_mat_idx++; // it seems equal to i
+            }
+            buff_ptr+=sizeof(float);
+        }
         img_pixels = img_rows * img_cols * img_chan;
         
         
         // run time changeable
 	int total_pack_back2Host = 1 + (img_pixels - 1) / PACK_SIZE;
-        int bytes_in_last_pack_back2Host = (img_pixels) - (total_pack_back2Host - 1) * PACK_SIZE;
+    int bytes_in_last_pack_back2Host = (img_pixels) - (total_pack_back2Host - 1) * PACK_SIZE;
 	int total_pack = 1 + (img_pixels+CMD_OVERHEAD_BYTES - 1) / PACK_SIZE - 1 ;
-        int bytes_in_last_pack = (img_pixels+CMD_OVERHEAD_BYTES) - (total_pack - 1) * PACK_SIZE;	    
+    int bytes_in_last_pack = (img_pixels+CMD_OVERHEAD_BYTES) - (total_pack - 1) * PACK_SIZE;	    
 	cout << "INFO: Expecting length of packs:" << total_pack << endl;
 	char * longbuf = new char[PACK_SIZE * total_pack];
-	memcpy(longbuf, init_buff, PACK_SIZE);    
+	memcpy(longbuf, init_buff+buff_ptr, PACK_SIZE-buff_ptr);    
 	
 
 	    // RX Loop
-            for (int i = 1; i < total_pack; i++) {
+            for (int i = 0; i < total_pack; i++) {
 	        if ( i == total_pack - 1 ) {
                     receiving_now = bytes_in_last_pack;
                 }
@@ -294,11 +246,11 @@ int main(int argc, char * argv[]) {
                     cerr << "ERROR: Received unexpected size pack:" << recvMsgSize << endl;
                     continue;
                 }
-                memcpy( & longbuf[i * PACK_SIZE], buffer, receiving_now);
+                memcpy( & longbuf[buff_ptr+(i * PACK_SIZE)], buffer, receiving_now);
             }
             //if run-time img dims, first step catching if img in receivign the compute those numbers
-
-            cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf), ocv_out_img; // OR vec.data() instead of ptr
+        
+        cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf), ocv_out_img; // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
@@ -342,7 +294,7 @@ int main(int argc, char * argv[]) {
                     total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx; 
             cout << "\\___________________________________________________________________/" << endl;
-        break;
+        // break;
 		} // while loop
         #if NET_TYPE == tcp
         delete servsock;
