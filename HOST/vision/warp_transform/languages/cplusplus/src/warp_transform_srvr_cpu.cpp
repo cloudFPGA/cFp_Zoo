@@ -33,7 +33,6 @@
 #include <iostream>          // For cout and cerr
 #include "PracticalSockets.h"
 #include "config.h"
-#include "opencv2/opencv.hpp"
 #include "cv_warp_transform_config.hpp"
 
 #include <stdio.h>
@@ -48,7 +47,6 @@
 #define PROCESSING_PACKET 1
 #define PROCESSING_PACKET_TXMAT 2
 
-using namespace cv;
 
 /*****************************************************************************
  * @brief print the binary representation of a target pointer buffer of a given size.
@@ -84,28 +82,31 @@ void printBits(size_t const size, void const * const ptr)
  *
  * @return int value -1|0 fail|ok.
  ******************************************************************************/
-template<const unsigned int max_img_size>
 int parseRXData(
-    char *          longbuf,
+    char	    longbuf[CMD_OVERHEAD_BYTES],
     img_meta_t *    img_rows,
     img_meta_t *    img_cols,
     img_meta_t *    img_chan,
     float           tx_matrix[TRANSFORM_MATRIX_DIM],
-    size_t *        out_buff_ptr
+    size_t *        out_buff_ptr,
+    const unsigned int max_img_size
     )
 {
-    //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
-    #pragma HLS INLINE off
     
     //-- LOCAL VARIABLES ------------------------------------------------------
-    char netWord;
+    char netWord[1];
 
     unsigned int tx_mat_idx = 0;
     CPUPacketFsmType parseFSM = RESET;
+    char lcl_longbuf[CMD_OVERHEAD_BYTES];
     unsigned int expected_output_meta = TOT_TRANSFERS_RX;
     unsigned int img_pixels=max_img_size;
     size_t buff_ptr = 0;
 
+    memcpy(lcl_longbuf, longbuf, sizeof(char)*CMD_OVERHEAD_BYTES);
+    img_meta_t rows = 0;
+    img_meta_t cols = 0;
+    img_meta_t chan = 0;
 
     switch(parseFSM)
     {
@@ -120,24 +121,24 @@ int parseRXData(
     case PROCESSING_PACKET:
         printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
         //-- Read incoming data chunk
-        memcpy(&netWord, longbuf, sizeof(char));
-        buff_ptr+=sizeof(char);
-        switch(netWord)//the command is in the first 8 bits
+        memcpy(netWord, lcl_longbuf, sizeof(char));
+       	print("Read some data\n");
+       	buff_ptr+=sizeof(char);
+        switch(*netWord)//the command is in the first 8 bits
         {
         case(WRPTX_TXMAT_CMD):{
+ 	    print("TX MAT CMD\n");
             parseFSM = PROCESSING_PACKET_TXMAT;
             tx_mat_idx = 0;
             break;
         }
         case(WRPTX_IMG_CMD):{
-            img_meta_t rows = 0;
-            img_meta_t cols = 0;
-            img_meta_t chan = 0;
-            memcpy(&rows, longbuf+buff_ptr, sizeof(char)*2);
+ 	    print("IMG CMD\n");
+            memcpy(&rows, lcl_longbuf+buff_ptr, sizeof(char)*2);
             buff_ptr+=sizeof(char)*2;
-            memcpy(&cols, longbuf+buff_ptr, sizeof(char)*2);
+            memcpy(&cols, lcl_longbuf+buff_ptr, sizeof(char)*2);
             buff_ptr+=sizeof(char)*2;
-            memcpy(&chan, longbuf+buff_ptr, sizeof(char)*1);
+            memcpy(&chan, lcl_longbuf+buff_ptr, sizeof(char)*1);
             buff_ptr+=sizeof(char)*1;
 
             std::cout << "DEBUG parseRXData - img rows =" << rows << " cols=" << cols << " chan=" << chan << std::endl; 
@@ -148,18 +149,19 @@ int parseRXData(
             *img_rows = rows;
             *img_cols = cols;
             *img_chan = chan;
-            break;
+            //break;
+	    return 0;
 
         }
-            //TODO: fix the default case
-            default:{
-                return -1;
-            }
+        //TODO: fix the default case
+        default:{
+             return -1;
+        }
             //     // invalid cmd
             //     enqueueRxToStrFSM = WAIT_FOR_META;
             //     break;
             //     //might be consume data? dk
-            }
+        }
 
     case PROCESSING_PACKET_TXMAT:
         printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET_TXMAT\n");
@@ -176,7 +178,8 @@ int parseRXData(
         }
         buff_ptr+=sizeof(float);
         *out_buff_ptr=buff_ptr;
-        break;
+        //break;
+	return 0;
         }
 
     return 0;
@@ -209,7 +212,8 @@ int main(int argc, char * argv[]) {
 	TCPSocket *servsock = servSock.accept();     // Wait for a client to connect
 	#endif
         char buffer[BUF_LEN]; // Buffer for echo string
-        int recvMsgSize; // Size of received message
+        char buffer4Commands[CMD_OVERHEAD_BYTES];
+	int recvMsgSize; // Size of received message
         string sourceAddress; // Address of datagram source
 	    
 	#if NET_TYPE == tcp
@@ -228,9 +232,10 @@ int main(int argc, char * argv[]) {
 	cout << endl;
 	#endif
 	img_meta_t img_rows, img_cols,img_chan, img_pixels;
-    float tx_matrix[TRANSFORM_MATRIX_DIM];
-    size_t out_buff_ptr;
-    int min_pack_to_recevie = 1;
+	float tx_matrix[TRANSFORM_MATRIX_DIM];
+	size_t out_buff_ptr;
+	int min_pack_to_recevie = 1;
+    	char init_buff [PACK_SIZE*min_pack_to_recevie];
 	int receiving_now = PACK_SIZE;
 
         // RX Step
@@ -244,18 +249,19 @@ int main(int argc, char * argv[]) {
         img_cols = FRAME_WIDTH;
         img_chan = 1;
         memset(tx_matrix,  0x0, sizeof(tx_matrix));
+        memset(init_buff,  0x0, sizeof(init_buff));
+        memset(buffer4Commands,  0x0, sizeof(buffer4Commands));
         out_buff_ptr = 0;
         //variables
-        char * init_buff = new char[PACK_SIZE*min_pack_to_recevie];
         receiving_now = PACK_SIZE;
         #if NET_TYPE == udp
                 recvMsgSize = sock.recvFrom(buffer, BUF_LEN, sourceAddress, servPort);
 		#else
 		recvMsgSize = servsock->recv(buffer, receiving_now);
 		#endif
-        memcpy( & init_buff, buffer, receiving_now);
-        
-        if(parseRXData<FRAME_TOTAL>(init_buff,&img_rows, &img_cols, &img_chan,tx_matrix,&out_buff_ptr) == -1 ){
+        memcpy(init_buff, buffer, receiving_now);
+       	//memcpy( 
+	if( parseRXData(init_buff,&img_rows, &img_cols, &img_chan,tx_matrix,&out_buff_ptr, FRAME_TOTAL) == -1 ){
             cout << "ERROR command not ok" << endl;
             cerr << "Command input Error" << endl;
             return -1;
@@ -265,17 +271,17 @@ int main(int argc, char * argv[]) {
         
         
         // run time changeable
-	    int total_pack_back2Host = 1 + (img_pixels - 1) / PACK_SIZE;
+	int total_pack_back2Host = 1 + (img_pixels - 1) / PACK_SIZE;
         int bytes_in_last_pack_back2Host = (img_pixels) - (total_pack_back2Host - 1) * PACK_SIZE;
-		int total_pack = 1 + (img_pixels - 1) / PACK_SIZE;
-        int bytes_in_last_pack = (img_pixels) - (total_pack - 1) * PACK_SIZE;	    
-
-		cout << "INFO: Expecting length of packs:" << total_pack << endl;
-		char * longbuf = new char[PACK_SIZE * total_pack];
-	    
+	int total_pack = 1 + (img_pixels+CMD_OVERHEAD_BYTES - 1) / PACK_SIZE - 1 ;
+        int bytes_in_last_pack = (img_pixels+CMD_OVERHEAD_BYTES) - (total_pack - 1) * PACK_SIZE;	    
+	cout << "INFO: Expecting length of packs:" << total_pack << endl;
+	char * longbuf = new char[PACK_SIZE * total_pack];
+	memcpy(longbuf, init_buff, PACK_SIZE);    
+	
 
 	    // RX Loop
-            for (int i = 0; i < total_pack; i++) {
+            for (int i = 1; i < total_pack; i++) {
 	        if ( i == total_pack - 1 ) {
                     receiving_now = bytes_in_last_pack;
                 }
@@ -292,8 +298,7 @@ int main(int argc, char * argv[]) {
             }
             //if run-time img dims, first step catching if img in receivign the compute those numbers
 
-            cv::Mat frame = cv::Mat(img_rows, img_cols, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
-            cv::Mat ocv_out_img;
+            cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf), ocv_out_img; // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
@@ -306,9 +311,8 @@ int main(int argc, char * argv[]) {
 	    imwrite("../../../../../../ROLE/vision/hls/warp_transform/test/input_from_udp_to_fpga.png", frame);
         cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, tx_matrix);
         ocv_ref(frame, ocv_out_img, transformation_matrix);
-        free(longbuf);
-        free(init_buff);
-        
+        //free(longbuf);
+ 	delete longbuf;  
 	        
 	    assert(ocv_out_img.total() == FRAME_WIDTH * FRAME_HEIGHT);
 	#ifdef SHOW_WINDOWS
