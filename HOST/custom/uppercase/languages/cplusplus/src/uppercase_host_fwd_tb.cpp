@@ -43,6 +43,10 @@
 
 using namespace std;
 
+// This defines the maximum number of packets, each of size PACK_SIZE, that we enable this fwd_tb to 
+// process.
+#define MAX_PACKETS_FOR_TB 10
+
 static inline ssize_t
 __file_size(const char *fname)
 {
@@ -108,7 +112,7 @@ int main(int argc, char * argv[]) {
 
     if ((argc < 2) || (argc > 4)) { // Test for correct number of parameters
         cerr << "Usage: " << argv[0] << " <Server Port> <optional simulation mode> <optional >" << endl;
-        cerr << "<optional simulation mode> : 0 - fcsim, 2 - csim, 3 - csynth + cosim, 4 - kcachegrind" << endl;
+        cerr << "<optional simulation mode> : 0 - fcsim, 2 - csim, 3 - csynth + cosim, 4 - memchecksim, 5 - kcachegrind" << endl;
         cerr << "<optional loop> : 0 - executed once, 1 - executed continuously" << endl;
         exit(1);
     }
@@ -163,13 +167,14 @@ int main(int argc, char * argv[]) {
     
             int input_string_total_len = 0;
             //int receiving_now = PACK_SIZE;
-            int total_pack = 0;
+            int total_pack = MAX_PACKETS_FOR_TB;
             int bytes_in_last_pack;
             bool msg_received = false;
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
             cout << "INFO: Proxy tb batch # " << ++num_batch << endl;	    
-            char * longbuf = new char[PACK_SIZE * total_pack];
+            //char * longbuf = new char[PACK_SIZE * total_pack];
+            char * longbuf = (char *) malloc (PACK_SIZE * total_pack * sizeof(char));
 
             // RX Loop
             for (int i = 0; msg_received != true; i++, total_pack++) {
@@ -181,7 +186,7 @@ int main(int argc, char * argv[]) {
                 input_string_total_len += recvMsgSize;
                 bytes_in_last_pack = recvMsgSize;
                 bool nullcharfound = findCharNullPos(buffer);
-                //printf("DEBUG: recvMsgSize=%u strlen(buffer)=%u nullcharpos=%u\n", recvMsgSize, strlen(buffer), nullcharfound);
+                printf("DEBUG: i=%d recvMsgSize=%u strlen(buffer)=%u nullcharfound=%u\n", i, recvMsgSize, strlen(buffer), nullcharfound);
                 memcpy( & longbuf[i * PACK_SIZE], buffer, recvMsgSize);
                 if (nullcharfound != true) {
                     cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
@@ -192,7 +197,7 @@ int main(int argc, char * argv[]) {
             }
 
             cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
- 
+            cout << "DEBUG: longbuf=" << longbuf << endl;
             string input_string = longbuf;
             if (input_string.length() == 0) {
                 cerr << "ERROR: received an empty string! Aborting..." << endl;
@@ -205,17 +210,21 @@ int main(int argc, char * argv[]) {
             string ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/fcsim/build/hls_out.txt";
             if (argc >= 3) {
                 if (atoi(argv[2]) == 2) {
-                exec_cmd = "make csim";
-                ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/csim/build/hls_out.txt";
+                    exec_cmd = "make csim";
+                    ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/csim/build/hls_out.txt";
                 }
-            else if (atoi(argv[2]) == 3) {
-                synth_cmd = "make csynth && ";
-                exec_cmd = "make cosim";
-                ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/sim/wrapc_pc/build/hls_out.txt";
+                else if (atoi(argv[2]) == 3) {
+                    synth_cmd = "make csynth && ";
+                    exec_cmd = "make cosim";
+                    ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/sim/wrapc_pc/build/hls_out.txt";
                 }
-            else if (atoi(argv[2]) == 4) {
-                exec_cmd = "make kcachegrind";
-                ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/fcsim/build/hls_out.txt";
+                else if (atoi(argv[2]) == 4) {
+                    exec_cmd = "make memchecksim";
+                    ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/fcsim/build/hls_out.txt";
+                }
+                else if (atoi(argv[2]) == 5) {
+                    exec_cmd = "make kcachegrind";
+                    ouf_file = "../../../../../../ROLE/custom/hls/uppercase/uppercase_prj/solution1/fcsim/build/hls_out.txt";
                 }
             }        // Calling the actual TB over its typical makefile procedure, but passing the save file
             // Skip the rebuilding phase on the 2nd run. However ensure that it's a clean recompile
