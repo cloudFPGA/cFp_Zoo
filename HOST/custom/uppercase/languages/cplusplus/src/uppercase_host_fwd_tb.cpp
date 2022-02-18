@@ -167,14 +167,14 @@ int main(int argc, char * argv[]) {
     
             int input_string_total_len = 0;
             //int receiving_now = PACK_SIZE;
-            int total_pack = MAX_PACKETS_FOR_TB;
+            int total_pack = 0;
             int bytes_in_last_pack;
             bool msg_received = false;
             cout << " ___________________________________________________________________ " << endl;
             cout << "/                                                                   \\" << endl;
             cout << "INFO: Proxy tb batch # " << ++num_batch << endl;	    
             //char * longbuf = new char[PACK_SIZE * total_pack];
-            char * longbuf = (char *) malloc (PACK_SIZE * total_pack * sizeof(char));
+            char * longbuf = (char *) malloc (PACK_SIZE * MAX_PACKETS_FOR_TB * sizeof(char));
 
             // RX Loop
             for (int i = 0; msg_received != true; i++, total_pack++) {
@@ -186,7 +186,7 @@ int main(int argc, char * argv[]) {
                 input_string_total_len += recvMsgSize;
                 bytes_in_last_pack = recvMsgSize;
                 bool nullcharfound = findCharNullPos(buffer);
-                printf("DEBUG: i=%d recvMsgSize=%u strlen(buffer)=%u nullcharfound=%u\n", i, recvMsgSize, strlen(buffer), nullcharfound);
+                //printf("DEBUG: i=%d recvMsgSize=%u strlen(buffer)=%u nullcharfound=%u\n", i, recvMsgSize, strlen(buffer), nullcharfound);
                 memcpy( & longbuf[i * PACK_SIZE], buffer, recvMsgSize);
                 if (nullcharfound != true) {
                     cout << "INFO: The string is not entirely fit in packet " <<  total_pack << endl;
@@ -197,7 +197,7 @@ int main(int argc, char * argv[]) {
             }
 
             cout << "INFO: Received packet from " << sourceAddress << ":" << sourcePort << endl;
-            cout << "DEBUG: longbuf=" << longbuf << endl;
+            //cout << "DEBUG: longbuf=" << longbuf << endl;
             string input_string = longbuf;
             if (input_string.length() == 0) {
                 cerr << "ERROR: received an empty string! Aborting..." << endl;
