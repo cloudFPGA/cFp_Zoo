@@ -22,7 +22,8 @@ RUN echo "ALL ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers
 RUN service ssh start
 
 EXPOSE 22
-EXPOSE 2718-2750
+EXPOSE 2718-2750/udp
+EXPOSE 2718-2750/tcp
 
 WORKDIR /app
 

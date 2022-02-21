@@ -12,6 +12,7 @@ ip_addr_begin="192.168.0.1"
 ENV_ALL=" --env THREADS=$THREADS --env PORTS=$BENCH_PORTS --env LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:/usr/local/lib"
 ENV_BENCHMARK=" --env IPS=$BENCH_IPS "
 # docker network create -d bridge br0 --subnet=192.168.0.100/16 --> used this
+# docker network create --driver=bridge --subnet=192.168.0.0/16 br0
 # docker network create -d macvlan --subnet=10.12.0.0/16 -o parent=enp1s0f0 --ip-range=10.12.50.0/25 net0
 dockercmd_base="docker run -d --rm -it --network br0 --cap-add=NET_ADMIN  --ip 192.168.0.1X --name rank_X --env ZRLMPI_CLUSTER_SIZE=$cluster_size"
 # dockercmd_base="docker run -d --rm -it --network br0 --cap-add=NET_ADMIN  --ip 192.168.0.1X --name rank_X --cpuset-cpus Y --env ZRLMPI_CLUSTER_SIZE=$cluster_size"
