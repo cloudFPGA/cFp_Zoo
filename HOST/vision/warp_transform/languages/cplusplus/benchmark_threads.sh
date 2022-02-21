@@ -1,11 +1,12 @@
 #!/bin/bash
 ping_fpga(){
-	ping -c 20 $1
+	ping -c 16 $1
 }
 
 warm_up_fpga () {
 	ip_list=$1
 	port_list=$2
+	threads=$3
 	IFS=':' read -ra FPGAS <<< "$ip_list"
 	IFS=':' read -ra PORTS <<< "$port_list"
 	for i in ${FPGAS[@]}
@@ -14,6 +15,24 @@ warm_up_fpga () {
 	done
 	echo ""
 	len=${#FPGAS[@]}
+	lenport=${#PORTS[@]}
+	#check if 
+	if [[ threads -gt len ]]
+	then
+		echo "ERROR more threads than availble platforms"
+		exit 1
+	fi
+	if [[ lenport -ne len ]]
+	then
+		echo "ERROR not same ports and ip nodes"
+		exit 1
+	fi
+
+	if [[ threads -lt len ]]
+	then
+		len=$threads
+	fi
+
 	updated_len=$((len-1))
 	for i in $(seq 0 $updated_len )
 	do
@@ -22,11 +41,12 @@ warm_up_fpga () {
 	done
 	for i in $(seq 0 $updated_len )
 	do
-		echo "Warming up $i thread"
+		echo "Warming up $i node"
 		#ping_fpga ${FPGAS[$i]}
 		echo ${FPGAS[$i]}
 		echo ${PORTS[$i]}
 		./warp_transform_host_lightweight ${FPGAS[$i]} ${PORTS[$i]} ./128x128.png ./ 2
+		echo "Warm up $i completed"
 		sleep 2 
 	done
 	echo ""
@@ -40,7 +60,7 @@ EXE_MODE=${2:-0}
 WAX_MODE=${3:-2}
 IPs=${4:-}
 PORTs=${5:-}
-
+threads=1
 
 if [[ EXE_MODE -eq 0 ]]
 then
@@ -52,12 +72,15 @@ then
 		echo $((2**$i)) 
 		thr_list+=($((2**$i)))
 	done
+	threads=$((2**$max_power_threads))
 else
 	logfile=cf_logger.csv
 	THR=./out_thread_cf
 	OMP=./out_openmp_cf
 	thr_list=$(seq 1 $max_power_threads)
-	warm_up_fpga $IPs $PORTs
+	threads=$max_power_threads
+	warm_up_fpga $IPs $PORTs $threads
+
 fi
 #exit
 echo $logfile
@@ -75,16 +98,16 @@ do
 	mkdir -p $THR-$i/ 
 	mkdir -p $OMP-$i/
 	rm -rf ${THR}-$i/* ${OMP}-$i/*
-	echo "Executing OpenMP with $i threads"
+	echo "Executing OpenMP with $i nodes"
 	ompres=$(./warp_transform_host_parallel_openmp ../dataset/ $OMP-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
 	sleep 5 
-	echo "Executing std::thread with $i threads"
+	echo "Executing std::thread with $i nodes"
 	thrres=$(./warp_transform_host_parallel_thread ../dataset/ $THR-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
 	echo "$i,$thrres,$ompres" >> $logfile
 	sleep 5 
 	if [[ EXE_MODE -ne 0 ]]
 	then
-		warm_up_fpga $IPs $PORTs
+		warm_up_fpga $IPs $PORTs $i
 	fi
 	echo -e "\n Done with iteration $i\n"
 done
