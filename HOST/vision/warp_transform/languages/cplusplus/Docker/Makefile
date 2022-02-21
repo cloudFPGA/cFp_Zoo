@@ -9,8 +9,8 @@ USE_CF=
 
 CLSTR_SIZE?=1
 THREADS?=1
-PORTS="2718:2719:2720:2721:2722:2723:2724:2725:2726:2727:2728:2729:2780:2781"
-CPU_IPS="10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9"
+PORTS="2718:2719:2720:2721:2722:2723:2724:2725:2726:2727:2728:2729:2780:2781:2782:2783:2784:2785:2786:2787"
+CPU_IPS="10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9"
 CF_IPS="10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9:10.12.0.9"
 
 
@@ -25,7 +25,7 @@ build_clean_sw: $(HOST_SRC) $(HOST_SRC_DIR)/warp_transform_srvr_cpu.cpp
 build_sw: $(HOST_SRC) $(HOST_SRC_DIR)/warp_transform_srvr_cpu.cpp
 	cd $(EXEC_DIR); make; cd -
 
-setup_host: build_sw ../benchmark_threads.sh
+setup_host: build_clean_sw ../benchmark_threads.sh
 	mkdir -p ./host_dir
 	cp $(EXEC_DIR)/warp_transform_host_parallel* ./host_dir
 	cp $(EXEC_DIR)/warp_transform_host_lightweight ./host_dir
@@ -35,7 +35,7 @@ setup_host: build_sw ../benchmark_threads.sh
 	cp container_start_script.sh ./host_dir
 
 
-setup_srvr: build_sw ../setup_multisrvr.sh
+setup_srvr: build_clean_sw ../setup_multisrvr.sh
 	mkdir -p ./srvr_dir
 	cp $(EXEC_DIR)/warp_transform_srvr_cpu ./srvr_dir
 	cp ../setup_multisrvr.sh ./srvr_dir
@@ -57,7 +57,7 @@ docker_run:
 	
 
 docker_run_host: docker_create_script.sh docker.host_stamp
-	./docker_create_script.sh ${HOST_MODE} ${CLSTR_SIZE} ${THREADS} ${PORTS} ${IPS}
+	./docker_create_script.sh ${HOST_MODE} ${CLSTR_SIZE} ${THREADS} ${PORTS} ${CPU_IPS}
 
 
 docker_run_srvr: docker_create_script.sh docker.srvr_stamp
