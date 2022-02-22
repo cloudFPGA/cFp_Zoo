@@ -4,6 +4,7 @@ RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y openssh-
 
 RUN apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev rename rpl dialog cmake swig python3-dev python3.8-venv gcc-multilib
 RUN apt-get install -y libjpeg62
+RUN apt-get install -y libboost-filesystem-dev
 
 RUN apt-get install -y cmake git libtiff-dev libgtk-3-dev libavcodec-dev libgstreamer-plugins-base1.0-dev libgstreamer1.0-dev libavformat-dev libswscale-dev libv4l-dev libxvidcore-dev libx264-dev libjpeg-dev libatlas-base-dev python3-numpy libtbb2 libtbb-dev libdc1394-22-dev libopenexr-dev
 RUN mkdir /opencv_build
