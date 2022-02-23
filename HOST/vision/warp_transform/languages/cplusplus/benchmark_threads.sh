@@ -17,6 +17,9 @@ warm_up_fpga () {
 	len=${#FPGAS[@]}
 	lenport=${#PORTS[@]}
 	#check if 
+	echo "threads $threads "
+	echo "ips $len " 
+	echo "ports $lenport "
 	if [[ threads -gt len ]]
 	then
 		echo "ERROR more threads than availble platforms"
@@ -61,6 +64,8 @@ WAX_MODE=${3:-2}
 IPs=${4:-}
 PORTs=${5:-}
 threads=1
+DATASET_FLDR=${6:-"./dataset/"}
+#old style is with ../dataset/
 
 if [[ EXE_MODE -eq 0 ]]
 then
@@ -99,10 +104,10 @@ do
 	mkdir -p $OMP-$i/
 	rm -rf ${THR}-$i/* ${OMP}-$i/*
 	echo "Executing OpenMP with $i nodes"
-	ompres=$(./warp_transform_host_parallel_openmp ../dataset/ $OMP-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
+	ompres=$(./warp_transform_host_parallel_openmp $DATASET_FLDR $OMP-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
 	sleep 5 
 	echo "Executing std::thread with $i nodes"
-	thrres=$(./warp_transform_host_parallel_thread ../dataset/ $THR-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
+	thrres=$(./warp_transform_host_parallel_thread $DATASET_FLDR $THR-$i/ $EXE_MODE $i $WAX_MODE $PORTs $IPs | grep chrono | sed 's/.*=//')
 	echo "$i,$thrres,$ompres" >> $logfile
 	sleep 5 
 	if [[ EXE_MODE -ne 0 ]]
