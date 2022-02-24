@@ -53,3 +53,11 @@ std::ostream &dout = cout;
 std::ofstream dev_null ("/dev/null");
 std::ostream &dout = dev_null;
 #endif
+
+
+bool isNumeric(const std::string str) {        // loop Through each character in the string
+    for(char x:  str)
+        if(!isdigit(x)) // Check if a single character "x" its a digit
+            return false;  // if its not return false 
+      return true; // else return true
+}

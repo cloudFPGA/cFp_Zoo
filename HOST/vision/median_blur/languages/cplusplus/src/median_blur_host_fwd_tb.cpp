@@ -34,6 +34,7 @@
 #include "PracticalSockets.h"
 #include "config.h"
 #include "opencv2/opencv.hpp"
+#include "util.hpp"
 
 using namespace cv;
 
@@ -49,6 +50,11 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 
+    if (!isNumeric(argv[1])) {
+        cerr << "ERROR: Unidentified provided port : " << argv[1] << " . Aborting..." << endl;
+        exit(1);
+    }
+    
     unsigned short servPort = atoi(argv[1]); // First arg:  local port
     unsigned int num_frame = 0;
     string clean_cmd;

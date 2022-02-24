@@ -189,10 +189,10 @@ int main(int argc, char** argv) {
     if (!dumpStringToFile(strInput, "ifsSHL_Uaf_Data.dat", simCnt)) {
       nrErr++;
     }
-    std::string strGold = createUppercaseGoldenOutput(strInput);
-    if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
-      nrErr++;
-    }
+    //std::string strGold = createUppercaseGoldenOutput(strInput);
+    //if (!dumpStringToFile(strGold, "verify_UAF_Shl_Data.dat", simCnt)){ 
+    //  nrErr++;
+    //}
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////////////

@@ -31,6 +31,7 @@
 #include <ostream>
 #include <fstream>
 #include "config.h"
+#include <string>
 
 extern std::ostream &dout;
 
@@ -55,6 +56,8 @@ void Dprintf(const char* format, ... ) {
 
 void Dfprintf(uint8_t level, FILE *stream, const char* format, ... );
 void bprintf( const char* format, ... );
+
+bool isNumeric(const std::string str);
 
 
 #endif
