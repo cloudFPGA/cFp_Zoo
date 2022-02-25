@@ -59,6 +59,29 @@ using namespace cv;
 
 using namespace std;
 
+
+/*****************************************************************************
+ * @brief print the binary representation of a target pointer buffer of a given size.
+ *      Assumes little endian.
+ * @param[in]  size the bytesize to print from ptr.
+ * @param[in] ptr the buffer pointer.
+ * @return nothing, print to stdout.
+ ******************************************************************************/
+void printBits(size_t const size, void const * const ptr)
+{
+    unsigned char *b = (unsigned char*) ptr;
+    unsigned char byte;
+    int i, j;
+    
+    for (i = size-1; i >= 0; i--) {
+        for (j = 7; j >= 0; j--) {
+            byte = (b[i] >> j) & 1;
+            printf("%u", byte);
+        }
+    }
+    puts("");
+}
+
 void delay(unsigned int mseconds)
 {
     clock_t goal = mseconds + clock();
@@ -485,6 +508,7 @@ int main(int argc, char * argv[]) {
             // warptx_cmd = warptx_cmd.append(sendarr_img, send_total * send_channels);
 	        unsigned char * sendarr = (unsigned char *) malloc (send_total * send_channels +  warptx_cmd_size);
             memcpy(sendarr,warptx_cmd.c_str(), warptx_cmd_size);
+	    printBits(warptx_cmd_size, warptx_cmd.c_str());
             memcpy(sendarr+warptx_cmd_size,sendarr_img, send_total * send_channels);
             
 #endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
