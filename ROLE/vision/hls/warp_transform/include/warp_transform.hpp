@@ -48,6 +48,8 @@
 #include <stdint.h>
 #include "network.hpp"
 #include "memory_utils.hpp"
+#include "warp_transform_network_config.hpp"
+
 
 using namespace hls;
 
@@ -64,23 +66,6 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
-
-/********************************************
- * Internal WarpTransform accelerator command
- ********************************************/
-enum MemTestCmd {
-    WRPTX_IMG_CMD = 2,
-    WRPTX_TXMAT_CMD  = 1,
-    WRPTX_INVLD_CMD = 0
-};
-
-//CMD 8 bitwdith up to 255 commands (0 is invalid)
-#define WARPTRANSFORM_COMMANDS_HIGH_BIT WARPTRANSFORM_COMMANDS_BITWIDTH-1
-#define WARPTRANSFORM_COMMANDS_LOW_BIT 0
-#define WARPTRANSFORM_COMMANDS_BITWIDTH 8
-typedef unsigned int  img_meta_t; 
-#define TRANSFORM_MATRIX_DIM 9
-const unsigned int const_tx_matrix_dim=TRANSFORM_MATRIX_DIM;
 #define ROLE_IS_WARPTRANSFORM
 
 #define WAIT_FOR_META             0

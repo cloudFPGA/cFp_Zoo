@@ -46,7 +46,7 @@
 #define RESET 0
 #define PROCESSING_PACKET 1
 #define PROCESSING_PACKET_TXMAT 2
-
+#define OUT_STATE 3
 
 /*****************************************************************************
  * @brief print the binary representation of a target pointer buffer of a given size.
@@ -171,11 +171,13 @@ int main(int argc, char * argv[]) {
         switch(parseFSM)
         {
         case PROCESSING_PACKET:
+	{
             printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
             //-- Read incoming data chunk
-            memcpy(readWord, init_buff, sizeof(char));
+            memcpy(readWord, init_buff+buff_ptr, sizeof(char));
             printf("Read some data %s\n",readWord);
-            buff_ptr+=sizeof(char);
+            printBits(sizeof(char), readWord);
+	    buff_ptr+=sizeof(char);
             switch(*readWord)//the command is in the first 8 bits
             {
             case(WRPTX_TXMAT_CMD):{
@@ -197,6 +199,7 @@ int main(int argc, char * argv[]) {
                 img_pixels = img_rows * img_cols * img_chan;
                 unsigned int meta_by_images = img_pixels/PACK_SIZE;
                 std::cout << "DEBUG parseRXData pixels " << img_pixels << std::endl;
+		parseFSM = OUT_STATE;
                 }
             //TODO: fix the default case
             default:{
@@ -205,8 +208,9 @@ int main(int argc, char * argv[]) {
                 }
 
             }
-
+	 }//case
         case PROCESSING_PACKET_TXMAT:
+	    {
             printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET_TXMAT\n");
             //-- Read incoming data chunk
             for(int i =0; i<TRANSFORM_MATRIX_DIM; i++){
@@ -215,9 +219,18 @@ int main(int argc, char * argv[]) {
                 memcpy(&tmp1, init_buff+buff_ptr , sizeof(float));
                 buff_ptr+=sizeof(float);
                 tx_matrix[tx_mat_idx]=tmp1.f;
+		cout<<"DEBUG: reading th value " << i << " with val=" << tx_matrix[tx_mat_idx] << endl;
                 tx_mat_idx++; // it seems equal to i
             }
             buff_ptr+=sizeof(float);
+            tx_mat_idx=0;
+            parseFSM = PROCESSING_PACKET;
+	    cout << "DEBUG: going to processing pckt" << endl;
+	    }
+	 case OUT_STATE:
+	    {
+	    cout << "INFO: exiting from the parsingFSM" << endl;
+	    }
         }
         img_pixels = img_rows * img_cols * img_chan;
         
@@ -250,7 +263,8 @@ int main(int argc, char * argv[]) {
             }
             //if run-time img dims, first step catching if img in receivign the compute those numbers
         
-        cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf), ocv_out_img; // OR vec.data() instead of ptr
+        cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
+        cv::Mat ocv_out_img(img_rows, img_cols, INPUT_TYPE_HOST); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
@@ -261,8 +275,10 @@ int main(int argc, char * argv[]) {
 
 	    // We save the image received from network in order to process it with the warp_transform HLS TB
 	    imwrite("../../../../../../ROLE/vision/hls/warp_transform/test/input_from_udp_to_fpga.png", frame);
+	imwrite("./input_from_udp_to_fpga"+to_string(num_frame)+".png", frame);
         cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, tx_matrix);
         ocv_ref(frame, ocv_out_img, transformation_matrix);
+	imwrite("./out_to_fpga"+to_string(num_frame)+".png", ocv_out_img);
         //free(longbuf);
  	delete longbuf;  
 	        
