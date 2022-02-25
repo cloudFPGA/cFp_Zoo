@@ -1,6 +1,9 @@
 #!/bin/bash
+ctrl_c() {
+	echo "WARNING cntrl c trapped :)"
+}
 ping_fpga(){
-	ping -c 16 $1
+	ping -c 14 $1
 }
 
 warm_up_fpga () {
@@ -117,4 +120,5 @@ do
 	echo -e "\n Done with iteration $i\n"
 done
 
+trap ctrl_c INT
 echo -e "\n************ Benchmark Completed :) *******************\n"

@@ -173,7 +173,7 @@ int main(int argc, char * argv[]) {
         case PROCESSING_PACKET:
             printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
             //-- Read incoming data chunk
-            memcpy(readWord, init_buff, sizeof(char));
+            memcpy(readWord, init_buff+buff_ptr, sizeof(char));
             printf("Read some data %s\n",readWord);
             printBits(sizeof(char), readWord);
 	    buff_ptr+=sizeof(char);
@@ -219,6 +219,7 @@ int main(int argc, char * argv[]) {
                 tx_mat_idx++; // it seems equal to i
             }
             buff_ptr+=sizeof(float);
+            parseFSM = PROCESSING_PACKET_TXMAT;
         }
         img_pixels = img_rows * img_cols * img_chan;
         
