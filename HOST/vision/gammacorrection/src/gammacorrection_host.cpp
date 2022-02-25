@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
 
 /*****************************************************************************
  * @file       gammacorrection_host.cpp
@@ -35,18 +50,18 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-void print_cFpVitis(void)
+void print_cFpZoo(void)
 {
         cout <<  "                                                          " << endl;
 	cout <<  "...build with:                                            " << endl;
-	cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
-	cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
-	cout <<  "██║     █████╗  ██████╔╝  ██║   ██║██║   ██║   ██║███████╗" << endl;
-	cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
-	cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
-	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-	cout <<  "                                                          " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███████╗ ██████╗  ██████╗      " << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ╚══███╔╝██╔═══██╗██╔═══██╗     " << endl;
+	cout <<  "██║     █████╗  ██████╔╝     ███╔╝ ██║   ██║██║   ██║     " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝     ███╔╝  ██║   ██║██║   ██║     " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
+	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
 
 
@@ -117,7 +132,7 @@ int main(int argc, char * argv[]) {
     out_video_file += "_fpga_img_out.avi";
     VideoWriter video(out_video_file,CV_FOURCC('M','J','P','G'),10, Size(FRAME_WIDTH,FRAME_HEIGHT));    
    
-    print_cFpVitis();
+    print_cFpZoo();
     
     try {
           

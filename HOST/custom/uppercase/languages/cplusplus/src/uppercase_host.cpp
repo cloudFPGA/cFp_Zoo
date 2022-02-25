@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
 
 /*****************************************************************************
  * @file       uppercase_host.cpp
@@ -21,7 +36,7 @@
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
 #include <string.h>
-#include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
+#include "PracticalSockets.h" // For UDPSocket and SocketException
 #include "../include/config.h"
 
 using namespace std;
@@ -33,22 +48,21 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-void print_cFpUppercase(void)
+                                                                                                    
+void print_cFpZoo(void)
+        // http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=cFp_Zoo
 {
-	// http://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=cFp_Uppercase
         cout <<  "                                                          " << endl;
 	cout <<  "...build with:                                            " << endl;
-	cout <<  " ██████╗███████╗██████╗    ██╗   ██╗██████╗ ██████╗ ███████╗██████╗  ██████╗ █████╗ ███████╗███████╗" << endl;
-	cout <<  "██╔════╝██╔════╝██╔══██╗   ██║   ██║██╔══██╗██╔══██╗██╔════╝██╔══██╗██╔════╝██╔══██╗██╔════╝██╔════╝" << endl;
-	cout <<  "██║     █████╗  ██████╔╝   ██║   ██║██████╔╝██████╔╝█████╗  ██████╔╝██║     ███████║███████╗█████╗  " << endl;
-	cout <<  "██║     ██╔══╝  ██╔═══╝    ██║   ██║██╔═══╝ ██╔═══╝ ██╔══╝  ██╔══██╗██║     ██╔══██║╚════██║██╔══╝  " << endl;
-	cout <<  "╚██████╗██║     ██║███████╗╚██████╔╝██║     ██║     ███████╗██║  ██║╚██████╗██║  ██║███████║███████╗" << endl;
- 	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═════╝ ╚═╝     ╚═╝     ╚══════╝╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝" << endl;
-	cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-	cout <<  "                                                          " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███████╗ ██████╗  ██████╗      " << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ╚══███╔╝██╔═══██╗██╔═══██╗     " << endl;
+	cout <<  "██║     █████╗  ██████╔╝     ███╔╝ ██║   ██║██║   ██║     " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝     ███╔╝  ██║   ██║██║   ██║     " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
+	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
-                                                                                                    
-
 
 
 
@@ -99,7 +113,7 @@ int main(int argc, char *argv[])
     //UDPSocket *udpsock_p;
     //TCPSocket *tcpsock_p;
   
-    print_cFpUppercase();
+    print_cFpZoo();
     
     try {
           

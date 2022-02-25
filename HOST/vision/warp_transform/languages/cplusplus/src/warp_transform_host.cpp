@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
 
 /*****************************************************************************
  * @file       warp_transform_host.cpp
@@ -48,18 +63,18 @@ void delay(unsigned int mseconds)
     while (goal > clock());
 }
 
-void print_cFpVitis(void)
+void print_cFpZoo(void)
 {
-    cout <<  "                                                          " << endl;
-    cout <<  "...build with:                                            " << endl;
-    cout <<  " ██████╗███████╗██████╗   ██╗   ██╗██╗████████╗██╗███████╗" << endl;
-    cout <<  "██╔════╝██╔════╝██╔══██╗  ██║   ██║██║╚══██╔══╝██║██╔════╝" << endl;
-    cout <<  "██║     █████╗  █████╔╝  ██║   ██║██   ██║   ██║███████╗" << endl;
-    cout <<  "██║     ██╔══╝  ██╔═══╝   ╚██╗ ██╔╝██║   ██║   ██║╚════██║" << endl;
-    cout <<  "╚██████╗██║     ██║███████╗╚████╔╝ ██║   ██║   ██║███████║" << endl;
-    cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝ ╚═══╝  ╚═╝   ╚═╝   ╚═╝╚══════╝" << endl;
-    cout <<  "A cloudFPGA project from IBM ZRL               v1.0 --did " << endl;
-    cout <<  "                                                          " << endl;
+        cout <<  "                                                          " << endl;
+	cout <<  "...build with:                                            " << endl;
+	cout <<  " ██████╗███████╗██████╗    ███████╗ ██████╗  ██████╗      " << endl;
+	cout <<  "██╔════╝██╔════╝██╔══██╗   ╚══███╔╝██╔═══██╗██╔═══██╗     " << endl;
+	cout <<  "██║     █████╗  ██████╔╝     ███╔╝ ██║   ██║██║   ██║     " << endl;
+	cout <<  "██║     ██╔══╝  ██╔═══╝     ███╔╝  ██║   ██║██║   ██║     " << endl;
+	cout <<  "╚██████╗██║     ██║███████╗███████╗╚██████╔╝╚██████╔╝     " << endl;
+	cout <<  " ╚═════╝╚═╝     ╚═╝╚══════╝╚══════╝ ╚═════╝  ╚═════╝      " << endl;
+	cout <<  "A cloudFPGA project from IBM ZRL                    v1.0  " << endl;
+	cout <<  "Quantitative Finance Monte-Carlo European Pricing Engine  " << endl;
 }
 
 /*****************************************************************************
@@ -83,6 +98,53 @@ void resizeCropSquare(const cv::Mat &input, const cv::Mat &output, const cv::Siz
     // printf("w=%d, h=%d, min_size=%d, x=%d, y=%d, width=%d, height=%d\n", w, h, min_size, x, y, width, height);
     cv::Mat crop_img = input(Rect(x, y, min_size, min_size));
     resize(crop_img, output, Size(dstSize.width, dstSize.height), 0, 0, interpolation);
+}
+
+string prepareWarpTransformCommand(unsigned int rows, unsigned int cols, unsigned int channels,float * transform_matrix){
+    string out;
+    unsigned int bytes_per_line = 8;
+    char tx_cmd [bytes_per_line];
+    char img_cmd [bytes_per_line];
+    char value_cmd[bytes_per_line];
+
+    //init tx and img cmd
+    for (unsigned int k = 0; k < bytes_per_line; k++) {
+       value_cmd[k]    = (char)0;
+        if (k != 0) {
+            tx_cmd[k] = (char)0;
+            img_cmd[k] = (char)0;
+        }
+        else {
+            tx_cmd[k] = (char)1; 
+            img_cmd[k] = (char)2;
+        }
+     }
+    out = out.append(tx_cmd,bytes_per_line);
+
+    //dump the even elements of the tx matrix
+    int off = 4;
+    for (int i = 0; i < 8; i++)
+    {
+        memcpy(value_cmd+off, (float*)transform_matrix+i, 4);
+        off += 4;
+        off = off % bytes_per_line;
+        if (i%2 && i!=0)
+        {
+            //dump matrix
+            out = out.append(value_cmd,bytes_per_line);
+        }
+    }
+    //dump last value
+    unsigned int zero_constant = 0;
+    memcpy(value_cmd, (char*)transform_matrix+8, 4);
+    memcpy(value_cmd, (char*)&zero_constant, 4);
+    out = out.append(value_cmd,bytes_per_line);
+    //creating img mat cmd
+    memcpy(img_cmd+6, (char*)&rows, 2);
+    memcpy(img_cmd+4, (char*)&cols, 2);
+    img_cmd[1]=channels;
+    out = out.append(img_cmd,bytes_per_line);
+    return string(out);
 }
 
 
@@ -178,7 +240,7 @@ int main(int argc, char * argv[]) {
     // float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};
     // float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
     // float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
-    float transformation_matrix_float [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0};
+    float transformation_matrix_float [9] = {1.5,0,0,0,1.8,0,0,0,0};
     cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     /////////////////
     string out_img_file;
@@ -198,7 +260,7 @@ int main(int argc, char * argv[]) {
 
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME) 
 
-    print_cFpVitis();
+    print_cFpZoo();
     
     try {
           
@@ -243,6 +305,7 @@ int main(int argc, char * argv[]) {
         }
         
 #endif // INPUT_FROM_CAMERA
+        std::string warptx_cmd = prepareWarpTransformCommand(FRAME_WIDTH, FRAME_HEIGHT, send.channels(), transformation_matrix_float);
         
         //frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         unsigned int num_frame = 0;
@@ -265,6 +328,8 @@ int main(int argc, char * argv[]) {
                 cout << "WARNING: Input frame was resized from " << frame.cols << "x" 
                         << frame.rows << " to " << send.cols << "x" << send.rows << endl;
             }
+                imwrite("testimg.png", frame);
+
             assert(send.total() == FRAME_WIDTH * FRAME_HEIGHT);
             // Ensure that the selection of MTU is a multiple of 8 (Bytes per transaction)
             assert(PACK_SIZE % 8 == 0);
@@ -281,29 +346,37 @@ int main(int argc, char * argv[]) {
 
             unsigned int send_total = send.total();
             unsigned int send_channels = send.channels();
-
+            unsigned int warptx_cmd_size = warptx_cmd.length();
 #else // PY_WRAP == PY_WRAP_WARPTRANSFORM_NUMPI
-    
-            unsigned int send_total = (unsigned int)total_size;
+////TODO: warptx cmds
+            unsigned int send_total = (unsigned int)total_size +  warptx_cmd_size; //TBC!!!!!!!!!!!!!!!!!
             unsigned int send_channels = 1; // FIXME: It is ok only for 1-d array, i.e. CV_8UC1
             unsigned char * sendarr = input_img;
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 
-            unsigned int total_pack  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
+            unsigned int total_pack  = 1 + (send_total * send_channels - 1 +  warptx_cmd_size) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
-            unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
+            unsigned int bytes_in_last_pack = send_total * send_channels +  warptx_cmd_size - (total_pack - 1) * PACK_SIZE;
             assert(total_pack == TOT_TRANSFERS);
 
-            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
-	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack * sizeof (unsigned char));
+            unsigned int total_pack_rx  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
+            unsigned int total_bytes_rx = total_pack_rx * PACK_SIZE;
+            unsigned int bytes_in_last_pack_rx = send_total * send_channels - (total_pack_rx- 1) * PACK_SIZE;
 
-//            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
-//            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
-//            cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-//            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
-//            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
-//            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
-//            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
+            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
+	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack_rx * sizeof (unsigned char));
+
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: Total packets to send= " << total_pack << endl;
+            cout << "INFO: Total packets to receive = " << total_pack_rx << endl;
+            cout << "INFO: Total bytes to send   = " << send_total * send_channels +  warptx_cmd_size << endl;
+            cout << "INFO: Total bytes to receive   = " << send_total * send_channels << endl;
+            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
+            cout << "INFO: Total bytes in " << total_pack_rx << " packets = "  << total_bytes_rx << endl;
+            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+            cout << "INFO: Bytes in last packet to receive    = " << bytes_in_last_pack_rx << endl;
+            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 	    
@@ -316,9 +389,9 @@ int main(int argc, char * argv[]) {
             clock_t end_cycle_warp_transform_sw = clock();
             double duration_warp_transform_sw = (end_cycle_warp_transform_sw - start_cycle_warp_transform_sw) / 
                                             (double) CLOCKS_PER_SEC;
-//            cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl;
-//            cout << "INFO: Effective FPS SW:" << (1 / duration_warp_transform_sw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_warp_transform_sw / 1024 * 8) << endl;
+            cout << "INFO: SW exec. time:" << duration_warp_transform_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW:" << (1 / duration_warp_transform_sw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_warp_transform_sw / 1024 * 8) << endl;
 
             //------------------------------------------------------
             //-- STEP-5 : RUN WARPTRANSFORM DETECTOR FROM cF (HW)
@@ -329,9 +402,13 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------
 
             // Anchor a pointer on cvMat raw data
-            unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
-
-
+            unsigned char * sendarr_img = send.isContinuous()? send.data: send.clone().data;
+            // unsigned char * sendarr = send.isContinuous()? send.data: send.clone().data;
+            // warptx_cmd = warptx_cmd.append(sendarr_img, send_total * send_channels);
+	        unsigned char * sendarr = (unsigned char *) malloc (send_total * send_channels +  warptx_cmd_size);
+            memcpy(sendarr,warptx_cmd.c_str(), warptx_cmd_size);
+            memcpy(sendarr+warptx_cmd_size,sendarr_img, send_total * send_channels);
+            
 #endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
     
             clock_t start_cycle_warp_transform_hw = clock();
@@ -350,13 +427,13 @@ int main(int argc, char * argv[]) {
                 #else
                 sock.send( & sendarr[i * PACK_SIZE], sending_now);
                 #endif
-                //delay(200);  
+                //delay(500);  
             }
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
-//                 total_pack / duration_tx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
+                 total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
         
         
@@ -365,7 +442,7 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------    
             clock_t last_cycle_rx = clock();
             unsigned int receiving_now = PACK_SIZE;
-//            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
+            cout << "INFO: Expecting length of packs:" << total_pack_rx << " from " <<  servAddress << ":" << servPort << endl;
             //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
@@ -386,23 +463,24 @@ int main(int argc, char * argv[]) {
                 memcpy( & longbuf[i], buffer, recvMsgSize);
                 //cout << "DEBUG: i=" << i << " recvMsgSize=" << recvMsgSize << endl;
                 i += recvMsgSize;
-                //delay(200);
+                //delay(500);
             }
-//            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
-//                    total_pack / duration_rx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack_rx / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
 
             clock_t end_cycle_warp_transform_hw = next_cycle_rx;
 
             double duration_warp_transform_hw = (end_cycle_warp_transform_hw - start_cycle_warp_transform_hw) / 
                                                 (double) CLOCKS_PER_SEC;
-//            cout << "INFO: HW exec. time:" << duration_warp_transform_hw << " seconds" << endl;
-//            cout << "INFO: Effective FPS HW:" << (1 / duration_warp_transform_hw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_warp_transform_hw / 1024 * 8) << endl;
+            cout << "INFO: HW exec. time:" << duration_warp_transform_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW:" << (1 / duration_warp_transform_hw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_warp_transform_hw / 1024 * 8) << endl;
+                    ////TODO: do we account for the cmd or not? if not is total_pack_rx
                     
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_WARPTRANSFORM_FILENAME)
 
@@ -458,9 +536,9 @@ int main(int argc, char * argv[]) {
 #endif // WRITE_OUTPUT_FILE
             waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
-//            cout << "\\___________________________________________________________________/" << endl
-//            << endl;
+            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
+            cout << "\\___________________________________________________________________/" << endl
+            << endl;
             //delete(longbuf);
 	    free (longbuf);
         } // while loop

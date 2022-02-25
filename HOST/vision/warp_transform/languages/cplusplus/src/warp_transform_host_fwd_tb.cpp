@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
+
 /*****************************************************************************
  * @file       warp_transform_host_fwd_tb.cpp
  * @brief      Testbench for WarpTransform userspace application for cF (x86, ppc64).
@@ -138,7 +154,8 @@ int main(int argc, char * argv[]) {
 	    // the first time.
 	    clean_cmd = " ";
 	    if (num_frame == 1) {
-	      clean_cmd = "make clean && ";
+	      clean_cmd = "";
+	      //clean_cmd = "make clean && ";
 	    }
 	    string str_command = "cd ../../../../../../ROLE/vision/hls/warp_transform/ && " + clean_cmd + synth_cmd + "\
 				  INPUT_IMAGE=./test/input_from_udp_to_fpga.png " + exec_cmd + " && \

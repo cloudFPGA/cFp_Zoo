@@ -17,15 +17,15 @@ echo "    \"srat-conf\": {">> cFp.json
 echo "        \"version\": 0.3,">> cFp.json
 echo "        \"roles\": [">> cFp.json
 echo "        {">> cFp.json
-echo "                \"name\": \"default\",">> cFp.json
-echo "                \"path\": \"\"">> cFp.json
+echo "                \"name\": \"$1\",">> cFp.json
+echo "                \"path\": \"$1/\"">> cFp.json
 echo "            },">> cFp.json
 echo "            {">> cFp.json
-echo "                \"name\": \"1st-role\",">> cFp.json
-echo "                \"path\": \"$1/\"">> cFp.json
+echo "                \"name\": \"2nd-role\",">> cFp.json
+echo "                \"path\": \"2nd-role/\"">> cFp.json
 echo "            }">> cFp.json
 echo "        ],">> cFp.json
-echo "        \"active_role\": \"1st-role\"">> cFp.json
+echo "        \"active_role\": \"$1\"">> cFp.json
 echo "    }">> cFp.json
 echo "}" >> cFp.json
     

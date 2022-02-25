@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
+
 /*****************************************************************************
  * @file       warp_transform.cpp
  * @brief      The Role for a WarpTransform Example application (UDP or TCP)
@@ -57,7 +73,7 @@ void warp_transform(
     //---- Write Path (S2MM) -----------
     stream<DmCmd>               &soMemWrCmdP0,
     stream<DmSts>               &siMemWrStsP0,
-    stream<Axis<MEMDW_512> >    &soMemWriteP0,
+    stream<Axis<MEMDW_512>>    &soMemWriteP0,
     //------------------------------------------------------
     //-- SHELL / Role / Mem / Mp1 Interface
     //------------------------------------------------------    
@@ -113,7 +129,7 @@ const unsigned int ddr_latency = DDR_LATENCY;
 // When max burst size is 1KB, with 512bit bus we get 16 burst transactions
 // When max burst size is 4KB, with 512bit bus we get 64 burst transactions
 const unsigned int max_axi_rw_burst_length = 64;
-const unsigned int num_outstanding_transactions = 256;//16;
+const unsigned int num_outstanding_transactions = 256;
 
 // Mapping LCL_MEM0 interface to moMEM_Mp1 channel
 #pragma HLS INTERFACE m_axi depth=ddr_mem_depth port=lcl_mem0 bundle=moMEM_Mp1\
@@ -141,7 +157,7 @@ const unsigned int num_outstanding_transactions = 256;//16;
   static bool write_chunk_to_ddr_pending;
   static bool ready_to_accept_new_data;
   static bool signal_init;
-  const int tot_transfers = TOT_TRANSFERS;
+  const int tot_transfers = TOT_TRANSFERS_TX;
   const unsigned int  loop_cnt = (MEMDW_512/BITS_PER_10GBITETHRNET_AXI_PACKET);
   const unsigned int bytes_per_loop = (BYTES_PER_10GBITETHRNET_AXI_PACKET*loop_cnt);
 
@@ -181,25 +197,42 @@ const unsigned int num_outstanding_transactions = 256;//16;
 #pragma HLS stream variable=img_out_axi_stream depth=img_out_axi_stream_depth
 #endif
 
+static stream<float> sTxMatrix("sTxMatrix");
+#pragma HLS stream variable=sTxMatrix depth=const_tx_matrix_dim
 
-  
- pPortAndDestionation(
+// static float tx_matrix[TRANSFORM_MATRIX_DIM] = {1.5,0,0,0,1.8,0,0,0,0}; //scaling (reduction) left corner!!!
+// #pragma HLS reset variable=tx_matrix
+img_meta_t img_rows = FRAME_HEIGHT;
+img_meta_t img_cols = FRAME_WIDTH;
+img_meta_t img_chan = NPC1;
+#pragma HLS reset variable=img_rows
+#pragma HLS reset variable=img_cols
+#pragma HLS reset variable=img_chan
+
+pPortAndDestionation(
         pi_rank, 
         pi_size, 
         sDstNode_sig, 
         po_rx_ports
-        );
+);
   
 #ifdef ENABLE_DDR
 
  pRXPathNetToStream< membus_t, 
  loop_cnt,
- TRANSFERS_PER_CHUNK>(
+ TRANSFERS_PER_CHUNK,
+ IMGSIZE,
+ BYTES_PER_10GBITETHRNET_AXI_PACKET>(
         siSHL_This_Data,
         siNrc_meta,
         sRxtoTx_Meta,
         img_in_axi_stream,
-        sMemBurstRx
+        sMemBurstRx,
+        &img_rows,
+        &img_cols,
+        &img_chan,
+        // tx_matrix
+        sTxMatrix
     );
  
  pRXPathStreamToDDR< Axis<MEMDW_512>, 
@@ -214,7 +247,10 @@ const unsigned int num_outstanding_transactions = 256;//16;
         soMemWriteP0,
         //---- P1 Memory mapped ---------------
         //&processed_bytes_rx,
-        sImageLoaded
+        sImageLoaded,
+        &img_rows,
+        &img_cols,
+        &img_chan
     );
  
  
@@ -243,7 +279,12 @@ const unsigned int num_outstanding_transactions = 256;//16;
         img_in_axi_stream,
         img_out_axi_stream,
 #endif
-        sImageLoaded
+        sImageLoaded,
+        &img_rows,
+        &img_cols,
+        &img_chan,
+        // tx_matrix
+        sTxMatrix
         );
 
   pTXPath(
@@ -253,7 +294,10 @@ const unsigned int num_outstanding_transactions = 256;//16;
         sRxtoTx_Meta,
         sDstNode_sig,
         &processed_word_tx,
-        pi_rank
+        pi_rank,
+        &img_rows,
+        &img_cols,
+        &img_chan
         );
 }
 

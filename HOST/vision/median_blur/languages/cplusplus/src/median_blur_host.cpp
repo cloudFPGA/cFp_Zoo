@@ -1,4 +1,3 @@
-
 /*****************************************************************************
  * @file       median_blur_host.cpp
  * @brief      MedianBlur userspace application for cF (x86, ppc64).

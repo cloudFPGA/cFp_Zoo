@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
+
 /*****************************************************************************
  * @file       warp_transform.hpp
  * @brief      The Role for a WarpTransform Example application (UDP or TCP)
@@ -37,7 +53,6 @@ using namespace hls;
 
 // Define this option to load data from network to DDR memory before calling the kernel.
 #define ENABLE_DDR
-
 /********************************************
  * SHELL/MMIO/EchoCtrl - Config Register
  ********************************************/
@@ -47,6 +62,23 @@ enum EchoCtrl {
 	ECHO_OFF	= 2
 };
 
+
+/********************************************
+ * Internal WarpTransform accelerator command
+ ********************************************/
+enum MemTestCmd {
+    WRPTX_IMG_CMD = 2,
+    WRPTX_TXMAT_CMD  = 1,
+    WRPTX_INVLD_CMD = 0
+};
+
+//CMD 8 bitwdith up to 255 commands (0 is invalid)
+#define WARPTRANSFORM_COMMANDS_HIGH_BIT WARPTRANSFORM_COMMANDS_BITWIDTH-1
+#define WARPTRANSFORM_COMMANDS_LOW_BIT 0
+#define WARPTRANSFORM_COMMANDS_BITWIDTH 8
+typedef unsigned int  img_meta_t; 
+#define TRANSFORM_MATRIX_DIM 9
+const unsigned int const_tx_matrix_dim=TRANSFORM_MATRIX_DIM;
 #define ROLE_IS_WARPTRANSFORM
 
 #define WAIT_FOR_META             0
@@ -68,6 +100,11 @@ enum EchoCtrl {
 #define FSM_WR_PAT_STS_A            16
 #define FSM_WR_PAT_STS_B            17
 #define FSM_WR_PAT_STS_C            18
+#define PROCESSING_PACKET_TXMAT     19           
+#define PROCESSING_PACKET_IMGMAT    20           
+#define WAIT_FOR_META_IMGMAT        21           
+#define PUSH_REMAINING_META        22           
+
 #define PacketFsmType uint8_t
 
 

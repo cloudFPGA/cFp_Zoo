@@ -1,3 +1,19 @@
+/*******************************************************************************
+ * Copyright 2016 -- 2022 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+*******************************************************************************/
+
 /*****************************************************************************
  * @file       : test_warp_transform.cpp
  * @brief      : Testbench for WarpTransform.
@@ -48,7 +64,7 @@ using namespace std;
 #define DEBUG_TRACE true
 
 // The number of sequential testbench executions
-#define TB_TRIALS   2
+#define TB_TRIALS   3
 
 // Enable delay in the response channel of DDR AXI controller
 #define ENABLE_DDR_EMULATE_DELAY_IN_TB
@@ -169,7 +185,8 @@ int main(int argc, char** argv) {
     // float xscale_tx_mat [9] = {1,0,0,0,2,0,0,0,0};
     // float rotation_30degree_tx_mat [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0}; //cos -sin 0 sin cos 0 000
     // float shearing_tx_mat [9] = {1,0.5,0,0,1,0,0,0,0}; //1 cx 0 cy 1 0 000
-    float transformation_matrix_float [9] = {0.87,-0.5,0,0.5,0.87,0,0,0,0};
+    //float transformation_matrix_float [9] = {1,0,0,0,-1,256,0,0,0};// reflect wrt x
+    float transformation_matrix_float [9] = {1.5,0,0,0,1.8,0,0,0,0};
     cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, transformation_matrix_float);
     cv::Mat hls_out_img, ocv_out_img;
 
@@ -235,6 +252,13 @@ int main(int argc, char** argv) {
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC8> imgOutput(in_img.rows, in_img.cols);
     static xf::cv::Mat<TYPE, HEIGHT, WIDTH, XF_NPPC1> imgOutputTb(in_img.rows, in_img.cols);
     #endif
+
+    // L2 Vitis WarpTransform
+    warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
+    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    if ( !dumpImgToFile ( imgOutputTb, "verify_UAF_Shl_Data.dat", simCnt) ) {
+        nrErr++;
+    }
     
     while (tb_trials++ < TB_TRIALS) {
    
@@ -248,7 +272,7 @@ int main(int argc, char** argv) {
         nrErr  = 0;
 
 #if NO
-        if ( !dumpImgToFile ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt ) ) {
+        if ( !dumpImgToFileWarpTransform ( imgInput, "ifsSHL_Uaf_Data.dat", simCnt, transformation_matrix_float ) ) {
             nrErr++;
         }
 #endif
@@ -280,7 +304,8 @@ int main(int argc, char** argv) {
 
             //there are TOT_TRANSFERS streams from the the App to the Role
             NetworkMeta tmp_meta = NetworkMeta ( 1,DEFAULT_RX_PORT,0,DEFAULT_RX_PORT,0 );
-            for ( int i=0; i<TOT_TRANSFERS; i++ ) {
+            std::cout << "DEBUG: tx transfer=" << TOT_TRANSFERS_TX << " rx=" << TOT_TRANSFERS_RX << std::endl;
+            for ( int i=0; i<TOT_TRANSFERS_TX; i++ ) {
                 siUdp_meta.write ( NetworkMetaStream ( tmp_meta ) );
             }
             //set correct node_rank and cluster_size
@@ -302,7 +327,7 @@ int main(int argc, char** argv) {
 
             // Keep enough simulation time for sequntially executing the FSMs of the main 3 functions
             // (Rx-Proc-Tx)
-            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10
+            if ( simCnt < MIN_RX_LOOPS + MIN_RX_LOOPS + MIN_TX_LOOPS + 10 + 2 + 4
 #ifdef ENABLE_DDR
 #ifdef ENABLE_DDR_EMULATE_DELAY_IN_TB 
                 + (TYPICAL_DDR_LATENCY + EXTRA_DDR_LATENCY_DUE_II + DDR_LATENCY) * MEMORY_LINES_512
@@ -438,7 +463,7 @@ if (simCnt < 0)
                 assert ( tmp_meta.tdata.dst_rank == ( ( tmp_meta.tdata.src_rank + 1 ) % cluster_size ) );
             }
             //printf("DEBUG: i=%u\tTOT_TRANSFERS=%u\n", i, TOT_TRANSFERS);
-            assert ( i == TOT_TRANSFERS );
+            assert ( i == TOT_TRANSFERS_RX );
         } else {
             printf ( "Error No metadata received...\n" );
             nrErr++;
@@ -464,6 +489,8 @@ if (simCnt < 0)
         } else {
             printf ( "Output data in file \'ofsUAF_Shl_Data.dat\' verified.\n" );
         }
+        const string outfilename = "hls_out-"+std::to_string(tb_trials)+".jpg";
+        xf::cv::imwrite(outfilename.c_str(), imgOutput);
 
         nrErr += rc1;
 
@@ -489,22 +516,22 @@ if (simCnt < 0)
 
     /**************		HLS Function	  *****************/
 
-    #if NO
+    // #if NO
 
-    // L2 Vitis WarpTransform
-    warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
-    xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
+    // // L2 Vitis WarpTransform
+    // warptTransformAccelArray(imgInputArray, transformation_matrix_float,imgOutputArrayTb, in_img.rows, in_img.cols);
+    // xf::cv::Array2xfMat<OUTPUT_PTR_WIDTH, TYPE, HEIGHT, WIDTH, NPIX>(imgOutputArrayTb, imgOutputTb);
         
-    // L1 Vitis WarpTransform 
-    //warp_transform_accel(imgInput, imgOutput, Thresh, k);
+    // // L1 Vitis WarpTransform 
+    // //warp_transform_accel(imgInput, imgOutput, Thresh, k);
 	
-    #endif
+    // #endif
 
-    #if RO
+    // #if RO
 
-    warp_transform_accel(imgInput, imgOutputTb);
+    // warp_transform_accel(imgInput, imgOutputTb);
 
-    #endif
+    // #endif
 
     /// hls_out_img.data = (unsigned char *)imgOutput.copyFrom();
     xf::cv::imwrite("hls_out_tb.jpg", imgOutputTb);
