@@ -46,7 +46,7 @@
 #define RESET 0
 #define PROCESSING_PACKET 1
 #define PROCESSING_PACKET_TXMAT 2
-
+#define OUT_STATE 3
 
 /*****************************************************************************
  * @brief print the binary representation of a target pointer buffer of a given size.
@@ -171,6 +171,7 @@ int main(int argc, char * argv[]) {
         switch(parseFSM)
         {
         case PROCESSING_PACKET:
+	{
             printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET\n");
             //-- Read incoming data chunk
             memcpy(readWord, init_buff+buff_ptr, sizeof(char));
@@ -198,6 +199,7 @@ int main(int argc, char * argv[]) {
                 img_pixels = img_rows * img_cols * img_chan;
                 unsigned int meta_by_images = img_pixels/PACK_SIZE;
                 std::cout << "DEBUG parseRXData pixels " << img_pixels << std::endl;
+		parseFSM = OUT_STATE;
                 }
             //TODO: fix the default case
             default:{
@@ -206,8 +208,9 @@ int main(int argc, char * argv[]) {
                 }
 
             }
-
+	 }//case
         case PROCESSING_PACKET_TXMAT:
+	    {
             printf("DEBUG in parseRXData: parseFSM - PROCESSING_PACKET_TXMAT\n");
             //-- Read incoming data chunk
             for(int i =0; i<TRANSFORM_MATRIX_DIM; i++){
@@ -216,10 +219,18 @@ int main(int argc, char * argv[]) {
                 memcpy(&tmp1, init_buff+buff_ptr , sizeof(float));
                 buff_ptr+=sizeof(float);
                 tx_matrix[tx_mat_idx]=tmp1.f;
+		cout<<"DEBUG: reading th value " << i << " with val=" << tx_matrix[tx_mat_idx] << endl;
                 tx_mat_idx++; // it seems equal to i
             }
             buff_ptr+=sizeof(float);
-            parseFSM = PROCESSING_PACKET_TXMAT;
+            tx_mat_idx=0;
+            parseFSM = PROCESSING_PACKET;
+	    cout << "DEBUG: going to processing pckt" << endl;
+	    }
+	 case OUT_STATE:
+	    {
+	    cout << "INFO: exiting from the parsingFSM" << endl;
+	    }
         }
         img_pixels = img_rows * img_cols * img_chan;
         
