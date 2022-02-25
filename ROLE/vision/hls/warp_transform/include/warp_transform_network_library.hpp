@@ -50,6 +50,7 @@
 #include "memory_utils.hpp" //for stream based communication with ddr
 #include "network.hpp"
 #include "warp_transform_hw_common.hpp"
+#include "warp_transform_network_config.hpp"
 
 using namespace hls;
 
@@ -65,21 +66,7 @@ using namespace hls;
 #endif
 #endif
 
-//64 bits 8 for cmd, 40 rows/cols 3 channels = 51 missing 13
-//If  other info, we need to change how it is working many stuffs I think
-#define WARPTRANSFORM_CHNNEL_BITWIDTH 8
-#define WARPTRANSFORM_COLS_BITWIDTH 16
-#define WARPTRANSFORM_ROWS_BITWIDTH 16
 
-#define WARPTRANSFORM_ROWS_HIGH_BIT NETWORK_WORD_BIT_WIDTH-1 // 63
-#define WARPTRANSFORM_ROWS_LOW_BIT NETWORK_WORD_BIT_WIDTH-WARPTRANSFORM_ROWS_BITWIDTH //64-16 = 48
-
-#define WARPTRANSFORM_COLS_HIGH_BIT WARPTRANSFORM_ROWS_LOW_BIT-1 // 47
-#define WARPTRANSFORM_COLS_LOW_BIT WARPTRANSFORM_ROWS_LOW_BIT-WARPTRANSFORM_COLS_BITWIDTH //48-16 = 32
-
-// #define WARPTRANSFORM_CHNNEL_HIGH_BIT WARPTRANSFORM_COLS_LOW_BIT-1 // 31
-#define WARPTRANSFORM_CHNNEL_HIGH_BIT 16-1 // 15
-#define WARPTRANSFORM_CHNNEL_LOW_BIT 16-WARPTRANSFORM_CHNNEL_BITWIDTH //16-8 = 8
 
 //////////////////////////////////////////////////////////////////////////////
 //////////////////Begin of Network-Related Functions//////////////////////////
