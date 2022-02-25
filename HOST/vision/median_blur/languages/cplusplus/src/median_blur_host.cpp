@@ -21,9 +21,8 @@
 #include <assert.h>                     // For assert()
 #include <string>                       // For to_string
 #include <string.h>                     // For memcpy()
-#include "PracticalSockets.h" // For UDPSocket and SocketException
-#include "config.h"
-#include "util.hpp"
+#include "../../../../../PracticalSockets/src/PracticalSockets.h" // For UDPSocket and SocketException
+#include "../include/config.h"
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME) || (PY_WRAP == PY_WRAP_MEDIANBLUR_NUMPI)
 #include "opencv2/opencv.hpp"
@@ -32,6 +31,7 @@ using namespace cv;
 #endif
 
 using namespace std;
+
 
 void delay(unsigned int mseconds)
 {
@@ -77,7 +77,6 @@ void resizeCropSquare(const cv::Mat &input, const cv::Mat &output, const cv::Siz
 }
 
 
-
 #ifdef PY_WRAP
 #if PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME
 void median_blur(char *s_servAddress, char *s_servPort, char *input_str, char *output_img_str, char *output_points_str)
@@ -96,7 +95,7 @@ int main(int argc, char * argv[]) {
         exit(1);
     }
 #endif // PY_WRAP
-
+    
     //------------------------------------------------------
     //-- STEP-1 : Socket and variables definition
     //------------------------------------------------------
@@ -221,7 +220,7 @@ int main(int argc, char * argv[]) {
             exit(1);
         }
         
-#endif // INPUT_FROM_CAMERA
+        #endif // INPUT_FROM_CAMERA
         
         //frame = cv::imread(argv[3], cv::IMREAD_GRAYSCALE); // reading in the image in grey scale
         unsigned int num_frame = 0;
@@ -268,21 +267,20 @@ int main(int argc, char * argv[]) {
             unsigned char * sendarr = input_img;
 #endif // #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
+   
+
             unsigned int total_pack  = 1 + (send_total * send_channels - 1) / PACK_SIZE;
             unsigned int total_bytes = total_pack * PACK_SIZE;
             unsigned int bytes_in_last_pack = send_total * send_channels - (total_pack - 1) * PACK_SIZE;
             assert(total_pack == TOT_TRANSFERS);
 
-            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
-	    unsigned char * longbuf = (unsigned char *) malloc (PACK_SIZE * total_pack * sizeof (unsigned char));
-
-//            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
-//            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
-//            cout << "INFO: Total packets to send/receive = " << total_pack << endl;
-//            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
-//            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
-//            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
-//            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
+            cout << "INFO: FPGA destination : " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Network socket   : " << ((NET_TYPE == tcp) ? "TCP" : "UDP") << endl;
+            cout << "INFO: Total packets to send/receive = " << total_pack << endl;
+            cout << "INFO: Total bytes to send/receive   = " << send_total * send_channels << endl;
+            cout << "INFO: Total bytes in " << total_pack << " packets = "  << total_bytes << endl;
+            cout << "INFO: Bytes in last packet          = " << bytes_in_last_pack << endl;
+            cout << "INFO: Packet size (custom MTU)      = " << PACK_SIZE << endl;
 
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 	    
@@ -295,9 +293,9 @@ int main(int argc, char * argv[]) {
             clock_t end_cycle_median_blur_sw = clock();
             double duration_median_blur_sw = (end_cycle_median_blur_sw - start_cycle_median_blur_sw) / 
                                             (double) CLOCKS_PER_SEC;
-//            cout << "INFO: SW exec. time:" << duration_median_blur_sw << " seconds" << endl;
-//            cout << "INFO: Effective FPS SW:" << (1 / duration_median_blur_sw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_median_blur_sw / 1024 * 8) << endl;
+            cout << "INFO: SW exec. time:" << duration_median_blur_sw << " seconds" << endl;
+            cout << "INFO: Effective FPS SW:" << (1 / duration_median_blur_sw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_median_blur_sw / 1024 * 8) << endl;
 
             //------------------------------------------------------
             //-- STEP-5 : RUN MEDIANBLUR DETECTOR FROM cF (HW)
@@ -334,8 +332,8 @@ int main(int argc, char * argv[]) {
             
             clock_t next_cycle_tx = clock();
             double duration_tx = (next_cycle_tx - last_cycle_tx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
-//                 total_pack / duration_tx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS TX:" << (1 / duration_tx) << " \tkbps:" << (PACK_SIZE * 
+                 total_pack / duration_tx / 1024 * 8) << endl;
             last_cycle_tx = next_cycle_tx;
         
         
@@ -344,8 +342,8 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------    
             clock_t last_cycle_rx = clock();
             unsigned int receiving_now = PACK_SIZE;
-//            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
-            //unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
+            cout << "INFO: Expecting length of packs:" << total_pack << " from " <<  servAddress << ":" << servPort << endl;
+            unsigned char * longbuf = new unsigned char[PACK_SIZE * total_pack];
             unsigned int loopi=0;
             for (unsigned int i = 0; i < send_total; ) {
                 //cout << "DEBUG: i=" << i << ", loopi=" << loopi++ << endl;
@@ -367,21 +365,21 @@ int main(int argc, char * argv[]) {
                 i += recvMsgSize;
                 //delay(200);
             }
-//            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
+            cout << "INFO: Received packet from " << servAddress << ":" << servPort << endl;
 
             clock_t next_cycle_rx = clock();
             double duration_rx = (next_cycle_rx - last_cycle_rx) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
-//                    total_pack / duration_rx / 1024 * 8) << endl;
+            cout << "INFO: Effective FPS RX:" << (1 / duration_rx) << " \tkbps:" << (PACK_SIZE * 
+                    total_pack / duration_rx / 1024 * 8) << endl;
             last_cycle_rx = next_cycle_rx;
 
             clock_t end_cycle_median_blur_hw = next_cycle_rx;
 
             double duration_median_blur_hw = (end_cycle_median_blur_hw - start_cycle_median_blur_hw) / 
                                                 (double) CLOCKS_PER_SEC;
-//            cout << "INFO: HW exec. time:" << duration_median_blur_hw << " seconds" << endl;
-//            cout << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << " \tkbps:" << 
-//                    (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8) << endl;
+            cout << "INFO: HW exec. time:" << duration_median_blur_hw << " seconds" << endl;
+            cout << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << " \tkbps:" << 
+                    (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8) << endl;
                     
 #if !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
@@ -400,8 +398,8 @@ int main(int argc, char * argv[]) {
             //------------------------------------------------------
 
             ostringstream oss;
-//            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << 
-//                   " \tkbps:" << (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8);
+            oss << "cFp_Vitis E2E:" << "INFO: Effective FPS HW:" << (1 / duration_median_blur_hw) << 
+                   " \tkbps:" << (PACK_SIZE * total_pack / duration_median_blur_hw / 1024 * 8);
             string windowName = "cFp_Vitis End2End"; //oss.str();
 
             //moveWindow(windowName, 0, 0);
@@ -437,11 +435,9 @@ int main(int argc, char * argv[]) {
 #endif // WRITE_OUTPUT_FILE
             waitKey(FRAME_INTERVAL);
             double duration_main = (clock() - start_cycle_main) / (double) CLOCKS_PER_SEC;
-//            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
-//            cout << "\\___________________________________________________________________/" << endl
-//            << endl;
-            //delete(longbuf);
-	    free (longbuf);
+            cout << "INFO: Effective FPS E2E:" << (1 / duration_main) << endl;
+            cout << "\\___________________________________________________________________/" << endl
+            << endl;
         } // while loop
 	
         // When everything done, release the video capture and write object
@@ -454,7 +450,7 @@ int main(int argc, char * argv[]) {
 #else  // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
         //output_img = longbuf;
         memcpy( output_img, longbuf, total_size);
-	free(longbuf);
+        delete(longbuf);
 #endif // !defined(PY_WRAP) || (PY_WRAP == PY_WRAP_MEDIANBLUR_FILENAME)
 
         // Destructor closes the socket
