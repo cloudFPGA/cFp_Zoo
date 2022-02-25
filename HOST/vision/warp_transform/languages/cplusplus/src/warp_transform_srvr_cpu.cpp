@@ -175,7 +175,8 @@ int main(int argc, char * argv[]) {
             //-- Read incoming data chunk
             memcpy(readWord, init_buff, sizeof(char));
             printf("Read some data %s\n",readWord);
-            buff_ptr+=sizeof(char);
+            printBits(sizeof(char), readWord);
+	    buff_ptr+=sizeof(char);
             switch(*readWord)//the command is in the first 8 bits
             {
             case(WRPTX_TXMAT_CMD):{
@@ -250,7 +251,8 @@ int main(int argc, char * argv[]) {
             }
             //if run-time img dims, first step catching if img in receivign the compute those numbers
         
-        cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf), ocv_out_img; // OR vec.data() instead of ptr
+        cv::Mat frame(img_rows, img_cols, INPUT_TYPE_HOST, longbuf); // OR vec.data() instead of ptr
+        cv::Mat ocv_out_img(img_rows, img_cols, INPUT_TYPE_HOST); // OR vec.data() instead of ptr
 	    if (frame.size().width == 0) {
                 cerr << "ERROR: receive failure!" << endl;
                 continue;
@@ -261,8 +263,10 @@ int main(int argc, char * argv[]) {
 
 	    // We save the image received from network in order to process it with the warp_transform HLS TB
 	    imwrite("../../../../../../ROLE/vision/hls/warp_transform/test/input_from_udp_to_fpga.png", frame);
+	imwrite("./input_from_udp_to_fpga"+to_string(num_frame)+".png", frame);
         cv::Mat transformation_matrix(TRMAT_DIM1, TRMAT_DIM2, CV_32FC1, tx_matrix);
         ocv_ref(frame, ocv_out_img, transformation_matrix);
+	imwrite("./out_to_fpga"+to_string(num_frame)+".png", ocv_out_img);
         //free(longbuf);
  	delete longbuf;  
 	        
