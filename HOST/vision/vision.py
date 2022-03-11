@@ -29,11 +29,6 @@ import cv2
 import socket
 
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 
 def median_blur(input_array, total_size, fpga_ip, fpga_port):
     bytesToSend = input_array.tostring()
@@ -42,13 +37,12 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
     UDPClientSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
     BUFF_SIZE = 1024#65536
     #UDPClientSocket.setsockopt(socket.SOL_SOCKET,socket.SO_RCVBUF,BUFF_SIZE)
-
     serverAddressPort   = (fpga_ip, fpga_port)
 
     cnt = 0;
     while True:
         print("INFO: Sending bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
-        
+       
         UDPClientSocket.sendto(bytesToSend[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE], serverAddressPort)
         if ((cnt+1)*BUFF_SIZE >= total_size):
             print("INFO: Reached size to sent")
@@ -60,17 +54,10 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
     output_array = np.zeros((total_size,))
     while True:
         print("INFO: Receiving bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
-        
+       
         msgFromServer = UDPClientSocket.recvfrom(BUFF_SIZE)
         print(input_array.dtype)
         y = np.frombuffer(msgFromServer[0], dtype=input_array.dtype)
-        print(type(y))
-        print("y")
-        print(y.shape)
-        print(y.size)
-        print("output_array")
-        print(output_array.shape)
-        print(output_array.size)
         
         print(output_array[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE-1].size)
         output_array[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE] = y
@@ -82,3 +69,9 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
             cnt = cnt + 1
 
     return output_array
+
+
+
+
+if __name__ == '__main__':
+    main(args)
