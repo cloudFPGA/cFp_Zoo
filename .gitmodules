@@ -1,6 +1,6 @@
 [submodule "cFDK"]
 	path = cFDK
-	url = git@github.com:cloudFPGA/cFDK.git
+	url = https://github.com/cloudFPGA/cFDK.git
 [submodule "Vitis_Libraries"]
 	path = Vitis_Libraries
 	url = https://github.com/Xilinx/Vitis_Libraries.git
