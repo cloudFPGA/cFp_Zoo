@@ -19,7 +19,7 @@ cFp_Zoo is a cloudFPGA project (cFp) featuring domain-specific accelerators for 
 
 Assuming Ubuntu >16.04 the folowing packages should be installed:
 ```
-sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev rename rpl dialog cmake swig python3-dev python3.8-venv gcc-multilib(=for vitis)
+sudo apt-get install -y build-essential pkg-config libxml2-dev python3-opencv libjpeg-dev libpng-dev libopencv-dev libopencv-contrib-dev rename rpl dialog cmake swig python3-dev python3.8-venv gcc-multilib
 ```
 
 You may also need these steps for Ubuntu 18.04 & Vitis 2019.2 :
