@@ -26,7 +26,8 @@ import sys
 import os
 
 cpwd = os.path.abspath(__file__)
-sys.path.append(os.path.dirname(cpwd+"/../vision"))
+vision_path = os.path.dirname(cpwd)+"/../vision"
+sys.path.append(vision_path)
 
 import vision
 

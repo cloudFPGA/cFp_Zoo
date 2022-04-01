@@ -27,5 +27,4 @@
 #  *
 
 # assemble the package
-from . import trieres
-
+from .trieres import *
