@@ -61,10 +61,11 @@ from common import clock, draw_str, StatValue
 import video
 import time 
 
-trieres_lib=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/python/build"
-sys.path.append(trieres_lib)
+#trieres_lib=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/python/build"
+#sys.path.append(trieres_lib)
+#import trieres
 
-import _trieres_median_blur_numpi
+from trieres import *
 
 ROI = True
 
@@ -170,7 +171,7 @@ def main():
         if (h_orig>h_frame) and (w_orig>w_frame):
                 roi_x_pos = int((w_orig-w_frame)/2)
                 roi_y_pos = int((h_orig-h_frame)/2)
-                frame_backtorgb = cv.cvtColor(frame,cv.COLOR_GRAY2RGB)
+                frame_backtorgb = cv.cvtColor(np.float32(frame),cv.COLOR_GRAY2RGB)
                 patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
         else:
                 patched_img = frame
@@ -200,7 +201,8 @@ def main():
             # some intensive computation...
             # Flattening the image from 2D to 1D
             image = frame.flatten()
-            output_array = _trieres_median_blur_numpi.median_blur(image, total_size, fpga[0], fpga[1])
+            #output_array = _trieres_median_blur_numpi.median_blur(image, total_size, fpga[0], fpga[1])
+            output_array = trieres.vision.median_blur(image, total_size, fpga[0], int(fpga[1]))
             # Convert 1D array to a 2D numpy array 
             #time.sleep(1)
             frame = np.reshape(output_array, (height, width))
@@ -224,8 +226,8 @@ def main():
     threaded_mode = False
     accel_mode = False
 
-    fpgas = deque([["10.12.200.167" , "2718"],
-                   ["10.12.200.224" , "2719"]])
+    fpgas = deque([["10.12.200.73" , "2718"]]) #,
+#                   ["10.12.200.224" , "2719"]])
 #                   ["10.12.200.11" , "2720"],
 #                   ["10.12.200.19" , "2721"],
 #                   ["10.12.200.29" , "2722"]])
