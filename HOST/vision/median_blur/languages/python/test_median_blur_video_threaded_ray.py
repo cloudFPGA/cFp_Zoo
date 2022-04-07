@@ -1,3 +1,36 @@
+#!/usr/bin/env python
+
+# *****************************************************************************
+# *                            cloudFPGA
+# *                Copyright 2016 -- 2022 IBM Corporation
+# * Licensed under the Apache License, Version 2.0 (the "License");
+# * you may not use this file except in compliance with the License.
+# * You may obtain a copy of the License at
+# *
+# *     http://www.apache.org/licenses/LICENSE-2.0
+# *
+# * Unless required by applicable law or agreed to in writing, software
+# * distributed under the License is distributed on an "AS IS" BASIS,
+# * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# * See the License for the specific language governing permissions and
+# * limitations under the License.
+# *----------------------------------------------------------------------------
+
+## @file   test_median_blur_video_threaded_ray.py
+## @author DID
+## @date   April 2022
+## @brief  A python script for testing the cF median_blur kernel in ray distributed environment. 
+
+'''
+Usage:
+   test_median_blur_numpi_video_threaded.py <video file name>
+
+   Shows how python ray capabilities can be used
+   to organize parallel frame processing pipeline
+   with cloudFPGA.
+
+'''
+
 import ray
 from ray.util.queue import Queue
 
@@ -7,6 +40,7 @@ import numpy as np
 import cv2 as cv
 
 ROI = True
+accel_mode = True
 
 config_file=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/cplusplus/include/config.h"
 
@@ -23,7 +57,6 @@ except:
     print("Coudln't find FRAME_WIDTH or FRAME_HEIGHT in "+ config_file + ". Aborting...")
     exit(0)
 
-#@ray.remote
 def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
     h, w = img.shape[:2]
     if ROI:
@@ -47,7 +80,6 @@ def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
         resized = crop_img
     return resized
 
-#@ray.remote
 def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA):
     h_orig,  w_orig  = orig.shape[:2]
     h_frame, w_frame = frame.shape[:2]
@@ -78,18 +110,21 @@ ray.init(dashboard_port=50051, num_cpus=8)
 fpgas_queue = Queue(maxsize=100)
 
 @ray.remote
-def consumer(i, fpgas_queue, frame):
-    next_item = fpgas_queue.get(block=True, timeout=100)
-    print(f"will work on {next_item} and then put in back in the fpgas_queue")
-    # Adjusting the image file if needed
+def consumer(accel_mode, fpgas_queue, frame):
     orig = frame
     frame_ret = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)    
     frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA)    
-    frame_ret = cv.medianBlur(frame_ret, 9)
+    if accel_mode:
+        next_item = fpgas_queue.get(block=True, timeout=100)
+        print(f"will work on {next_item} and then put in back in the fpgas_queue")
+        # Adjusting the image file if needed
+        frame_ret = cv.medianBlur(frame_ret, 9)
+        fpgas_queue.put(next_item)
+        print(f"finished working on {next_item} Now it is back in the fpgas_queue")
+    else:
+        frame_ret = cv.medianBlur(frame_ret, 9)        
     if ROI:
         frame_ret = patch_sqaure_roi(orig, frame_ret, cv.INTER_AREA)    
-    fpgas_queue.put(next_item)
-    print(f"finished working on {next_item} Now it is back in the fpgas_queue")    
     return frame_ret
 
 
@@ -120,16 +155,13 @@ while(cap.isOpened()):
 # When everything done, release the video capture object
 cap.release()
 
-print("length of ")
+consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i]) for i in range(len(frames))]
 
-
-consumers = [consumer.remote(i, fpgas_queue, frames[i]) for i in range(len(frames))]
-
-[fpgas_queue.put(j) for j in ([["10.12.200.73" , "2718"],
-                        ["10.12.200.24" , "2719"],
-                        ["10.12.200.11" , "2720"],
-                        ["10.12.200.19" , "2721"],
-                        ["10.12.200.29" , "2722"]])]
+[fpgas_queue.put(j) for j in ([ ["10.12.200.73" , "2718"],
+                                ["10.12.200.24" , "2719"],
+                                ["10.12.200.11" , "2720"],
+                                ["10.12.200.19" , "2721"],
+                                ["10.12.200.29" , "2722"]   ])]
 
 results = ray.get(consumers)
 print('Tasks executed')
