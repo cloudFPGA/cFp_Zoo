@@ -38,6 +38,7 @@ import sys
 import os
 import numpy as np
 import cv2 as cv
+from trieres import *
 
 ROI = True
 accel_mode = True
@@ -113,12 +114,16 @@ fpgas_queue = Queue(maxsize=100)
 def consumer(accel_mode, fpgas_queue, frame):
     orig = frame
     frame_ret = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)    
+    # Adjusting the image file if needed
     frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA)    
     if accel_mode:
         next_item = fpgas_queue.get(block=True, timeout=100)
         print(f"will work on {next_item} and then put in back in the fpgas_queue")
-        # Adjusting the image file if needed
-        frame_ret = cv.medianBlur(frame_ret, 9)
+        # Flattening the image from 2D to 1D
+        image = frame_ret.flatten()        
+        output_array = trieres.vision.median_blur(image, total_size, next_item[0], int(next_item[1]))
+        frame_ret = np.reshape(output_array, (height, width))
+        #frame_ret = cv.medianBlur(frame_ret, 9)
         fpgas_queue.put(next_item)
         print(f"finished working on {next_item} Now it is back in the fpgas_queue")
     else:
@@ -157,11 +162,11 @@ cap.release()
 
 consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i]) for i in range(len(frames))]
 
-[fpgas_queue.put(j) for j in ([ ["10.12.200.73" , "2718"],
-                                ["10.12.200.24" , "2719"],
-                                ["10.12.200.11" , "2720"],
-                                ["10.12.200.19" , "2721"],
-                                ["10.12.200.29" , "2722"]   ])]
+[fpgas_queue.put(j) for j in ([ ["10.12.200.73" , "2718"]   ])]
+#                                ["10.12.200.171" , "2719"],
+#                                ["10.12.200.11"  , "2720"],
+#                                ["10.12.200.19"  , "2721"],
+#                                ["10.12.200.29"  , "2722"]   ])]
 
 results = ray.get(consumers)
 print('Tasks executed')
