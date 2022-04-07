@@ -5,12 +5,74 @@ import sys
 import os
 import numpy as np
 import cv2 as cv
-import pims
+
+ROI = True
+
+config_file=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/cplusplus/include/config.h"
+
+with open(config_file) as cfg:
+    for line in cfg:
+        if "#define FRAME_WIDTH" in line:
+            width = int(line.split()[2])
+        elif "#define FRAME_HEIGHT" in line:
+            height = int(line.split()[2])
+try:
+   print("Found in " + config_file + ": width = "+str(width) + ", height = "+str(height))
+   total_size = height * width
+except:
+    print("Coudln't find FRAME_WIDTH or FRAME_HEIGHT in "+ config_file + ". Aborting...")
+    exit(0)
+
+#@ray.remote
+def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
+    h, w = img.shape[:2]
+    if ROI:
+        if (h>height) and (w>width):
+            roi_x_pos = int((w-width) /2)
+            roi_y_pos = int((h-height)/2)
+            crop_img = img[int(roi_y_pos):int(roi_y_pos+height), int(roi_x_pos):int(roi_x_pos+width)]
+        else:
+            crop_img = img
+            print("WARNING: The input image of [", h , " x ", w , "] is not bigger to crop a ROI of [", height  , " x ", width, "]. Will just resize")
+    else:
+        min_size = np.amin([np.amin([h,w]), np.amin([height,width])])
+        # Centralize and crop
+        crop_img = img[int(h/2-min_size/2):int(h/2+min_size/2), int(w/2-min_size/2):int(w/2+min_size/2)]
+    
+    # Adjusting the image file if needed
+    if ((crop_img.shape[0] != height) or (crop_img.shape[1] != width)):
+        print("WARNING: The image was resized from [", crop_img.shape[0] , " x ", crop_img.shape[1] , "] to [", height  , " x ", width, "]")
+        resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
+    else:
+        resized = crop_img
+    return resized
+
+#@ray.remote
+def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA):
+    h_orig,  w_orig  = orig.shape[:2]
+    h_frame, w_frame = frame.shape[:2]
+      
+    patched_img = orig.copy()
+        
+    if (h_orig>h_frame) and (w_orig>w_frame):
+        roi_x_pos = int((w_orig-w_frame)/2)
+        roi_y_pos = int((h_orig-h_frame)/2)
+        frame_backtorgb = cv.cvtColor(np.float32(frame),cv.COLOR_GRAY2RGB)
+        patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
+    else:
+        patched_img = frame
+        print("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI of [", h_frame  , " x ", w_frame, "]. Will just resize")
+    # Adjusting the image file if needed
+    if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
+        print("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
+        resized = cv.resize(patched_img , (w_orig, h_orig), interpolation=interpolation)
+    else:
+        resized = patched_img
+    return resized
+
 
 ray.init(dashboard_port=50051, num_cpus=8)
 
-image_file=os.environ['cFpRootDir'] + "ROLE/vision/hls/harris/test/512x512.png"
-frame = cv.imread(image_file, cv.IMREAD_COLOR)
 
 # You can pass this object around to different tasks/actors
 fpgas_queue = Queue(maxsize=100)
@@ -19,9 +81,13 @@ fpgas_queue = Queue(maxsize=100)
 def consumer(i, fpgas_queue, frame):
     next_item = fpgas_queue.get(block=True, timeout=100)
     print(f"will work on {next_item} and then put in back in the fpgas_queue")
-    #for l in range(10000000):
-    #    k = i + l
-    frame_ret = cv.medianBlur(frame, 9)
+    # Adjusting the image file if needed
+    orig = frame
+    frame_ret = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)    
+    frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA)    
+    frame_ret = cv.medianBlur(frame_ret, 9)
+    if ROI:
+        frame_ret = patch_sqaure_roi(orig, frame_ret, cv.INTER_AREA)    
     fpgas_queue.put(next_item)
     print(f"finished working on {next_item} Now it is back in the fpgas_queue")    
     return frame_ret
