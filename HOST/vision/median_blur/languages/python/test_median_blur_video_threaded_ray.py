@@ -38,12 +38,15 @@ import sys
 import os
 import numpy as np
 import cv2 as cv
+import logging
 from trieres import *
 
 ROI = True
 accel_mode = True
+debug_level = logging.INFO
 
 config_file=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/cplusplus/include/config.h"
+logging.basicConfig(level=debug_level)
 
 with open(config_file) as cfg:
     for line in cfg:
@@ -52,13 +55,15 @@ with open(config_file) as cfg:
         elif "#define FRAME_HEIGHT" in line:
             height = int(line.split()[2])
 try:
-   print("Found in " + config_file + ": width = "+str(width) + ", height = "+str(height))
+   logging.info("Found image dimensions in " + config_file + ": width = "+str(width) + ", height = "+str(height))
    total_size = height * width
 except:
-    print("Coudln't find FRAME_WIDTH or FRAME_HEIGHT in "+ config_file + ". Aborting...")
+    logging.error("Coudln't find FRAME_WIDTH or FRAME_HEIGHT in "+ config_file + ". Aborting...")
     exit(0)
 
-def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
+def crop_square_roi(img, size, interpolation=cv.INTER_AREA, debug_level=debug_level):
+    logging.basicConfig(level=debug_level)
+    
     h, w = img.shape[:2]
     if ROI:
         if (h>height) and (w>width):
@@ -67,7 +72,7 @@ def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
             crop_img = img[int(roi_y_pos):int(roi_y_pos+height), int(roi_x_pos):int(roi_x_pos+width)]
         else:
             crop_img = img
-            print("WARNING: The input image of [", h , " x ", w , "] is not bigger to crop a ROI of [", height  , " x ", width, "]. Will just resize")
+            logging.warning("WARNING: The input image of [", h , " x ", w , "] is not bigger to crop a ROI of [", height  , " x ", width, "]. Will just resize")
     else:
         min_size = np.amin([np.amin([h,w]), np.amin([height,width])])
         # Centralize and crop
@@ -75,13 +80,15 @@ def crop_square_roi(img, size, interpolation=cv.INTER_AREA):
     
     # Adjusting the image file if needed
     if ((crop_img.shape[0] != height) or (crop_img.shape[1] != width)):
-        print("WARNING: The image was resized from [", crop_img.shape[0] , " x ", crop_img.shape[1] , "] to [", height  , " x ", width, "]")
+        logging.warning("WARNING: The image was resized from [", crop_img.shape[0] , " x ", crop_img.shape[1] , "] to [", height  , " x ", width, "]")
         resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
     else:
         resized = crop_img
     return resized
 
-def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA):
+def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug_level):
+    logging.basicConfig(level=debug_level)
+    
     h_orig,  w_orig  = orig.shape[:2]
     h_frame, w_frame = frame.shape[:2]
       
@@ -94,42 +101,44 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA):
         patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
     else:
         patched_img = frame
-        print("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI of [", h_frame  , " x ", w_frame, "]. Will just resize")
+        logging.warning("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI of [", h_frame  , " x ", w_frame, "]. Will just resize")
     # Adjusting the image file if needed
     if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
-        print("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
+        logging.warning("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
         resized = cv.resize(patched_img , (w_orig, h_orig), interpolation=interpolation)
     else:
         resized = patched_img
     return resized
 
 
-ray.init(dashboard_port=50051, num_cpus=8)
+ray.init(dashboard_port=50051, num_cpus=5)
 
 
 # You can pass this object around to different tasks/actors
 fpgas_queue = Queue(maxsize=100)
 
 @ray.remote
-def consumer(accel_mode, fpgas_queue, frame):
+def consumer(accel_mode, fpgas_queue, frame, debug_level=debug_level):
+    logging.basicConfig(level=debug_level)
+    
     orig = frame
     frame_ret = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)    
     # Adjusting the image file if needed
-    frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA)    
+    frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA, debug_level=debug_level)    
     if accel_mode:
         next_item = fpgas_queue.get(block=True, timeout=100)
-        print(f"will work on {next_item} and then put in back in the fpgas_queue")
+        logging.debug(f"will work on {next_item} and then put in back in the fpgas_queue")
         # Flattening the image from 2D to 1D
         image = frame_ret.flatten()        
-        output_array = trieres.vision.median_blur(image, total_size, next_item[0], int(next_item[1]))
+        output_array = trieres.vision.median_blur(image, total_size, next_item[0], int(next_item[1]), debug_level=logging.ERROR)
         frame_ret = np.reshape(output_array, (height, width))
         #frame_ret = cv.medianBlur(frame_ret, 9)
         fpgas_queue.put(next_item)
-        print(f"finished working on {next_item} Now it is back in the fpgas_queue")
+        logging.debug(f"finished working on {next_item} Now it is back in the fpgas_queue")
     else:
         frame_ret = cv.medianBlur(frame_ret, 9)        
     if ROI:
-        frame_ret = patch_sqaure_roi(orig, frame_ret, cv.INTER_AREA)    
+        frame_ret = patch_sqaure_roi(orig, frame_ret, cv.INTER_AREA, debug_level=debug_level)
     return frame_ret
 
 
@@ -162,18 +171,18 @@ cap.release()
 
 consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i]) for i in range(len(frames))]
 
-[fpgas_queue.put(j) for j in ([ ["10.12.200.73" , "2718"]   ])]
-#                                ["10.12.200.171" , "2719"],
-#                                ["10.12.200.11"  , "2720"],
-#                                ["10.12.200.19"  , "2721"],
-#                                ["10.12.200.29"  , "2722"]   ])]
+[fpgas_queue.put(j) for j in ([ ["10.12.200.171" , "2718"],   #])]
+                                ["10.12.200.73"  , "2719"],   # ])]
+                                ["10.12.200.205" , "2720"],   #])]
+                                ["10.12.200.69"  , "2721"],   #])]
+                                ["10.12.200.181" , "2722"]   ])]
 
 results = ray.get(consumers)
-print('Tasks executed')
+logging.info('Tasks executed')
 
 video_name = str(fn)+"_out.avi"
 video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (results[0].shape[1],results[0].shape[0]))
 for t in range(len(results)):
     video_out.write(results[t])
 video_out.release()
-print("Saved video: " + video_name)
+logging.info("Saved video: " + video_name)
