@@ -27,10 +27,11 @@ import os
 import numpy as np
 import cv2
 import socket
+import logging
 
 
-
-def median_blur(input_array, total_size, fpga_ip, fpga_port):
+def median_blur(input_array, total_size, fpga_ip, fpga_port, debug_level):
+    logging.basicConfig(level=debug_level)
     bytesToSend = input_array.tostring()
     #input_array = np.ones((1, 60))
     # Create a UDP socket at client side
@@ -41,11 +42,10 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
 
     cnt = 0;
     while True:
-        print("INFO: Sending bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
-       
+        logging.debug("Sending bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
         UDPClientSocket.sendto(bytesToSend[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE], serverAddressPort)
         if ((cnt+1)*BUFF_SIZE >= total_size):
-            print("INFO: Reached size to sent")
+            logging.debug("INFO: Reached size to sent")
             break;
         else:
             cnt = cnt + 1
@@ -53,17 +53,14 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
     cnt = 0;
     output_array = np.zeros((total_size,))
     while True:
-        print("INFO: Receiving bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
-       
+        logging.debug("Receiving bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
         msgFromServer = UDPClientSocket.recvfrom(BUFF_SIZE)
-        print(input_array.dtype)
         y = np.frombuffer(msgFromServer[0], dtype=input_array.dtype)
-        
-        print(output_array[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE-1].size)
+        logging.debug(output_array[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE-1].size)
         output_array[cnt*BUFF_SIZE:(cnt+1)*BUFF_SIZE] = y
 
         if ((cnt+1)*BUFF_SIZE >= total_size):
-            print("INFO: Reached size to receive")
+            logging.debug("Reached size to receive")
             break;
         else:
             cnt = cnt + 1
@@ -75,3 +72,4 @@ def median_blur(input_array, total_size, fpga_ip, fpga_port):
 
 if __name__ == '__main__':
     main(args)
+
