@@ -112,7 +112,7 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug
     return resized
 
 
-ray.init(dashboard_port=50051, num_cpus=5)
+ray.init(dashboard_port=50051, num_cpus=12)
 
 
 # You can pass this object around to different tasks/actors
@@ -176,17 +176,26 @@ toc_capture = time.perf_counter()
 tic_consumers = time.perf_counter()
 consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i], debug_level=debug_level) for i in range(len(frames))]
 
-[fpgas_queue.put(j) for j in ([ ["10.12.200.171" , "2718"],   #])]
-                                ["10.12.200.73"  , "2718"],   # ])]
-                                ["10.12.200.205" , "2718"],   #])]
-                                ["10.12.200.69"  , "2718"],   #])]
-                                ["10.12.200.181" , "2718"]   ])]
+# 256
+#[fpgas_queue.put(j) for j in ([ ["10.12.200.171" , "2718"],   #])]
+#                                ["10.12.200.73"  , "2718"],   # ])]
+#                                ["10.12.200.205" , "2718"],   #])]
+#                                ["10.12.200.69"  , "2718"],   #])]
+#                                ["10.12.200.181" , "2718"]   ])]
 
-#[fpgas_queue.put(j) for j in ([ ["10.12.200.9"   , "2718"]   ])]
-#                                ["10.12.200.212" , "2719"],   # ])]
-#                                ["10.12.200.170" , "2720"],   #])]
-#                                ["10.12.200.83"  , "2721"],   #])]
-#                                ["10.12.200.234" , "2722"]   ])]
+# 512
+[fpgas_queue.put(j) for j in ([ ["10.12.200.9"   , "2718"],   #])]
+                                ["10.12.200.212" , "2718"],   #])]
+                                ["10.12.200.170" , "2718"],   #])]
+                                ["10.12.200.83"  , "2718"],   #])]
+                                ["10.12.200.234" , "2718"],   #])]
+                                ["10.12.200.219" , "2718"],   #])]
+                                ["10.12.200.21"  , "2718"],   #])]
+                                ["10.12.200.243" , "2718"],   #])]
+                                ["10.12.200.76"  , "2718"],   #])]
+                                ["10.12.200.249" , "2718"],   #])]
+                                ["10.12.200.140" , "2718"],   #])]
+                                ["10.12.200.126" , "2718"],   ])]
 
 toc_consumers = time.perf_counter()
 
