@@ -39,6 +39,7 @@ import os
 import numpy as np
 import cv2 as cv
 import logging
+import time
 from trieres import *
 
 ROI = True
@@ -130,7 +131,7 @@ def consumer(accel_mode, fpgas_queue, frame, debug_level=debug_level):
         logging.debug(f"will work on {next_item} and then put in back in the fpgas_queue")
         # Flattening the image from 2D to 1D
         image = frame_ret.flatten()        
-        output_array = trieres.vision.median_blur(image, total_size, next_item[0], int(next_item[1]), debug_level=logging.ERROR)
+        output_array = trieres.vision.median_blur(image, total_size, next_item[0], int(next_item[1]), debug_level=debug_level)
         frame_ret = np.reshape(output_array, (height, width))
         #frame_ret = cv.medianBlur(frame_ret, 9)
         fpgas_queue.put(next_item)
@@ -146,6 +147,8 @@ try:
     fn = sys.argv[1]
 except:
     fn = 0
+
+tic_capture = time.perf_counter()
 
 cap = cv.VideoCapture(fn)
 frames = []
@@ -168,21 +171,42 @@ while(cap.isOpened()):
 
 # When everything done, release the video capture object
 cap.release()
+toc_capture = time.perf_counter()
 
-consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i]) for i in range(len(frames))]
+tic_consumers = time.perf_counter()
+consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i], debug_level=debug_level) for i in range(len(frames))]
 
 [fpgas_queue.put(j) for j in ([ ["10.12.200.171" , "2718"],   #])]
-                                ["10.12.200.73"  , "2719"],   # ])]
-                                ["10.12.200.205" , "2720"],   #])]
-                                ["10.12.200.69"  , "2721"],   #])]
-                                ["10.12.200.181" , "2722"]   ])]
+                                ["10.12.200.73"  , "2718"],   # ])]
+                                ["10.12.200.205" , "2718"],   #])]
+                                ["10.12.200.69"  , "2718"],   #])]
+                                ["10.12.200.181" , "2718"]   ])]
 
+#[fpgas_queue.put(j) for j in ([ ["10.12.200.9"   , "2718"]   ])]
+#                                ["10.12.200.212" , "2719"],   # ])]
+#                                ["10.12.200.170" , "2720"],   #])]
+#                                ["10.12.200.83"  , "2721"],   #])]
+#                                ["10.12.200.234" , "2722"]   ])]
+
+toc_consumers = time.perf_counter()
+
+tic_exec = time.perf_counter()
 results = ray.get(consumers)
-logging.info('Tasks executed')
+toc_exec = time.perf_counter()
+logging.info(f"Tasks executed")
 
+tic_save = time.perf_counter()
 video_name = str(fn)+"_out.avi"
 video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (results[0].shape[1],results[0].shape[0]))
 for t in range(len(results)):
     video_out.write(results[t])
 video_out.release()
 logging.info("Saved video: " + video_name)
+toc_save = time.perf_counter()
+
+logging.info(f"Tasks executed : {toc_exec - tic_exec:0.4f} seconds")
+logging.info(f"Consumers time : {toc_consumers - tic_consumers:0.4f} seconds")
+logging.info(f"Loading frames : {toc_capture - tic_capture:0.4f} seconds")
+logging.info(f"Saving video   : {toc_save - tic_save:0.4f} seconds")
+
+
