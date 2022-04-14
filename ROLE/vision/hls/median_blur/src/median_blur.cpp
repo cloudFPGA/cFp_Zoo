@@ -63,37 +63,13 @@ PacketFsmType  MedianBlurFSM   = WAIT_FOR_META;
 void pPortAndDestionation(
     ap_uint<32>             *pi_rank,
     ap_uint<32>             *pi_size,
-    stream<NodeId>          &sDstNode_sig,
     ap_uint<32>             *po_rx_ports
     )
 {
   //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
 #pragma HLS inline off
-//#pragma HLS pipeline II=1 //not necessary
-  //-- STATIC VARIABLES (with RESET) ------------------------------------------
-  static PortFsmType port_fsm = FSM_WRITE_NEW_DATA;
-#pragma HLS reset variable=port_fsm
-
-
-  switch(port_fsm)
-  {
-    default:
-    case FSM_WRITE_NEW_DATA:
-        printf("DEBUG in pPortAndDestionation: port_fsm - FSM_WRITE_NEW_DATA\n");       
-        //Triangle app needs to be reset to process new rank
-        if(!sDstNode_sig.full())
-        {
-          NodeId dst_rank = (*pi_rank + 1) % *pi_size;
-          printf("rank: %d; size: %d; \n", (int) *pi_rank, (int) *pi_size);
-          sDstNode_sig.write(dst_rank);
-          port_fsm = FSM_DONE;
-        }
-        break;
-    case FSM_DONE:
-        printf("DEBUG in pPortAndDestionation: port_fsm - FSM_DONE\n");        
-        *po_rx_ports = PORTS_OPENED;
-        break;
-  }
+#pragma HLS pipeline II=1 //TODO: check not necessary
+    *po_rx_ports = PORTS_OPENED;
 }
 
 
@@ -1042,7 +1018,6 @@ unsigned int sRxpToTxp_DataCounter = 0;
  * @return Nothing.
  *****************************************************************************/
 void pTXPath(
-        stream<NodeId>              &sDstNode_sig,
         stream<NetworkWord>         &soTHIS_Shl_Data,
         stream<NetworkMetaStream>   &soNrc_meta,
         stream<NetworkWord>         &sRxpToTxp_Data,
@@ -1071,16 +1046,7 @@ void pTXPath(
   {
     default:
     case WAIT_FOR_META:
-      if(!sDstNode_sig.empty())
-      {
-        dst_rank = sDstNode_sig.read();
-        dequeueFSM = WAIT_FOR_STREAM_PAIR;
-        //MedianBlur app needs to be reset to process new rank
-      }
-      break;      
-      
-    case WAIT_FOR_STREAM_PAIR:
-      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_STREAM_PAIR, *processed_word_tx=%u\n", 
+      printf("DEBUG in pTXPath: dequeueFSM=%d - WAIT_FOR_META, *processed_word_tx=%u\n", 
         dequeueFSM, *processed_word_tx);
       //-- Forward incoming chunk to SHELL
       if (*processed_word_tx == MIN_TX_LOOPS) {
@@ -1098,7 +1064,7 @@ void pTXPath(
       {
         netWordTx = sRxpToTxp_Data.read();
 
-        // in case MTU=8 ensure tlast is set in WAIT_FOR_STREAM_PAIR and don't visit PROCESSING_PACKET
+        // in case MTU=8 ensure tlast is set in WAIT_FOR_META and don't visit PROCESSING_PACKET
         if (PACK_SIZE == 8) 
         {
             netWordTx.tlast = 1;
@@ -1110,7 +1076,7 @@ void pTXPath(
         meta_out_stream.tlast = 1;
         meta_out_stream.tkeep = 0xFF; //just to be sure
 
-        meta_out_stream.tdata.dst_rank = dst_rank; //(*pi_rank + 1) % *pi_size;
+        meta_out_stream.tdata.dst_rank = meta_in.src_rank; //dst_rank; //(*pi_rank + 1) % *pi_size;
         //meta_out_stream.tdata.dst_port = DEFAULT_TX_PORT;
         meta_out_stream.tdata.src_rank = (NodeId) *pi_rank;
 
@@ -1151,7 +1117,7 @@ void pTXPath(
         {
             netWordTx.tlast = 1; // in case it is the 2nd or
             printf("DEBUGGGG: A netWordTx.tlast=1 ... sRxpToTxp_Data.empty()==%u \n", sRxpToTxp_Data.empty());
-            dequeueFSM = WAIT_FOR_STREAM_PAIR;
+            dequeueFSM = WAIT_FOR_META;
         }
 	
         // This is our own termination based on the custom MTU we have set in PACK_SIZE.
@@ -1161,7 +1127,7 @@ void pTXPath(
         //{
         //    printf("DEBUGGGG: B (*processed_word_tx)*8) % PACK_SIZE == 0 ...\n");
         //    netWordTx.tlast = 1;
-        //    dequeueFSM = WAIT_FOR_STREAM_PAIR;
+        //    dequeueFSM = WAIT_FOR_META;
         //}
 	
         soTHIS_Shl_Data.write(netWordTx);
@@ -1314,8 +1280,6 @@ const unsigned int max_axi_rw_burst_length = 64;
   static stream<ap_uint<OUTPUT_PTR_WIDTH>> img_out_axi_stream ("img_out_axi_stream");
 #endif
 #endif
-  //*po_rx_ports = 0x1; //currently work only with default ports...
-  static stream<NodeId>            sDstNode_sig("sDstNode_sig");
 
 
 //-- DIRECTIVES FOR THIS PROCESS ------------------------------------------
@@ -1333,7 +1297,6 @@ const unsigned int max_axi_rw_burst_length = 64;
 //#pragma HLS stream variable=sWriteChunkToDdrPending depth=2
 #pragma HLS reset variable=ready_to_accept_new_data
 #pragma HLS reset variable=signal_init
-#pragma HLS STREAM variable=sDstNode_sig     depth=1
 
 #ifdef ENABLE_DDR
 #pragma HLS stream variable=img_in_axi_stream depth=img_in_axi_stream_depth  
@@ -1403,7 +1366,6 @@ const unsigned int max_axi_rw_burst_length = 64;
  pPortAndDestionation(
         pi_rank, 
         pi_size, 
-        sDstNode_sig, 
         po_rx_ports
         );
   
@@ -1473,7 +1435,6 @@ const unsigned int max_axi_rw_burst_length = 64;
         );
 
   pTXPath(
-        sDstNode_sig,
         soTHIS_Shl_Data,
         soNrc_meta,
         sRxpToTxp_Data,

@@ -65,25 +65,24 @@ enum EchoCtrl {
 
 #define ROLE_IS_MEDIANBLUR
 
-#define WAIT_FOR_META             0
-#define WAIT_FOR_STREAM_PAIR      1
-#define PROCESSING_PACKET         2
-#define LOAD_IN_STREAM            3
-#define MEDIANBLUR_RETURN_RESULTS     4
-#define MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT 5
-#define MEDIANBLUR_RETURN_RESULTS_UNPACK 6
-#define MEDIANBLUR_RETURN_RESULTS_FWD 7
-#define WAIT_FOR_TX               8
-#define FSM_IDLE                    9
-#define FSM_CHK_SKIP                10
-#define FSM_CHK_PROC_BYTES          11
-#define FSM_CHK_WRT_CHNK_TO_DDR_PND 12
-#define FSM_WR_PAT_CMD              13
-#define FSM_WR_PAT_LOAD             14
-#define FSM_WR_PAT_DATA             15
-#define FSM_WR_PAT_STS_A            16
-#define FSM_WR_PAT_STS_B            17
-#define FSM_WR_PAT_STS_C            18
+#define WAIT_FOR_META                               0
+#define PROCESSING_PACKET                           1
+#define LOAD_IN_STREAM                              2
+#define MEDIANBLUR_RETURN_RESULTS                   3
+#define MEDIANBLUR_RETURN_RESULTS_ABSORB_DDR_LAT    4
+#define MEDIANBLUR_RETURN_RESULTS_UNPACK            5
+#define MEDIANBLUR_RETURN_RESULTS_FWD               6
+#define WAIT_FOR_TX                                 7
+#define FSM_IDLE                                    8
+#define FSM_CHK_SKIP                                9
+#define FSM_CHK_PROC_BYTES                          10
+#define FSM_CHK_WRT_CHNK_TO_DDR_PND                 11
+#define FSM_WR_PAT_CMD                              12
+#define FSM_WR_PAT_LOAD                             13
+#define FSM_WR_PAT_DATA                             14
+#define FSM_WR_PAT_STS_A                            15
+#define FSM_WR_PAT_STS_B                            16
+#define FSM_WR_PAT_STS_C                            17
 #define PacketFsmType uint8_t
 
 
