@@ -43,7 +43,7 @@ import time
 from trieres import *
 
 ROI = True
-accel_mode = True
+accel_mode = False
 debug_level = logging.INFO
 
 config_file=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/cplusplus/include/config.h"
@@ -73,7 +73,7 @@ def crop_square_roi(img, size, interpolation=cv.INTER_AREA, debug_level=debug_le
             crop_img = img[int(roi_y_pos):int(roi_y_pos+height), int(roi_x_pos):int(roi_x_pos+width)]
         else:
             crop_img = img
-            logging.warning("WARNING: The input image of [", h , " x ", w , "] is not bigger to crop a ROI of [", height  , " x ", width, "]. Will just resize")
+            logging.warning(f"The input image of [{h}x{w}] is not bigger to embed a ROI of [{height}x{width}]. Will just resize")            
     else:
         min_size = np.amin([np.amin([h,w]), np.amin([height,width])])
         # Centralize and crop
@@ -81,7 +81,7 @@ def crop_square_roi(img, size, interpolation=cv.INTER_AREA, debug_level=debug_le
     
     # Adjusting the image file if needed
     if ((crop_img.shape[0] != height) or (crop_img.shape[1] != width)):
-        logging.warning("WARNING: The image was resized from [", crop_img.shape[0] , " x ", crop_img.shape[1] , "] to [", height  , " x ", width, "]")
+        logging.warning(f"The image was resized from [{crop_img.shape[0]} x {crop_img.shape[1]}] to [{height}x{width}]")        
         resized = cv.resize(crop_img , (size, size), interpolation=interpolation)
     else:
         resized = crop_img
@@ -102,10 +102,10 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug
         patched_img[int(roi_y_pos):int(roi_y_pos+h_frame), int(roi_x_pos):int(roi_x_pos+w_frame),:] = frame_backtorgb
     else:
         patched_img = frame
-        logging.warning("WARNING: The input image of [", h_orig , " x ", w_orig , "] is not bigger to embed a ROI of [", h_frame  , " x ", w_frame, "]. Will just resize")
+        logging.warning(f"The input image of [{h_orig}x{w_orig}] is not bigger to embed a ROI of [{h_frame}x{w_frame}]. Will just resize")
     # Adjusting the image file if needed
     if ((patched_img.shape[0] != h_orig) or (patched_img.shape[1] != w_orig)):
-        logging.warning("WARNING: The image was resized from [", patched_img.shape[0] , " x ", patched_img.shape[1] , "] to [", h_orig  , " x ", w_orig, "]")
+        logging.warning(f"The image was resized from [{patched_img.shape[0]} x {patched_img.shape[1]}] to [{h_orig}x{w_orig}]")
         resized = cv.resize(patched_img , (w_orig, h_orig), interpolation=interpolation)
     else:
         resized = patched_img
@@ -113,7 +113,12 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug
 
 
 ray.init(dashboard_port=50051, num_cpus=12)
+#ray.init(address='ray://10.12.0.10:10001')
 
+print('''This cluster consists of
+    {} nodes in total
+    {} CPU resources in total
+'''.format(len(ray.nodes()), ray.cluster_resources()['CPU']))
 
 # You can pass this object around to different tasks/actors
 fpgas_queue = Queue(maxsize=100)
