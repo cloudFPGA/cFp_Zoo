@@ -33,3 +33,6 @@ target_link_libraries( harris_host_fwd_tb ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 add_executable( harris_host src/harris_host.cpp ../../../../PracticalSockets/src/PracticalSockets.cpp )
 target_link_libraries( harris_host ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
 
+add_executable( harris_standalone src/harris_standalone.cpp)
+target_link_libraries( harris_standalone ${OpenCV_LIBS} ${LIBXML2_LIBRARIES} )
+

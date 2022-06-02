@@ -112,8 +112,8 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug
     return resized
 
 
-ray.init(dashboard_port=50051, num_cpus=12)
-#ray.init(address='ray://10.12.0.10:10001')
+#ray.init(dashboard_port=50051, num_cpus=12)
+ray.init(address='ray://172.17.0.2:10001')
 
 print('''This cluster consists of
     {} nodes in total
