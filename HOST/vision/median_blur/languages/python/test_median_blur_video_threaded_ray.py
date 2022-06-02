@@ -29,6 +29,13 @@ Usage:
    to organize parallel frame processing pipeline
    with cloudFPGA.
 
+   On head node the ray server may be started with the command:
+   taskset -c 1 ray start --head --port=6379 --num-cpus=7 --resources='{"cloudFPGA": 7}'
+
+   Then client nodes can be connected with the command 
+   ray start --address='10.12.0.10:6379' --redis-password='5241590000000000' --num-cpus=7 --resources='{"cloudFPGA": 7}'
+   or directly using the ray init method in this script.
+
 '''
 
 import ray
@@ -42,8 +49,8 @@ import logging
 import time
 from trieres import *
 
-ROI = True
-accel_mode = False
+ROI = False
+accel_mode = True
 debug_level = logging.INFO
 
 config_file=os.environ['cFpRootDir'] + "HOST/vision/median_blur/languages/cplusplus/include/config.h"
@@ -113,24 +120,25 @@ def patch_sqaure_roi(orig, frame, interpolation=cv.INTER_AREA, debug_level=debug
 
 
 #ray.init(dashboard_port=50051, num_cpus=12)
-ray.init(address='ray://172.17.0.2:10001')
+ray.init(address='ray://10.12.0.10:10001')
 
 print('''This cluster consists of
     {} nodes in total
     {} CPU resources in total
-'''.format(len(ray.nodes()), ray.cluster_resources()['CPU']))
+    {} cloudFPGA resources in total    
+'''.format(len(ray.nodes()), ray.cluster_resources()['CPU'], ray.cluster_resources()['cloudFPGA']))
 
 # You can pass this object around to different tasks/actors
 fpgas_queue = Queue(maxsize=100)
 
-@ray.remote
+@ray.remote(resources={'cloudFPGA': 1})
 def consumer(accel_mode, fpgas_queue, frame, debug_level=debug_level):
     logging.basicConfig(level=debug_level)
     
     orig = frame
     frame_ret = cv.cvtColor(frame, cv.COLOR_RGB2GRAY)    
     # Adjusting the image file if needed
-    frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA, debug_level=debug_level)    
+    #frame_ret = crop_square_roi(frame_ret, width, interpolation = cv.INTER_AREA, debug_level=debug_level)    
     if accel_mode:
         next_item = fpgas_queue.get(block=True, timeout=100)
         logging.debug(f"will work on {next_item} and then put in back in the fpgas_queue")
@@ -145,6 +153,8 @@ def consumer(accel_mode, fpgas_queue, frame, debug_level=debug_level):
         frame_ret = cv.medianBlur(frame_ret, 9)        
     if ROI:
         frame_ret = patch_sqaure_roi(orig, frame_ret, cv.INTER_AREA, debug_level=debug_level)
+    else:
+        frame_ret = cv.cvtColor(np.uint8(frame_ret),cv.COLOR_GRAY2RGB)
     return frame_ret
 
 
@@ -182,25 +192,41 @@ tic_consumers = time.perf_counter()
 consumers = [consumer.remote(accel_mode, fpgas_queue, frames[i], debug_level=debug_level) for i in range(len(frames))]
 
 # 256
-#[fpgas_queue.put(j) for j in ([ ["10.12.200.171" , "2718"],   #])]
-#                                ["10.12.200.73"  , "2718"],   # ])]
-#                                ["10.12.200.205" , "2718"],   #])]
-#                                ["10.12.200.69"  , "2718"],   #])]
-#                                ["10.12.200.181" , "2718"]   ])]
+#[fpgas_queue.put(j) for j in ([ ["10.12.200.97" , "2718"],   #])]
+#                                ["10.12.200.30" , "2718"],   # ])]
+#                                ["10.12.200.36" , "2718"],   #])]
+#                                ["10.12.200.209", "2718"],   #])]
+#                                ["10.12.200.89" , "2718"],   #])]
+#                                ["10.12.200.207", "2718"],   #])]
+#                                ["10.12.200.178", "2718"],   #])]
+#                                ["10.12.200.27" , "2718"],   #])]
+#                                ["10.12.200.126", "2718"],   #])]
+#                                ["10.12.200.73" , "2718"],   ])]
 
 # 512
-[fpgas_queue.put(j) for j in ([ ["10.12.200.9"   , "2718"],   #])]
-                                ["10.12.200.212" , "2718"],   #])]
-                                ["10.12.200.170" , "2718"],   #])]
-                                ["10.12.200.83"  , "2718"],   #])]
-                                ["10.12.200.234" , "2718"],   #])]
-                                ["10.12.200.219" , "2718"],   #])]
-                                ["10.12.200.21"  , "2718"],   #])]
-                                ["10.12.200.243" , "2718"],   #])]
-                                ["10.12.200.76"  , "2718"],   #])]
-                                ["10.12.200.249" , "2718"],   #])]
-                                ["10.12.200.140" , "2718"],   #])]
-                                ["10.12.200.126" , "2718"],   ])]
+#[fpgas_queue.put(j) for j in ([ ["10.12.200.66"  , "2718"],   #])]
+#                                ["10.12.200.124" , "2718"],   #])]
+#                                ["10.12.200.239" , "2718"],   #])]
+#                                ["10.12.200.28"  , "2718"],   #])]
+#                                ["10.12.200.62"  , "2718"],   #])]
+#                                ["10.12.200.31"  , "2718"],   #])]
+#                                ["10.12.200.226" , "2718"],   ])]
+#                                ["10.12.200.243" , "2718"],   #])]
+#                                ["10.12.200.76"  , "2718"],   #])]
+#                                ["10.12.200.249" , "2718"],   #])]
+#                                ["10.12.200.140" , "2718"],   #])]
+#                                ["10.12.200.126" , "2718"],   ])]
+
+# 1024
+[fpgas_queue.put(j) for j in ([ ["10.12.200.17" , "2718"],   #])]
+                                ["10.12.200.20" , "2718"],   #])]
+                                ["10.12.200.69" , "2718"],   #])]
+                                ["10.12.200.208", "2718"],   #])]
+                                ["10.12.200.179", "2718"],   #])]
+                                ["10.12.200.223", "2718"],   #])]
+                                ["10.12.200.182", "2718"],   #])]
+                                ["10.12.200.232", "2718"],   #])]
+                                ["10.12.200.59" , "2718"],   ])]
 
 toc_consumers = time.perf_counter()
 
@@ -211,6 +237,7 @@ logging.info(f"Tasks executed")
 
 tic_save = time.perf_counter()
 video_name = str(fn)+"_out.avi"
+
 video_out = cv.VideoWriter(video_name, cv.VideoWriter_fourcc('M','J','P','G'), 30, (results[0].shape[1],results[0].shape[0]))
 for t in range(len(results)):
     video_out.write(results[t])

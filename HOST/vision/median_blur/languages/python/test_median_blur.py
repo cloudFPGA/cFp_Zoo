@@ -118,7 +118,7 @@ for i in range(1):
 
 #for i in range(100):
 
-    output_array = vision.median_blur(input_array, total_size, "10.12.200.9", 2718, logging.ERROR)
+    output_array = vision.median_blur(input_array, total_size, "10.12.200.66", 2718, logging.ERROR)
 
     # Convert 1D array to a 2D numpy array of 2 rows and 3 columns
     output_array_2d = np.reshape(output_array, (height, width))
