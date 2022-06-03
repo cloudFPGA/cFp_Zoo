@@ -15,17 +15,11 @@
 
 #sudo tc qdisc add dev eth0 root netem delay 0.4ms 0.2ms rate 10Gbit limit 100000000 loss 0.0000125% 1%
 ip a
-sudo tc qdisc add dev eth0 root netem delay 0.4ms 0.2ms rate 10Gbit limit 10000000000000
-sudo tc qdisc show dev eth0
+tc qdisc add dev enp35s0f0 root netem delay 0.4ms 0.2ms rate 10Gbit limit 10000000000000
+tc qdisc show dev enp35s0f0
 
-#start ZRLMPI binary
-
-#if not there
-cd /app 
 #ray start --head --port=6379 --num-cpus=7 --resources='{"cloudFPGA": 7}' --redis-password=1234 --object-manager-port=8076 --redis-shard-ports=6379 -include-dashboard=false
 
 
 # keep container alive
-tail -f /dev/null
-
-echo "docker done"
+# tail -f /dev/null

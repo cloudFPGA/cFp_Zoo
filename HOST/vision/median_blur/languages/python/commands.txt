@@ -1,0 +1,4 @@
+
+on header: 
+* docker run --shm-size=8G --net=host --cap-add=NET_ADMIN -it 06d2457a2b24ac59134d5adf5977c984cc79804a1e2d57a304d83d0c5df16eea /bin/bash
+* inside the header: ray start --head --port=6379
