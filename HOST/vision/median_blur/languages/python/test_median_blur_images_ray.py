@@ -55,7 +55,8 @@ split = 1
 REPEATS = 1
 
 #ray.init(dashboard_port=50051, num_cpus=12)
-ray.init(address='ray://192.168.1.8:10001')
+#ray.init(address='ray://192.168.1.8:10001')
+ray.init(address='ray://10.1.1.24:10001')
 
 #print('''This cluster consists of
 #    {} nodes in total
