@@ -46,8 +46,8 @@ accel_mode = False
 debug_level = logging.DEBUG
 logging.basicConfig(stream=sys.stdout, level=debug_level)
 
-width  = 13840
-height = 12160
+width  = 3840
+height = 2160
 total_size = height * width
 
 DATASET_SIZE = 50
@@ -160,25 +160,24 @@ for _ in range(REPEATS):
     results = ray.get(consumers)
     results = flatten(results)
 
-
     toc_exec = time.perf_counter()
     logging.info(f"Tasks executed")
-
-    tic_save = time.perf_counter()
-    for t in range(len(results)):
-        image_name = "CARLA_out_"+str(t)+".jpg"
-        cv.imwrite(image_name, results[t])
-    logging.info("Last saved image: " + image_name)
-
-    toc_save = time.perf_counter()
 
     logging.info(f"Tasks executed : {toc_exec - tic_exec:0.4f} seconds")
     logging.info(f"Consumers time : {toc_consumers - tic_consumers:0.4f} seconds")
     logging.info(f"Loading frames : {toc_capture - tic_capture:0.4f} seconds")
-    logging.info(f"Saving images  : {toc_save - tic_save:0.4f} seconds")
 
     end_time = time.time()
     elapsed_times.append(end_time - start_time)
+
+tic_save = time.perf_counter()
+for t in range(len(results)):
+    image_name = "CARLA_out_"+str(t)+".jpg"
+    cv.imwrite(image_name, results[t])
+logging.info("Last saved image: " + image_name)
+toc_save = time.perf_counter()
+logging.info(f"Saving images  : {toc_save - tic_save:0.4f} seconds")
+
 elapsed_times = np.sort(elapsed_times)
 average_elapsed_time = sum(elapsed_times) / REPEATS
 print(elapsed_times)
@@ -188,5 +187,3 @@ print("    90th percentile: {}".format(elapsed_times[round((90/100) * REPEATS)-1
 print("    99th percentile: {}".format(elapsed_times[round((99/100) * REPEATS)-1]))
 print("    best:            {}".format(elapsed_times[0]))
 print("    worst:           {}".format(elapsed_times[round((99.9/100) * REPEATS)-1]))
-
-ray.shutdown()
