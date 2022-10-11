@@ -17,10 +17,8 @@
 ## @file   trieres.py
 ## @author DID
 ## @date   February 2022
-## @brief  A python script for testing the cF median_blur kernel. The script takes as argument the fpga 
-##         ip, the port and the numpi array of an image to be processed. This array should be an 1-D 
-##         array, containing all pixels of a CV MAT in CV_8UC1. The kernel will rerurn a numpi
-##         array which is the array with only the detected points.
+## @brief  The top-level python lib of trieres. It imports python linbs from several 
+##         domain-specific applications. 
 
 import sys
 import os
@@ -28,8 +26,11 @@ import os
 cpwd = os.path.abspath(__file__)
 vision_path = os.path.dirname(cpwd)+"/../vision"
 sys.path.append(vision_path)
+custom_path = os.path.dirname(cpwd)+"/../custom"
+sys.path.append(custom_path)
 
 import vision
+import custom
 
 #def main(argv):
     
