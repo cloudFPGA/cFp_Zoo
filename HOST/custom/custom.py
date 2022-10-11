@@ -60,7 +60,7 @@ def uppercase(input_array, total_size, fpga_ip, fpga_port, debug_level):
         else:
             cnt = cnt + 1
     cnt = 0;
-    output_array = np.zeros((total_size,))
+    output_array = np.zeros((total_size,), dtype=input_array.dtype)
     while True:
         logging.debug("Receiving bytes: " + str(cnt*BUFF_SIZE) + " : " + str((cnt+1)*BUFF_SIZE-1))
         msgFromServer = UDPClientSocket.recvfrom(BUFF_SIZE)
